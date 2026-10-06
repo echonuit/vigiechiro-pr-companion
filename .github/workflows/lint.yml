@@ -1286,6 +1286,14 @@ jobs:
         run: |
           python3 scripts/methode/verifie-normalisation-git.py --auto-test
           python3 scripts/methode/verifie-normalisation-git.py
+      - name: "Aucun marqueur de conflit n'est versionné (bloquant, #4329)"
+        # Le 2026-08-23, `main` a porté trois marqueurs dans `design.css` pendant plusieurs heures
+        # (#4294, retirés par #4310) : la feuille livrée était amputée, et seule la suite Java le
+        # voyait, dans un ordre d'exécution sur deux. Ce garde lit les fichiers suivis en moins
+        # d'une seconde. L'auto-test l'éprouve dans un dépôt jetable qui porte un fichier en conflit.
+        run: |
+          python3 scripts/methode/verifie-marqueurs-de-conflit.py --auto-test
+          python3 scripts/methode/verifie-marqueurs-de-conflit.py
       - name: "Un garde déclare ce dont il a besoin, comme le pom le déclare pour Java (bloquant, #5008)"
         # L'auto-test d'abord : un détecteur relâché passerait sinon au vert sur un dépôt conforme.
         # Le verdict ensuite, sur les deux arbres de gardes et le Python enfoui dans leurs heredocs.
