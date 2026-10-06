@@ -89,9 +89,6 @@ MARQUE_INSTRUMENT = "# Instrument : "
 # compris (4,2 %). Ils restent donc sans plancher, et la comparaison le DIT au lieu de les ranger
 # parmi les cas stables. Une ligne se retire avec l issue qui la porte.
 SANS_PLANCHER = {
-    "ScenarioAnnonceConnexionTest.deconnecte_le_compte_rendu_ne_pretend_rien": "#5893",
-    "ScenarioRejetsEtArchiveTest.l_import_aboutit_malgre_les_rejets": "#5893",
-    "ScenarioRejetsEtArchiveTest.la_decompression_se_voit_avant_l_inspection": "#5893",
     "ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce": "#5911",
     "ScenarioBandeauLectureSeuleTest.le_support_en_lecture_seule_s_annonce_et_l_import_aboutit": "#5911",
     "ScenarioPassagePivotTest.modifier_le_passage": "#5911",
