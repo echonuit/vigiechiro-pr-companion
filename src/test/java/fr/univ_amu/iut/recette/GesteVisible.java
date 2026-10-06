@@ -151,7 +151,7 @@ public final class GesteVisible {
             mettreEnPage(cible);
             List<ScrollPane> panneaux = panneauxDont(cible);
             pose.set(!panneaux.isEmpty()
-                    && panneaux.stream().allMatch(panneau -> ecartAuReglage(panneau, cible) <= DEMI_PIXEL)
+                    && panneaux.stream().allMatch(panneau -> estRegle(panneau, reglage(panneau, cible)))
                     && estDansLeCadre(robot, selecteur));
         });
         return pose.get();
@@ -190,17 +190,17 @@ public final class GesteVisible {
         racine.layout();
     }
 
-    /// De combien de pixels `panneau` est écarté de la place où [#amener] le mettrait maintenant.
-    private static double ecartAuReglage(ScrollPane panneau, Node cible) {
+    /// `panneau` est-il, au demi-pixel, à la place `voulue` que [#reglage] vient de calculer ?
+    private static boolean estRegle(ScrollPane panneau, double voulue) {
         Node contenu = panneau.getContent();
         if (contenu == null) {
-            return 0;
+            return true;
         }
         double course = Math.max(
                 1,
                 contenu.getBoundsInLocal().getHeight()
                         - panneau.getViewportBounds().getHeight());
-        return Math.abs(panneau.getVvalue() - reglage(panneau, cible, contenu)) * course;
+        return Math.abs(panneau.getVvalue() - voulue) * course <= DEMI_PIXEL;
     }
 
     /// Une passe de calcul, puis le verdict : la cible est-elle atteignable ?
@@ -250,18 +250,22 @@ public final class GesteVisible {
     /// **Le quotient est borné, sans garde** : il sort de `[0, 1]` onze fois sur quatre-vingt-seize
     /// appels réels, mais JavaFX normalise la valeur stockée. Hygiène, pas remède (#4795).
     private static void amener(ScrollPane panneau, Node cible) {
-        Node contenu = panneau.getContent();
-        if (contenu == null) {
+        if (panneau.getContent() == null) {
             return;
         }
-        panneau.setVvalue(reglage(panneau, cible, contenu));
+        panneau.setVvalue(reglage(panneau, cible));
     }
 
     /// La position qui met `cible` en haut du champ de `panneau`, bornée à ce que la page permet.
     ///
     /// Sortie de [#amener] pour que [#estPoseDansLeCadre] relise la **même** formule : deux calculs
     /// d'une même position finiraient par diverger, et le prédicat jugerait autre chose que le geste.
-    private static double reglage(ScrollPane panneau, Node cible, Node contenu) {
+    /// Un panneau sans contenu n'a rien à régler, et garde sa position.
+    private static double reglage(ScrollPane panneau, Node cible) {
+        Node contenu = panneau.getContent();
+        if (contenu == null) {
+            return panneau.getVvalue();
+        }
         double hauteurContenu = contenu.getBoundsInLocal().getHeight();
         double hauteurVue = panneau.getViewportBounds().getHeight();
         double y = cible.localToScene(cible.getBoundsInLocal()).getMinY();
