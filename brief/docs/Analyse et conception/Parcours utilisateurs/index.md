@@ -4,11 +4,13 @@ Cette section présente les **parcours d'usage** de l'application, organisés en
 
 **Les parcours P0 à P13 sont supportés par l'application livrée**, à l'exception de [P9](P9%20-%20Regrouper%20les%20nuits%20successives%20par%20point.md) (regrouper les nuits d'un point pour une validation conjointe) : ni service ni vue de regroupement n'existent (cf. [E8.S1](../Story%20mapping/E8%20-%20Productivite%20avancee%20Tadarida.md#e8s1)).
 
-**P14 à P17 sont des cibles**, ouvertes en août 2026 et pas encore construites. Chacune porte en tête l'issue qui la suit : c'est là que se lit son état, et non dans une phrase de ce sommaire.
+**P14 à P16 sont des cibles**, ouvertes en août 2026 et pas encore construites. Chacune porte en tête l'issue qui la suit : c'est là que se lit son état, et non dans une phrase de ce sommaire.
+
+**P17**, ouverte avec elles, est livrée pour la relecture d'une nuit confiée à un collègue. Le passage du terrain au bureau, qu'elle décrivait aussi, ne l'est pas : il est consigné dans l'issue #6043.
 
 - **Section A - Fil rouge** : un seul parcours, **P0**, qui raconte l'usage de bout-en-bout vu par Marie, de la carte SD au dépôt.
 - **Section B - Chaîne de production** : les parcours **P1 à P6** qui composent et enrichissent le fil rouge - déclaration de site, import, vérification, préparation du dépôt, navigation multi-sites et diagnostic matériel -, plus **P12** (récupérer une nuit déjà déposée sur la plateforme, en trois coutures : synchro, reconstruire, réactiver). Trois cibles s'y rattachent : **P14** (relever l'état d'une nuit sur la plateforme), **P15** (relire son histoire) et **P16** (déclarer son matériel une fois).
-- **Section C - Après le dépôt & exploitation** : **P7** (validation des résultats Tadarida) et son prolongement **biodiversité** - regroupement (**P9**), bibliothèque de sons (**P10**), inventaire des espèces (**P11**) et envoi d'un sous-ensemble à un expert (**P13**), plus la cible **P17** (reprendre une nuit sur un autre poste).
+- **Section C - Après le dépôt & exploitation** : **P7** (validation des résultats Tadarida) et son prolongement **biodiversité** - regroupement (**P9**), bibliothèque de sons (**P10**), inventaire des espèces (**P11**) et envoi d'un sous-ensemble à un expert (**P13**), plus **P17** (faire relire une nuit sur un autre poste, et reprendre l'avis rendu).
 - **Transverse** : **P8** (recherche globale) est accessible depuis **n'importe quel écran**.
 
 Tous les parcours reposent sur le vocabulaire posé dans le [Modèle conceptuel](../Modele%20conceptuel/index.md).
@@ -68,9 +70,9 @@ flowchart LR
     classDef livre fill:#1e8449,stroke:#0e5128,color:#fff,stroke-width:2px
     classDef transverse fill:#3f51b5,stroke:#283593,color:#fff,stroke-width:2px
     classDef nonlivre fill:#5d6d7e,stroke:#283747,color:#fff,stroke-width:2px,stroke-dasharray:5 3
-    class P1,P2,P3,P4,P5,P6,P7,P10,P11,P12,P13 livre
+    class P1,P2,P3,P4,P5,P6,P7,P10,P11,P12,P13,P17 livre
     class P8 transverse
-    class P9,P14,P15,P16,P17 nonlivre
+    class P9,P14,P15,P16 nonlivre
 ```
 
 Le fil rouge **P0** est la concaténation P1 → P2 → P3 → P4. Les nœuds verts sont des parcours **livrés** ; **P8** (bleu) est la recherche **transverse**, atteignable depuis tout écran ; les nœuds **gris pointillés** sont des **cibles non livrées**. Le statut d'un parcours se lit ici, sur son nœud : c'est ce qui l'empêche de se périmer sans qu'on le voie.
@@ -95,7 +97,7 @@ Le fil rouge **P0** est la concaténation P1 → P2 → P3 → P4. Les nœuds ve
 | | [P10 - Exporter une bibliothèque de sons de référence](P10%20-%20Exporter%20une%20bibliotheque%20de%20sons%20de%20reference.md) | Samuel | sons de référence par espèce |
 | | [P11 - Inventaire des espèces détectées](P11%20-%20Inventaire%20des%20especes%20detectees.md) | Karim / Samuel | « Espèces & observations » (par espèce / par carré) |
 | | [P13 - Envoyer un sous-ensemble à un expert](P13%20-%20Envoyer%20un%20sous-ensemble%20a%20un%20expert.md) | Samuel | espèce × lieu → archive ZIP (CSV + sons) |
-| | [P17 - Reprendre une nuit sur un autre poste](P17%20-%20Reprendre%20une%20nuit%20sur%20un%20autre%20poste.md) ⬜ | Samuel / Karim | paquet de reprise entre deux machines |
+| | [P17 - Reprendre une nuit sur un autre poste](P17%20-%20Reprendre%20une%20nuit%20sur%20un%20autre%20poste.md) | Karim / Samuel | paquet d'une nuit à relire, avis signé en retour |
 | **Transverse** | [P8 - Rechercher globalement](P8%20-%20Rechercher%20globalement.md) | tous | sauter à un site, un point, un passage |
 
 Le repère ⬜ marque une **cible non livrée**, dans la même convention que les nœuds pointillés du diagramme ci-dessus.
@@ -121,7 +123,7 @@ Le repère ⬜ marque une **cible non livrée**, dans la même convention que le
 | [P14 - Relever l'état sur la plateforme](P14%20-%20Verifier%20ce%20que%20la%20plateforme%20detient%20d%27une%20nuit.md) ⬜ | ✓ | ✅ ⭐ | ✅ |
 | [P15 - Relire l'histoire d'une nuit](P15%20-%20Relire%20l%27histoire%20d%27une%20nuit.md) ⬜ | (rare) | ✅ | ✅ ⭐ |
 | [P16 - Déclarer son matériel](P16%20-%20Declarer%20et%20retrouver%20son%20materiel.md) ⬜ | ✓ | ✅ ⭐ | ✅ |
-| [P17 - Reprendre sur un autre poste](P17%20-%20Reprendre%20une%20nuit%20sur%20un%20autre%20poste.md) ⬜ | (non) | ✅ | ✅ ⭐ |
+| [P17 - Reprendre sur un autre poste](P17%20-%20Reprendre%20une%20nuit%20sur%20un%20autre%20poste.md) | (non) | ✅ | ✅ ⭐ |
 
 ⭐ = parcours central pour la persona, ✅ = parcours fréquent, ✓ = parcours occasionnel, ⬜ = cible non livrée.
 

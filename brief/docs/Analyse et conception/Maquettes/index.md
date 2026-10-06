@@ -38,7 +38,7 @@ Cette section regroupe les **maquettes basse fidélité** de l'application *Vigi
 | [M-Releve](M-Releve.md) ⬜ | Relevé d'une nuit sur la plateforme | Vue secondaire (depuis M-Passage) | [P14](../Parcours%20utilisateurs/P14%20-%20Verifier%20ce%20que%20la%20plateforme%20detient%20d%27une%20nuit.md) | chaîne de production |
 | [M-Journal](M-Journal.md) ⬜ | L'histoire d'une nuit (frise des évènements) | Vue secondaire (depuis M-Passage) | [P15](../Parcours%20utilisateurs/P15%20-%20Relire%20l%27histoire%20d%27une%20nuit.md) | chaîne de production |
 | [M-Materiel](M-Materiel.md) ⬜ | Parc d'enregistreurs et de micros | Onglet des Réglages | [P16](../Parcours%20utilisateurs/P16%20-%20Declarer%20et%20retrouver%20son%20materiel.md) | chaîne de production |
-| [M-Paquet](M-Paquet.md) ⬜ | Paquet de reprise entre deux postes | Assistant (depuis M-MultiSite) | [P17](../Parcours%20utilisateurs/P17%20-%20Reprendre%20une%20nuit%20sur%20un%20autre%20poste.md) | prisme collecte & passages |
+| [M-Paquet](M-Paquet.md) | Paquet d'une nuit à relire, et avis signé en retour | Quatre entrées du menu ☰ de la liste de M-Qualification | [P17](../Parcours%20utilisateurs/P17%20-%20Reprendre%20une%20nuit%20sur%20un%20autre%20poste.md) | prisme collecte & passages |
 
 !!! success "Les écrans sans repère existent"
     [M-Synthese](M-Synthese.md), [M-Activite](M-Activite.md), [M-Saison](M-Saison.md) et
@@ -47,7 +47,7 @@ Cette section regroupe les **maquettes basse fidélité** de l'application *Vigi
     l'issue qui l'a mise en oeuvre.
 
     Le repère ⬜ marque une **cible non livrée**, dans la même convention que les nœuds pointillés du
-    diagramme ci-dessous. Les quatre dernières lignes du tableau sont des chantiers ouverts en août ;
+    diagramme ci-dessous. Les trois lignes qui le portent sont des chantiers ouverts en août ;
     chaque fiche porte l'issue qui la suit, et c'est là que se lit son état.
 
     Une maquette peut par ailleurs **devancer le produit sur un détail** : c'est un écart, pas une
@@ -125,12 +125,11 @@ flowchart TB
     Passage --> Releve
     Passage --> Journal
     Accueil -.Réglages.-> Materiel
-    MultiSite --> Paquet
-    Paquet -.reprise.-> Import
+    Qualif --> Paquet
 
-    class Detail,Passage,MultiSite,Saison detail
+    class Detail,Passage,MultiSite,Saison,Paquet detail
     class Analyse,SonsVal,Synthese,Activite biodiv
-    class Releve,Journal,Materiel,Paquet avenir
+    class Releve,Journal,Materiel avenir
 ```
 
 - 🟦 **Indigo** : écran d'accueil (lanceur à deux prismes).
@@ -139,7 +138,7 @@ flowchart TB
 - 🟪 **Violet** : prisme espèces & biodiversité (inventaire, sons & validation).
 - ⬜ **Contour pointillé** : écran **décidé et maquetté, pas encore livré**. Le statut se lit sur le
   nœud, pas dans une phrase du corps de texte : c'est ce qui l'empêche de se périmer sans qu'on le
-  voie. Quatre écrans y sont aujourd'hui, tous ouverts en août 2026.
+  voie. Trois écrans y sont aujourd'hui, tous ouverts en août 2026.
 
 Le graphe montre au passage ce que les chantiers d'août feraient au **pivot** : `M-Passage` porterait
 huit écrans spécialisés, contre quatre à l'origine. C'est le point d'attention noté sur sa fiche.
