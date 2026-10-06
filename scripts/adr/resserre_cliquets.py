@@ -118,9 +118,11 @@ def aligner_les_balises() -> list[str]:
 
 
 def appliquer() -> list[str]:
-    # `collecter()` rend quatre listes depuis #4635 : cliquets, planchers, loupes, et les scripts
-    # dont le verdict n a pas ete lu. Seuls les cliquets se resserrent ici.
-    cliquets, _, _, _ = rapport.collecter()
+    # `collecter()` rend cinq listes : cliquets, planchers, invariants (#6059), loupes, et les
+    # scripts dont le verdict n a pas ete lu. Seuls les cliquets se resserrent ici, et c est pour
+    # cela que les invariants ont leur liste : ranges avec les cliquets, celui qui partage son
+    # numero avec l un d eux aurait fait reecrire un `ratchet:` qui n est pas le sien.
+    cliquets, _, _, _, _ = rapport.collecter()
     faits = []
     for num, nouvelle in rapport.resserrements(cliquets):
         fichier = min(DECISIONS.glob(f"{num}-*.md"))

@@ -100,6 +100,31 @@ def _verifie(cas: str, obtenu, attendu) -> None:
         print(f"  ✘ {cas} : attendu {attendu}, obtenu {obtenu}")
 
 
+def _capte(appel) -> tuple:
+    """Ce qu un appel REND et ce qu il IMPRIME, les deux canaux reunis (#6059).
+
+    Le verdict d un garde tient en deux choses, son code et sa ligne : un cas qui n en lit qu une
+    laisse l autre mentir. Les deux canaux sont reunis parce que la porte les lit ainsi.
+    """
+    import contextlib
+    import io
+
+    sortie = io.StringIO()
+    with contextlib.redirect_stdout(sortie), contextlib.redirect_stderr(sortie):
+        rendu = appel()
+    return rendu, sortie.getvalue()
+
+
+def _ligne_de_verdict(sortie: str) -> dict:
+    """Les champs de la PREMIERE ligne de verdict d une sortie, ou un dictionnaire vide."""
+    commun = _charge("_commun.py")
+    for ligne in sortie.splitlines():
+        champs = commun.champs_du_verdict(ligne)
+        if champs is not None:
+            return champs
+    return {}
+
+
 def _ecrire(racine: pathlib.Path, chemin_relatif: str, contenu: str) -> None:
     f = racine / chemin_relatif
     f.parent.mkdir(parents=True, exist_ok=True)
@@ -845,6 +870,71 @@ def test_4359_blocs_relus() -> None:
             "4359 registre : une methode au-dela du sien l est aussi, dans l arbre de test",
             "src/test/java/Methode.java" in sous_cliquet,
             True,
+        )
+
+        # LA LIGNE DE VERDICT (#6059). Ce garde se declare `invariant` et ne rendait aucune ligne :
+        # `rapport.py` le nommait parmi les verdicts qu il n avait pas su lire. Les cas lisent le
+        # code ET la ligne, sur le meme arbre : deux blocs y sont sous cliquet.
+        #
+        # `dict(...)` puis un `next` AVEC repli, pour la raison dite plus haut : sous le banc des
+        # temoins la fonction rend une liste vide, et un `.items()` ou un `next` nu y PLANTAIENT au
+        # lieu de laisser les cas rougir.
+        vivante = next(
+            (h for h, c in dict(m.blocs_du_corpus(racine)).items() if c.endswith("Long.java")),
+            "empreinte-absente",
+        )
+        registre = "scripts/adr/4359-blocs-relus.tsv"
+        _ecrire(racine, registre, f"{vivante}\tsrc/main/java/Long.java\trelu\n")
+        code, sortie = _capte(lambda: m.verdict(racine))
+        _verifie("4359 registre : un registre a jour sort en 0", code, 0)
+        _verifie(
+            "4359 registre : et sa ligne de verdict dit l invariant, ce qu il a lu et qu il tient",
+            {
+                c: _ligne_de_verdict(sortie).get(c)
+                for c in ("dispositif", "numero", "lus", "suspects", "verdict")
+            },
+            {
+                "dispositif": "INVARIANT",
+                "numero": "4359",
+                "lus": "2",
+                "suspects": "0",
+                "verdict": "ok",
+            },
+        )
+
+        _ecrire(
+            racine,
+            registre,
+            f"{vivante}\tsrc/main/java/Long.java\trelu\n"
+            "0000000000000000\tsrc/main/java/Fantome.java\tjadis relu\n",
+        )
+        code, sortie = _capte(lambda: m.verdict(racine))
+        _verifie("4359 registre : une entree perimee sort en 1", code, 1)
+        _verifie(
+            "4359 registre : et la ligne de verdict REFUSE, en comptant l entree",
+            {c: _ligne_de_verdict(sortie).get(c) for c in ("lus", "suspects", "verdict")},
+            {"lus": "2", "suspects": "1", "verdict": "refus"},
+        )
+        # Ce que la PORTE montrera : la ligne qui refuse, puis l entree fautive, et rien d autre. Le
+        # compte « restant a lire » s ecrivait en retrait, et `lignes_du_refus` l aurait pris pour
+        # le premier suspect.
+        montre = _charge("_commun.py").lignes_du_refus(sortie) or ""
+        _verifie(
+            "4359 registre : la porte montre le refus puis l entree perimee, pas le compte",
+            [("verdict=refus" in montre), ("Fantome.java" in montre), ("estant a lire" in montre)],
+            [True, True, False],
+        )
+
+    # Un CORPUS INTROUVABLE ne s accuse pas d une entree perimee : il n a rien lu, et il le dit.
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        _ecrire(racine, "scripts/adr/4359-blocs-relus.tsv", "aaaa\tsrc/main/java/A.java\trelu\n")
+        code, sortie = _capte(lambda: m.verdict(racine))
+        _verifie("4359 registre : un corpus vide sort en 1", code, 1)
+        _verifie(
+            "4359 registre : et son verdict nomme la population vide, pas une entree perimee",
+            _ligne_de_verdict(sortie).get("verdict"),
+            "population-vide",
         )
 
 
@@ -1637,6 +1727,61 @@ def test_5087_versions_hors_des_checks() -> None:
         )
         _verifie("5087 : un bump invalide la marque du manifeste", len(m.suspects(racine)), 1)
 
+        # LA LIGNE DE VERDICT (#6059). Ce garde se declare `invariant` et ne rendait aucune ligne ;
+        # il sortait de plus par `refuse`, la forme de qui n a pas pu juger. Le manifeste atteste
+        # ici une autre valeur que le pom : il a juge, et c est rouge.
+        code, sortie = _capte(lambda: m.verdict(racine))
+        _verifie("5087 : une version non attestee sort en 1, et non en 2", code, 1)
+        _verifie(
+            "5087 : et sa ligne de verdict REFUSE, en comptant ce qu elle a lu",
+            {
+                c: _ligne_de_verdict(sortie).get(c)
+                for c in ("dispositif", "numero", "lus", "suspects", "verdict")
+            },
+            {
+                "dispositif": "INVARIANT",
+                "numero": "5087",
+                "lus": str(len(m.fichiers(racine))),
+                "suspects": "1",
+                "verdict": "refus",
+            },
+        )
+        commun = _charge("_commun.py")
+        _verifie(
+            "5087 : un jugement rouge n emploie PAS la forme de qui n a pas pu juger",
+            commun.lit_le_refus(sortie),
+            None,
+        )
+        # Ce que la PORTE montrera : la version non attestee, et non la carte des versions exposees
+        # qui la precede - elle s ecrivait en retrait, comme un suspect.
+        #
+        # ⟨on compte les LIGNES, on ne cherche pas un mot⟩ La carte et le suspect nomment le meme
+        # artefact et le meme profil : chercher l un des deux dans ce que la porte montre passait
+        # que la carte y soit ou non. Vu sous mutation, la carte remise en retrait survivait.
+        montre = (commun.lignes_du_refus(sortie) or "").splitlines()
+        _verifie(
+            "5087 : la porte montre le refus puis la version non attestee, pas la carte",
+            [
+                len(montre),
+                "verdict=refus" in "".join(montre[:1]),
+                "atteste 0.9.0" in "".join(montre[1:2]),
+            ],
+            [2, True, True],
+        )
+
+        _ecrire(
+            racine,
+            "scripts/methode/versions-verifiees.txt",
+            "expose.version 1.0.0 joue a la main\n",
+        )
+        code, sortie = _capte(lambda: m.verdict(racine))
+        _verifie("5087 : attestee a la bonne valeur, le garde sort en 0", code, 0)
+        _verifie(
+            "5087 : et sa ligne de verdict le dit",
+            {c: _ligne_de_verdict(sortie).get(c) for c in ("suspects", "verdict")},
+            {"suspects": "0", "verdict": "ok"},
+        )
+
         # Et `lus` ne peut pas etre zero : un garde qui ne balaie rien n est jamais legitime.
         _verifie("5087 : le garde balaie au moins cinq unites", len(m.fichiers(racine)) >= 5, True)
 
@@ -2079,6 +2224,44 @@ def test_le_rapport_lit_encore_les_trois_lignes() -> None:
         "PLANCHER",
     )
 
+    # LA TROISIEME FAMILLE (#6059). Un invariant rend sa ligne sous son propre mot de tete : sous
+    # `ADR`, celui qui partage son numero avec un cliquet ferait deux lignes dans la meme table.
+    code, sortie = _capte(lambda: commun.rapporte_invariant("4359", "temoin", [], lus=7))
+    invariant = champs(sortie)
+    _verifie("un invariant sans suspect sort en 0", code, 0)
+    _verifie(
+        "le rapport lit une ligne d invariant, et son dispositif le separe des cliquets",
+        {
+            c: (invariant or {}).get(c)
+            for c in ("dispositif", "numero", "lus", "suspects", "verdict")
+        },
+        {"dispositif": "INVARIANT", "numero": "4359", "lus": "7", "suspects": "0", "verdict": "ok"},
+    )
+    _verifie(
+        "et sa ligne ne porte AUCUNE marge : un invariant n a pas de cliquet",
+        "cliquet" in (invariant or {"cliquet": ""}),
+        False,
+    )
+    code, sortie = _capte(lambda: commun.rapporte_invariant("4359", "temoin", ["x", "y"], lus=7))
+    _verifie("un invariant qui trouve ce qu il interdit sort en 1", code, 1)
+    _verifie(
+        "et son verdict REFUSE, en comptant les suspects",
+        {c: (champs(sortie) or {}).get(c) for c in ("suspects", "verdict")},
+        {"suspects": "2", "verdict": "refus"},
+    )
+    _verifie(
+        "et ce verdict est de ceux que la porte tient pour un refus",
+        "refus" in commun.VERDICTS_QUI_REFUSENT,
+        True,
+    )
+    code, sortie = _capte(lambda: commun.rapporte_invariant("4359", "temoin", [], lus=0))
+    _verifie("un invariant qui n a rien lu sort en 1", code, 1)
+    _verifie(
+        "et il nomme la population vide plutot que de se dire tenu",
+        (champs(sortie) or {}).get("verdict"),
+        "population-vide",
+    )
+
     _verifie(
         "et il les lit encore quand le compte n est pas declare",
         bool(champs(rendu(lambda: commun.rapporte("0008", "temoin de couture", [])))),
@@ -2420,7 +2603,7 @@ def test_resserre_cliquets_appelle_le_rapport() -> None:
     )
     signature = resserre.__doc__ is not None
     _verifie("resserre_cliquets se charge a cote de rapport", signature, True)
-    _verifie("collecter() rend le nombre de listes que resserre_cliquets deballe", len(attendus), 4)
+    _verifie("collecter() rend le nombre de listes que resserre_cliquets deballe", len(attendus), 5)
     # ⟨on COMPARE, on n INDEXE pas⟩ Sous mutation, la fonction neutralisee rend `[]` : `attendus[0]`
     # levait alors une IndexError, et le harnais entier mourait AVANT que l assertion ne puisse
     # echouer. Le banc classait donc ce garde « non concluant » plutot que tenu - un rouge pour la
@@ -2441,7 +2624,46 @@ def test_resserre_cliquets_appelle_le_rapport() -> None:
         and isinstance(n.value, ast.Call)
         and getattr(n.value.func, "attr", "") == "collecter"
     ]
-    _verifie("resserre_cliquets deballe autant de listes que collecter en rend", deballes, [4])
+    _verifie("resserre_cliquets deballe autant de listes que collecter en rend", deballes, [5])
+
+    # ⟨UN NUMERO, DEUX DISPOSITIFS (#6059)⟩ `4359-blocs-relus.py` est un invariant et partage son
+    # numero avec le cliquet `4359-javadoc-narratif.py`. Ce cas fait rendre les deux lignes par deux
+    # scripts : la table des cliquets ne doit en porter qu UNE, l invariant a sa liste, et aucun des
+    # deux scripts n est nomme muet. La marge du cliquet est a resserrer, pour que le cas voie aussi
+    # qu une seule proposition part vers l ADR.
+    sorties = {
+        "4359-javadoc-narratif.py": "ADR 4359 | lus=9 | suspects=3 | cliquet=5 | verdict=a-resserrer\n",
+        "4359-blocs-relus.py": "INVARIANT 4359 | lus=314 | suspects=0 | verdict=ok\n",
+        "4617-muet.py": "REFUS : pas de rapport\n",
+    }
+    listes = rapport.collecter(
+        executeur=lambda script: sorties[script.name],
+        scripts=[pathlib.Path(nom) for nom in sorties],
+    )
+    cliquets, planchers, invariants, loupes, muets = listes if len(listes) == 5 else ([],) * 5
+    _verifie(
+        "un invariant qui partage son numero ne fait pas une seconde ligne de cliquet",
+        cliquets,
+        [("4359", "9", 3, 5, "a-resserrer")],
+    )
+    _verifie("il a sa propre liste", invariants, [("4359", "314", 0, "ok")])
+    _verifie("et il ne passe pas pour un plancher", planchers, [])
+    _verifie(
+        "seul le script sans verdict est nomme muet",
+        [nom for nom, _ in muets],
+        ["4617-muet.py"],
+    )
+    _verifie(
+        "et une seule proposition de resserrement part vers l ADR 4359",
+        rapport.resserrements(cliquets),
+        [("4359", 3)],
+    )
+    rendu = rapport.rendre(cliquets, planchers, invariants, loupes, muets, markdown=False)
+    _verifie(
+        "le rapport montre l invariant dans sa section, avec son verdict",
+        "ADR 4359 : lus=314 suspects=0 → ok" in rendu and "Invariants" in rendu,
+        True,
+    )
 
 
 def test_rapport_et_resserrement() -> None:
@@ -2501,11 +2723,13 @@ def test_rapport_et_resserrement() -> None:
 
     # Le compte doit traverser jusqu au RENDU, et pas seulement jusqu au tuple. C est la moitie du
     # trajet qu aucun cas ne couvrait : `lus` pouvait etre capture, range, puis jete a l affichage.
-    rendu_texte = rapport.rendre([("0099", "42", 2, 5, "a-resserrer")], [], [], [], markdown=False)
+    rendu_texte = rapport.rendre(
+        [("0099", "42", 2, 5, "a-resserrer")], [], [], [], [], markdown=False
+    )
     _verifie("le rendu texte porte le compte lu", "lus=42" in rendu_texte, True)
-    rendu_md = rapport.rendre([("0099", "?", 2, 5, "ok")], [], [], [], markdown=True)
+    rendu_md = rapport.rendre([("0099", "?", 2, 5, "ok")], [], [], [], [], markdown=True)
     _verifie("le rendu markdown porte un compte non declare", "| ? |" in rendu_md, True)
-    rendu_loupe = rapport.rendre([], [], [("4472", "2080", 43)], [], markdown=False)
+    rendu_loupe = rapport.rendre([], [], [], [("4472", "2080", 43)], [], markdown=False)
     _verifie("le rendu d une loupe porte ce qu elle a lu", "sur 2080" in rendu_loupe, True)
 
     # MESURER n est pas RESORBER, et le confondre a laisse trois chiffres perimes en une journee

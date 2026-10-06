@@ -59,7 +59,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import RACINE_DEPOT, refuse, sort_si_contrat_demande
+from _commun import RACINE_DEPOT, rapporte_invariant, sort_si_contrat_demande
 
 MAVEN = "{http://maven.apache.org/POM/4.0.0}"
 MANIFESTE = pathlib.Path("scripts/methode/versions-verifiees.txt")
@@ -271,31 +271,52 @@ scripts/adr/5087-versions-hors-des-checks.py
 }
 
 
-if __name__ == "__main__":
-    sort_si_contrat_demande(__file__, CONTRAT)
-    if hors := hors_de_la_carte():
+def verdict(racine: pathlib.Path | None = None) -> int:
+    """La carte, puis la LIGNE DE VERDICT de l invariant, et le code de sortie (#6059)."""
+    if hors := hors_de_la_carte(racine):
         print(
             "Profils actives par « os » et non par « -P », donc hors de la lecture des flux : "
             + ", ".join(hors)
-            + "\n  Aucun ne porte de version aujourd hui ; le jour ou l un en portera une, sa"
+            + "\nAucun ne porte de version aujourd hui ; le jour ou l un en portera une, sa"
             " couverture se decidera.\n"
         )
-    # Un INVARIANT rend son verdict lui-meme, sans `rapporte` : celui-ci confronte un compte a un
-    # cliquet, et lit donc un `ratchet:` dans l en-tete de l ADR. Une divergence entre le pom et le
-    # manifeste n est jamais une dette qui descend - elle est fausse ou elle n est pas - donc il n y a
-    # pas de cliquet a declarer, et en declarer un a zero dirait qu il pourrait monter.
-    exposition = exposees()
-    print(f"VERSIONS EXPOSEES | lus={len(fichiers())} | exposees={len(exposition)}")
+    # Un INVARIANT rend son verdict sans `rapporte` : celui-ci confronte un compte a un cliquet, et
+    # lit donc un `ratchet:` dans l en-tete de l ADR. Une divergence entre le pom et le manifeste
+    # n est jamais une dette qui descend - elle est fausse ou elle n est pas - donc il n y a pas de
+    # cliquet a declarer, et en declarer un a zero dirait qu il pourrait monter.
+    #
+    # ⟨mais il REND une ligne, par `rapporte_invariant`⟩ Il n en rendait aucune, et `rapport.py` le
+    # nommait parmi les verdicts qu il n avait pas su lire. Il sortait de plus par `refuse`, la forme
+    # de qui N A PAS PU juger : la porte classait donc « muet » un garde qui avait juge, et rouge.
+    # Une version non attestee est un jugement, et il sort en 1 comme tout verdict qui refuse (#6059).
+    #
+    # ⟨aucune ligne EN RETRAIT avant le verdict, hors les suspects⟩ `lignes_du_refus` rattache a une
+    # ligne de verdict tout ce qui la precede en retrait. La carte s ecrivait ainsi : la porte aurait
+    # montre les versions EXPOSEES a la place des versions non attestees.
+    exposition = exposees(racine)
+    print(f"Versions exposees : {len(exposition)}")
     for prop, (profil, artefact) in sorted(exposition.items()):
-        print(f"  {prop}  ({artefact}, profil « {profil} »)")
+        print(f"- {prop}  ({artefact}, profil « {profil} »)")
+    print()
 
-    trouves = suspects()
-    if not trouves:
-        sys.exit(0)
-    refuse(
-        f"{len(trouves)} version(s) exposee(s) que le manifeste n atteste pas :\n  "
-        + "\n  ".join(trouves),
-        f"Jouez le profil a la main sur la version du pom, puis inscrivez-la dans"
-        f" {MANIFESTE} avec ce qui l atteste. Aucun flux declenche par une demande n exerce"
-        f" ces artefacts : c est pourquoi rien d autre ne le dira.",
+    trouves = suspects(racine)
+    code = rapporte_invariant(
+        "5087",
+        "version exposee que le manifeste n atteste pas",
+        trouves,
+        lus=len(fichiers(racine)),
     )
+    if trouves:
+        print(
+            f"\nECHEC : {len(trouves)} version(s) exposee(s) que le manifeste n atteste pas.\n"
+            f"Jouez le profil a la main sur la version du pom, puis inscrivez-la dans {MANIFESTE}\n"
+            f"avec ce qui l atteste. Aucun flux declenche par une demande n exerce ces artefacts :\n"
+            f"c est pourquoi rien d autre ne le dira.",
+            file=sys.stderr,
+        )
+    return code
+
+
+if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
+    sys.exit(verdict())

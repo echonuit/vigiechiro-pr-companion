@@ -2,12 +2,14 @@
 """Rapport hebdomadaire de conformité aux ADR.
 
 Il fait tourner tous les scripts de vérification et agrège leur sortie normalisée en un tableau
-Markdown, pour mesurer l'écart et la dette d'une semaine sur l'autre. Deux sections :
+Markdown, pour mesurer l'écart et la dette d'une semaine sur l'autre. Trois sections :
 
 - **Cliquets** (`probable`) : chaque script rend `suspects=N | cliquet=M | verdict=…`. Le rapport
   rappelle la marge, et surtout signale les cliquets À RESSERRER - ceux dont la réalité (`suspects`)
   est passée sous la marge. C'est le carburant de la calibration : un cliquet qui ne descend pas quand
   le dépôt s'améliore laisse une marge morte où une régression pourrait se glisser sans rougir.
+- **Invariants** : chaque script rend `suspects=N | verdict=…`, sans marge. Ils ont leur section,
+  parce qu'un invariant peut partager son numéro d'ADR avec un cliquet (#6059).
 - **Loupes** (`humaine`) : indicatif seul. On compte les candidats à revoir, sans verdict.
 
 Le rapport N'ÉCHOUE PAS sur une régression de cliquet : ce n'est pas son rôle (c'est celui du script,
@@ -88,7 +90,7 @@ def collecter(executeur=None, scripts=None):
     etaient dans ce cas, dont un plancher qui annoncait `verdict=a-relever` depuis on ne sait quand.
     Un dispositif dit ce qu il couvre, et ce qu il n a pas pu lire.
     """
-    cliquets, planchers, loupes, muets = [], [], [], []
+    cliquets, planchers, invariants, loupes, muets = [], [], [], [], []
     lance = executeur or executer
     for script in sorted(ICI.glob("[0-9]*.py")) if scripts is None else scripts:
         sortie = lance(script)
@@ -112,6 +114,14 @@ def collecter(executeur=None, scripts=None):
                         int(champs["cliquet"]),
                         champs["verdict"],
                     )
+                )
+            elif champs["dispositif"] == "INVARIANT":
+                # ⟨une famille A PART, et non une ligne de cliquet de plus⟩ Un invariant n a pas de
+                # marge : le ranger avec les cliquets lui en preterait une de zero, et celui qui
+                # partage son numero avec un cliquet, `4359-blocs-relus.py`, y ferait une seconde
+                # ligne 4359 que `resserrements()` lirait comme une marge a ramener (#6059).
+                invariants.append(
+                    (champs["numero"], lus, int(champs["suspects"]), champs["verdict"])
                 )
             else:
                 planchers.append(
@@ -137,7 +147,7 @@ def collecter(executeur=None, scripts=None):
             verdicts += 1
         if not verdicts:
             muets.append((script.name, premiere_ligne_de_verdict(sortie)))
-    return cliquets, planchers, loupes, muets
+    return cliquets, planchers, invariants, loupes, muets
 
 
 def premiere_ligne_de_verdict(sortie: str) -> str:
@@ -147,12 +157,12 @@ def premiere_ligne_de_verdict(sortie: str) -> str:
     pourquoi. Avec lui, l ecart entre ce qui est rendu et ce qui est attendu se lit sur place.
     """
     for ligne in sortie.split("\n"):
-        if ligne.startswith(("ADR ", "LOUPE ", "PLANCHER ")) and "|" in ligne:
+        if ligne.startswith(("ADR ", "LOUPE ", "PLANCHER ", "INVARIANT ")) and "|" in ligne:
             return ligne.strip()
     return "aucune ligne de verdict"
 
 
-def rendre(cliquets, planchers, loupes, muets, markdown: bool) -> str:
+def rendre(cliquets, planchers, invariants, loupes, muets, markdown: bool) -> str:
     h1, h2, li = ("## ", "### ", "- ") if markdown else ("== ", "-- ", "  ")
     out = [f"{h1}Rapport de conformité aux ADR", ""]
 
@@ -191,6 +201,12 @@ def rendre(cliquets, planchers, loupes, muets, markdown: bool) -> str:
         for num, lus, mesure, plancher, verdict in planchers:
             fleche = "→ ok" if verdict == "ok" else f"→ {verdict}"
             out.append(f"{li}ADR {num} : lus={lus} mesure={mesure} plancher={plancher} {fleche}")
+        out.append("")
+
+    if invariants:
+        out += ["", f"{h2}Invariants (vrais ou faux, sans marge)"]
+        for num, lus, suspects, verdict in invariants:
+            out.append(f"{li}ADR {num} : lus={lus} suspects={suspects} → {verdict}")
         out.append("")
 
     out.append(f"{h2}Loupes (vérifications « humaine », indicatif)")
@@ -332,5 +348,5 @@ if __name__ == "__main__":
     if "--auto-test" in sys.argv:
         raise SystemExit(auto_test())
     markdown = "--markdown" in sys.argv
-    cliquets, planchers, loupes, muets = collecter()
-    sys.stdout.write(rendre(cliquets, planchers, loupes, muets, markdown))
+    cliquets, planchers, invariants, loupes, muets = collecter()
+    sys.stdout.write(rendre(cliquets, planchers, invariants, loupes, muets, markdown))

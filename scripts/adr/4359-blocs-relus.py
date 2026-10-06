@@ -58,7 +58,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 import importlib.util
 
-from _commun import sort_si_contrat_demande
+from _commun import rapporte_invariant, sort_si_contrat_demande
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 REGISTRE = pathlib.Path("scripts/adr/4359-blocs-relus.tsv")
@@ -139,24 +139,42 @@ CONTRAT = {
 }
 
 
-if __name__ == "__main__":
-    sort_si_contrat_demande(__file__, CONTRAT)
-    corpus = blocs_du_corpus()
-    inscrites = entrees()
+def verdict(racine: pathlib.Path | None = None) -> int:
+    """Le compte du registre, puis la LIGNE DE VERDICT de l invariant, et le code de sortie (#6059).
+
+    Ce garde se declare `invariant` et sortait en 1 sur une entree perimee, mais sans rendre de
+    ligne : `rapport.py` le rangeait parmi les verdicts qu il n avait pas su lire. Les deux lignes de
+    compte restent, elles disent ou en est la lecture ; la ligne qui suit dit ce qu il DECIDE.
+
+    `lus` compte les blocs sous cliquet, et non les entrees du registre : c est le corpus que ce
+    garde balaie, et un corpus introuvable ferait de toute entree une entree perimee, c est-a-dire
+    un refus qui accuse le registre quand c est l arbre qui manque. Un registre vide, lui, est
+    legitime et ne refuse pas.
+    """
+    corpus = blocs_du_corpus(racine)
+    inscrites = entrees(racine)
     mortes = perimees(inscrites, corpus)
     relus = len(inscrites) - len(mortes)
 
+    # ⟨aucune ligne EN RETRAIT avant le verdict⟩ `lignes_du_refus` rattache a une ligne de verdict
+    # tout ce qui la precede en retrait : le compte « restant a lire » s ecrivait ainsi, et la porte
+    # l aurait montre comme le premier suspect d un refus.
     print(f"Registre des blocs relus : {relus} sur {len(corpus)} blocs sous cliquet")
-    print(f"  restant a lire : {len(corpus) - relus}")
+    print(f"Restant a lire : {len(corpus) - relus}\n")
 
-    if mortes:
+    code = rapporte_invariant(
+        "4359", "registre des blocs relus : entree perimee", mortes, lus=len(corpus)
+    )
+    if mortes and corpus:
         print(
             f"\nECHEC : {len(mortes)} entree(s) ne correspondent a aucun bloc. Le bloc a change - donc\n"
             "il n a pas ete relu sous sa forme actuelle - ou il a disparu. Relisez-le et reinscrivez\n"
-            "son empreinte, ou retirez la ligne.\n",
+            "son empreinte, ou retirez la ligne.",
             file=sys.stderr,
         )
-        for m in mortes:
-            print(f"  {m}", file=sys.stderr)
-        sys.exit(1)
-    sys.exit(0)
+    return code
+
+
+if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
+    sys.exit(verdict())
