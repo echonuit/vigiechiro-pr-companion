@@ -199,8 +199,12 @@ Les passes **0 à 9 gardent leur numéro**, et les deux dernières ont glissé d
 
 ## Chercher dans le dépôt
 
-Six outils, six questions. `graphify` d'abord (voir ci-dessous), puis :
+Sept outils, sept questions. `graphify` d'abord (voir ci-dessous), puis :
 
+- **`scripts/graphify/couche_semantique.py cherche`** pour le **pourquoi** d'une règle, ce que la
+  prose en dit. Elle rend les énoncés de la couche du graphe, avec leur justification et leur page,
+  là où `graphify query` peut ne rendre que du code. La commande et sa raison sont plus bas, sous
+  « graphify ».
 - **`scripts/qualite/appelants.py`** pour « **qui appelle cette méthode ?** » quand la réponse doit
   être RÉSOLUE. C'est le seul qui distingue deux méthodes de même nom, et le dépôt en déclare
   **1 424** sur 10 360 dans plusieurs classes : `preparer` dans 188, `start` dans 150, `nettoyer` dans 77.
