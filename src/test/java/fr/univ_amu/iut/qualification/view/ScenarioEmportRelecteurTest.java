@@ -35,7 +35,6 @@ import fr.univ_amu.iut.sites.view.NavigationSites;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import javafx.stage.Stage;
@@ -225,10 +224,5 @@ class ScenarioEmportRelecteurTest {
                 return Optional.of(chemin);
             }
         };
-    }
-
-    @SuppressWarnings("unused")
-    private List<String> inutilise() {
-        return List.of();
     }
 }
