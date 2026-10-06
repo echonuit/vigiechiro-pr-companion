@@ -41,6 +41,11 @@ updates:
   # Outillage de publication (semantic-release et ses greffons), figé par lockfile depuis #2738.
   # Sans cette entrée, le lockfile fige aussi les correctifs de sécurité : figer sans surveiller
   # échange un risque contre un autre.
+  #
+  # Elle n'a jamais ouvert de demande (#6084). Dependabot trouve les versions, soumet, et la forge
+  # refuse : `dependency_file_not_supported`. Mesuré le 2026-10-06 : 39 exécutions `npm` sur 39 en
+  # échec depuis le 4 août. Elle reste parce que la retirer est une décision, pas un nettoyage ; et
+  # `/.github/openspec` n'en reçoit pas, puisqu'elle y échouerait de la même façon.
   - package-ecosystem: "npm"
     directory: "/.github/release"
     schedule:

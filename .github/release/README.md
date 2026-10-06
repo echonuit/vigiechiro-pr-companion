@@ -10,8 +10,26 @@ se faisait à chaque exécution : un greffon compromis entre deux runs se serait
 de publication **sans qu'aucun diff du dépôt ne l'ait montré**.
 
 Le lockfile fige l'arbre entier, `npm ci` refuse d'installer autre chose que lui, et toute montée de
-version passe désormais par une PR relue. Dependabot suit ce manifeste (`npm`, mensuel) : figer sans
-surveiller échangerait un risque contre un autre.
+version passe désormais par une PR relue. `.github/dependabot.yml` porte une entrée pour ce manifeste
+(`npm`, mensuel), posée parce que figer sans surveiller échangerait un risque contre un autre.
+
+**Cette entrée n'a jamais ouvert de demande** (#6084). Dependabot trouve les versions, soumet, et la
+forge refuse : `dependency_file_not_supported`, « The request contains invalid or unauthorized
+changes ». Mesuré le 2026-10-06 : 39 exécutions `npm` sur 39 en échec depuis le 4 août, les montées
+de version comme les correctifs de sécurité, et aucune demande `npm` parmi les 55 que Dependabot a
+ouvertes ici. Ce jour-là, `@semantic-release/changelog` est épinglé à 6.0.3 quand le registre rend
+7.0.0, et `@semantic-release/git` à 10.0.1 quand il rend 11.0.1. La cause du refus n'est pas établie ;
+ce manifeste vit sous `.github/`, et c'est l'hypothèse à éprouver en premier. D'ici là, la fraîcheur
+de cet outillage se demande à la main, paquet par paquet :
+
+```bash
+npm view semantic-release version
+npm view @semantic-release/changelog version
+npm view @semantic-release/git version
+```
+
+`npm outdated` ne convient pas ici : sans `node_modules/`, que ce dossier n'a que sur le runner, il ne
+rend rien et sort en 0, ce qui se lit « tout est à jour ».
 
 ## Les deux configurations, et pourquoi elles diffèrent
 
