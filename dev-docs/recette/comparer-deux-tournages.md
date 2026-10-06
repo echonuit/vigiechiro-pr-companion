@@ -114,11 +114,23 @@ runners GitHub distincts, soit **quinze paires** par clip. Mesurés le 5 octobre
 
 **Le fichier s'est complété depuis, et les paires ne sont plus uniformes.** Les clips de la session
 S2 en portent **vingt et une**, mesurées sur quatre tournages de plus (#5956), et celui du menu de
-ligne en porte **six**, sa ligne étant neuve. Au total : 68 lignes à quinze paires, 25 à vingt et une,
-une à six. La quatrième colonne de `planchers-tournages.tsv` dit, pour chaque clip, sur combien de
-paires son plancher a été pris - et un plancher tiré de peu de paires en prouve d'autant moins.
+ligne en porte **six**, sa ligne étant neuve. La quatrième colonne de `planchers-tournages.tsv` dit,
+pour chaque clip, sur combien de paires son plancher a été pris - et un plancher tiré de peu de
+paires en prouve d'autant moins. Le décompte des lignes par nombre de paires ne s'écrit pas ici :
+chaque mesure le déplace, et le fichier le dit mieux que cette page.
 
-Six clips n'ont pas de plancher, parce qu'ils ont deux fins (voir plus bas). Sur les **89** autres, clips ordinaires seuls - les cinq clips de la plateforme de test ont leur propre section :
+Le fichier mêle deux populations, et chaque compte de cette page nomme la sienne. Les clips
+**ordinaires** qui ont un plancher sont <!--inv:clips-ordinaires-a-plancher-->89<!--/inv-->. Ceux de
+la **plateforme de test** sont <!--inv:clips-de-la-plateforme-de-test-a-plancher-->5<!--/inv-->, et
+ont leur propre section. Les clips **sans plancher**, parce qu'ils ont deux fins, sont
+<!--inv:clips-sans-plancher-->6<!--/inv--> (voir plus bas). Ces trois comptes sont relus à chaque
+demande contre l'outil et son fichier : un clip corrigé qui quitte la table fait rougir cette page
+tant qu'elle ne le dit pas. Un cas est de la plateforme de test quand sa méthode, ou sa classe, en
+porte le tag : ni le nom de sa classe ni le tag de sa seule classe ne suffisent à le dire.
+
+La distribution des planchers des clips ordinaires, **relevée le 6 octobre 2026** sur le fichier de
+`main` à `358205ef5`. C'est une mesure datée : elle ne suit pas le fichier, et se relève quand
+l'argument qu'elle sert en a besoin.
 
 | plancher à 5 % de tolérance | cas |
 |---|---|
@@ -187,7 +199,8 @@ mesurées avec l'instrument du flux (#5870).
 | `ScenarioConnecteAnnonceImportTest` | S2-59, S2-60 | 0,325 % |
 | `ScenarioConnecteLancementTest` | S4-47 | 0,503 % |
 
-Aucun ne dépasse le pire plancher des clips ordinaires, 1,033 % : ces clips se comparent.
+Aucun ne dépasse le pire plancher des clips ordinaires, 1,033 % au relevé du 6 octobre 2026 : ces
+clips se comparent.
 
 !!! danger "Un plancher se mesure avec l'instrument du flux, pas avec celui du poste"
 
@@ -334,11 +347,14 @@ deux lancements, le second complétant le fichier rendu par le premier.
 
 ### Les clips auxquels on refuse un plancher
 
-Un plancher mesure le bruit d'un clip qui **finit sur son verdict**. Six clips ont deux fins : deux
-tournages du même commit y diffèrent de 3 à 26 %, parce que le clip s'arrête pendant une
+Un plancher mesure le bruit d'un clip qui **finit sur son verdict**. Certains clips ont deux fins :
+deux tournages du même commit y diffèrent de 3 à 26 %, parce que le clip s'arrête pendant une
 transformation, pendant un fondu, ou sur une page que rien n'a calée.
 
-| clip | ses quinze paires vont jusqu'à | issue |
+Ce tableau est celui de la table `SANS_PLANCHER` de l'outil, et un test le confronte à elle dans
+les deux sens. Sa colonne du milieu est une mesure datée, prise le 5 octobre 2026 sur quinze paires.
+
+| clip | ses paires allaient jusqu'à, le 5 octobre 2026 | issue |
 |---|---|---|
 | `ScenarioAnnonceConnexionTest.deconnecte_le_compte_rendu_ne_pretend_rien` | 23,9 % | #5893 |
 | `ScenarioRejetsEtArchiveTest.l_import_aboutit_malgre_les_rejets` | 23,8 % | #5893 |

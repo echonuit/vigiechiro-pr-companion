@@ -64,7 +64,8 @@ que notre client parle à **notre idée** de la plateforme.
 
 Son écran dépend de **données vivantes**. Deux tournages du même commit peuvent différer parce qu'une
 nuit a été traitée entre les deux, et le plancher de bruit des clips ordinaires - médiane 0,160 %, pire
-cas 0,979 %, mesurés par #5885 - mesurerait alors la plateforme au lieu du rendu. Le plancher par cas n'y répond pas non plus :
+cas 0,979 %, mesurés par #5885 le 5 octobre 2026, l'état courant étant dans
+[la page de la comparaison](comparer-deux-tournages.md) - mesurerait alors la plateforme au lieu du rendu. Le plancher par cas n'y répond pas non plus :
 un cas connecté aurait un bruit énorme et se retrouverait durablement en bas du classement, y compris
 le jour où il change pour une vraie raison.
 

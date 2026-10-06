@@ -7,6 +7,7 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import fr.univ_amu.iut.cli.commande.CommandeRacine;
+import fr.univ_amu.iut.commun.api.plateforme.CibleLive;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Workspace;
@@ -47,8 +48,10 @@ import java.util.stream.Stream;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.platform.commons.support.AnnotationSupport;
 import picocli.CommandLine;
 
 /// Garde-fou de **documentation** (#1458) : une commande CLI sans ligne de doc, ou un écran sans fiche,
@@ -903,7 +906,10 @@ class DocumentationAJourTest {
             "criteres-multisite",
             "criteres-audit",
             "contributeurs",
-            "equipes");
+            "equipes",
+            "clips-sans-plancher",
+            "clips-ordinaires-a-plancher",
+            "clips-de-la-plateforme-de-test-a-plancher");
 
     /// La clé de balise qu'une ADR déclare pour SA valeur, dans son en-tête.
     private static final Pattern CLE_BALISE_ADR = Pattern.compile("^inv_key: ([a-z-]+)$", Pattern.MULTILINE);
@@ -1069,6 +1075,10 @@ class DocumentationAJourTest {
             case "tables" -> tablesDuSchema();
             case "ecrans" ->
                 (int) fichiersDe(Path.of("docs", "ecrans"), nom -> nom.endsWith(".md") && !"index.md".equals(nom));
+            case "clips-sans-plancher" -> clipsSansPlancher().size();
+            case "clips-ordinaires-a-plancher" -> casAPlancher(false).size();
+            case "clips-de-la-plateforme-de-test-a-plancher" ->
+                casAPlancher(true).size();
             case String catalogue
             when CATALOGUES_CRITERES.containsKey(catalogue) -> criteresDuCatalogue(CATALOGUES_CRITERES.get(catalogue));
             case String seuil
@@ -1101,6 +1111,163 @@ class DocumentationAJourTest {
                 .matcher(lire(Path.of("REMERCIEMENTS.md")))
                 .results()
                 .count();
+    }
+
+    // #5953 - Les comptes de la comparaison de deux tournages, dérivés de l'outil et de son fichier.
+
+    /// L'outil de comparaison : sa table `SANS_PLANCHER` nomme les clips auxquels on refuse un plancher.
+    private static final Path OUTIL_DE_COMPARAISON = Path.of(".github", "assets", "compare_tournages.py");
+
+    /// Le fichier de planchers : une ligne par cas qui en a un, son nom en première colonne.
+    private static final Path PLANCHERS_DES_TOURNAGES = Path.of(".github", "assets", "planchers-tournages.tsv");
+
+    /// La page qui cite ces comptes, et qui porte le tableau des clips nommés.
+    private static final Path PAGE_DE_LA_COMPARAISON = Path.of("dev-docs", "recette", "comparer-deux-tournages.md");
+
+    /// Le titre de la section qui porte ce tableau. Elle s'arrête au titre suivant.
+    private static final String SECTION_SANS_PLANCHER = "### Les clips auxquels on refuse un plancher";
+
+    /// Le corps de la table, de son accolade ouvrante à sa fermante. Une table vidée de ses
+    /// entrées s'écrit `{}` sur une ligne, et se lit comme zéro clip : c'est l'état visé.
+    private static final Pattern TABLE_SANS_PLANCHER =
+            Pattern.compile("^SANS_PLANCHER(?:: [^=\\n]+)? = \\{(.*?)\\}$", Pattern.MULTILINE | Pattern.DOTALL);
+
+    /// Une entrée de la table : le cas, puis l'issue qui le porte.
+    private static final Pattern ENTREE_SANS_PLANCHER = Pattern.compile("\\s*\"(\\w+\\.\\w+)\": \"(#\\d+)\",");
+
+    /// Une ligne du tableau de la page : le cas entre accents graves, une mesure datée, l'issue.
+    private static final Pattern LIGNE_SANS_PLANCHER =
+            Pattern.compile("^\\| `(\\w+\\.\\w+)` \\|[^|\\n]*\\| (#\\d+) \\|$", Pattern.MULTILINE);
+
+    /// Les clips sans plancher tels que l'outil les nomme, chacun avec son issue.
+    ///
+    /// La table se lit entrée par entrée, et une ligne qu'on ne reconnaît pas fait échouer. Un
+    /// lecteur qui sauterait ce qu'il ne comprend pas rendrait un compte trop bas sans rien dire,
+    /// et la page le recopierait.
+    private static Map<String, String> clipsSansPlancher() {
+        Matcher table = TABLE_SANS_PLANCHER.matcher(lire(OUTIL_DE_COMPARAISON));
+        if (!table.find()) {
+            throw new AssertionError(OUTIL_DE_COMPARAISON + " ne porte plus de table SANS_PLANCHER : ce test ne sait"
+                    + " plus d'où dériver le compte des clips sans plancher.");
+        }
+        Map<String, String> clips = new TreeMap<>();
+        for (String ligne : table.group(1).split("\n")) {
+            if (ligne.isBlank() || ligne.strip().startsWith("#")) {
+                continue;
+            }
+            Matcher entree = ENTREE_SANS_PLANCHER.matcher(ligne);
+            if (!entree.matches()) {
+                throw new AssertionError(OUTIL_DE_COMPARAISON + " : entrée de SANS_PLANCHER non reconnue, « "
+                        + ligne.strip() + " »." + " Attendu : un cas entre guillemets, puis son issue.");
+            }
+            clips.put(entree.group(1), entree.group(2));
+        }
+        return clips;
+    }
+
+    /// Les cas qui ont un plancher, d'une seule des deux populations que le fichier mêle.
+    ///
+    /// Le fichier porte les clips ordinaires ET ceux de la plateforme de test, et un compte qui ne
+    /// dit pas lequel des deux il prend a déjà mis un faux sur la page (#5963).
+    private static List<String> casAPlancher(boolean deLaPlateformeDeTest) {
+        return lire(PLANCHERS_DES_TOURNAGES)
+                .lines()
+                .filter(ligne -> !ligne.isBlank() && !ligne.startsWith("#"))
+                .map(ligne -> ligne.split("\t", 2)[0])
+                .filter(cas -> estDeLaPlateformeDeTest(cas) == deLaPlateformeDeTest)
+                .toList();
+    }
+
+    /// Dit si un cas est filmé sur la plateforme de test : sa méthode, ou sa classe, en porte le tag.
+    ///
+    /// L'appartenance se lit comme le moteur de test la lit, et non sur un nom. Deux raisons, toutes
+    /// deux déjà dans le dépôt. Le tag se pose tantôt sur la classe, tantôt sur la seule méthode : une
+    /// même classe `ScenarioConnecte...` porte un cas de cette plateforme et un cas qui ne l'est pas.
+    /// Et une classe le porte sans ce préfixe : une règle de nommage la compterait parmi les clips
+    /// ordinaires le jour où elle aura sa ligne.
+    private static boolean estDeLaPlateformeDeTest(String cas) {
+        int point = cas.indexOf('.');
+        Class<?> classe = classeDeTest(cas.substring(0, point));
+        String nom = cas.substring(point + 1);
+        List<Method> methodes = Arrays.stream(classe.getDeclaredMethods())
+                .filter(methode -> methode.getName().equals(nom))
+                .toList();
+        assertThat(methodes)
+                .as(
+                        "%s cite le cas %s : sa classe doit porter une méthode de ce nom, et une seule",
+                        PLANCHERS_DES_TOURNAGES, cas)
+                .hasSize(1);
+        return Stream.concat(
+                        AnnotationSupport.findRepeatableAnnotations(classe, Tag.class).stream(),
+                        AnnotationSupport.findRepeatableAnnotations(methodes.get(0), Tag.class).stream())
+                .anyMatch(tag -> CibleLive.PLATEFORME_DE_TEST.equals(tag.value()));
+    }
+
+    /// La classe de test qui porte ce nom simple, cherchée dans les sources et chargée sans être
+    /// initialisée. Aucune, ou plusieurs, fait échouer : une ligne du fichier dont la classe a
+    /// disparu ne se range dans aucune population.
+    private static Class<?> classeDeTest(String nomSimple) {
+        Path racine = Path.of("src", "test", "java");
+        List<Path> sources;
+        try (Stream<Path> fichiers = Files.walk(racine)) {
+            sources = fichiers.filter(f -> f.getFileName().toString().equals(nomSimple + ".java"))
+                    .toList();
+        } catch (IOException echec) {
+            throw new UncheckedIOException("parcours de " + racine, echec);
+        }
+        assertThat(sources)
+                .as(
+                        "%s cite la classe %s : elle doit exister une fois, et une seule, sous %s",
+                        PLANCHERS_DES_TOURNAGES, nomSimple, racine)
+                .hasSize(1);
+        List<String> segments = new ArrayList<>();
+        racine.relativize(sources.get(0)).forEach(segment -> segments.add(segment.toString()));
+        String qualifie = String.join(".", segments).replaceFirst("\\.java$", "");
+        try {
+            return Class.forName(qualifie, false, DocumentationAJourTest.class.getClassLoader());
+        } catch (ClassNotFoundException echec) {
+            throw new AssertionError("la classe " + qualifie + " ne se charge pas", echec);
+        }
+    }
+
+    @Test
+    @DisplayName("#5953 : le tableau des clips sans plancher est celui de l'outil, dans les deux sens")
+    void le_tableau_des_clips_sans_plancher_est_celui_de_l_outil() {
+        String page = lire(PAGE_DE_LA_COMPARAISON);
+        int debut = page.indexOf(SECTION_SANS_PLANCHER);
+        assertThat(debut)
+                .as("%s ne porte plus la section « %s »", PAGE_DE_LA_COMPARAISON, SECTION_SANS_PLANCHER)
+                .isNotNegative();
+        int suivante = page.indexOf("\n#", debut + SECTION_SANS_PLANCHER.length());
+        String section = page.substring(debut, suivante < 0 ? page.length() : suivante);
+
+        Map<String, String> dansLaPage = new TreeMap<>();
+        Matcher ligne = LIGNE_SANS_PLANCHER.matcher(section);
+        while (ligne.find()) {
+            dansLaPage.put(ligne.group(1), ligne.group(2));
+        }
+        Map<String, String> dansLOutil = clipsSansPlancher();
+
+        SoftAssertions verifs = new SoftAssertions();
+        verifs.assertThat(dansLaPage.keySet())
+                .as(
+                        "%s nomme des clips sans plancher que SANS_PLANCHER ne porte plus : leur ligne se retire du"
+                                + " tableau, ils ont reçu leur remède",
+                        PAGE_DE_LA_COMPARAISON)
+                .isSubsetOf(dansLOutil.keySet());
+        verifs.assertThat(dansLOutil.keySet())
+                .as(
+                        "SANS_PLANCHER porte des clips que le tableau de %s ne nomme pas : une ligne leur manque",
+                        PAGE_DE_LA_COMPARAISON)
+                .isSubsetOf(dansLaPage.keySet());
+        dansLaPage.forEach((cas, issue) -> {
+            if (dansLOutil.containsKey(cas)) {
+                verifs.assertThat(issue)
+                        .as("%s : l'issue de %s n'est pas celle que l'outil annonce", PAGE_DE_LA_COMPARAISON, cas)
+                        .isEqualTo(dansLOutil.get(cas));
+            }
+        });
+        verifs.assertAll();
     }
 
     /// Les tables du schéma **courant**, obtenues en appliquant les migrations puis en interrogeant

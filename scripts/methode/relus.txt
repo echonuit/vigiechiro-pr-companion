@@ -1748,7 +1748,7 @@ db45175c906f  src/test/java/fr/univ_amu/iut/diagnostic/view/ScenarioDiagnosticSa
 f3d67902b4ad  src/test/java/fr/univ_amu/iut/diagnostic/view/ScenarioReveilParBoutonTest.java
 756472eb3bdd  src/test/java/fr/univ_amu/iut/diagnostic/viewmodel/DiagnosticViewModelTest.java
 9c8a02123e93  src/test/java/fr/univ_amu/iut/documentation/DecisionsRespecteesTest.java
-d0b17ea73097  src/test/java/fr/univ_amu/iut/documentation/DocumentationAJourTest.java
+a83ba387277a  src/test/java/fr/univ_amu/iut/documentation/DocumentationAJourTest.java
 e55e224b4323  src/test/java/fr/univ_amu/iut/documentation/NomDeLApplicationTest.java
 9e14ebf40997  src/test/java/fr/univ_amu/iut/e2e/AttenteAvantClic.java
 e93a95bddc5b  src/test/java/fr/univ_amu/iut/e2e/AttenteAvantClicTest.java
