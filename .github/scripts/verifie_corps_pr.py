@@ -38,15 +38,21 @@ Usage : python3 .github/scripts/verifie_corps_pr.py "<corps>"   (sortie 0 si con
 
 from __future__ import annotations
 
+import pathlib
 import re
 import sys
 import unicodedata
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+
+from verifie_titre_pr import ELISION
 
 # Construits, jamais ecrits : sans cela le garde des cadratins compterait la prose de son propre
 # garde, et celui des fichiers compterait l apostrophe courbe comme un emploi.
 CADRATIN = chr(0x2014)
 COURBE = chr(0x2019)
 OUVRANT, FERMANT = chr(0x00AB), chr(0x00BB)
+INSECABLE = chr(0x00A0)
 
 # La prose seule. Un corps de PR colle des sorties de commande, des extraits de code et des motifs
 # d expression reguliere : les lire comme de la prose ferait rougir le garde sur un corps juste.
@@ -58,30 +64,11 @@ CITE = re.compile(
         ]
     )
 )
-# L elision sans apostrophe, MEME regle que le garde du titre, et meme retrecissement (#4483) : une
-# lettre isolee precedee d un NOMBRE est un symbole d unite, et une MAJUSCULE isolee au fil d une
-# phrase est un symbole, jamais une elision. Le detail de la mesure est dans `verifie_titre_pr.py`,
-# qui porte la regle mere.
-BORNE = r"[^\w'" + COURBE + r"]"
-
-# Ce qui SUIT decide, et non ce qui precede (#4786). Une elision est suivie d un MOT francais, qui
-# peut porter trait d union et apostrophe. Un symbole est suivi de ce qu il etiquette : un chemin, un
-# compte entre parentheses, un identifiant.
-MOT = r"[^\W\d_](?:[^\W\d_]|['" + COURBE + r"-])*"
-
-# Une decoration Markdown peut s ouvrir entre la lettre et le mot. Ce qui separe les deux cas est de
-# savoir si la lettre isolee est DEDANS la decoration - un symbole etiquete - ou DEHORS, le mot seul
-# etant decore, qui est une elision.
-OUVRE = r"(?:\*\*|\*|__|_|«\s*|\[)?"
-
-# La fin du mot admet la decoration FERMANTE, sans quoi « L **amendement** » se couperait sur
-# l etoile et la detection retomberait.
-FIN_MOT = r"(\s|[*_)\]»,.;:!?]|$)"
-
-ELISION_MIN = re.compile(
-    r"(^" + BORNE + r"?|[^\d]" + BORNE + r")([ldnscjmt]|qu) +" + OUVRE + MOT + FIN_MOT
-)
-ELISION_MAJ = re.compile(r"(^" + BORNE + r"?|[^\w]\s)([LDNSCJMT]|Qu) +" + OUVRE + MOT + FIN_MOT)
+# L elision sans apostrophe n a PAS de motif ici : `ELISION` vient de `verifie_titre_pr.py`, qui
+# porte la regle et la mesure dont elle sort (#4837). Ce fichier en tenait une copie, et les deux
+# ont diverge deux fois sans bruit, chacun gardant son auto-test vert : #4786 a corrige celle-ci
+# seule, puis l espace insecable a ete vue ici et pas la-bas. Un temoin a espace insecable plus bas
+# prouve que le motif lu est bien celui du titre : le casser LA-BAS fait rougir cet auto-test.
 
 
 def sans_accents(texte: str) -> str:
@@ -145,7 +132,7 @@ def juger(corps: str) -> int:
             fautes.append((numero, "tiret cadratin", ligne.strip()))
         if COURBE in prose:
             fautes.append((numero, "apostrophe courbe", ligne.strip()))
-        if ELISION_MIN.search(prose) or ELISION_MAJ.search(prose):
+        if ELISION.search(prose):
             fautes.append((numero, "élision sans apostrophe", ligne.strip()))
         if FERMETURE_FR.search(sans_accents(prose)):
             fautes.append((numero, "fermeture en français", ligne.strip()))
@@ -265,13 +252,20 @@ CAS = (
     (1, "un truc l **ADR** dit", "la même règle vaut pour les minuscules"),
     (0, "| **C** Conformité | à établir |", "un symbole DANS le gras ne déclenche pas"),
     (0, "- **N** saute à la prochaine observation.", "une touche en gras ne déclenche pas"),
+    # #4837. Le temoin du PARTAGE : la classe d espaces remise en ASCII dans le garde du titre le
+    # fait rougir ICI, et c est la seule preuve que ce garde lit le motif de l autre.
+    (
+        1,
+        f"Le garde tient, l amendement{INSECABLE}: il le dit.",
+        "une élision devant une espace insécable est refusée",
+    ),
     # Epingle une DECISION, pas un comportement : un corps vide PASSE.
     (0, "", "un corps vide passe, faute de décision qui l'interdise"),
 )
 
 
 def _auto_test() -> int:
-    """Les trente-sept corps CONNUS, chacun avec son code attendu."""
+    """Les corps CONNUS, chacun avec son code attendu ; la derniere ligne les recompte."""
     import contextlib
     import io
 

@@ -34,7 +34,7 @@ formes ci-dessus.
 
 Ce qui SUIT decide, et non ce qui precede (#4786, harmonise en #4803) : une elision est suivie d un
 MOT francais, un symbole de ce qu il etiquette - un chemin, un compte entre parentheses. Le garde du
-CORPS porte la meme regle, et cette page en est la source.
+CORPS IMPORTE ce motif : la regle ne vit qu ici, et la corriger ici la corrige des deux cotes (#4837).
 
 ## La locale, epinglee ici parce qu elle a menti
 
@@ -56,6 +56,9 @@ import sys
 # propre garde, et celui des fichiers compterait l apostrophe courbe comme un emploi (#4377).
 CADRATIN = chr(0x2014)
 COURBE = chr(0x2019)
+# L espace insecable se construit aussi : aucun fichier Python du depot n en porte de litteral, et
+# un caractere invisible dans un temoin ne se relit pas.
+INSECABLE = chr(0x00A0)
 
 # Types reellement pratiques dans le depot. `feat` -> mineure, `fix`/`perf` -> patch ; les autres ne
 # declenchent pas de version (cf. CONTRIBUTING.md §3).
@@ -64,16 +67,22 @@ MOTIF = re.compile(
 )
 ESPACE_AVANT = re.compile(r"^[a-z]+(\([a-z0-9._-]+\))? +:")
 
-# Les classes POSIX de la version bash, ecrites ici sans ambiguite de locale.
+# Le motif de l elision ne s ecrit QU ICI (#4837) : `verifie_corps_pr.py` importe `ELISION` et n en
+# porte plus de copie. Les deux ecritures avaient diverge deux fois sans qu un auto-test rougisse.
+#
+# Les classes sont UNICODE, et c est ce qui avait diverge : `\s` voit l espace insecable que la
+# typographie francaise met devant un deux-points ou dans des guillemets, `\d` voit un chiffre qui
+# n est pas ASCII. Ecrites en ASCII, elles laissaient passer « l amendement », suivi d une
+# insecable, que le garde du corps refusait.
 _ALPHA = r"[^\W\d_]"
-_ESPACE = r"[ \t\n\r\f\v]"
+_ESPACE = r"\s"
 _MOT = rf"{_ALPHA}({_ALPHA}|['" + COURBE + r"-])*"
 _OUVRE = r"(\*\*|\*|__|_|«" + _ESPACE + r"*|\[)?"
 _FIN_MOT = rf"({_ESPACE}|[*_)]|]|»|,|\.|;|:|!|\?|$)"
 _ELISION_MIN = (
     r"(^[^\w'"
     + COURBE
-    + r"]?|[^0-9][^\w'"
+    + r"]?|[^\d][^\w'"
     + COURBE
     + r"])([ldnscjmt]|qu) +"
     + _OUVRE
@@ -234,13 +243,27 @@ CAS = (
     ),
     (1, "fix(garde): L **amendement** le dit", "une élision devant un mot en gras est refusée"),
     (1, "fix(garde): L auto-test le prouve", "une élision suivie d'un mot composé reste refusée"),
+    # #4837. La typographie francaise met une espace INSECABLE devant le deux-points : une classe
+    # d espaces ecrite en ASCII coupait le mot sur elle et laissait passer l elision.
+    (
+        1,
+        f"fix(garde): l amendement{INSECABLE}: il le dit",
+        "une élision devant une espace insécable est refusée",
+    ),
+    # L autre classe qui avait diverge : un chiffre qui n est pas ASCII reste un NOMBRE, et la lettre
+    # qui le suit un symbole d unite. Le chiffre se construit, pour rester lisible dans ce fichier.
+    (
+        0,
+        f"fix(ci): le job a dure {chr(0x0665)} s la ou il en prenait 9",
+        "un symbole d'unité après un chiffre non ASCII ne déclenche pas",
+    ),
     # Le SCOPE est en ASCII, et ce cas le tient contre la locale (#4456).
     (1, "feat(méthode): sujet", "un scope hors ASCII est refuse, quelle que soit la locale"),
 )
 
 
 def _auto_test() -> int:
-    """Les vingt-deux titres CONNUS, chacun avec son code attendu."""
+    """Les titres CONNUS, chacun avec son code attendu ; la derniere ligne les recompte."""
     import contextlib
     import io
 
