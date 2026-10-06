@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextInputControl;
 import org.testfx.api.FxRobot;
@@ -45,6 +46,9 @@ public final class GesteVisible {
 
     /// De quoi laisser passer une mise en page, jamais de quoi masquer un blocage.
     private static final long SELECTION_MS = 5_000;
+
+    /// L'écart qu'une position **posée** tolère : en deçà, deux images sont la même au pixel.
+    private static final double DEMI_PIXEL = 0.5;
 
     private GesteVisible() {}
 
@@ -107,6 +111,93 @@ public final class GesteVisible {
         return tenu.get();
     }
 
+    /// Amène `selecteur` à la place que sa page lui donne, et **vérifie qu'il y est** (#6069).
+    ///
+    /// Dernier geste d'un clip dont le verdict n'est pas le dernier élément de sa page : il **pose**
+    /// une position, là où [#amenerDansLeCadre] se contente d'une position acceptable. Celui-ci
+    /// s'arrête dès que la cible est dans le cadre, et cette condition est vraie à plusieurs
+    /// positions. Appelé juste après qu'une section devient visible, il règle la page sur des bornes
+    /// d'**avant** la mise en page qui place cette section ; la page reste où elle était, la section
+    /// est dans le cadre quand même, et le geste conclut. Deux tournages sur douze du même commit
+    /// finissaient ainsi la page en haut, à 21 % des dix autres.
+    ///
+    /// Deux choses le distinguent. Il **met en page avant de lire** les bornes, au lieu d'attendre
+    /// qu'une pulsation l'ait fait. Et sa condition d'arrêt est [#estPoseDansLeCadre] : la position,
+    /// au demi-pixel, et non la seule présence dans le cadre.
+    ///
+    /// Une cible qui ne descend d'aucun panneau de défilement est **refusée** : il n'y aurait rien à
+    /// poser, et réussir en silence ferait croire le contraire.
+    public static void poserDansLeCadre(FxRobot robot, String selecteur) {
+        AtomicBoolean defilable = new AtomicBoolean();
+        robot.interact(() ->
+                defilable.set(!panneauxDont(robot.lookup(selecteur).query()).isEmpty()));
+        if (!defilable.get()) {
+            throw new IllegalStateException("« " + selecteur + " » ne descend d'aucun panneau de défilement :"
+                    + " il n'y a aucune position à poser. Ce geste ne vaut que pour une page qui défile.");
+        }
+        // Par [Attente], comme [#allerAuBasDeLaPage] et pour la même raison (ADR 4974). La passe ouvre
+        // elle-même ses `interact`, d'où `que` et non `queSurLeFil`.
+        Attente.que(
+                () -> unePassePosee(robot, selecteur),
+                "« " + selecteur + " » posé à la place que sa page lui donne, et dans le cadre",
+                SECONDES_CADRE * 1000L);
+    }
+
+    /// La page de `selecteur` est-elle **là où le réglage la met**, la cible dans le cadre ?
+    ///
+    /// C'est ce qu'une assertion de fin demande : « la cible est dans le cadre » est vrai à plusieurs
+    /// positions de la page, et ne tient donc pas la dernière image. Le prédicat met en page avant de
+    /// lire, pour ne pas juger des bornes périmées, et répond faux quand la page a bougé depuis le
+    /// geste - un contenu qui grandit laisse la page en deçà, JavaFX gardant le décalage en pixels.
+    public static boolean estPoseDansLeCadre(FxRobot robot, String selecteur) {
+        AtomicBoolean pose = new AtomicBoolean();
+        robot.interact(() -> {
+            Node cible = robot.lookup(selecteur).query();
+            mettreEnPage(cible);
+            List<ScrollPane> panneaux = panneauxDont(cible);
+            pose.set(!panneaux.isEmpty()
+                    && panneaux.stream().allMatch(panneau -> ecartAuReglage(panneau, cible) <= DEMI_PIXEL)
+                    && estDansLeCadre(robot, selecteur));
+        });
+        return pose.get();
+    }
+
+    /// Une passe : la mise en page, le réglage de chaque panneau, puis le verdict sur la POSITION.
+    private static boolean unePassePosee(FxRobot robot, String selecteur) {
+        robot.interact(() -> {
+            Node cible = robot.lookup(selecteur).query();
+            mettreEnPage(cible);
+            for (ScrollPane panneau : panneauxDont(cible)) {
+                amener(panneau, cible);
+            }
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        return estPoseDansLeCadre(robot, selecteur);
+    }
+
+    /// Établit les bornes de tout ce que la scène doit encore mettre en page.
+    ///
+    /// Un nœud qui vient de devenir visible garde ses bornes d'avant jusqu'à la prochaine pulsation.
+    /// Les lire entre les deux, c'est régler la page pour un écran qui n'existe plus.
+    private static void mettreEnPage(Node cible) {
+        Parent racine = cible.getScene().getRoot();
+        racine.applyCss();
+        racine.layout();
+    }
+
+    /// De combien de pixels `panneau` est écarté de la place où [#amener] le mettrait maintenant.
+    private static double ecartAuReglage(ScrollPane panneau, Node cible) {
+        Node contenu = panneau.getContent();
+        if (contenu == null) {
+            return 0;
+        }
+        double course = Math.max(
+                1,
+                contenu.getBoundsInLocal().getHeight()
+                        - panneau.getViewportBounds().getHeight());
+        return Math.abs(panneau.getVvalue() - reglage(panneau, cible, contenu)) * course;
+    }
+
     /// Une passe de calcul, puis le verdict : la cible est-elle atteignable ?
     ///
     /// Le calcul se refait à chaque tour parce que ses **bornes** peuvent ne pas encore être établies -
@@ -158,11 +249,19 @@ public final class GesteVisible {
         if (contenu == null) {
             return;
         }
+        panneau.setVvalue(reglage(panneau, cible, contenu));
+    }
+
+    /// La position qui met `cible` en haut du champ de `panneau`, bornée à ce que la page permet.
+    ///
+    /// Sortie de [#amener] pour que [#estPoseDansLeCadre] relise la **même** formule : deux calculs
+    /// d'une même position finiraient par diverger, et le prédicat jugerait autre chose que le geste.
+    private static double reglage(ScrollPane panneau, Node cible, Node contenu) {
         double hauteurContenu = contenu.getBoundsInLocal().getHeight();
         double hauteurVue = panneau.getViewportBounds().getHeight();
         double y = cible.localToScene(cible.getBoundsInLocal()).getMinY();
         double yContenu = contenu.localToScene(contenu.getBoundsInLocal()).getMinY();
-        panneau.setVvalue(Math.clamp((y - yContenu) / Math.max(1, hauteurContenu - hauteurVue), 0, 1));
+        return Math.clamp((y - yContenu) / Math.max(1, hauteurContenu - hauteurVue), 0, 1);
     }
 
     /// La cible est-elle dans le cadre, **au sens de TestFX** ?

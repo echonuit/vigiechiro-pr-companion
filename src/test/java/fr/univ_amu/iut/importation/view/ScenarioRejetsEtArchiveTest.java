@@ -65,6 +65,8 @@ class ScenarioRejetsEtArchiveTest {
 
     private static final int APPARITION_SECONDES = 30;
 
+    private static final String SECTION_INSPECTION = "#sectionInspection";
+
     private static final int FIN_SECONDES = 180;
 
     private static final long PAUSE_PAR_FICHIER_MS = 900;
@@ -176,10 +178,26 @@ class ScenarioRejetsEtArchiveTest {
                 "l'inspection n'a jamais suivi la décompression : l'archive a été ouverte pour rien",
                 FIN_SECONDES * 1000L);
 
-        // Ce que l'inspection a rendu vient dans le cadre, et y reste le temps d'être lu : la page
-        // avait suivi la barre de progression deux fois sur huit, et le clip finissait alors ailleurs.
-        GesteVisible.amenerDansLeCadre(robot, "#sectionInspection");
+        // Ce que l'inspection a rendu se POSE dans le cadre, et y reste le temps d'être lu. La page
+        // arrive ici à deux endroits, selon qu'elle a suivi ou non la barre de progression, et le
+        // geste d'avant ne faisait qu'y amener la section : appelé avant la mise en page qui la fait
+        // paraître, il laissait la page en haut deux tournages sur douze, à 21 % des autres (#6069).
+        GesteVisible.poserDansLeCadre(robot, SECTION_INSPECTION);
         Respiration.leTempsDeLire(robot);
+        exigerLInspectionPosee(robot);
+    }
+
+    /// Ce que le cas promet de montrer est-il à l'image, **là où le geste l'a posé** ?
+    ///
+    /// « La section est dans le cadre » était vrai aux deux fins de ce clip, et ne tenait donc rien.
+    /// Ce qui se juge est la position de la page, relue après la tenue : un écran qui bouge encore
+    /// la déplace, et le clip finirait ailleurs en restant vert.
+    private static void exigerLInspectionPosee(FxRobot robot) {
+        assertThat(GesteVisible.estPoseDansLeCadre(robot, SECTION_INSPECTION))
+                .as("la page n'est plus à la place où l'inspection a été posée, ou la section n'est pas"
+                        + " dans le cadre : deux tournages du même commit ne finiraient pas sur la même"
+                        + " image, et la comparaison ne dirait plus rien de ce clip (#6069)")
+                .isTrue();
     }
 
     @Test
