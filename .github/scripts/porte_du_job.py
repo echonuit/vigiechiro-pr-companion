@@ -91,6 +91,16 @@ mvnw
 .github/scripts/verifie_fraicheur_actions.py
 """
     + MECANISME,
+    # ⟨#6095⟩ Meme raison que son patron ci-dessus : le job ne juge que le lundi, donc la demande
+    # qui touche le garde doit l engager. Les deux manifestes y sont aussi, parce qu une montee de
+    # version est le moment ou l on veut lire ce que le garde en dit, sans attendre lundi.
+    "fraicheur-des-outillages-npm": """
+.github/workflows/securite-dependances.yml
+.github/scripts/verifie_fraicheur_npm.py
+.github/openspec/package.json
+.github/release/package.json
+"""
+    + MECANISME,
     # `paquet` assemble et eprouve ce qu on EMBALLE. Il ne depend ni de la suite de tests ni de la
     # couverture - il construit avec `-DskipTests` - donc la documentation, les ADR et les
     # competences ne lui apprennent rien. C est le seul job dont la compétence `clore-une-pr` disait
