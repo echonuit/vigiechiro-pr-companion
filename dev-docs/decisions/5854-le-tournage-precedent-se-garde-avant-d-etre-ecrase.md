@@ -11,6 +11,7 @@ enforced_by:
 verification_note: "le garde lit l ordre des pas du job de publication par ce que leur run fait, et non par leur nom : la recopie vient avant toute écriture sur la pré-version courante, elle reprend bien les pièces de la courante, et la comparaison ne refuse pas la source précédente. Trois cassures : recopie déplacée en dernier, recopie retirée, refus étendu à la précédente"
 relations:
   complete: ["5641-les-tests-connectes-ont-deux-cibles", "4291-un-clip-tourne-contre-la-plateforme-ne-se-range-pas-avec-les-autres"]
+  amendee_par: ["5930-une-comparaison-reprend-une-execution-avec-les-refus-de-la-mesure"]
 verified:
   - by: machine:ci
     at: 2026-10-05
@@ -20,6 +21,9 @@ generated:
 ---
 
 # Le tournage précédent de la plateforme de test se garde avant d'être écrasé
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Amendée le 2026-10-06** par l'[ADR 5930](5930-une-comparaison-reprend-une-execution-avec-les-refus-de-la-mesure.md) : la comparaison lit aussi l'artefact d'une exécution, ce que cette décision écartait. Ses deux objections ont reçu leur réponse : la parité des deux reprises est tenue par un garde, et un artefact expiré se dit. Ce qui tient : le tournage précédent de la plateforme de test se recopie avant toute écriture sur la pré-version, et l'ordre reste la décision.
 
 ## Contexte
 

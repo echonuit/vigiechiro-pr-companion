@@ -11,9 +11,9 @@ Le flux `comparer-tournages.yml` (`workflow_dispatch`) prend quatre entrées :
 
 | Entrée | Ce qu'elle attend |
 |---|---|
-| `avant` | ce à quoi on compare : un tag de version (`v2.188.0`), `clips-recette`, ou `clips-plateforme-de-test-precedent` |
+| `avant` | ce à quoi on compare : un tag de version (`v2.188.0`), `clips-recette`, `clips-plateforme-de-test-precedent`, ou un numéro d'exécution de `tournage-recette.yml` |
 | `apres` | ce qu'on regarde, mêmes valeurs |
-| `banc` | `bash` ou `java`, pour choisir le préfixe sur les tags de version |
+| `banc` | `bash` ou `java`, pour choisir le préfixe sur les tags de version. Sans effet sur une exécution |
 | `tolerance` | la tolérance de couleur, en pourcentage. 5 par défaut |
 
 L'usage courant est `avant` = la dernière version, `apres` = `clips-recette`, ce qui montre **ce que le
@@ -27,6 +27,33 @@ Les clips de la **plateforme de test** se comparent d'un tournage au suivant : `
 sur cette cible recopie la pré-version sous le premier nom avant de l'écraser, et les notes des deux
 disent l'exécution et le commit qui les ont tournées : c'est là qu'on lit ce qu'on compare. Deux
 tournages du même commit mesurent du bruit ; deux commits différents, ce que le second a changé.
+
+### Comparer une branche à `main` avant fusion
+
+Une valeur purement numérique est un **numéro d'exécution** de `tournage-recette.yml`
+([ADR 5930](../decisions/5930-une-comparaison-reprend-une-execution-avec-les-refus-de-la-mesure.md)).
+On tourne `main`, on tourne la branche, et on donne les deux numéros :
+
+```bash
+gh workflow run tournage-recette.yml --ref main -f session=toutes -f plateforme=ubuntu
+gh workflow run tournage-recette.yml --ref <branche> -f session=toutes -f plateforme=ubuntu
+gh workflow run comparer-tournages.yml --ref <branche> -f avant=<exécution de main> -f apres=<exécution de la branche>
+```
+
+L'atelier se lance depuis la branche tant qu'elle n'est pas fusionnée : c'est son fichier de planchers
+qui est lu, et il peut porter une ligne que `main` n'a pas encore. Les planchers sont ceux du dépôt,
+lus avec l'instrument du flux : plus besoin de conteneur sur un poste.
+
+Le résumé nomme les deux côtés avant l'index : le numéro, le commit et la branche de chaque exécution.
+
+Une exécution n'est reprise que si elle a conclu en succès et porte un artefact de clips, et un seul.
+Ce sont les refus de `mesurer-les-planchers.yml`, moins celui du même commit : deux commits sont
+l'objet d'une comparaison. Un artefact est gardé **quatorze jours**. Passé ce délai, l'atelier le dit,
+et le geste est de relancer un tournage du commit voulu.
+
+Une paire mixte est permise, une version d'un côté et une exécution de l'autre. Deux exécutions de
+populations différentes, l'une ordinaire et l'autre de la plateforme de test, n'ont en revanche aucun
+cas commun : tout sort « apparu » ou « disparu », et rien n'est comparé (#5934).
 
 !!! note "Pourquoi rien n'est committé"
 
@@ -249,7 +276,9 @@ correctif de sécurité reporté par la distribution ne fait pas remesurer cent 
 !!! warning "Sur un poste, la comparaison avec planchers est donc refusée"
 
     C'est voulu. Pour regarder une paire chez soi, comparer **sans** fichier de planchers : les écarts
-    sortent en valeur absolue, et ne se lisent contre aucun sol.
+    sortent en valeur absolue, et ne se lisent contre aucun sol. Pour les lire contre leurs planchers,
+    donner les deux numéros d'exécution à `comparer-tournages.yml` : c'est la section « Comparer une
+    branche à `main` avant fusion », plus haut.
 
 ### Le mesurer : l'atelier `mesurer-les-planchers.yml`
 
