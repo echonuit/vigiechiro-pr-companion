@@ -8,6 +8,8 @@ decided_at: 2026-08-18
 verification: certaine
 enforced_by:
   - "StatutPassageTest#json_passage_complet"
+  - "StatutPassageTest#le_json_garde_les_heures_de_la_base"
+  - "ServiceRechercheGlobaleTest#une_nuit_se_cherche_par_la_date_qu_on_lit"
 verified:
   - by: machine:ci
     at: 2026-08-18
@@ -50,6 +52,21 @@ verts, et le premier à s'en apercevoir aurait été l'utilisateur d'un script.
 
 Les deux clés sont désormais assertées. C'est la moitié la plus importante de cette ADR : une décision
 de ne **pas** changer quelque chose n'est tenue que si un test rougit quand on la défait.
+
+## Ce que #5996 y ajoute : les heures, et ce qui se cherche
+
+**La règle vaut pour les heures d'une nuit.** `statut-passage` les recopiait de la base, « 21:30:07 → 05:45:52 »,
+quand la fiche du passage les dit sans secondes. Sa sortie texte passe par `Horodatage.heureCourte` ; son
+`--json` garde la valeur de la base, et un test le tient sur une nuit aux secondes non nulles.
+
+**Les heures réalignées gardent leurs secondes, en texte comme à l'écran.** `metadonnees-passage` et le compte
+rendu d'envoi disent les heures d'une nuit avant et après leur réalignement sur les enregistrements. Ce
+réalignement peut se jouer à la seconde : raccourcies, « 21:30:00 → 21:30:07 » se liraient « 21:30 → 21:30 »,
+et la correction ne se verrait plus. Qui voudrait « finir le travail » y perdrait ce que la phrase sert à dire.
+
+**Ce qui s'affiche se cherche.** La recherche globale dit la date d'une nuit en français, et la trouve par cette
+forme comme par la forme ISO. Franciser l'affichage seul aurait fait taper à l'utilisateur ce qu'il lit sans
+rien trouver ; retirer l'ISO aurait cassé une requête que des habitués tapent.
 
 ## Ce qui reste délibérément hors de cette décision
 
