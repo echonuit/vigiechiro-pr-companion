@@ -51,8 +51,10 @@ mafeature/
 - Une **entité** en `record` (immuable), p. ex. `record Truc(Long id, String nom)`.
 - Un **DAO** en `PreparedStatement` héritant du patron des autres `*/model/dao/` (pas d'ORM).
 - Un **service** qui orchestre les DAO et porte la logique métier.
-- Si le schéma change : ajoutez une **migration** `src/main/resources/db/migration/V0x__ma_table.sql`
-  (numéro suivant). Elle s'applique automatiquement au démarrage.
+- Si le schéma change : ajoutez une **migration** `src/main/resources/db/migration/Vnn__ma_table.sql`
+  (numéro suivant) **et** son nom dans `MigrationSchema.MIGRATIONS`, sans quoi elle ne s'applique pas.
+  Ce qu'elle oblige ailleurs est dit dans l'encadré
+  [« Ajouter une migration »](persistance.md#les-migrations-de-schema).
 
 !!! warning "Frontière"
     Rien ici n'importe JavaFX : le test `model_sans_javafx` y veille.
