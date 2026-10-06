@@ -31,9 +31,9 @@ ne bougeait pas le compte d un cran : le travail ne se voyait pas, et le cliquet
 du contrat pour passer sous le seuil plutot qu a retirer du recit.
 
 **Ce que ce cliquet ne compte pas.** Les blocs de `//` dans un corps de methode, qui sont une autre
-population. La ligne d origine leur donne un garde dedie ; ce depot ne l a pas encore (#4462), et
-c est une CECITE, pas une exemption : rien ici ne remarque un recit qui descend de la javadoc vers
-le corps de la methode.
+population. Ils ont leur garde dedie, `4472-commentaire-en-corps.py`, comme dans la ligne d origine.
+Pour CE cliquet c est une CECITE, pas une exemption : rien ici ne remarque un recit qui descend de
+la javadoc vers le corps de la methode, et c est l autre qui le compte.
 
 **Les TESTS sont dans la meme population**, et ce n a pas toujours ete le cas. Le corpus s est
 d abord borne a la production, au motif qu un garde DOIT declarer ce qu il verifie (article A2) et
@@ -77,9 +77,6 @@ RACINES = RACINES_ANCREES
 # Au-dela, chaque ligne de prose compte une. Chaque seuil est pose au-dessus du 9e decile de sa
 # nature, mesure sur le depot : il laisse passer le regime normal et signale ce qui en sort.
 SEUILS = {"type": 15, "methode": 8, "champ": 8, "constante": 8, "autre": 8}
-
-# Conserve pour les appelants qui mesurent une longueur sans connaitre la nature du bloc.
-SEUIL = 8
 
 # Ce qu un bloc surmonte, lu sur la premiere ligne de code qui le suit, annotations sautees.
 TYPE = re.compile(r"\b(class|interface|enum|record)\s+\w")
@@ -461,7 +458,10 @@ if __name__ == "__main__":
     if "--releve" in sys.argv:
         for s in listes[:30]:
             print(f"  {s}")
-        print(f"\n{len(listes)} lignes de prose au-delà de {SEUIL} par bloc")
+        # Les seuils sont LUS de `SEUILS` : ce libelle annoncait « au-delà de 8 par bloc », le
+        # seuil plat, pour un compte fait par nature (#6029).
+        par_nature = ", ".join(f"{seuil} pour {quoi}" for quoi, seuil in SEUILS.items())
+        print(f"\n{len(listes)} lignes de prose au-delà du seuil de leur bloc : {par_nature}")
         sys.exit(0)
     sys.exit(
         rapporte(
