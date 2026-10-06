@@ -44,7 +44,9 @@ issues sur le même sujet, écrites depuis deux angles, ne se ressemblent pas.
 3. VERIFIER  ce qui est deja pris, par TROIS signaux qui ne repondent pas a la meme
              question. Aucun ne suffit, et les confondre fait prendre une issue tenue :
              - `gh issue list --assignee "*"` : dit qu une issue est prise, JAMAIS par qui.
-             - `git worktree list` : dit qu une SESSION de ce poste la tient, et laquelle.
+             - `git worktree list` : dit qu un WORKTREE de ce poste porte sa branche. Une
+               session la tient, ou c est le reliquat d une issue livree : la demande
+               de la branche tranche.
              - demander aux pairs : le seul qui traverse les machines.
              Une revendication ANCIENNE se verifie au lieu de se croire.
 4. DECIDER   du rattachement : une issue appartient au chantier qui traite sa CAUSE,
@@ -116,7 +118,7 @@ sans sortir de la machine.
 | Signal | Répond « c'est pris » ? | Répond « par qui » ? |
 |---|---|---|
 | `gh issue list --assignee "*"` | oui | **non** |
-| `git worktree list` | oui, sur ce poste | **oui**, par le nom de branche |
+| `git worktree list` | un worktree existe sur ce poste : prise en cours ou reliquat d'une issue livrée, à vérifier | **oui**, par le nom de branche |
 | demander aux pairs | oui | oui, et **hors de ce poste** |
 
 **L'assignee ne peut pas départager deux sessions.** Toutes écrivent sous le même compte : relevé le
@@ -127,6 +129,13 @@ enregistre le compte, jamais la session.
 **Le worktree, lui, distingue - et il est sous-employé.** Relevé le même jour : **cinquante
 worktrees, dont trente-neuf portent une branche nommée par son numéro d'issue**. Le travail en cours
 d'un pair y est lisible, avec son sujet, sans rien demander à personne.
+
+**Un worktree n'est pas pour autant une prise.** Relevé le même jour sur ce poste : 29 worktrees
+numérotés sur 31 pointaient une issue close. Celui d'une issue livrée reste là tant que personne ne
+l'a retiré, et git ne dit pas si sa branche est livrée, puisque la fusion est un squash. La demande
+de la branche le dit, par `gh pr list --head <branche> --state all` : la recette et ses réserves sont
+dans [`ouvrir-une-issue`](../ouvrir-une-issue/SKILL.md), « Vérifier une annonce reçue, ou une branche
+qu'on croit prise ».
 
 ```bash
 git worktree list | grep -oE '\[[^]]+\]'     # les branches, donc les numeros d issue
@@ -150,7 +159,7 @@ l'ADR 5414 en fait une décision plutôt qu'un oubli : une règle que rien ne pe
 | « J'ai cherché, rien ne couvre ça » | Avez-vous cherché par concept, ou par mot-clé ? |
 | « Le graphe rend zéro, donc ça n'existe pas » | Zéro sur du code externe est une absence de modèle |
 | « Cette issue est libre, personne n'est assigné » | L'assignation est muette. Lire `git worktree list` |
-| « Elle est revendiquée depuis longtemps » | Vérifier : branche vivante ? PR ouverte ? |
+| « Elle est revendiquée depuis longtemps » | Vérifier par la demande de sa branche, `gh pr list --head <branche> --state all`. Après un squash, git seul la dit en avance pour toujours |
 | « L'assignee dit que c'est pris, donc je sais par qui » | Il dit le **compte**, jamais la session. Toutes écrivent sous le même |
 | « `ListAgents` me montre mes pairs, je saurai » | Il dit qui est occupé **maintenant**, pas qui détient une issue. Et il ne rend pas la même population selon l'endroit d'où on l'interroge |
 | « J'ai compté 28 occurrences » | Un comptage n'est pas une lecture |

@@ -1,6 +1,6 @@
 ---
 name: clore-un-chantier
-description: Use when a chantier or EPIC is finished and must be closed. Orchestrates the twelve closure passes in their mandatory order, states why the order is what it is, and delegates each pass to the skill that owns it.
+description: Use when a chantier or EPIC is finished and must be closed. Orchestrates the fourteen closure passes in their mandatory order, states why the order is what it is, and delegates each pass to the skill that owns it.
 license: GPL-3.0-or-later
 metadata:
   langue: fr
@@ -12,7 +12,7 @@ metadata:
 ## Loi d'airain
 
 ```
-LES DOUZE PASSES S'EXÉCUTENT DANS L'ORDRE, ET LAISSENT LEUR TRACE
+LES QUATORZE PASSES S'EXÉCUTENT DANS L'ORDRE, ET LAISSENT LEUR TRACE
 ```
 
 L'ordre n'est pas un rangement, c'est une chaîne de dépendances. Le rompre fait rater ce que la
