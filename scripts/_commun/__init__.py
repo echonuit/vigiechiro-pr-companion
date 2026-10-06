@@ -386,7 +386,11 @@ def lignes_du_refus(sortie: str, suspects_montres: int = 2) -> str | None:
 # plus d'un site, aux sémantiques différentes : un champ déclaré serait vrai le jour où on l'écrit et
 # faux au second site. Ces deux propriétés se DÉRIVENT des workflows, elles ne se déclarent pas.
 # Le plafond de `gh issue list --state all`. Au-dela, il tronque SANS le dire (#4834), et une loupe
-# qui conclurait sur une collecte tronquee mentirait en silence - d ou un refus plutot qu un verdict.
+# qui conclurait sur une collecte tronquee sans le dire mentirait en silence.
+#
+# La constante est partagee, la CONDUITE au plafond ne l est pas : elle appartient a chaque loupe,
+# qui la declare dans sa docstring. `loupe-4992` refuse en 2, `loupe-5539` avertit et conclut en 0
+# (#5567).
 #
 # **Il est ici parce qu il etait ailleurs DEUX fois.** `loupe-4992` et `loupe-5539` lisent exactement
 # la meme population et portaient deux constantes : 1600 et 4000. Relever l une sans l autre a suffi
@@ -399,7 +403,8 @@ def lignes_du_refus(sortie: str, suspects_montres: int = 2) -> str | None:
 PLAFOND_ISSUES = 4000
 
 # Le plafond de RENDU : au-dela, une liste cesse d etre une reponse et devient un mur. A ne pas
-# confondre avec `PLAFOND_ISSUES` au-dessus, qui est un seuil de REFUS sur une collecte tronquee -
+# confondre avec `PLAFOND_ISSUES` au-dessus, qui est un seuil de COLLECTE, celui ou elle peut etre
+# tronquee -
 # l un protege le LECTEUR, l autre protege le VERDICT.
 #
 # **Il est ici parce qu il etait ailleurs DEUX fois**, et c est la lecon de #5568 appliquee a la

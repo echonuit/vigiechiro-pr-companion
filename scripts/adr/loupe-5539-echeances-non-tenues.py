@@ -37,6 +37,27 @@ différence entre reconnaître ce qu'une ligne FAIT et reconnaître à quoi elle
 
 Une LOUPE. Elle rend 0 en signalant. Une échéance dépassée peut être un choix, et un garde qui la
 refuserait obligerait à retirer la date pour livrer : il supprimerait le signal au lieu de le lire.
+
+## Au plafond, elle avertit et conclut
+
+Quand la collecte atteint `_commun.PLAFOND_ISSUES`, la forge en porte peut-être davantage. Cette
+loupe écrit alors une ligne `AVERTISSEMENT` sur sa sortie, puis rend son relevé et sort en 0.
+
+La raison tient à ce qu'elle rend : chaque candidat se lit sur une issue, seule. Une collecte
+tronquée lui en fait **manquer**, elle ne lui en fait inventer aucun, et ceux qu'elle nomme restent
+vrais. Son relevé est alors un minorant, et l'avertissement le dit.
+
+`loupe-4992`, qui partage ce plafond et lit la même population, y **refuse** en 2, comme
+`loupe-4712` au sien (#5348) : elle publie un compte, « N sur M lots », qu'une troncature fausserait.
+Les deux conduites ne sont pas alignées, et #5567 a laissé la question à qui arbitre.
+
+Deux limites, pour que la déclaration ne promette pas plus que le code :
+
+- le rapport du lundi ne retient d'une loupe que sa ligne de verdict. L'avertissement n'y arrive
+  pas, et `lus` égal au plafond y est le seul signe. Ce même lundi, `loupe-4992` aura refusé, et
+  c'est son refus qui s'y verra ;
+- « rend 0 » ne vaut que pour une collecte **partielle**. Sans `gh`, la collecte est absente, et
+  cette loupe sort en 2 comme les autres.
 """
 
 import datetime
@@ -44,6 +65,7 @@ import json
 import os
 import pathlib
 import re
+import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
@@ -53,7 +75,8 @@ from _commun.forge import interroge
 
 # Le plafond de `gh issue list`. Au-dela, il tronque SANS le dire (#4834). Mesure du 2026-09-25 :
 # le depot porte 1856 issues, et un plafond a 1600 en taisait 256. La marge est volontaire, et la
-# troncature se DIT plutot que de se deviner.
+# troncature se DIT plutot que de se deviner. Au plafond cette loupe AVERTIT sans refuser, la ou
+# `loupe-4992` refuse : la conduite et sa raison sont dans la docstring du module (#5567).
 PLAFOND = PLAFOND_ISSUES
 
 # Un ENGAGEMENT est un verbe colle a une date. La liste vient des formes reellement ecrites dans le
@@ -301,6 +324,46 @@ def _auto_test() -> int:
     else:
         print("  ✔ la couture d injection remplace la forge")
 
+    # ⟨le plafond⟩ La conduite declaree en tete de module : au plafond, elle AVERTIT et CONCLUT en 0.
+    # La branche vit dans `main()`, que rien ci-dessus ne traverse, et `main()` rappelle l auto-test
+    # tant que `--auto-test` est dans `sys.argv` : le script est donc lance NU, dans un processus
+    # neuf, ce qui eprouve aussi son vrai code de sortie. Les bornes se derivent de `PLAFOND`, pour
+    # que la constante partagee soit bien celle qui est lue (#5567).
+    for nombre in (PLAFOND - 1, PLAFOND, PLAFOND + 1):
+        ordinaires = [
+            {"number": i, "title": "ordinaire", "body": "", "state": "OPEN"}
+            for i in range(1, nombre + 1)
+        ]
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f:
+            json.dump(ordinaires, f)
+            chemin = f.name
+        try:
+            nu = subprocess.run(
+                [sys.executable, __file__],
+                capture_output=True,
+                text=True,
+                check=False,
+                env={**os.environ, "ECHEANCES_RELEVE_FICHIER": chemin},
+            )
+        finally:
+            pathlib.Path(chemin).unlink(missing_ok=True)
+        joues += 1
+        if nu.returncode != 0:
+            echecs += 1
+            print(f"  ✘ {nombre} issues lues : code {nu.returncode}, elle doit conclure en 0")
+        else:
+            print(f"  ✔ {nombre} issues lues, elle conclut en 0")
+        averti = "AVERTISSEMENT" in nu.stdout
+        attendu = nombre >= PLAFOND
+        joues += 1
+        if averti is not attendu:
+            echecs += 1
+            print(f"  ✘ {nombre} issues lues : avertissement {averti}, attendu {attendu}")
+        elif attendu:
+            print(f"  ✔ {nombre} issues lues, soit le plafond de {PLAFOND} : elle avertit")
+        else:
+            print(f"  ✔ {nombre} issues lues, sous le plafond de {PLAFOND} : elle n avertit pas")
+
     if echecs:
         print(f"\n{echecs} cas en échec.", file=sys.stderr)
         return 1
@@ -323,7 +386,10 @@ def _auto_test() -> int:
         if injecte is not None:
             os.environ["ECHEANCES_RELEVE_FICHIER"] = injecte
 
-    print(f"\n{joues} cas joue(s) : les deux moitiés, leurs contraires, et la règle d'exclusion.")
+    print(
+        f"\n{joues} cas joue(s) : les deux moitiés, leurs contraires, la règle d'exclusion,"
+        " et la conduite au plafond."
+    )
     return 0
 
 
@@ -334,7 +400,7 @@ def main() -> int:
     if len(issues) >= PLAFOND:
         print(
             f"AVERTISSEMENT : {len(issues)} issues lues, soit le plafond. La forge en porte"
-            " peut-etre davantage, et cette loupe ne conclut pas sur ce qu elle n a pas lu."
+            " peut-etre davantage : ce releve ne vaut que pour ce qui a ete lu."
         )
     # ⟨le fuseau de la SOURCE⟩ `closedAt` vient de la forge en UTC. Comparer a un « aujourd hui »
     # local decalerait d un jour les deux bords, et « echue depuis 0 j » se lirait comme un
