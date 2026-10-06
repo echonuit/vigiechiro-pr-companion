@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.model.VerdictFichier;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.BoutonsDeDialogue;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
@@ -21,6 +22,7 @@ import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CarteDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.recette.DialoguesALImage;
 import fr.univ_amu.iut.recette.ExecuteurTacheRalenti;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
@@ -33,11 +35,14 @@ import fr.univ_amu.iut.sites.view.NavigationSites;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
+import javafx.geometry.Bounds;
+import javafx.scene.control.Labeled;
+import javafx.scene.control.TableView;
 import javafx.stage.Stage;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -69,11 +74,25 @@ class ScenarioEmportExpediteurTest {
 
     private static final long PAUSE_PAR_FICHIER_MS = 900;
 
+    /// Ce que l'annonce du volume, le compte rendu de l'emport et la question du second avis disent,
+    /// et que les cas attendent de lire à l'image.
+    private static final String ANNONCE_DU_VOLUME = "Emporter cette nuit ?";
+
+    private static final String COMPTE_RENDU_DE_L_EMPORT = "Nuit emportée";
+
+    private static final String QUESTION_DU_SECOND_AVIS = "seraient définitivement remplacés";
+
+    /// La marge que l'ascenseur vertical de la table prend sur son bord droit, quand il paraît.
+    private static final double LARGEUR_DE_L_ASCENSEUR = 18;
+
     private Path carteSd;
 
     private Path dossierDEmport;
 
     private Injector injecteur;
+
+    /// La question et le compte rendu de la production, à l'image, auxquels le cas répond par un clic.
+    private DialoguesALImage dialogues;
 
     /// JUnit crée ce répertoire et le **supprime** en fin de test, là où
     /// `createTempDirectory` n'enlevait rien (#4876).
@@ -84,6 +103,7 @@ class ScenarioEmportExpediteurTest {
     void start(Stage stage) throws IOException {
         carteSd = CarteDeRecette.materialiser(FIXTURE);
         dossierDEmport = dossierTemporaire;
+        dialogues = new DialoguesALImage(() -> stage);
 
         injecteur = BancDeRecette.surLeChrome()
                 .taille(1180, 900)
@@ -104,6 +124,11 @@ class ScenarioEmportExpediteurTest {
         service.ajouterPoint(carre.id(), "A1", 43.42, 5.11, "Près du grand chêne");
     }
 
+    @AfterEach
+    void fermerLesDialogues() {
+        dialogues.toutFermer();
+    }
+
     @Test
     @CasDeRecette(
             value = {"S3-45", "S3-46", "S3-47"},
@@ -112,49 +137,58 @@ class ScenarioEmportExpediteurTest {
     void emporter_une_nuit_et_ses_deux_refus(FxRobot robot) throws TimeoutException {
         ouvrirLaVerification(robot);
         Path destination = dossierDEmport.resolve("nuit.zip");
+        QualificationController controleur = controleurDeLEcran();
+        controleur.confirmateur().definir(dialogues.question());
+        controleur.notificateur().definir(dialogues.compteRendu());
 
         // S3-46 d'abord : annuler la désignation. Le geste doit s'arrêter AVANT de peser, donc avant
         // que la moindre question soit posée - c'est ce que le clip doit montrer, et l'ordre compte :
         // le filmer en dernier laisserait un paquet déjà écrit sur le disque.
-        List<String> demandes = new ArrayList<>();
-        QualificationController controleur = controleurDeLEcran();
-        controleur.confirmateur().definir(message -> {
-            demandes.add(message);
-            return false;
-        });
-        controleur.notificateur().definir((niveau, entete, message) -> {});
         definirSelecteur(robot, selecteurQuiAnnule());
-
         GesteVisible.choisir(robot, controleur.menuDeLaSelection(), "Emporter cette nuit…");
         Respiration.surLeMomentCle(robot);
 
-        assertThat(demandes)
+        assertThat(dialogues.questions())
                 .as("S3-46 : annuler la désignation arrête le geste avant même de peser")
                 .isEmpty();
         assertThat(Files.exists(destination)).isFalse();
 
-        // S3-47 : le volume s'annonce, et on le refuse.
+        // S3-47 : le volume s'annonce à l'image, et on le refuse.
         definirSelecteur(robot, selecteurQuiRepond(destination));
         GesteVisible.choisir(robot, controleur.menuDeLaSelection(), "Emporter cette nuit…");
+        dialogues.attendre(ANNONCE_DU_VOLUME);
         Respiration.surLeMomentCle(robot);
-
-        assertThat(demandes)
+        Respiration.leTempsDeLire(robot);
+        assertThat(dialogues.questions())
                 .as("S3-45 : le volume s'annonce AVANT d'écrire, sinon on confirme à l'aveugle")
                 .singleElement()
                 .satisfies(
                         annonce -> assertThat(annonce).contains("séquence(s)").contains("audio"));
+        dialogues.repondre(robot, ANNONCE_DU_VOLUME, BoutonsDeDialogue.ANNULER);
         assertThat(Files.exists(destination))
                 .as("S3-47 : un volume refusé ne laisse aucun fichier")
                 .isFalse();
+        assertThat(dialogues.comptesRendus())
+                .as("S3-47 : et ne rend aucun compte, puisque rien n'a été fait")
+                .isEmpty();
 
-        // S3-45 : la même annonce, acceptée cette fois.
-        controleur.confirmateur().definir(message -> true);
+        // S3-45 : la même annonce, acceptée cette fois, puis le compte rendu de ce qui est écrit.
         GesteVisible.choisir(robot, controleur.menuDeLaSelection(), "Emporter cette nuit…");
-        Respiration.surLeMomentCle(robot);
-
+        dialogues.attendre(ANNONCE_DU_VOLUME);
+        assertThat(Files.exists(destination))
+                .as("S3-45 : tant que l'annonce attend sa réponse, rien n'est écrit")
+                .isFalse();
+        Respiration.leTempsDeLire(robot);
+        dialogues.repondre(robot, ANNONCE_DU_VOLUME, BoutonsDeDialogue.CONFIRMER);
+        dialogues.attendre(COMPTE_RENDU_DE_L_EMPORT);
         assertThat(Files.exists(destination))
                 .as("S3-45 : confirmé, le paquet est écrit")
                 .isTrue();
+        Respiration.surLeMomentCle(robot);
+        Respiration.leTempsDeLire(robot);
+        dialogues.repondre(robot, COMPTE_RENDU_DE_L_EMPORT, BoutonsDeDialogue.FERMER);
+        // Le clip finit sur l'écran retrouvé, dialogue fermé, et non sur le clic qui le ferme.
+        Respiration.surLeMomentCle(robot);
     }
 
     @Test
@@ -165,35 +199,100 @@ class ScenarioEmportExpediteurTest {
     void reprendre_un_avis_et_le_second_qui_se_confirme(FxRobot robot) throws TimeoutException, IOException {
         ouvrirLaVerification(robot);
         QualificationController controleur = controleurDeLEcran();
-        List<String> questions = new ArrayList<>();
-        controleur.confirmateur().definir(message -> {
-            questions.add(message);
-            return true;
-        });
-        List<String> comptes = new ArrayList<>();
-        controleur.notificateur().definir((niveau, entete, message) -> comptes.add(entete + " | " + message));
+        controleur.confirmateur().definir(dialogues.question());
+        controleur.notificateur().definir(dialogues.compteRendu());
 
         // Deux avis, écrits par le service : le voyage du fichier n'est filmable par aucune famille.
         Path premier = avisSignePar("claire");
         Path second = avisSignePar("martin");
 
-        // S3-48 : le premier avis se range à côté du nôtre.
+        // S3-48 : le premier avis se range à côté du nôtre, sans question, et le compte rendu le dit.
         definirSelecteur(robot, selecteurQuiRepond(premier));
         GesteVisible.choisir(robot, controleur.menuDeLaSelection(), "Reprendre un avis reçu…");
+        dialogues.attendre("de « claire »");
         Respiration.surLeMomentCle(robot);
+        Respiration.leTempsDeLire(robot);
+        assertThat(dialogues.questions())
+                .as("S3-48 : un premier avis ne remplace rien, donc ne demande rien")
+                .isEmpty();
+        dialogues.repondre(robot, "de « claire »", BoutonsDeDialogue.FERMER);
+        attendreLAvisAffiche(robot, "claire");
+        Respiration.leTempsDeLire(robot);
 
-        assertThat(comptes)
-                .as("S3-48 : le compte rendu nomme qui a jugé, et combien de verdicts sont rangés")
-                .anySatisfy(compte -> assertThat(compte).contains("claire"));
-
-        // S3-49 : le second nomme le relecteur présent avant de remplacer.
+        // S3-49 : le second nomme le relecteur présent et ce qui serait perdu. On refuse d'abord.
         definirSelecteur(robot, selecteurQuiRepond(second));
         GesteVisible.choisir(robot, controleur.menuDeLaSelection(), "Reprendre un avis reçu…");
+        dialogues.attendre(QUESTION_DU_SECOND_AVIS);
         Respiration.surLeMomentCle(robot);
-
-        assertThat(questions)
+        Respiration.leTempsDeLire(robot);
+        assertThat(dialogues.questions())
                 .as("S3-49 : un second avis nomme celui qui serait remplace, et ce qui serait perdu")
-                .anySatisfy(question -> assertThat(question).contains("claire").contains("verdict"));
+                .singleElement()
+                .satisfies(question -> assertThat(question)
+                        .contains("claire")
+                        .contains("verdict(s)")
+                        .contains("martin"));
+        dialogues.repondre(robot, QUESTION_DU_SECOND_AVIS, BoutonsDeDialogue.ANNULER);
+        assertThat(pseudosEnBase())
+                .as("S3-49 : refuser n'écrit rien, l'avis de claire est toujours le seul rangé")
+                .containsOnly("claire");
+        attendreLAvisAffiche(robot, "claire");
+
+        // Puis on confirme : l'avis de martin remplace celui de claire, et le compte rendu le dit.
+        GesteVisible.choisir(robot, controleur.menuDeLaSelection(), "Reprendre un avis reçu…");
+        dialogues.attendre(QUESTION_DU_SECOND_AVIS);
+        Respiration.leTempsDeLire(robot);
+        dialogues.repondre(robot, QUESTION_DU_SECOND_AVIS, BoutonsDeDialogue.CONFIRMER);
+        dialogues.attendre("de « martin »");
+        Respiration.surLeMomentCle(robot);
+        Respiration.leTempsDeLire(robot);
+        dialogues.repondre(robot, "de « martin »", BoutonsDeDialogue.FERMER);
+        assertThat(pseudosEnBase())
+                .as("S3-49 : confirmé, le remplacement a eu lieu")
+                .containsOnly("martin");
+        attendreLAvisAffiche(robot, "martin");
+        Respiration.surLeMomentCle(robot);
+        Respiration.leTempsDeLire(robot);
+    }
+
+    // Ce que la table REND dans sa colonne d'avis, et non ce que son modèle porte : l'écran se relit
+    // après une reprise, et c'est l'état réel sur lequel le clip attend avant de laisser lire.
+    //
+    // La colonne est la dernière d'une table plus large que son cadre : elle y est amenée, puis c'est
+    // la POSITION du badge qui est exigée, entier dans le cadre de la table. Sa seule présence dans le
+    // graphe ne dit pas qu'on le lit : rogné par le bord, il n'aurait montré que le verdict.
+    private static void attendreLAvisAffiche(FxRobot robot, String pseudo) {
+        Attente.queSurLeFil(
+                () -> {
+                    TableView<?> table = robot.lookup("#tableSequences").queryTableView();
+                    table.scrollToColumnIndex(table.getColumns().size() - 1);
+                    Bounds cadre = table.localToScene(table.getLayoutBounds());
+                    return table.lookupAll(".label").stream()
+                            .filter(noeud -> noeud instanceof Labeled libelle
+                                    && libelle.getText() != null
+                                    && libelle.getText().endsWith("· " + pseudo))
+                            .map(noeud -> noeud.localToScene(noeud.getLayoutBounds()))
+                            .anyMatch(badge -> badge.getMinX() >= cadre.getMinX()
+                                    && badge.getMaxX() <= cadre.getMaxX() - LARGEUR_DE_L_ASCENSEUR);
+                },
+                "l'avis de « " + pseudo + " » se lit en entier, badge dans le cadre de la table, dans la colonne"
+                        + " « Avis relecteur »",
+                APPARITION_SECONDES * 1000L);
+    }
+
+    private List<String> pseudosEnBase() {
+        SelectionDao selections = injecteur.getInstance(SelectionDao.class);
+        Long idPassage = injecteur
+                .getInstance(fr.univ_amu.iut.passage.model.dao.PassageDao.class)
+                .findAll()
+                .getFirst()
+                .id();
+        return selections
+                .listerSequences(
+                        selections.findByPassage(idPassage).orElseThrow().id())
+                .stream()
+                .map(fr.univ_amu.iut.qualification.model.SequenceSelectionnee::pseudoRelecteur)
+                .toList();
     }
 
     /// Un avis tel qu'un relecteur le renverrait, ecrit par le service : le geste de l'autre role est
