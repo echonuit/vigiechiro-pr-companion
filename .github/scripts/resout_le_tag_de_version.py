@@ -56,27 +56,18 @@ from __future__ import annotations
 
 import os
 import pathlib
-import re
-import shutil
-import subprocess
 import sys
 import tempfile
 
-MOTIF_DE_VERSION = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
-
-def version(tag: str) -> tuple[int, int, int] | None:
-    """Le triplet d un tag de version, ou `None` si ce tag n en est pas un.
-
-    Les tags qui ne suivent pas `vX.Y.Z` sont ecartes sans bruit : ce depot en porte d autres, et ils
-    ne concernent pas la publication.
-    """
-    trouve = MOTIF_DE_VERSION.match(tag)
-    return (int(trouve[1]), int(trouve[2]), int(trouve[3])) if trouve else None
-
-
-class Refus(Exception):
-    """Ce que le script ne peut pas trancher seul, et qui doit arreter le job."""
+from _versions import (
+    Refus,
+    candidats,
+    tag_de_la_tete,
+    tags_de_version,
+    versions_publiees,
+)
 
 
 def resout(
@@ -100,73 +91,17 @@ def resout(
             " verdict, c est une lecture qui a echoue."
         )
 
-    publiees = sorted(v for t in versions_publiees if (v := version(t)))
-    plus_haute = publiees[-1] if publiees else (0, 0, 0)
-
-    candidats = sorted((v, t) for t in tags_de_version if (v := version(t)) and v > plus_haute)
-    if not candidats:
+    au_dessus = candidats(tags_de_version, versions_publiees)
+    if not au_dessus:
         return ""
-    if len(candidats) > 1:
-        noms = ", ".join(t for _, t in candidats)
+    if len(au_dessus) > 1:
+        noms = ", ".join(t for _, t in au_dessus)
         raise Refus(
-            f"{len(candidats)} tags de version depassent la plus haute version publiee : {noms}."
+            f"{len(au_dessus)} tags de version depassent la plus haute version publiee : {noms}."
             " Deux versions a moitie faites ne se departagent pas toutes seules, et en choisir une"
             " publierait peut-etre la mauvaise. Reprendre a la main, une version a la fois."
         )
-    return candidats[0][1]
-
-
-def tag_de_la_tete() -> str:
-    """Le tag porte par `HEAD`, chaine vide s il n y en a pas. Un echec de git EST une absence ici."""
-    rendu = subprocess.run(
-        ["git", "describe", "--tags", "--exact-match", "HEAD"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    return rendu.stdout.strip() if rendu.returncode == 0 else ""
-
-
-def tags_de_version() -> list[str]:
-    """Tous les tags `vX.Y.Z` du depot, par `git tag`."""
-    rendu = subprocess.run(["git", "tag", "-l", "v*"], capture_output=True, text=True, check=False)
-    if rendu.returncode != 0:
-        raise Refus("`git tag` a refuse : impossible de lister les tags de version.")
-    return [l.strip() for l in rendu.stdout.splitlines() if l.strip()]
-
-
-def versions_publiees() -> list[str] | None:
-    """Les tags que la forge declare publies, ou `None` si elle n a pas repondu.
-
-    Les brouillons sont ECARTES : un brouillon est precisement l etat d une version a moitie faite,
-    et le compter comme publie ferait taire le repli dans le cas ou il sert.
-
-    Deux absences, deux conduites, et c est le garde de l ADR 5692 qui l a exigee ici : un `gh`
-    introuvable fait REFUSER en nommant la panne d installation, parce que `subprocess.run` leverait un
-    `FileNotFoundError` avant qu il y ait un code de sortie. Un `gh` present qui rend non zero, lui,
-    rend `None` : la forge n a pas repondu, ce qui est une panne de lecture et non d installation.
-    """
-    if shutil.which("gh") is None:
-        raise Refus(
-            "« gh » est absent : ce script ne peut pas savoir quelles versions sont publiees, donc il"
-            " ne peut pas distinguer une version a moitie faite d une sequelle. C est une panne"
-            " d installation, et non un verdict sur la publication."
-        )
-    rendu = subprocess.run(
-        ["gh", "release", "list", "--limit", "1000", "--json", "tagName,isDraft"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if rendu.returncode != 0:
-        return None
-    import json
-
-    try:
-        lu = json.loads(rendu.stdout or "[]")
-    except json.JSONDecodeError:
-        return None
-    return [p["tagName"] for p in lu if not p.get("isDraft")]
+    return au_dessus[0][1]
 
 
 def juger() -> int:

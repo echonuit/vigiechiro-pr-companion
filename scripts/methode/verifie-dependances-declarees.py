@@ -58,8 +58,13 @@ HEREDOC = re.compile(r"<<'(?P<borne>[A-Z]+)'\n(?P<corps>.*?)\n(?P=borne)\n", re.
 # que la ligne `curl` recopiee aux trois endroits y portait le meme defaut du « HTTP 000000 »
 # (#4385). Elle ne juge pas, et c est ce qui permet de la partager - un `401` refuse le depart d un
 # tournage et vaut succes a sa revocation.
+# `_versions` l a rejointe avec #5987, pour la raison que ce commentaire donne deja : la
+# resolution du tag de version et le signalement d une version a moitie faite posent la MEME
+# question - quels tags depassent la plus haute version publiee - et en tirent deux lectures
+# opposees. La borne a demande trois essais dont deux faux ; recopiee, elle aurait diverge.
 LOCAUX = {
     "_commun",
+    "_versions",
     "rapport",
     "verifie_okf",
     "resserre_cliquets",
