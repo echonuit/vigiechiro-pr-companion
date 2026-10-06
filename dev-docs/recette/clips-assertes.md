@@ -823,11 +823,17 @@ relue. Les deux clips se lisent ensemble, dans cet ordre, parce que le second su
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioEmportExpediteurTest.emporter_une_nuit_et_ses_deux_refus.mp4"></video>
 
 > **Deux des trois cas sont des refus**, et c'est voulu : un geste qui écrit des gigaoctets se juge
-> autant sur ce qu'il refuse d'écrire que sur ce qu'il écrit. `S3-46` est une nuit sans sélection,
-> `S3-47` une séquence que le disque ne porte plus.
+> autant sur ce qu'il refuse d'écrire que sur ce qu'il écrit. Le clip les joue en premier. `S3-46`
+> annule la désignation du fichier : le geste s'arrête là, sans poser de question. `S3-47` refuse
+> l'annonce de volume, et aucun fichier ne reste.
 
-> **Le volume s'annonce avant que rien ne parte.** Ce qui change à l'image est le compte rendu, pas la
-> barre de progression : l'écriture est brève, l'annonce est ce que l'utilisateur lit.
+> **Le volume s'annonce avant que rien ne parte.** La question se lit deux fois à l'image, refusée
+> puis confirmée : le nombre de séquences, le volume total et la part d'audio. Le compte rendu « Nuit
+> emportée » ne paraît qu'après le clic sur « Confirmer ».
+
+> **Les dialogues sont ceux de la production, ouverts par le banc.** Ils n'y sont pas modaux pour la
+> fenêtre : dans les quatre clips de l'emport, le menu de la liste reste ouvert derrière eux, et rien
+> n'établit que le produit fasse de même.
 
 ### S3-48 et S3-49 · `reprendre_un_avis_et_le_second_qui_se_confirme`
 
@@ -835,9 +841,11 @@ relue. Les deux clips se lisent ensemble, dans cet ordre, parce que le second su
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioEmportExpediteurTest.reprendre_un_avis_et_le_second_qui_se_confirme.mp4"></video>
 
 > `S3-49` est le cas qui **demande** avant de remplacer. Un second avis sur les mêmes séquences écrase
-> le premier, et la question nomme ce qui serait perdu plutôt que de dire « êtes-vous sûr ». Sans
-> verdicts posés au préalable l'avis serait vide, et la question ne se poserait jamais : la fixture les
-> pose donc en premier.
+> le premier, et la question nomme le relecteur présent et le nombre de verdicts qui seraient perdus
+> plutôt que de dire « êtes-vous sûr ». Le clip la refuse d'abord, et l'avis de « claire » reste seul
+> dans la colonne. Il la repose, la confirme, et « martin » remplace « claire ». Sans verdicts posés
+> au préalable l'avis serait vide, et la question ne se poserait jamais : la fixture les pose donc en
+> premier.
 
 ## ScenarioEmportRelecteurTest
 
@@ -851,9 +859,15 @@ le voir puisque tous partaient du poste de l'expéditeur.
 <video controls muted playsinline preload="none" width="100%"
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioEmportRelecteurTest.relire_une_nuit_confiee.mp4"></video>
 
-> **Le remplacement se confirme, il n'est pas tacite.** La question nomme les verdicts qui seront
-> perdus. `S3-51` constate ensuite que le compte rendu dit **qui** signera : l'identité est relevée à
-> l'ouverture du paquet, pas au moment du jugement.
+> **Le remplacement se confirme, il n'est pas tacite.** La question prévient que les verdicts posés
+> ici seront perdus, et rien n'est remplacé avant le clic sur « Confirmer ». `S3-51` constate ensuite
+> que le compte rendu nomme le relecteur, dont l'identité est relevée à l'ouverture du paquet. Elle
+> n'est pas conservée : tant que #4703 n'est pas livrée, l'avis est signé du profil connecté au moment
+> du renvoi.
+
+> **Le clip finit sur le refus de régénérer.** La sélection reçue est figée, et l'écran en donne le
+> motif au lieu de griser le bouton. La fin du motif est coupée à l'image par des points de
+> suspension.
 
 ### S3-52 · `renvoyer_son_avis`
 
@@ -861,7 +875,8 @@ le voir puisque tous partaient du poste de l'expéditeur.
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioEmportRelecteurTest.renvoyer_son_avis.mp4"></video>
 
 > **L'avis n'emporte pas les séquences**, que l'expéditeur possède déjà : il ne porte que les verdicts
-> et le pseudo qui les signe. C'est ce que le manifeste relu après coup établit.
+> et le pseudo qui les signe. C'est ce que le manifeste relu après coup établit. À l'image, le compte
+> rendu « Avis renvoyé » donne le nombre de verdicts et ce pseudo, sans qu'aucune question ne le précède.
 
 > **Ce que ces trois cas ne peuvent pas montrer.** Le voyage du fichier d'un poste à l'autre. Le paquet
 > arrive par la fixture, composé par le service : aucune des deux familles ne filme le transport, et

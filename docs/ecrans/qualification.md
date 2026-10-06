@@ -58,7 +58,7 @@ pictogramme sont ceux d'un avertissement.
 ## Faire relire une nuit par quelqu'un d'autre
 
 Une nuit peut se juger à deux. Les quatre gestes vivent dans le menu **☰ outils** de la liste, en deux
-groupes qui disent les deux rôles.
+groupes : les deux qui font voyager le paquet de la nuit, puis les deux qui font voyager l'avis.
 
 ![Le menu outils de la liste, ouvert : « Colonnes… », puis « Emporter cette nuit… » et « Ouvrir un paquet reçu… », puis « Renvoyer mon avis… » et « Reprendre un avis reçu… ».](../assets/captures/apercu-qualification-menu-emport.png)
 
@@ -71,13 +71,17 @@ Le paquet emporte les séquences de **la sélection en cours**, pas toute la nui
 vous avez déjà posés. Votre relecteur juge donc le même échantillon que vous : deux tirages
 indépendants n'auraient presque aucune séquence en commun, et les deux avis ne se compareraient pas.
 
-**Votre relecteur reçoit.** « **Ouvrir un paquet reçu…** » installe la nuit chez lui, avec votre
-sélection **figée** : il ne peut pas la régénérer, et l'application le lui dit plutôt que de griser un
-bouton sans explication. Son identité est relevée **à l'ouverture**, pas au moment où il juge, si bien
-qu'un jugement rendu deux semaines plus tard porte quand même son nom.
+**Votre relecteur reçoit.** Le paquet n'apporte pas la nuit sur son poste : il doit l'avoir déjà
+importée, sans quoi « **Ouvrir un paquet reçu…** » refuse en disant ce qui manque. L'application le
+prévient que votre sélection remplacera celle de cette nuit et que les verdicts posés chez lui seront
+perdus, puis attend son accord. Votre sélection devient alors la sienne, **figée** : il ne peut pas la
+régénérer, et l'application le lui dit plutôt que de griser un bouton sans explication.
+
+Il doit être connecté pour ouvrir le paquet, et le compte rendu nomme son pseudo.
 
 **Il vous renvoie son avis.** « **Renvoyer mon avis…** » écrit un paquet léger : son jugement signé,
-sans les séquences, que vous avez déjà.
+sans les séquences, que vous avez déjà. L'avis porte le pseudo du compte connecté au moment du renvoi,
+pas celui relevé à l'ouverture ; sans connexion, l'application le dit et n'écrit rien.
 
 **Vous reprenez son avis.** « **Reprendre un avis reçu…** » range son verdict **à côté du vôtre**, dans
 la colonne « Avis relecteur », avec son pseudo. Le vôtre ne bouge pas, et l'avis affiché ne pèse pas
@@ -93,7 +97,8 @@ verdicts qui seraient perdus, et attend votre accord. Refuser ne change rien.
 
 **En ligne de commande.** Les quatre gestes ont leur commande : `emporter-nuit`, `ouvrir-paquet-recu`,
 `renvoyer-avis` et `reprendre-avis`. `emporter-nuit` annonce le volume et s'arrête ; ajoutez `--oui`
-pour écrire. `reprendre-avis` refuse de remplacer un avis présent sans `--remplacer`.
+pour écrire. `ouvrir-paquet-recu` refuse de remplacer la sélection que la nuit porte déjà sans
+`--remplacer`, et `reprendre-avis` refuse de même de remplacer un avis présent.
 
 ## État initial
 
