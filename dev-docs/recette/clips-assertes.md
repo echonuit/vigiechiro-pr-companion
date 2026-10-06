@@ -541,8 +541,8 @@ la situation la plus fréquente du terrain, pas un cas limite.
 > vient ce badge.
 
 > Le banc lit les **cellules**, non les objets du modèle : un banc qui lirait `NuitVM#badge()`
-> rejouerait le calcul au lieu d'éprouver ce que l'observateur voit. Il cherche « complétude inco »
-> et non le libellé entier, la colonne de 130 px le tronquant (#5111).
+> rejouerait le calcul au lieu d'éprouver ce que l'observateur voit. Il cherche le libellé entier,
+> « complétude inconnue », que la colonne État ne coupe plus depuis #5111.
 
 ### S2-43 · `deux_nuits_deux_configurations`
 

@@ -96,7 +96,7 @@ lue comme une preuve, et le badge le plus rassurant allait à la nuit dont on sa
 **Ce que l'image et le clip montrent** : la première nuit est **complète**, les deux suivantes de
 **complétude inconnue**. C'est la distinction qui compte.
 La capture montre désormais le libellé « complétude inconnue » en entier : la colonne a été
-élargie par le correctif #5111. Le clip, tourné avant ce correctif, garde l'ancien libellé tronqué.
+élargie par le correctif #5111.
 
 ### 6 · Une carte protégée en écriture le dit
 

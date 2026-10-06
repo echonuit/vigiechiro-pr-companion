@@ -74,7 +74,7 @@ class ScenarioJournalAbsentTest {
 
     private static final long PAUSE_PAR_FICHIER_MS = 900;
 
-    private static final String INCONNUE = "complétude inco";
+    private static final String INCONNUE = "complétude inconnue";
 
     private Injector injecteur;
 
