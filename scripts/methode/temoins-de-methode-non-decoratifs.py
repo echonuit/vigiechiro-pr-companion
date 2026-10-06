@@ -49,6 +49,22 @@ ATELIER = RACINE / ".github" / "workflows" / "lint.yml"
 # mutant le meme garde compteraient deux fois, et la somme cesserait de valoir la population.
 LANCE = re.compile(r"(?<![\w./-])scripts/(?!adr/)([a-z0-9_/-]+\.py)")
 
+# ⟨ce banc est dans le corpus qu il mute, et c est une DECISION⟩ L ADR 4770 l ecrit : « le garde
+# est dans son propre corpus, et c est sain ». Il y entre comme tout autre garde, par la derivation :
+# `lint.yml` le lance et il declare un `CONTRAT`. Jusqu a #5550 rien dans ce fichier ne le disait, si
+# bien qu un atelier modifie l aurait fait sortir ou entrer sans un mot.
+#
+# ⟨pourquoi il peut s y trouver⟩ Son `--auto-test` ne rappelle pas `suspects()` : il ne mute que de
+# faux gardes ecrits dans un bac. Se muter ne le fait donc pas se relancer sur tout le corpus. C est
+# SA raison ; le banc de CI s exclut et le banc des ADR ne s inclut que par une moitie, chacun pour
+# la sienne.
+#
+# ⟨la forme est celle du corpus⟩ `corpus()` rend des chemins relatifs a `scripts/`. Le nom nu n y
+# est jamais, et le comparer rendrait « absent » pour une raison de forme : les trois bancs stockent
+# trois formes (nom nu chez les ADR, chemin relatif ici, chemin absolu en CI). La constante se
+# derive donc du chemin du fichier, sous la forme que `corpus()` emploie.
+MOI = pathlib.Path(__file__).resolve().relative_to(RACINE / "scripts").as_posix()
+
 # Ce qu on insere pour retirer sa detection a un garde, sans toucher a ce qui le decrit.
 #
 # **La fonction d auto-test est EPARGNEE, et c est ce qui rend la mesure honnete.** La neutraliser
@@ -174,14 +190,19 @@ def declarations_des_bancs(racine: pathlib.Path | None = None) -> list[tuple[str
     return rendu
 
 
-def corpus() -> list[str]:
+def corpus(texte: str | None = None) -> list[str]:
     """Les gardes que `lint.yml` lance sous `scripts/`, derives et non enumeres.
 
     Rendus RELATIFS a `scripts/`, donc `methode/x.py` et `batterie.py` : la porte vit a la racine du
     dossier, et le motif d avant la manquait alors que la prose de ce banc annonce « les gardes que
     la CI lance vraiment » (#5397).
+
+    `texte` remplace le contenu de l atelier. Il sert a l auto-test, qui fabrique un atelier lancant
+    ce banc et un autre ne le lancant pas : sans lui, l appartenance du banc a son propre corpus ne
+    se verrait que d un cote (#5550).
     """
-    trouves = set(LANCE.findall(ATELIER.read_text(encoding="utf-8")))
+    texte = ATELIER.read_text(encoding="utf-8") if texte is None else texte
+    trouves = set(LANCE.findall(texte))
     return sorted(c for c in trouves if declare_un_contrat(RACINE / "scripts" / c))
 
 
@@ -352,6 +373,34 @@ def _auto_test() -> int:
     # rendent le meme resultat : rien. C est ce qui est arrive a `scripts/batterie.py` jusqu a #5397.
     verifie("aucun garde du dossier ne sort du compte en silence", sans_domicile(), [])
     verifie("aucune exemption n a survécu à son motif", exemptions_perimees(), [])
+    # ⟨#5550⟩ Ce banc fait-il partie du corpus qu il mute ? Oui, et l ADR 4770 l a decide. Les deux
+    # premiers cas le disent sur le depot reel, SOUS LA FORME du corpus. Les deux suivants fabriquent
+    # les deux cotes, parce que sur le depot reel l appartenance ne peut etre vue que d un seul.
+    verifie("ce banc est dans le corpus qu il mute (ADR 4770)", lambda: MOI in corpus(), True)
+    verifie(
+        "sous la forme du corpus : son nom nu n y est pas",
+        lambda: pathlib.Path(MOI).name in corpus(),
+        False,
+    )
+    # La LISTE et non une appartenance : « il n y est pas » serait vrai aussi d un corpus vide, donc
+    # d un `corpus` qui ne lirait rien.
+    verifie(
+        "un atelier qui ne le lance pas rend ce qu il lance, sans ce banc",
+        lambda: corpus("python3 scripts/batterie.py --auto-test\n"),
+        ["batterie.py"],
+    )
+    verifie(
+        "et un atelier qui le lance l y fait entrer",
+        lambda: corpus(f"python3 scripts/{MOI}\n"),
+        [MOI],
+    )
+    # ⟨on S ARRETE si la population est fausse⟩ Les cas suivants eprouvent la mutation et le verdict.
+    # Rendus sur un corpus qu on ne sait plus deriver, ils ne veulent rien dire, et c est le geste que
+    # le banc de CI porte deja. C est aussi ce qui rend vraie la phrase de l ADR 4770, « mute, son
+    # auto-test rougit » : sans cet arret, ce banc sous sa propre mutation PLANTAIT plus bas, sur
+    # `mute(src).index(...)`, et son verdict sur lui-meme etait « non concluant » (ADR 4918).
+    if echecs():
+        return echecs()
     # ⟨#5498⟩ Les trois bancs font la meme chose : ils doivent la declarer pareil, sans quoi aucun
     # dispositif ne les retrouve ensemble.
     declarations = declarations_des_bancs()
