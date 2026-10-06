@@ -27,7 +27,7 @@ sens le 2026-09-03 : ils sont identiques, a cinquante fichiers (issue #5187).
 
 ## Ce que le seuil vaut, et ce qu il vaudra
 
-3 est la mesure du jour, pas un objectif. Elle etait de 50 le 2026-09-04 au matin, et sept lots l ont fait descendre : #5210, #5219, #5221, #5229, #5231, #5233, #5236, puis #5239 les quatre qui regardent des pixels. Un cliquet ne se negocie pas vers le haut : chaque
+2 est la mesure du jour, pas un objectif. Elle etait de 50 le 2026-09-04 au matin, et sept lots l ont fait descendre : #5210, #5219, #5221, #5229, #5231, #5233, #5236, puis #5239 les quatre qui regardent des pixels et #5240 la porte APT. Un cliquet ne se negocie pas vers le haut : chaque
 conversion le fait descendre, et il ne remonte jamais. La cible est **zero**, ce qui distingue ce
 cliquet de la plupart des autres : ceux-la bornent une dette qu on tolere, celui-ci compte une
 population qui doit disparaitre entierement.
@@ -50,8 +50,8 @@ ADR = "5188"
 # verite sur ce qui reste a convertir.
 TOLERES = {
     ".github/scripts/lance-test-filme.sh": (
-        "1 295 lignes d orchestration, tolerees tant que le banc Java n est pas definitivement "
-        "valide. La levee de cette condition declenche la conversion"
+        "l orchestration du banc filme de recette, toleree tant que le banc Java n est pas "
+        "definitivement valide. La levee de cette condition declenche la conversion"
     ),
 }
 
