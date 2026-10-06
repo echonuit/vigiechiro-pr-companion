@@ -159,6 +159,9 @@ juge pas à l'échelle 1.
 Le modèle vit dans `dev-docs/cycle-de-chantier.md`, section « Modèle de clôture (à coller dans
 l'EPIC) ». Il se colle **en commentaire**, cases cochées, avant de fermer.
 
+L'EPIC se ferme ensuite à la main. La demande de clôture le cite par `Refs #<EPIC>` et non par
+`Closes #<EPIC>`, et la compétence `clore-un-chantier` dit pourquoi.
+
 Son en-tête `## Clôture de chantier` est ce que le garde cherche. Une clôture qui l'omet ne se
 distingue d'aucune manière d'une clôture qui n'a pas eu lieu.
 
