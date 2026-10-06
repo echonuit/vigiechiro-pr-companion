@@ -202,13 +202,23 @@ jobs:
         # (La configuration d'analyse de .github/release/ n'en garde que deux et ne sert qu'à la
         # répétition à blanc des PR.)
         run: ./.github/release/node_modules/.bin/semantic-release
-      - name: Récupérer le tag fraîchement créé
+      - name: Récupérer le tag de la version, reprise comprise
         id: tag
+        # ⟨reprise⟩ Ce pas lisait `git describe --exact-match HEAD`, ce qui ne rend le tag que si la
+        # tête est le commit de version. Sur une REPRISE, une fusion entre l'échec et la relance
+        # suffisait à vider cette sortie, et `installers` comme `publish` étaient sautés une seconde
+        # fois en silence (#5987). La résolution vit maintenant dans un script, qui garde ce premier
+        # moyen et n'ajoute un repli que pour la reprise - le tag dont la VERSION dépasse la plus
+        # haute version publiée, et un refus s'il y en a plusieurs. Elle est en Python pour être
+        # éprouvable : du shell dans un atelier ne se joue qu'en publiant.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
         run: |
           git fetch --tags --force
-          NEW_TAG=$(git describe --tags --exact-match HEAD 2>/dev/null || echo "")
+          NEW_TAG=$(python3 .github/scripts/resout_le_tag_de_version.py)
           echo "value=${NEW_TAG}" >> "$GITHUB_OUTPUT"
-          echo "Nouveau tag : ${NEW_TAG:-(aucun)}"
+          echo "Tag de la version : ${NEW_TAG:-(aucun)}"
 
   installers:
     needs: release

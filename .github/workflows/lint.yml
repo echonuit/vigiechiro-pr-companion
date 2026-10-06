@@ -700,6 +700,16 @@ jobs:
         run: |
           chmod +x .github/scripts/verifie_demarrage_emballage.py
           python3 .github/scripts/verifie_demarrage_emballage.py --auto-test
+      - name: La résolution du tag de version sait encore rougir
+        # Même raison que ci-dessus, et un cran plus fort : cette résolution ne tourne pour de vrai
+        # que dans le job `release`, c'est-à-dire une fois par semaine, et son cas INTÉRESSANT est
+        # celui d'une reprise après panne - donc quelques fois par an. Son autotest est le seul
+        # endroit où on la voit à l'œuvre, et c'est pour cela qu'elle a quitté le shell de l'atelier
+        # pour un script : du shell dans `release.yml` ne s'éprouve qu'en publiant (#5987).
+        #
+        # Ses six cas tiennent la borne du repli, qui est ce qui peut casser le train normal : deux
+        # règles plausibles ont été essayées et écartées par la mesure avant celle-ci.
+        run: python3 .github/scripts/resout_le_tag_de_version.py --auto-test
       - name: La garde du secret winget sait encore rougir
         # Elle ne tourne pour de vrai que dans winget.yml, sur dispatch manuel, c'est-à-dire quelques
         # fois par an : son autotest est le seul endroit où on la voit à l'œuvre entre deux
