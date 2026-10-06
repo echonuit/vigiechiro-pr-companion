@@ -256,11 +256,26 @@ sequenceDiagram
     Dev->>Main: push (Conventional Commits)
     Main->>Rel: déclenche (si ENABLE_RELEASE)
     Rel->>SR: analyse les commits
-    SR->>GH: tag vX.Y.Z + Release (brouillon)
     SR->>Main: commit CHANGELOG.md [skip ci]
+    SR->>Main: tag vX.Y.Z
+    SR->>Main: note git refs/notes/semantic-release-vX.Y.Z
+    SR->>GH: Release (brouillon)
     Rel->>Rel: job installers (matrice, profil -Pinstaller)
     Rel->>GH: attache installeurs + archives portables à la Release
+    Rel->>GH: job publish (retire le brouillon)
 ```
+
+!!! warning "L'ordre de ces écritures compte, et ce schéma le disait faux jusqu'à #5987"
+    Il montrait le tag et la Release **avant** le commit du `CHANGELOG.md`. Mesuré sur le journal de
+    l'exécution 37453428765, le 2026-10-06 : `prepare` de `@semantic-release/changelog` à 11:00:41,
+    puis `prepare` de `@semantic-release/git` qui **pousse le commit** à 11:00:43, puis le cœur qui
+    pousse le **tag** et la **note git**, et seulement ensuite l'étape `publish` de
+    `@semantic-release/github` qui crée la Release.
+
+    Ce n'est pas un détail de dessin : **l'ordre détermine ce qu'une publication interrompue laisse
+    derrière elle**. Avec l'ancien ordre, une version à moitié faite avait toujours au moins un
+    brouillon ; avec le vrai, elle peut n'avoir qu'un commit, ou un commit et un tag. C'est ce que
+    dit la section « Une publication peut s'arrêter en chemin » plus bas.
 
 Chaque runner produit **deux** artefacts, à partir du même profil `installer` :
 
@@ -1595,6 +1610,97 @@ créé et la Release déposée en brouillon **avant** l'étape qui a échoué. L
 `installers` et `publish` ont été **sautés** - donc ni binaires attachés, ni brouillon levé. Une
 version peut donc exister à moitié. C'est ce qu'il faut regarder d'abord quand un train échoue :
 `gh release list` avant `gh run view`.
+
+## Une publication peut s'arrêter en chemin : trois états, trois reprises (#5987)
+
+Le train écrit **quatre** choses, dans cet ordre - commit du `CHANGELOG.md`, tag, note git, Release en
+brouillon - puis deux jobs s'appuient dessus. Un échec à n'importe lequel de ces pas laisse une version
+**à moitié faite**, et c'est un état qui ne se voit pas : `main` porte un tag et un journal d'apparence
+normale, et il faut interroger la forge pour découvrir qu'il n'y a pas de publication.
+
+!!! tip "Le premier geste, quand un train échoue"
+    `gh release list` **avant** `gh run view`. Le journal dit ce qui a cassé ; la liste des
+    publications dit ce que la version **a**, et c'est elle qui décide de la reprise.
+
+### Les trois états observables
+
+La note git est invisible de `main`, donc elle ne fabrique pas d'état distinct : son échec se lit
+comme « tag posé, pas de publication ». Il reste trois états, et chacun a sa reprise.
+
+| L'échec est tombé | La version **a** | Il lui **manque** | La reprise | Jouée ? |
+|---|---|---|---|---|
+| avant le tag | le commit `chore(release)` et l'entrée de `CHANGELOG.md`, sur `main` | le tag, la note, la publication, les installeurs | **poser le tag à la main** sur le commit de version, puis relancer l'atelier | **non, déduite** : aucune panne connue ne s'est arrêtée là |
+| après le tag, avant la publication | commit, journal, **tag** ; parfois la note | la publication, les installeurs | **créer le brouillon à la main** sur le tag, avec la section du `CHANGELOG.md` ; pousser la note si elle manque ; relancer l'atelier | **oui**, sur `v2.197.0` le 2026-10-06 : publication complète en dix-sept minutes, installeurs construits par la chaîne |
+| après la publication | commit, journal, tag, note, **brouillon** | les installeurs attachés, et le brouillon reste brouillon | **relancer l'atelier**, qui téléverse sur la publication existante | **non** : #4083 a au contraire **supprimé** le brouillon, la relance butant alors sur la tête de `main` |
+
+!!! warning "Une seule de ces trois reprises a été jouée"
+    Celle du deuxième état, et elle est vérifiable - exécution 37454826583, `completed/success`, 202
+    fichiers attachés. Les deux autres sont **déduites du fonctionnement de la chaîne**, et ce n'est
+    pas la même chose qu'un geste éprouvé.
+
+    La troisième mérite une mise en garde particulière : #4083 l'a **écartée** pour la 2.186.0, et non
+    parce qu'elle était fausse en principe. La relance butait sur la résolution du tag, qui dépend de
+    la tête de `main` - `main` portait alors 46 commits de plus que le tag. C'est la fragilité décrite
+    plus bas, et c'est elle qui rendra cette reprise praticable une fois levée. Tant qu'elle tient,
+    « relancer l'atelier » n'est une reprise que si la tête de `main` est encore le commit taggué.
+
+**Le premier état est le plus dangereux, et c'est le moins visible.** Sans tag, le train suivant
+recalcule la **même** version - il compte depuis le dernier tag, qui est celui d'avant - et
+`@semantic-release/changelog` ajouterait une **seconde** entrée pour elle. Poser le tag à la main n'est
+donc pas une commodité : c'est ce qui empêche le doublon. C'est la même raison qui a fait **conserver**
+le tag `v2.186.0` après l'arbitrage de #4083, et elle vaut dans les deux sens.
+
+**Ce que la reprise ne doit pas faire**, et c'est tranché depuis #4083 : construire les installeurs à
+la main. La chaîne reste seule productrice des artefacts et de leur attestation de provenance
+(#2742). Seul l'objet « brouillon » se crée à la main, parce qu'il ne contient aucun binaire -
+`gh release upload` exige une publication existante, et c'est tout ce que le brouillon apporte.
+
+### Les trois voies qui ne reprennent pas, et pourquoi
+
+Essayées ou écartées sur les cas réels, pour éviter de les réessayer :
+
+- **Rejouer le job en échec.** L'exécution est figée sur le commit d'**avant** la version.
+  semantic-release y voit une branche en retard sur la forge et ne publie rien, et l'étape qui
+  retrouve le tag ne trouve rien sur ce commit.
+- **Relancer l'atelier sans rien faire d'autre**, au deuxième état. semantic-release n'a plus rien à
+  publier, le tag est bien retrouvé, mais `gh release upload` refuse : il n'y a pas de publication où
+  téléverser. C'est pourquoi le brouillon se crée **avant** de relancer.
+- **Supprimer le tag et recommencer.** Écarté par #4083 : le `CHANGELOG.md` porte déjà l'entrée, et
+  semantic-release recréerait la même version avec une seconde entrée.
+
+### Ce que la reprise suppose encore, et qui est fragile
+
+L'étape « Récupérer le tag fraîchement créé » du job `release` résout le tag par
+`git describe --tags --exact-match HEAD`. **La reprise dépend donc de la tête de `main`** : elle
+n'aboutit que si cette tête est encore le commit taggué. Une fusion entre l'échec et la relance, et
+`installers` comme `publish` sont sautés une seconde fois, par leur garde `tag != ''`. Le 2026-10-06,
+`main` avait avancé six minutes après la relance - la reprise a tenu de peu.
+
+Tout l'aval, lui, est juste : il consomme `needs.release.outputs.tag`, et `installers` extrait déjà
+`ref: <tag>`. La fragilité est confinée à cette **unique résolution**.
+
+### Trois occurrences, et un état qui persiste
+
+| Version | Où elle s'est arrêtée | Ce qu'il en reste |
+|---|---|---|
+| `v2.21.0` | pendant `installers`, sur `desktop-file-validate` absent du runner | publication restée en brouillon |
+| `v2.184.0` | après le brouillon, sur le commentaire d'issues du greffon GitHub | ni binaires, ni brouillon levé |
+| `v2.186.0` | après le brouillon, sur une condition de job sans fonction d'état (ADR 4079) | brouillon **supprimé** après arbitrage (#4083) ; tag et journal conservés |
+| `v2.197.0` | après le tag, sur la poussée de la note git, rejetée | reprise en dix-sept minutes, publication complète par la chaîne |
+
+**Et l'état « tag sans publication » persiste au-delà de ces cas.** Compté sur la forge le 2026-10-06
+à `278de494a` : **17 tags de version sans publication**, sur 512 tags et 495 publications. Seize
+forment un bloc contigu du 20 au 22 juillet 2026, de `v2.26.1` à `v2.35.1`, qui est l'époque où la
+dérive typographique empêchait semantic-release de reconnaître les sujets (#2104) ; le dix-septième est
+le `v2.186.0` de #4083.
+
+!!! danger "Ne pas raisonner sur l'ancestralité de ces tags"
+    Les 17 ne sont pas « derrière » la dernière version publiée : leurs commits **ne sont pas sur
+    `main` du tout**, 0 sur 17 étant des ancêtres de `origin/main`, une réécriture d'historique les
+    ayant orphelinés. C'est aussi ce qui réconcilie ce constat avec #4083, qui mesurait en août une
+    ancestralité alors vraie : **une mesure de graphe sur ces tags est datée**, et toute règle qui s'y
+    appuie rend un résultat plausible et faux. Les distinguer se fait par **comparaison de versions**,
+    pas par le graphe.
 
 ## Un runner qui exécute n'est pas un runner qui pilote (#3710)
 
