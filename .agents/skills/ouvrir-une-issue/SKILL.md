@@ -171,6 +171,42 @@ l'ouverture de la demande.
 Sans cette seconde moitié, annoncer plus large ne fait que diffuser plus vite un plan que personne
 n'a l'obligation de respecter.
 
+### Vérifier une annonce reçue, ou une branche qu'on croit prise
+
+Une annonce vieillit : la branche qu'elle nomme a pu être livrée depuis. La question « cette branche
+est-elle encore en cours ? » se pose à la **forge**, pas à git. Ce dépôt fusionne en squash, donc le
+commit d'une branche livrée n'est jamais un ancêtre de `main`, et git seul répond « en avance » pour
+toujours. Le 7 septembre 2026, trois sessions ont posé la question à git sur la branche de #5376, et
+les trois ont conclu à une prise en cours : l'ADR était fusionnée depuis la veille.
+
+| Signal | Ce qu'il répond |
+|---|---|
+| `git rev-list --count origin/main..<branche>` | rien : au moins 1 après un squash, livrée ou non |
+| comparer le contenu des fichiers à `main` | rien non plus, et plus tard : il dit « diverge » dès qu'un tiers a retouché le fichier livré |
+| `gh issue view <N> --json state` | « l'issue est-elle close », question voisine : une branche peut porter des commits que la fusion n'a pas eus |
+| `git ls-tree -r --name-only origin/main -- <chemin>` | « un fichier de ce **nom** est-il sur `main` ». Il ignore le contenu, et c'est pour cela qu'il survit au squash. Ne vaut que pour un nom prévisible, une ADR numérotée par son issue |
+| `gh pr list --head <branche> --state all` | « la demande de cette branche a-t-elle été fusionnée, et sur quel commit » |
+
+Le dernier est celui qui répond :
+
+```bash
+gh pr list --head <branche> --state all --json number,state,mergedAt,headRefOid
+git -C <depot> rev-parse <branche>      # à comparer à headRefOid, si la branche existe ici
+```
+
+`MERGED` avec un `headRefOid` égal au sommet local : la branche est livrée, et ce qui en reste sur le
+poste est un reliquat. Rejoué le 6 octobre 2026 sur trois branches fusionnées dans la journée : le
+compteur rendait 1 sur les trois, la forge `MERGED` sur les trois. Un sommet local **différent** dit
+que la branche porte autre chose que ce qui a été fusionné, et cela se demande à qui la tient.
+
+Ce que la réponse ne couvre pas : une liste vide veut dire « aucune demande à ce nom », donc une
+branche jamais poussée ou nommée autrement, **pas** une branche libre ; un nom réemployé rend
+plusieurs lignes ; et la commande demande le réseau. Hors ligne, `ls-tree` par nom reste, avec sa
+réserve.
+
+**Quand le travail annoncé est déjà sur `main`, ce n'est plus un concurrent, c'est une décision à
+appliquer.** On la lit avant d'écrire.
+
 ### Un listing ne remplace pas une annonce
 
 `ListAgents` ne dit **pas** qui détient une issue : il dit qui est occupé **maintenant**, et une
@@ -221,6 +257,10 @@ Quand on s'arrête, reporté, bloqué ou abandonné : **on retire l'assignation 
 Une revendication oubliée depuis trois semaines est **pire que rien** : elle fait passer une issue
 libre pour prise, et personne ne la reprendra.
 
+**La fusion relâche aussi.** L'issue se ferme, mais le worktree et la branche locale restent sur le
+poste, et un pair qui les voit y lit une prise. Ce qu'il en reste à faire est dans
+[`clore-une-pr`](../clore-une-pr/SKILL.md).
+
 ## Ce que le signalement ne couvre pas
 
 Il répond à « cette issue est-elle prise ? ». Il ne répond **pas** à « cette issue est-elle la même
@@ -244,4 +284,5 @@ locale, les refus que seule la forge rend, et le moniteur qui part avec la PR.
 | « Je m'assigne, ça suffit » | L'assignation ne dit pas quel remède vous allez écrire |
 | « Personne d'autre ne travaille dessus » | L'assignation est muette et le compte est partagé |
 | « Je reprendrai plus tard, je garde l'assignation » | Une revendication oubliée est pire que rien |
+| « Git dit que la branche est en avance, donc quelqu'un y travaille » | Après un squash il le dit toujours. Interroger la demande de la branche |
 | « Mon bloc dit ce que je vérifierai, ça suffit » | Le bloc est un commentaire. Le critère va dans le corps |

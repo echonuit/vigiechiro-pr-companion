@@ -39,6 +39,9 @@ au moment où on l'a regardé.
 7. PREVENIR les sessions pairs de ce qui vient d arriver sur `main`, quand l
             environnement en expose. Elles travaillent sur une base qui vient de
             bouger, et rien ne le leur dira.
+8. RELACHER la prise : retirer le worktree, apres avoir lu ses fichiers non suivis.
+            La branche locale, elle, survit a la fusion : un pair qui la voit y lit
+            une prise en cours.
 ```
 
 ## Le garde du verdict complet ne se lance pas tout seul
@@ -200,6 +203,37 @@ regardé la forge et a écrit à l'autre.
 **Nommer les fichiers touchés est la partie utile.** Un pair ne peut pas juger si « #5408 a été
 fusionnée » le concerne ; il le peut si la ligne dit `scripts/batterie.py`.
 
+## La fusion relâche la prise
+
+Une prise annoncée a une fin, et la fusion en est une. La demande peut fermer son issue ; elle ne
+retire ni le worktree ni la branche locale. Relevé le 7 septembre 2026 sur ce poste : 197 branches numérotées sur 216, et
+29 worktrees sur 31, pointaient une issue **close**. Le même jour, deux sessions ont lu l'un de ces
+reliquats comme la prise d'un inconnu, sur une ADR fusionnée depuis la veille.
+
+Le worktree se retire, après avoir regardé ce qu'il porte encore :
+
+```bash
+git -C <worktree> status --porcelain --untracked-files=all    # rien à perdre ?
+git -C <depot> worktree remove ../vigiechiro-wt/<branche>
+```
+
+`worktree remove` refuse un arbre qui porte un fichier modifié ou non suivi. Ce refus se lit : il
+nomme un travail qui n'est pas parti avec la demande.
+
+**La branche locale survit, et rien ne le dit.** La forge supprime la branche distante à la fusion ;
+celle du poste reste, et son commit n'est pas un ancêtre de `main` puisque la fusion est un squash.
+Cela se constate :
+
+```bash
+git -C <depot> ls-remote --heads origin <branche>    # vide : la forge ne l'a plus
+git -C <depot> branch --list <branche>               # le poste l'a encore
+```
+
+Cette page ne prescrit pas de la supprimer : effacer une branche dont le commit n'est pas sur `main`
+est un geste destructif, laissé à l'arbitrage (#5487). Qui la rencontre ne la croit donc pas sur sa
+présence, et la vérifie par la demande de sa branche, comme le décrit
+[`ouvrir-une-issue`](../ouvrir-une-issue/SKILL.md).
+
 ## Signaux d'alerte : on s'arrête
 
 | Pensée | Réalité |
@@ -212,3 +246,4 @@ fusionnée » le concerne ; il le peut si la ligne dit `scripts/batterie.py`.
 | « Le corps décrit bien la PR » | Il décrit ce qu'elle était à l'ouverture. Elle a grossi depuis |
 | « La PR est fusionnée, l'issue est close » | Seulement avec `Closes #N` en anglais. Sinon elle est restée ouverte |
 | « Les deux PR étaient vertes » | Séparément. C'est leur fusion qui part en production |
+| « La PR est fusionnée, j'ai fini » | Le worktree et la branche locale restent, et un pair les lira comme une prise |
