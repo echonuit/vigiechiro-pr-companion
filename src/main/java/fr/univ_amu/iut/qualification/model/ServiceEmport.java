@@ -101,6 +101,8 @@ public class ServiceEmport {
         List<SequenceSelectionnee> rattachements = selectionDao.listerSequences(selection.id());
         Map<Long, SequenceDEcoute> connues = sequenceDao.findParIds(
                 rattachements.stream().map(SequenceSelectionnee::idSequence).toList());
+        // Un chemin stocké relatif se lit contre la racine de la session de la nuit, jamais tel quel.
+        Optional<SessionDEnregistrement> session = sessionDao.trouverParPassage(idPassage);
 
         List<ManifestePaquet.SequenceEmportee> emportees = new ArrayList<>();
         List<Path> fichiers = new ArrayList<>();
@@ -112,7 +114,8 @@ public class ServiceEmport {
             }
             emportees.add(new ManifestePaquet.SequenceEmportee(
                     sequence.nomFichier(), rattachement.position(), rattachement.verdict()));
-            fichiers.add(Path.of(sequence.cheminFichier()));
+            Path stocke = Path.of(sequence.cheminFichier());
+            fichiers.add(session.map(racine -> racine.resoudre(stocke)).orElse(stocke));
         }
 
         Prefixe prefixe = prefixeDe(idPassage);
