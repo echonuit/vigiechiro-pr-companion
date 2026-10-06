@@ -455,7 +455,9 @@ principal `vigiechiro-*.jar` reste **mince**. jpackage empaquette donc le `-shad
     décrivait déjà, et fait de ce garde celui de l'historique, ce que l'ADR 4453 suppose (#5248).
 
     **`gh pr merge --squash` se lance nu.** Un `--body-file` écarte encore le corps validé et lui
-    substitue un texte que rien n'a lu, sous ce réglage comme sous l'autre.
+    substitue un texte que rien n'a lu, sous ce réglage comme sous l'autre. Un `--subject` fait de
+    même au sujet : il remplace celui que la forge compose, `(#N)` compris, et la ligne du CHANGELOG
+    perd son lien vers la demande sans que rien ne rougisse (#4775).
 
     **Pas d'espace avant le `:`** : `feat(scope): …` publie, `feat(scope) : …` ne publie rien. Cette
     seconde forme a arrêté la publication du 18 au 20 juillet 2026, en accumulant 58 commits

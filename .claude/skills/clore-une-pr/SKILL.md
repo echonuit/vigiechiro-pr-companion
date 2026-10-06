@@ -34,6 +34,7 @@ au moment où on l'a regardé.
 3. RELIRE   le titre et le corps : decrivent-ils ce qui a ETE FAIT, pas ce qui etait prevu ?
 4. FUSIONNER en squash, `gh pr merge --squash` NU : le corps de la demande devient celui du
             commit, et un `--body-file` ici ecarte le texte que le job `corps` vient de juger.
+            Un `--subject` ecarte de meme le sujet que la forge compose, numero de demande compris.
 5. VERIFIER `main` apres coup, sur ce que la PR touchait.
 6. TENIR    l issue mere : fermee par la PR, ou mise a jour a la main.
 7. PREVENIR les sessions pairs de ce qui vient d arriver sur `main`, quand l
@@ -140,6 +141,15 @@ drapeau, pour des effets opposés.
 
 La seconde ne se rattrape pas : l'historique est écrit. **Fusionner nu**, donc, et laisser la forge
 prendre le corps qu'elle a sous les yeux.
+
+`--subject` fait au sujet ce que `--body-file` fait au corps. La forge compose le sujet du squash
+depuis le titre de la demande et lui accole son numéro, `(#N)` ; un sujet passé à la main
+**remplace** le tout, numéro compris. C'est de ce `(#N)` que le journal engendré tire son lien vers
+la demande : la ligne garde son lien de commit et perd celui-là, sans que rien ne rougisse, le titre
+ayant été jugé avant la fusion et le sujet n'étant jugé par rien après. Un commit est arrivé ainsi
+sur `main` le 29 août 2026 (#4775). Deux ateliers posent un sujet à dessein, `capture-vues.yml` et
+`flatpak.yml`, pour y accoler la marque de saut de CI ; leurs types, `chore` et `build`, n'entrent
+pas au journal.
 
 Ce point est resté muet longtemps, et il a coûté. Jusqu'au 2026-09-05 la forge était réglée
 `COMMIT_MESSAGES`, si bien que le corps du commit était la concaténation des messages de branche :
