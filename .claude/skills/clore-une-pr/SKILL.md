@@ -48,9 +48,16 @@ au moment où on l'a regardé.
 ## Le garde du verdict complet ne se lance pas tout seul
 
 `verifie_verdict_avant_fusion.py` refuse une fusion dont le commit de tête n'a **pas** de verdict
-complet : ni zéro run, ni un run rapide conclu pendant que les gardes bloquants courent encore. Il
-existe parce que #4560 a été fusionnée avec **zéro run** sur son commit de tête, les sept qu'elle a
-fini par avoir étant nés deux minutes trop tard.
+complet : ni zéro run, ni un run rapide conclu pendant que les gardes bloquants courent encore, ni un
+atelier dont le dernier run a été interrompu. Il existe parce que #4560 a été fusionnée avec
+**zéro run** sur son commit de tête, les sept qu'elle a fini par avoir étant nés deux minutes trop
+tard.
+
+**Un atelier annulé n'a rien jugé** (#4581). Quatre de ces sept runs ont fini `cancelled` à côté de
+trois contrôles légers verts, et le garde y lisait un verdict rendu. Il nomme désormais les ateliers
+dont le **dernier** run a été interrompu, et le geste est de les relancer : `gh run rerun <id>`. Un
+run annulé puis rejoué vert passe, ce qui arrive à `Corps de PR` et `Titre de PR` à chaque édition
+de la demande.
 
 **Il ne tourne pas en CI, et c'est délibéré** : en faire un check requis casserait les chemins
 d'écriture vers `main`, ce que l'[ADR 0041](../../../dev-docs/decisions/0041-un-check-requis-gouverne-la-branche.md)
