@@ -48,7 +48,7 @@ reste propre à chacun, et chaque écart porte sa raison là où il est écrit.
 |---|---|---|---|
 | d'où vient le corpus | ce que `verifie_scripts.py` charge, plus les autonomes | ce que `lint.yml` lance sous `scripts/`, hors `scripts/adr` | ce que les ateliers nomment |
 | le banc est-il dans son corpus | par sa moitié chargée, jamais par celle qu'il lance | oui ([ADR 4770](4770-la-mutation-se-transpose-par-le-point-d-entree.md)) | non |
-| ce qui borne le second sens de la table | la portée du diff | rien | les outils du poste, `NE_JOUENT_QU_AVEC` |
+| ce qui borne le second sens de la table | la portée du diff | rien | le corpus entier |
 | ses exemptions nommées | `HORS_PORTEE` (#5495) | `HORS_PORTEE` (#5479) | aucune |
 
 La seconde ligne a trois raisons. Le banc des ADR lance les scripts qu'il éprouve et se rappellerait
@@ -64,8 +64,8 @@ Trois fonctions du même nom ne sont pas une duplication à réduire : la lectur
 est identique dans deux bancs et diffère dans le troisième, la confrontation diffère dans les trois.
 
 Un écart entre deux bancs se lit avec sa raison, ou se consigne comme une trouvaille. Les aligner
-« par cohérence » retirerait au banc des ADR sa barrière contre le rappel sans fin, ou ferait rougir
-la table du banc de CI sur tout poste qui porte ImageMagick.
+« par cohérence » retirerait au banc des ADR sa barrière contre le rappel sans fin, ou lui ferait
+annoncer des réparations imaginaires sur un diff partiel.
 
 Ce qui se paie : une règle neuve s'écrit trois fois, et la troisième s'oublie (#5263, #5495, #5550).
 Le remède retenu est que chaque banc porte son cas rouge, non que le code soit commun.
@@ -90,8 +90,8 @@ Elle ne répare pas les gardes que les tables nomment : le chantier l'a exclu.
 
 Le job `temoins` sur `main` à `e8682ff5f` : 50 tiennent et 4 ne concluent pas sur 54 pour le banc
 des ADR, 20 et 10 sur 30 pour celui de méthode, 39 et 9 sur 48 pour celui de CI. Aucun
-décoratif, et chaque somme vaut sa population. Deux des 39 n'ont rien prouvé sur ce runner : leur
-auto-test refuse de commencer sans ImageMagick ou ffmpeg, et le banc lit ce refus comme un rouge qui
-tient (#5497).
+décoratif, et chaque somme vaut sa population. Deux des 39 n'avaient rien prouvé sur ce runner : leur
+auto-test refuse de commencer sans ImageMagick ou ffmpeg, et le banc lisait ce refus comme un rouge
+qui tient. Depuis #6030 il les compte non concluants, 11 sur tout hôte.
 
 Les fonctions homonymes ont été comparées par leur arbre à `0467bca9f`.
