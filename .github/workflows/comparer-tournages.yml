@@ -238,9 +238,18 @@ jobs:
           # classé contre le mauvais sol a l'air aussi juste que l'autre (#5885). Le jour où l'image
           # du runner change de version, ce pas rougit en nommant les deux, et c'est le signal qu'il
           # faut remesurer.
+          #
+          # L'index va au résumé QUE L'OUTIL AIT REFUSÉ OU NON, puis ce pas rend son code. Deux sources
+          # sans aucun cas commun font sortir l'outil en 1 (#5934) : il écrit quand même l'index, et
+          # la liste des cas apparus et disparus y est tout ce qu'il reste à lire. Versé après l'appel
+          # sous `set -e`, le résumé restait vide précisément sur ce refus.
+          code=0
           python3 .github/assets/compare_tournages.py avant apres comparaison "${TOLERANCE}" \
-            .github/assets/planchers-tournages.tsv
-          cat comparaison/index.md >> "${GITHUB_STEP_SUMMARY}"
+            .github/assets/planchers-tournages.tsv || code=$?
+          if [ -f comparaison/index.md ]; then
+            cat comparaison/index.md >> "${GITHUB_STEP_SUMMARY}"
+          fi
+          exit "${code}"
 
       - name: Garder les images de la comparaison
         if: ${{ always() }}
