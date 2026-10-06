@@ -93,25 +93,34 @@ CHIFFRE = re.compile(r"(\d+)")
 # resoudre les imports et le corps de l aide, pour une reponse qu un nom donne exactement.
 AIDE_DU_CONTRAT = "sort_si_contrat_demande"
 
-# LE DERNIER PORTEUR NON PYTHON, nomme plutot que devine (issue #5144).
+# LES PORTEURS NON PYTHON, nommes plutot que devines (issue #5144). IL N EN RESTE AUCUN.
 #
 # Un contrat Python se DECLARE par un `CONTRAT` au niveau module, que l AST lit. Le shell n a pas
-# cette prise : `verifie-butoirs.sh` imprime ses six champs depuis un `cat <<'FIN_DU_CONTRAT'`.
+# cette prise : `verifie-butoirs.sh` imprimait ses six champs depuis un `cat <<'FIN_DU_CONTRAT'`.
 #
 # **On ne tord pas le recensement pour lui.** #5102 a decide que les gardes shell ne recoivent pas de
 # contrat mais se CONVERTISSENT, la cible du depot etant deux langages, Java et Python. Batir un
 # mecanisme pour ce cas serait investir dans ce qui doit disparaitre.
 #
-# Une exception NOMMEE dit ce qu un motif tairait : il en reste un, c est le dernier, et le jour ou
-# le lot 5 de #5102 le convertit, ce dictionnaire devient vide et la branche qui le lit s en va.
+# Une exception NOMMEE dit ce qu un motif tairait. Il en restait un, `verifie-butoirs.sh` : #5224
+# l a converti le 2026-09-04, et son entree est restee ici un mois sans que rien ne le dise, parce
+# que `fichiers()` ecartait le fichier absent et qu un cas comptait les entrees au lieu de les
+# chercher sur le disque (issue #6079). Le dictionnaire est donc vide, et une entree qui nommerait
+# un fichier absent est desormais un suspect : voir `porteurs_absents`.
 # L idiome vient de `HORS_PORTEE` dans `verifie_verdicts_declares.py`, dont le commentaire dit
 # pourquoi chaque entree porte sa raison.
-PORTEURS_HORS_PYTHON = {
-    ".github/scripts/verifie-butoirs.sh": (
-        "dernier garde shell portant un contrat ; il imprime ses champs depuis un heredoc, qu aucun "
-        "AST Python ne lit. Se retire quand le lot 5 de #5102 l aura converti"
-    ),
-}
+PORTEURS_HORS_PYTHON: dict[str, str] = {}
+
+
+def porteurs_absents(porteurs: dict[str, str], base: pathlib.Path) -> list[str]:
+    """Les porteurs hors Python DECLARES dont le fichier n existe pas (issue #6079).
+
+    `fichiers()` n ajoute un porteur hors Python que si son fichier existe, sans quoi sa lecture
+    leverait. Ce filtre ecartait donc en silence une exception devenue morte : `verifie-butoirs.sh` a
+    ete converti par #5224 le 2026-09-04, son entree est restee un mois, et rien ne l a dit. Une
+    exception nommee qui ne designe plus rien est un SUSPECT, pas une absence.
+    """
+    return sorted(nom for nom in porteurs if not (base / nom).is_file())
 
 
 def declare_un_contrat(texte: str) -> bool:
@@ -330,12 +339,24 @@ def releve_des_contrats(base: pathlib.Path):
     return releve
 
 
-def suspects(racine: pathlib.Path | None = None) -> list[str]:
-    """Un suspect par CONTRADICTION entre ce qu un contrat declare et ce que le garde fait."""
+def suspects(
+    racine: pathlib.Path | None = None, porteurs: dict[str, str] | None = None
+) -> list[str]:
+    """Un suspect par CONTRADICTION entre ce qu un contrat declare et ce que le garde fait.
+
+    `porteurs` vaut `PORTEURS_HORS_PYTHON` par defaut ; le temoin en passe un fabrique, pour voir le
+    refus d un porteur disparu sans dependre de ce que le dictionnaire reel porte ce jour-la.
+    """
     base = racine or RACINE_DEPOT
     releve = releve_des_contrats(base)
+    declares = PORTEURS_HORS_PYTHON if porteurs is None else porteurs
 
-    trouves = []
+    # Un porteur NOMME dont le fichier n existe plus : `fichiers()` l ecarte pour ne pas lever, et
+    # c est ici qu il se dit (issue #6079).
+    trouves = [
+        f"{nom}  porteur hors Python declare, mais le fichier n existe pas"
+        for nom in porteurs_absents(declares, base)
+    ]
     for chemin in fichiers(racine):
         vu_tot = chemin.relative_to(base).as_posix()
         # Un contrat DECLARE que rien ne peut atteindre est un contrat qui ment : il existe, il a
@@ -531,17 +552,42 @@ def _auto_test() -> int:
         declare_un_contrat('CONTRAT = {"geste": "x"}\n\nsort_ailleurs(__file__, CONTRAT)\n'),
         True,
     )
-    # Le dernier porteur shell est NOMME, pas devine : le jour ou le lot 5 de #5102 le convertit,
-    # ce cas tombe a zero et la branche qui le lit s en va.
+    # Le dernier porteur shell a ete converti par #5224 : ce cas disait « exactement un » et il est
+    # tombe a zero, comme son commentaire l annoncait. Le cas voisin, « chacun porte sa raison », ne
+    # jugeait plus rien sur un dictionnaire vide ; il est retire plutot que laisse vacant.
     verifie(
-        "il reste exactement un porteur hors Python",
+        "il ne reste aucun porteur hors Python",
         len(PORTEURS_HORS_PYTHON),
-        1,
+        0,
+    )
+    # UN PORTEUR DECLARE QUI N EXISTE PLUS EST VU (issue #6079). Sur un depot fabrique d abord, pour
+    # que le cas puisse rougir quel que soit l etat du dictionnaire reel, puis sur le depot.
+    import tempfile
+
+    with tempfile.TemporaryDirectory(prefix="vc-6079-") as tmp:
+        faux = pathlib.Path(tmp)
+        (faux / "present.sh").write_text("#!/usr/bin/env bash\n", encoding="utf-8")
+        declares = {"present.sh": "il existe", "disparu.sh": "il a ete converti"}
+        verifie(
+            "un porteur declare dont le fichier manque est nomme, et lui seul",
+            porteurs_absents(declares, faux),
+            ["disparu.sh"],
+        )
+    # Le REFUS, et non le calcul : sur le depot reel, parce que `suspects()` charge l inference depuis
+    # l arbre qu on lui donne, et avec un dictionnaire fabrique, pour ne rien devoir au vrai.
+    verifie(
+        "et il devient un suspect du garde, au lieu d etre ecarte en silence",
+        [
+            s
+            for s in suspects(None, {"scripts/adr/jamais-ecrit.sh": "fabrique"})
+            if "jamais-ecrit" in s
+        ],
+        ["scripts/adr/jamais-ecrit.sh  porteur hors Python declare, mais le fichier n existe pas"],
     )
     verifie(
-        "et chacun porte sa raison",
-        all(len(r) > 40 for r in PORTEURS_HORS_PYTHON.values()),
-        True,
+        "chaque porteur hors Python declare existe dans le depot",
+        porteurs_absents(PORTEURS_HORS_PYTHON, RACINE_DEPOT),
+        [],
     )
 
     verifie(
