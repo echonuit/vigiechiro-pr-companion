@@ -99,8 +99,8 @@ qu'elles écrivent est lu hors de l'échange qui l'a produit, donc l'article A31
 Une clôture se refait parfois - une passe sautée, une passe faite de trop loin. **L'ordre vaut alors
 une seconde fois** : une passe qui en balaye d'autres doit être rejouée **après** elles.
 
-Vécu le 28 août 2026 sur le chantier #4573. Six passes ont été reprises, mais la **10** avait été
-relancée avant que les 5 à 8 ne le soient. Elle a balayé des passes qui n'avaient pas encore eu lieu
+Vécu le 28 août 2026 sur le chantier #4573. Six passes ont été reprises, mais celle des ADR, alors
+numérotée 10 et aujourd'hui **11**, avait été relancée avant que les 5 à 8 ne le soient. Elle a balayé des passes qui n'avaient pas encore eu lieu
 dans leur forme finale, et n'a rien tiré ni de la 0 ni de la 7 - les deux sources que
 [`ecrire-une-adr`](../ecrire-une-adr/SKILL.md) désigne pourtant en premier.
 
@@ -237,7 +237,7 @@ relit comme telle.
 | « Je relis les ADR de ma branche » | Contre `origin/main`, sinon vous manquez celles écrites pendant |
 | « Les suites, on verra plus tard » | Elles se closent par les mêmes quatorze passes |
 | « Le garde est sorti en 0, tout va bien » | Les loupes signalent en rendant `0`. Passe 1 : on **lit** ce que les gardes écrivent |
-| « Je refais la passe qui manquait » | Elle en invalide d'autres si elle les balayait. La 10 se rejoue **en dernier** |
+| « Je refais la passe qui manquait » | Elle en invalide d'autres si elle les balayait. La 11, celle des ADR, se rejoue **après** les passes qu'elle balaye |
 | « La capture est produite, la passe 8 est faite » | Elle se **regarde**. Une image peut montrer le bon état et rester invraisemblable |
 | « Cette trouvaille aura le numéro suivant » | Un numéro d'issue **supposé** est le numéro de quelqu'un d'autre. On l'ouvre, ou on cite l'EPIC |
 | « Je relis le diff de mon chantier » | Le delta est `<ouverture>..origin/main` **entier**. Filtrer cache ce que la rencontre avec les autres sessions a produit |
