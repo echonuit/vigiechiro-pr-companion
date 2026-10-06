@@ -49,8 +49,10 @@
 
         <maven.compiler.plugin.version>3.16.0</maven.compiler.plugin.version>
         <!-- Second compilateur, profil `ecj` seulement (#3366) : jamais dans le build par défaut. -->
-        <plexus.compiler.eclipse.version>2.17.0</plexus.compiler.eclipse.version>
-        <ecj.version>3.46.0</ecj.version>
+        <!-- UNE propriété pour `plexus-compiler-eclipse` ET `plexus-compiler-api`, et `ecj` monte avec
+             elles : la raison est au profil (#6090). -->
+        <plexus.compiler.version>2.17.1</plexus.compiler.version>
+        <ecj.version>3.46.100</ecj.version>
         <maven.surefire.plugin.version>3.6.0</maven.surefire.plugin.version>
         <maven.shade.plugin.version>3.6.2</maven.shade.plugin.version>
         <maven.dependency.plugin.version>3.11.0</maven.dependency.plugin.version>
@@ -1087,11 +1089,29 @@
                                 <exclude>module-info.java</exclude>
                             </excludes>
                         </configuration>
+                        <!-- Ces artefacts montent ENSEMBLE (#6090). `EclipseJavaCompiler` hérite
+                             d'`AbstractCompiler`, qui vit dans `plexus-compiler-api` ; or le plugin
+                             déclare lui-même l'api en direct, à SA version, et un direct l'emporte
+                             sur ce que `plexus-compiler-eclipse` demande en transitif. Monté seul
+                             à 2.17.1, eclipse appelait `joinAnnotationProcessors(String[])`,
+                             méthode ajoutée dans l'api 2.17.1, sur une api restée à 2.17.0 :
+                             `NoSuchMethodError`. L'api est donc déclarée ici, à la MÊME propriété.
+                             L'api SEULE, et non `-manager` ni `-javac`, que le plugin tire aussi à
+                             sa version : lu par `javap` sur les jars, l'api 2.17.1 n'a fait
+                             qu'AJOUTER cette méthode, le manager n'en appelle aucune et javac
+                             2.17.0 n'appelle pas celle-là. Les déclarer éloignerait deux artefacts
+                             de plus de ce que le plugin a éprouvé, sans défaut à réparer.
+                             `ecj` suit la version que le POM de `plexus-compiler-eclipse` demande. -->
                         <dependencies>
                             <dependency>
                                 <groupId>org.codehaus.plexus</groupId>
                                 <artifactId>plexus-compiler-eclipse</artifactId>
-                                <version>${plexus.compiler.eclipse.version}</version>
+                                <version>${plexus.compiler.version}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.codehaus.plexus</groupId>
+                                <artifactId>plexus-compiler-api</artifactId>
+                                <version>${plexus.compiler.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>org.eclipse.jdt</groupId>
