@@ -76,6 +76,8 @@ DOSSIERS = (".github/scripts", ".github/assets")
 MOI = pathlib.Path(__file__).name
 
 TRACE = "Traceback (most recent call last)"
+# Le code par lequel un script de ce depot dit qu il n a PAS PU juger (ADR 5774). Voir `classe`.
+CODE_DE_REFUS = 2
 
 # ⟨les gardes qui PLANTENT sous mutation, nommes un par un (#5497)⟩ Un plantage ne fait pas rougir
 # ce banc (ADR 5257), et c est juste. Mais rien ne BORNAIT ces gardes : ils s imprimaient sous
@@ -98,22 +100,23 @@ PLANTENT_SOUS_MUTATION: dict[str, str] = {
     "verifie_jeton_vivant.py": "type sous neutralisation : une liste employee comme cle de dictionnaire",
     "verifie_specification_consignee.py": "type sous neutralisation : le deballage de la fabrique de forge, mutee",
     "check_capture_mains.py": "fixture sous neutralisation : le fichier que la fonction mutee devait ecrire",
-    "compare_apercus.py": "fixture sous neutralisation : l index que la fonction mutee devait ecrire",
-    "compare_tournages.py": "fixture sous neutralisation : les planchers que la fonction mutee devait ecrire",
+    "compare_apercus.py": "fixture sous neutralisation : l index que la fonction mutee devait ecrire ; "
+    "sans `convert`, refuse de jouer",
+    "compare_tournages.py": "fixture sous neutralisation : les planchers que la fonction mutee devait "
+    "ecrire ; sans `ffmpeg` ou `compare`, refuse de jouer",
     "filtrer_bruit_cartes.py": "type sous neutralisation : un deballage de deux valeurs sur un vide",
 }
 
-# ⟨deux entrees ne plantent que la ou leur auto-test JOUE⟩ Elles ouvrent leur auto-test par un
-# prealable d outil et sortent en 2 sans trace quand il manque : ce banc lit alors « tient ». Le
-# runner du job `temoins` n a ni ImageMagick ni ffmpeg, un poste de developpement les a souvent.
-# Mesure du 2026-10-06, meme commit : 9 non concluants sur le runner, 11 sur un poste outille, et 9
-# sur ce poste une fois les outils retires du PATH. Sans cette borne, la table rougirait d un cote
-# ou de l autre. Un garde qui a refuse de jouer n a pas ete visite, et l ADR 5743 ne juge le second
-# sens que sur ce qui l a ete.
-NE_JOUENT_QU_AVEC: dict[str, tuple[str, ...]] = {
-    "compare_apercus.py": ("convert",),
-    "compare_tournages.py": ("ffmpeg", "compare"),
-}
+# ⟨deux entrees ont DEUX causes, selon l hote (#6030)⟩ `compare_apercus.py` et
+# `compare_tournages.py` ouvrent leur auto-test par un prealable d outil. Sur un poste qui porte
+# ImageMagick et ffmpeg, l auto-test joue et plante sur sa fixture ; sur le runner du job `temoins`,
+# qui ne les porte pas, il refuse de jouer et sort en 2. Les deux sont « non concluant » : cette
+# table vaut donc sur tout hote, 11 partout.
+#
+# Elle ne valait pas partout avant : un refus de jouer se lisait « tient », le runner rendait 9 la
+# ou un poste outille rendait 11, et une seconde table, `NE_JOUENT_QU_AVEC`, declarait les outils
+# de ces deux entrees pour qu elles ne soient pas dites perimees la ou ils manquaient (#5497). Elle
+# bornait un defaut de classification ; le defaut corrige, elle n avait plus rien a borner.
 
 CONDUITE_SUR_LA_TABLE = (
     "Un garde qui plante : le reparer pour qu il ASSERTE au lieu de planter, ou le nommer dans "
@@ -217,6 +220,43 @@ def ligne_du_point_d_entree(source: str) -> int | None:
     return None
 
 
+def classe(rendu) -> tuple[str, str]:
+    """Le verdict d un auto-test MUTE, lu sur son code de sortie et sur ce qu il a dit.
+
+    | ce qu on observe | verdict | ce que cela prouve |
+    |---|---|---|
+    | code 0 | decoratif | l auto-test ne lit pas sa detection |
+    | une trace Python | non concluant | rien : il est mort avant d assertir (ADR 5257) |
+    | code 2, sans trace | non concluant | rien : il a REFUSE DE JOUER |
+    | tout autre code, sans trace | tient | il a vu sa detection disparaitre |
+
+    ## Le refus de jouer (#6030)
+
+    Un auto-test qui s ouvre par un prealable d outil sort en 2 sans trace quand l outil manque. Ce
+    banc lisait « rouge sans trace », donc « tient », pour un garde dont AUCUN cas n avait joue.
+    Mesure du 2026-10-06 sur le runner du job `temoins`, qui n a ni ImageMagick ni ffmpeg : 2 des
+    39 gardes annonces eprouves, `compare_apercus.py` et `compare_tournages.py`.
+
+    Le signe est le CODE, et c est le canal de l ADR 5774 : ce qui empeche de juger sort en `2`, ce
+    qui a ete juge sort en `1`. Mesure du meme jour, en relevant le code de chaque auto-test mute :
+    les 50 gardes du corpus sortent en 1 sur un poste outille, et sans outils ces deux-la sortent
+    en 2, eux seuls. Aucun garde du corpus ne rougit donc en 2 pour dire qu il a detecte.
+
+    Rendu par UNE fonction pour les deux chemins, `eprouve` et `eprouve_fichier` : l auto-test ne
+    joue que le second, et une classification recopiee aurait laisse ses cas juger une jumelle de
+    ce que le banc applique au corpus.
+    """
+    if rendu.returncode == 0:
+        return "decoratif", "reste vert sans sa detection"
+    if TRACE in rendu.stderr:
+        derniere = [l for l in rendu.stderr.strip().splitlines() if l and not l.startswith(" ")]
+        return "non concluant", (derniere[-1] if derniere else "trace illisible")[:110]
+    if rendu.returncode == CODE_DE_REFUS:
+        dit = [l for l in (rendu.stderr or rendu.stdout).strip().splitlines() if l.strip()]
+        return "non concluant", ("a refuse de jouer : " + (dit[-1] if dit else "sans un mot"))[:110]
+    return "tient", ""
+
+
 def mute(source: str) -> str:
     """La source, neutralisation INSEREE avant le point d entree de module."""
     ligne = ligne_du_point_d_entree(source)
@@ -256,41 +296,32 @@ def eprouve(garde: pathlib.Path) -> tuple[str, str]:
             check=False,
             timeout=300,
         )
-    if rendu.returncode == 0:
-        return "decoratif", "reste vert sans sa detection"
-    if TRACE in rendu.stderr:
-        derniere = [l for l in rendu.stderr.strip().splitlines() if l and not l.startswith(" ")]
-        return "non concluant", (derniere[-1] if derniere else "trace illisible")[:110]
-    return "tient", ""
+    return classe(rendu)
 
 
-def ecarts_de_la_table(
-    plantent: list[str], entier: bool = True, present=shutil.which
-) -> tuple[list[str], list[str]]:
-    """Les deux ecarts entre ce qui plante et ce que la table nomme : (inattendus, perimes).
+def ecarts_de_la_table(plantent: list[str], entier: bool = True) -> tuple[list[str], list[str]]:
+    """Les deux ecarts entre ce qui ne conclut pas et ce que la table nomme : (inattendus, perimes).
 
-    Le premier sens vaut toujours. Le second ne se juge que sur ce qui a ete VISITE : le corpus
-    entier, et, pour les entrees de `NE_JOUENT_QU_AVEC`, un hote qui porte leurs outils. `present`
-    s injecte pour qu un cas eprouve les deux hotes sans desinstaller quoi que ce soit.
+    Le premier sens vaut toujours. Le second ne se juge que sur le corpus ENTIER : sur une part du
+    corpus, les entrees non visitees paraitraient reparees (ADR 5743).
+
+    Il ne depend plus de l hote (#6030). Tant qu un refus de jouer se lisait « tient », deux entrees
+    n etaient visitees que la ou leurs outils existaient, et cette fonction recevait de quoi sonder
+    le poste. Un garde qui refuse de jouer est desormais visite et non concluant partout.
     """
     inattendus = sorted(set(plantent) - set(PLANTENT_SOUS_MUTATION))
     if not entier:
         return inattendus, []
-    non_visites = {
-        nom
-        for nom, outils in NE_JOUENT_QU_AVEC.items()
-        if not all(present(outil) for outil in outils)
-    }
-    return inattendus, sorted(set(PLANTENT_SOUS_MUTATION) - set(plantent) - non_visites)
+    return inattendus, sorted(set(PLANTENT_SOUS_MUTATION) - set(plantent))
 
 
-def conclut_sur_la_table(plantent: list[str], entier: bool = True, present=shutil.which) -> int:
+def conclut_sur_la_table(plantent: list[str], entier: bool = True) -> int:
     """Rend 1 avec un CONSTAT si la table ne decrit plus ce qui plante, et 0 sinon.
 
     Un constat et non un refus : le banc a mute son corpus et compare, donc il a JUGE (ADR 5774). Il
     rend `1` SANS les marques de refus, que la porte lirait « ce garde n a pas pu juger ».
     """
-    inattendus, perimes = ecarts_de_la_table(plantent, entier, present)
+    inattendus, perimes = ecarts_de_la_table(plantent, entier)
     if not (inattendus or perimes):
         return 0
     dits = []
@@ -325,7 +356,7 @@ def juge(gardes: list[pathlib.Path] | None = None) -> int:
     print("ADR 4490 - temoin decoratif : l auto-test de CI reste vert sans sa detection")
     print()
     print(f"  eprouves et TENANT           : {tient}")
-    print(f"  NON CONCLUANTS (plantage)    : {len(non_concluants)}")
+    print(f"  NON CONCLUANTS               : {len(non_concluants)}")
     for nom, cause in non_concluants:
         print(f"      {nom} : {cause}")
     print(f"  DECORATIFS                   : {len(decoratifs)}")
@@ -397,6 +428,30 @@ def _auto_test():
     liste, compte = suspects()
     print("ok" if compte == 1 else "ECHEC")
     return 0 if compte == 1 else 1
+
+
+if __name__ == "__main__":
+    sys.exit(_auto_test())
+'''
+
+# ⟨#6030⟩ Le garde qui REFUSE DE JOUER : son auto-test s ouvre par un prealable et sort en 2 sans
+# trace, avant son premier cas. C est la forme de `compare_apercus.py` sans ImageMagick. Sa
+# detection est lue plus bas, donc avec son outil il tiendrait : ce qu on eprouve est le refus.
+GARDE_QUI_REFUSE_DE_JOUER = '''#!/usr/bin/env python3
+"""Faux garde : son auto-test exige un outil que cet hote ne porte pas."""
+import shutil
+import sys
+
+
+def suspects():
+    return ["un defaut"]
+
+
+def _auto_test():
+    if shutil.which("outil-que-personne-n-a-installe") is None:
+        print("outil requis pour l auto-test.", file=sys.stderr)
+        return 2
+    return 0 if suspects() == ["un defaut"] else 1
 
 
 if __name__ == "__main__":
@@ -478,56 +533,42 @@ def _auto_test() -> int:
     verifie("tient", GARDE_QUI_TIENT, "un auto-test qui lit sa detection rougit")
     verifie("decoratif", GARDE_DECORATIF, "un auto-test qui ne la lit pas reste vert")
     verifie("non concluant", GARDE_QUI_PLANTE, "un depaquetage sur [] ne conclut pas")
+    verifie(
+        "non concluant",
+        GARDE_QUI_REFUSE_DE_JOUER,
+        "un auto-test qui refuse de jouer ne conclut pas",
+    )
 
     # ⟨#5497⟩ La table des non concluants, confrontee dans les deux sens. Les cas eprouvent la
     # fonction et le geste sur des noms FABRIQUES : muter quarante-huit gardes pour savoir ce que
     # rend une difference d ensembles ne prouverait rien de plus.
     connus = list(PLANTENT_SOUS_MUTATION)
-    outille = lambda _outil: "/usr/bin/present"
-    cas += 9
+    cas += 7
     asserte(
-        "les nommes qui plantent ne font aucun ecart",
-        lambda: ecarts_de_la_table(connus, present=outille),
+        "les nommes qui ne concluent pas ne font aucun ecart",
+        lambda: ecarts_de_la_table(connus),
         ([], []),
     )
     asserte(
-        "un garde de PLUS qui plante est un inattendu, et il se nomme",
-        lambda: ecarts_de_la_table([*connus, "neuf.py"], present=outille),
+        "un garde de PLUS qui ne conclut pas est un inattendu, et il se nomme",
+        lambda: ecarts_de_la_table([*connus, "neuf.py"]),
         (["neuf.py"], []),
     )
     # ⟨le sens que n aurait pas un cliquet⟩ Un compte reste VERT quand un plantage est repare.
     asserte(
-        "une entree qui ne plante plus est perimee, et elle se nomme aussi",
-        lambda: ecarts_de_la_table(connus[1:], present=outille),
+        "une entree qui conclut desormais est perimee, et elle se nomme aussi",
+        lambda: ecarts_de_la_table(connus[1:]),
         ([], ["cas_manquants_du_tournage.py"]),
-    )
-    # ⟨LES DEUX HOTES⟩ Sans leurs outils, deux entrees refusent de jouer et ne plantent pas : le
-    # runner du job `temoins` est cet hote-la. Elles n y sont pas dites perimees.
-    sans_outils = [nom for nom in connus if nom not in NE_JOUENT_QU_AVEC]
-    asserte(
-        "sur un hote SANS leurs outils, les entrees qui n ont pas joue ne sont pas perimees",
-        lambda: ecarts_de_la_table(sans_outils, present=lambda _outil: None),
-        ([], []),
-    )
-    asserte(
-        "sur un hote qui les porte, les memes le sont",
-        lambda: ecarts_de_la_table(sans_outils, present=outille),
-        ([], sorted(NE_JOUENT_QU_AVEC)),
     )
     asserte(
         "sur un corpus PARTIEL, aucune entree n est dite perimee",
-        lambda: ecarts_de_la_table([], entier=False, present=outille),
+        lambda: ecarts_de_la_table([], entier=False),
         ([], []),
     )
     # Une cle qui ne serait pas un garde du corpus ne rencontrerait jamais ce que `juge` rend.
     asserte(
-        "chaque entree des deux tables est un garde du corpus",
-        lambda: (
-            sorted(
-                (set(PLANTENT_SOUS_MUTATION) | set(NE_JOUENT_QU_AVEC)) - {g.name for g in corpus()}
-            )
-            + sorted(set(NE_JOUENT_QU_AVEC) - set(PLANTENT_SOUS_MUTATION))
-        ),
+        "chaque entree de la table est un garde du corpus",
+        lambda: sorted(set(PLANTENT_SOUS_MUTATION) - {g.name for g in corpus()}),
         [],
     )
 
@@ -535,7 +576,7 @@ def _auto_test() -> int:
     def sortie_de(noms: list[str]) -> tuple[int, str]:
         tampon = io.StringIO()
         with contextlib.redirect_stderr(tampon):
-            return conclut_sur_la_table(noms, present=outille), tampon.getvalue()
+            return conclut_sur_la_table(noms), tampon.getvalue()
 
     asserte(
         "un ecart rend un constat ROUGE, en 1, et les nommes n en rendent aucun",
@@ -576,12 +617,7 @@ def eprouve_fichier(chemin: pathlib.Path) -> tuple[str, str]:
         check=False,
         timeout=120,
     )
-    if rendu.returncode == 0:
-        return "decoratif", "reste vert sans sa detection"
-    if TRACE in rendu.stderr:
-        derniere = [l for l in rendu.stderr.strip().splitlines() if l and not l.startswith(" ")]
-        return "non concluant", (derniere[-1] if derniere else "trace illisible")[:110]
-    return "tient", ""
+    return classe(rendu)
 
 
 if __name__ == "__main__":
