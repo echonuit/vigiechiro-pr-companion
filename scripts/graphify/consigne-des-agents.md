@@ -50,16 +50,20 @@ remplace en silence une extraction plus riche.
   concept, pas le titre. La fusion replie ces homonymes sur le titre, et votre nœud n'y gagne rien.
 - Aucun numéro de lot ni suffixe dans un identifiant.
 - **Un libellé ne se partage pas.** Le moteur fond deux énoncés de même libellé en un seul, et
-  l'identifiant de l'un disparaît. L'audit refuse donc un libellé que porte déjà un autre énoncé,
-  dans votre lot ou dans celui d'un autre lecteur. Quand votre page dit la même chose qu'une
-  autre, écrivez ce que **cette page** en dit, et reliez les deux par une arête.
+  l'identifiant de l'un disparaît. L'audit refuse donc un libellé que porte déjà un autre énoncé
+  **de la passe**, dans votre lot ou dans celui d'un autre lecteur. Il compare sans casse, sans
+  accent et sans ponctuation : changer une virgule ne fait pas un autre libellé. Il ne lit pas le
+  graphe : un libellé que porte déjà une page hors de la passe passe l'audit, et c'est la fusion
+  qui nomme l'énoncé fondu. Quand votre page dit la même chose qu'une autre, écrivez ce que
+  **cette page** en dit, et reliez les deux par une arête.
 
 ## Les arêtes
 
 Chaque extrémité d'arête est un nœud que vous émettez, ou un identifiant recopié **octet pour
 octet** depuis l'un des trois fichiers. Certains portent des accents : copiez-les depuis le JSON,
-ne les retapez pas. Un énoncé d'une autre page n'est une extrémité admise que si la fiche le range
-sous `ailleurs`, comme dit plus bas.
+ne les retapez pas. Un énoncé d'une autre page est une extrémité admise dans deux cas : sa page
+est relue dans la même passe, par vous ou par un autre lecteur, ou la fiche le range sous
+`ailleurs`, comme dit plus bas.
 
 - **Ancrez chaque nœud** : une arête `references`, `EXTRACTED`, depuis le titre de la section qui
   le définit. Quand ce titre manque à `structure`, un `###`, un encart ou une ligne d'un grand
@@ -160,16 +164,17 @@ Un seul fichier, `rendu_NN.json`, dans le dossier de travail :
 Écrivez vos brouillons dans un sous-dossier `travail_NN/` que vous créez, avec le numéro de
 votre lot : d'autres agents travaillent à côté, chacun dans le sien, et un nom générique s'écrase.
 
-L'audit, `python3 -B scripts/graphify/couche_semantique.py audite --dossier <dossier>`, écrit une
-ligne par lot : `sain` avec ses comptes, `ABSENT`, ou le défaut. Lancez-le et lisez la vôtre. Les
-lots des autres lecteurs sont absents tant qu'ils n'ont pas rendu, et sa sortie reste en 1 jusque
-là : ce n'est pas votre affaire. Un libellé pris par un autre lot ne se voit qu'une fois les deux
+L'audit, `python3 -B scripts/graphify/couche_semantique.py audite --dossier <dossier>`, écrit pour
+chaque lot `sain` avec ses comptes, `ABSENT`, ou une ligne par sorte de défaut, puis une ligne
+`AUDIT` qui compte les lots refusés. Lancez-le et lisez les vôtres. Les lots des autres lecteurs
+sont absents tant qu'ils n'ont pas rendu, et sa sortie reste en 1 jusque là : ce n'est pas votre
+affaire. Un libellé pris par un autre lot ne se voit qu'une fois les deux
 rendus là.
 
 Il vérifie : aucun identifiant de structure réémis, chaque extrémité d'arête connue,
 `source_location` nul, `_origin` posé, chaque page du lot avec au moins un nœud, chaque
 identifiant de `semantique` et chaque hyperarête de la fiche réémis ou déclaré dans `laches`,
-chaque membre d'hyperarête connu, aucun libellé porté par deux énoncés.
+chaque membre d'hyperarête connu, aucun libellé porté par deux énoncés de la passe.
 
 ## Quand une seule session fait tout
 

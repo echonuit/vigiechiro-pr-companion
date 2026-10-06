@@ -16,9 +16,10 @@
 # - Skip si l'opt-in est absent, si graphify n'est pas installé, ou si aucun graphe
 #   n'existe encore (rien à mettre à jour tant qu'il n'a pas été construit une fois)
 # - Sinon relance en ARRIÈRE-PLAN scripts/graphify/rebuild.py sur les fichiers du
-#   commit : extraction AST du code modifié, les quatre passes de pont, puis
-#   clustering et rapport. Environ 20 s, sans bloquer le terminal.
-# - La documentation demande un LLM, que le hook n'a pas : un `.md` modifié pose le
+#   commit : extraction de structure du code modifié ET des pages modifiées, dont les
+#   titres se relisent (#5941), les quatre passes de pont, puis reconstruction et rapport.
+#   Environ 20 s, sans bloquer le terminal.
+# - La PROSE d'une page demande un LLM, que le hook n'a pas : un `.md` modifié pose le
 #   drapeau graphify-out/.needs_update, à résorber en session.
 #   `scripts/graphify/couche_semantique.py a-reextraire` dit quelles pages, et ce n'est
 #   pas `/graphify . --update`, qui signale le corpus entier (ADR 5790). Le graphe du

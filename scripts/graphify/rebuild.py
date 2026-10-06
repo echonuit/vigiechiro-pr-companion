@@ -66,7 +66,33 @@ def journal(message: str) -> None:
     print(f"[graphify] {message}", flush=True)
 
 
-def refus_sans_le_moteur() -> int:
+# Le refus et son remede, ecrits UNE fois : `couche_semantique.py fusionne` les dit aussi, sur la
+# sortie d'erreur. Ils existaient en deux textes, dont un seul donnait le remede (#5966).
+REFUS_SANS_MOTEUR = (
+    (
+        "REFUS : graphify n est pas importable par cet interprete. Ce refus parle du poste,"
+        " pas du depot, et rien n a ete touche."
+    ),
+    (
+        "POUR REPARER : relancer avec l interprete de graphify, que nomme"
+        " graphify-out/.graphify_python."
+    ),
+)
+
+# Les drapeaux que `main` connait. Tout autre argument a deux tirets fait refuser.
+DRAPEAUX = ("--auto-test", "--mets-a-jour", "--repartitionne")
+
+
+def drapeaux_inconnus(argv: list[str]) -> list[str]:
+    """Les arguments a deux tirets que ce script ne connait pas, dans l'ordre ou ils viennent.
+
+    `main` ecartait de la liste des fichiers tout ce qui commence par deux tirets. Une faute de
+    frappe sur `--repartitionne` gardait donc la partition sans rien dire (#5966).
+    """
+    return [a for a in argv if a.startswith("--") and a not in DRAPEAUX]
+
+
+def refus_sans_le_moteur(dit=journal) -> int:
     """0 si cet interprete importe graphify, sinon 2 apres avoir dit le remede (ADR 5407).
 
     `graphify` est une commande, posee avec son propre interprete : le `python3` du poste peut la
@@ -75,19 +101,50 @@ def refus_sans_le_moteur() -> int:
     restait un graphe reecrit, sans ponts ni reconstruction, et les libelles d'avant etaient
     perdus avec le dossier temporaire qui les gardait. Le refus vient donc AVANT l'outil.
     """
+    # `graphify.build`, et non `graphify` seul : le dossier `scripts/graphify/` s'importe sous ce
+    # nom des que `scripts/` est sur le chemin, et il passait pour le moteur (#5966).
     try:
-        import graphify  # noqa: F401
+        import graphify.build  # noqa: F401
     except ModuleNotFoundError:
-        journal(
-            "REFUS : graphify n est pas importable par cet interprete. Ce refus parle du poste,"
-            " pas du depot, et rien n a ete touche."
-        )
-        journal(
-            "POUR REPARER : relancer avec l interprete de graphify, que nomme"
-            " graphify-out/.graphify_python."
-        )
+        for ligne in REFUS_SANS_MOTEUR:
+            dit(ligne)
         return 2
     return 0
+
+
+def ecrire_l_extrait(fusion, chemin: Path, hyperaretes: list | None = None) -> None:
+    """Ecrit l'extrait que les ponts et la reconstruction liront.
+
+    Le graphe du moteur n'est pas oriente : une arete y garde son sens d'origine sous `_src` et
+    `_tgt`, que l'extrait remet en `source` et `target`. `hyperaretes` remplace celles que la
+    fusion porte, pour qui vient de les trier ; ce bloc etait copie dans `couche_semantique.py`.
+    """
+    chemin.write_text(
+        json.dumps(
+            {
+                "nodes": [{"id": n, **d} for n, d in fusion.nodes(data=True)],
+                "edges": [
+                    {
+                        **{
+                            k: v
+                            for k, v in d.items()
+                            if k not in ("_src", "_tgt", "source", "target")
+                        },
+                        "source": d.get("_src", u),
+                        "target": d.get("_tgt", v),
+                    }
+                    for u, v, d in fusion.edges(data=True)
+                ],
+                "hyperedges": list(fusion.graph.get("hyperedges", []))
+                if hyperaretes is None
+                else hyperaretes,
+                "input_tokens": 0,
+                "output_tokens": 0,
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
 
 
 def extraire_les_modifies(
@@ -155,30 +212,7 @@ def fusionner_une_extraction(
         "output_tokens": 0,
     }
     fusion = build_merge([nouveau], graph_path=str(graphe), root=str(racine), directed=False)
-    extrait.write_text(
-        json.dumps(
-            {
-                "nodes": [{"id": n, **d} for n, d in fusion.nodes(data=True)],
-                "edges": [
-                    {
-                        **{
-                            k: v
-                            for k, v in d.items()
-                            if k not in ("_src", "_tgt", "source", "target")
-                        },
-                        "source": d.get("_src", u),
-                        "target": d.get("_tgt", v),
-                    }
-                    for u, v, d in fusion.edges(data=True)
-                ],
-                "hyperedges": list(fusion.graph.get("hyperedges", [])),
-                "input_tokens": 0,
-                "output_tokens": 0,
-            },
-            ensure_ascii=False,
-        ),
-        encoding="utf-8",
-    )
+    ecrire_l_extrait(fusion, extrait)
     return fusion
 
 
@@ -305,28 +339,32 @@ def reporte(libelles_avant: dict, membres_avant: dict, communautes: dict) -> dic
 
 
 def libeller(
-    communautes: dict, noeuds: dict, reference: Path | None = None, par_identifiant: bool = False
+    communautes: dict,
+    noeuds: dict,
+    reference: Path | None = None,
+    par_identifiant: bool = False,
+    d_avant: dict[str, int] | None = None,
 ) -> dict:
     """Nomme les communautes, en reprenant les libelles de la passe precedente.
 
-    Les identifiants de communaute changent a chaque clustering : le report se fait
-    par recouvrement de membres, jamais par identifiant. Reprendre les anciens
-    libelles evite qu'un nommage manuel ne s'erode a chaque reconstruction.
+    Le report se fait de deux facons. Quand la partition a ete GARDEE, l'identifiant d'une
+    communaute est celui d'avant, et son libelle se reprend `par_identifiant` (ADR 5940). Quand
+    elle a ete refaite, les identifiants ont change : le report se fait par recouvrement de
+    membres. Reprendre les anciens libelles evite qu'un nommage manuel ne s'erode a chaque
+    reconstruction.
 
     `reference` designe le dossier ou lire l'etat d'avant. Par defaut c'est la sortie
     elle-meme ; `--mets-a-jour` y passe une copie prise AVANT `graphify update .`, qui
     reecrit le graphe et ses libelles sur place.
+
+    `d_avant` est la communaute de chaque noeud dans cet etat, quand l'appelant l'a deja lue :
+    `reconstruire` la lit pour garder la partition, et le graphe d'avant se relisait ici.
     """
     reference = reference or SORTIE
     precedents = reference / ".graphify_labels.json"
-    ancien_graphe = reference / "graph.json"
     repris = {}
-    if precedents.exists() and ancien_graphe.exists():
+    if precedents.exists() and (reference / "graph.json").exists():
         libelles_avant = json.loads(precedents.read_text(encoding="utf-8"))
-        membres_avant: dict[int, set] = {}
-        for n in json.loads(ancien_graphe.read_text(encoding="utf-8"))["nodes"]:
-            if n.get("community") is not None:
-                membres_avant.setdefault(int(n["community"]), set()).add(n["id"])
         if par_identifiant:
             # La partition a ete gardee : l'identifiant d'une communaute EST celui d'avant. Le
             # recouvrement perdrait le libelle d'une communaute qui a fondu.
@@ -336,6 +374,10 @@ def libeller(
                 if str(cid) in libelles_avant
             }
         else:
+            membres_avant: dict[int, set] = {}
+            lus = communautes_d_avant(reference) if d_avant is None else d_avant
+            for noeud, communaute in lus.items():
+                membres_avant.setdefault(communaute, set()).add(noeud)
             repris = reporte(libelles_avant, membres_avant, communautes)
 
     def paquet(n):
@@ -440,16 +482,13 @@ def reconstruire(reference: Path | None = None, repartitionne: bool = False) -> 
     if graphe.number_of_nodes() == 0:
         journal("graphe vide, reconstruction abandonnee")
         raise SystemExit(1)
+    d_avant = communautes_d_avant(reference or SORTIE)
     communautes, phrase, gardee = partition_de(
-        list(graphe.nodes),
-        graphe.neighbors,
-        communautes_d_avant(reference or SORTIE),
-        repartitionne,
-        lambda: cluster(graphe),
+        list(graphe.nodes), graphe.neighbors, d_avant, repartitionne, lambda: cluster(graphe)
     )
     journal(phrase)
     noeuds = {n["id"]: n for n in extraction["nodes"]}
-    libelles = libeller(communautes, noeuds, reference, par_identifiant=gardee)
+    libelles = libeller(communautes, noeuds, reference, par_identifiant=gardee, d_avant=d_avant)
     cohesion = score_all(graphe, communautes)
     dieux = god_nodes(graphe)
     surprises = surprising_connections(graphe, communautes)
@@ -536,6 +575,17 @@ def auto_test():
         else:
             print(f"  ECHEC {nom}{' : ' + detail if detail else ''}")
             echecs.append(nom)
+
+    def sans_chute(calcul):
+        """Le rendu d'un calcul, ou sa chute sous une forme reconnaissable.
+
+        Un calcul fait hors de `verifier` qui leve arrete l'auto-test entier, sans dire quel cas
+        il servait. Rendu ainsi, le cas qui le lit rougit et les autres continuent (#5966).
+        """
+        try:
+            return calcul()
+        except (Exception, SystemExit) as leve:  # noqa: BLE001
+            return f"a leve {leve!r}"
 
     # 1 : une detection injectee doit ressortir telle quelle. Le corpus code en dur
     # faisait ouvrir le rapport sur « 0 files · ~0 words » suivi de « corpus is large
@@ -651,6 +701,33 @@ def auto_test():
     # temoins, pour lire l'ordre sans graphify ni graphe.
     recu_par_la_reconstruction: dict = {}
 
+    def pose_le_moteur(etat):
+        """Fabrique un poste avec le moteur (`True`), sans lui (`False`), ou avec son HOMONYME.
+
+        L'homonyme est ce que voit un interprete sans le moteur des que `scripts/` est sur son
+        chemin : le dossier `scripts/graphify/` s'importe sous le nom `graphify`, sans `build`.
+        Rend ce qu'il faut remettre a `rends_le_moteur`.
+        """
+        d_avant = {nom: sys.modules.get(nom) for nom in ("graphify", "graphify.build")}
+        sys.modules.pop("graphify.build", None)
+        if etat is False:
+            # `None` dans `sys.modules` fait lever l'import : c'est un poste sans le module.
+            sys.modules["graphify"] = None
+            return d_avant
+        paquet = types.ModuleType("graphify")
+        paquet.__path__ = []
+        sys.modules["graphify"] = paquet
+        if etat is True:
+            sys.modules["graphify.build"] = types.ModuleType("graphify.build")
+        return d_avant
+
+    def rends_le_moteur(d_avant):
+        for nom, module in d_avant.items():
+            if module is None:
+                sys.modules.pop(nom, None)
+            else:
+                sys.modules[nom] = module
+
     def ordre_de_la_mise_a_jour(code_de_l_outil, moteur_present=True, repartitionne=False):
         appels = []
         temoins = {
@@ -663,12 +740,10 @@ def auto_test():
         }
         portee = globals()
         d_avant = {nom: portee.get(nom) for nom in temoins}
-        moteur_d_avant = sys.modules.get("graphify")
+        moteur_d_avant = pose_le_moteur(moteur_present)
         which, run = shutil.which, subprocess.run
         try:
             portee.update(temoins)
-            # `None` dans `sys.modules` fait lever l'import : c'est un poste sans le module.
-            sys.modules["graphify"] = types.ModuleType("graphify") if moteur_present else None
             shutil.which = lambda nom: "/faux/graphify"
             subprocess.run = lambda *a, **k: (
                 appels.append("update"),
@@ -681,10 +756,7 @@ def auto_test():
                 code = mets_a_jour(repartitionne)
         finally:
             shutil.which, subprocess.run = which, run
-            if moteur_d_avant is None:
-                sys.modules.pop("graphify", None)
-            else:
-                sys.modules["graphify"] = moteur_d_avant
+            rends_le_moteur(moteur_d_avant)
             for nom, valeur in d_avant.items():
                 if valeur is None:
                     portee.pop(nom, None)
@@ -890,7 +962,7 @@ def auto_test():
                 setattr(module, attribut, faux_objet)
                 sys.modules[nom] = module
             sys.modules["graphify"] = paquet
-            return action()
+            return sans_chute(action)
         finally:
             for nom, mod in d_avant.items():
                 if mod is None:
@@ -1045,18 +1117,18 @@ def auto_test():
             }
             portee = globals()
             d_avant = {nom: portee.get(nom) for nom in temoins}
-            moteur_d_avant = sys.modules.get("graphify")
+            moteur_d_avant = pose_le_moteur(moteur_present)
             try:
                 portee.update(temoins)
-                sys.modules["graphify"] = types.ModuleType("graphify") if moteur_present else None
-                with contextlib.redirect_stdout(io.StringIO()):
-                    code = main(list(arguments))
+                dit = io.StringIO()
+                with contextlib.redirect_stdout(dit):
+                    code = sans_chute(lambda: main(list(arguments)))
             finally:
-                if moteur_d_avant is None:
-                    sys.modules.pop("graphify", None)
-                else:
-                    sys.modules["graphify"] = moteur_d_avant
+                rends_le_moteur(moteur_d_avant)
                 portee.update(d_avant)
+            recus["journal"] = [
+                ligne.removeprefix("[graphify] ") for ligne in dit.getvalue().splitlines()
+            ]
             drapeau = (sortie / ".needs_update").exists()
         return code, appels, drapeau
 
@@ -1073,9 +1145,9 @@ def auto_test():
         f"obtenu : {obtenu}",
     )
 
-    ordre_de_la_mise_a_jour(0, repartitionne=True)
+    sans_chute(lambda: ordre_de_la_mise_a_jour(0, repartitionne=True))
     demandee_a_la_reconstruction = recu_par_la_reconstruction.get("repartitionne")
-    ordre_de_la_mise_a_jour(0)
+    sans_chute(lambda: ordre_de_la_mise_a_jour(0))
     verifier(
         "la mise a jour transmet a la reconstruction la repartition qu on lui demande",
         (demandee_a_la_reconstruction, recu_par_la_reconstruction.get("repartitionne"))
@@ -1105,6 +1177,48 @@ def auto_test():
         "`--mets-a-jour --repartitionne` demande la repartition, `--mets-a-jour` seul la garde",
         (avec_drapeau, vus.get("maj")) == (True, False),
         f"obtenu : {(avec_drapeau, vus.get('maj'))}",
+    )
+
+    # 12 quater : l'HOMONYME du moteur n'est pas le moteur (#5966). Vu en rejouant la fusion avec
+    # l'interprete du poste : `scripts/graphify/` s'importait sous le nom `graphify`, le controle
+    # passait, et l'import suivant tombait dans une trace de pile.
+    obtenu = chemin_du_crochet("homonyme")
+    verifier(
+        "un dossier qui s importe sous le nom du moteur ne passe pas pour lui : le crochet refuse",
+        (obtenu, vus.get("journal")) == ((2, [], False), list(REFUS_SANS_MOTEUR)),
+        f"obtenu : {(obtenu, vus.get('journal'))}",
+    )
+
+    # 12 ter : un drapeau que le script ne connait pas le fait REFUSER (#5966). Il etait ecarte
+    # de la liste des fichiers avec les autres : `--repartitione`, une lettre en moins, gardait la
+    # partition sans rien dire.
+    obtenu = chemin_du_crochet(True, ("src/Classe.java", "--repartitione"))
+    verifier(
+        "un drapeau inconnu fait refuser le crochet en 2, sans rien extraire ni signaler",
+        (obtenu, vus.get("journal"))
+        == (
+            (2, [], False),
+            [
+                (
+                    "REFUS : drapeau(x) inconnu(s) : --repartitione. Connus : --auto-test,"
+                    " --mets-a-jour, --repartitionne. Rien n a ete touche."
+                )
+            ],
+        ),
+        f"obtenu : {(obtenu, vus.get('journal'))}",
+    )
+    obtenu = chemin_du_crochet(True, ("--mets-a-jour", "--repartitione"))
+    verifier(
+        "un drapeau inconnu fait refuser la mise a jour en 2, sans la lancer",
+        (obtenu[0], vus.get("maj")) == (2, None),
+        f"obtenu : {(obtenu[0], vus.get('maj'))}",
+    )
+    arguments_melanges = ["--mets-a-jour", "--x", "--repartitionne", "docs/a.md", "--auto-test"]
+    obtenu = sans_chute(lambda: drapeaux_inconnus(arguments_melanges))
+    verifier(
+        "les trois drapeaux connus et un fichier ne sont pas pris pour des inconnus",
+        obtenu == ["--x"],
+        f"obtenu : {obtenu}",
     )
 
     # 13 : la partition gardee (#5940). La reconstruction repartitionnait le graphe entier a
@@ -1137,8 +1251,10 @@ def auto_test():
         "partition gardee : 4 communautes ; 4 noeud(s) neuf(s) range(s) chez leurs voisins, "
         "2 en communaute neuve. Repartition entiere : --repartitionne"
     )
-    obtenu = partition_de(
-        sorted(liens_fabriques), lambda n: liens_fabriques[n], d_avant, False, jamais
+    obtenu = sans_chute(
+        lambda: partition_de(
+            sorted(liens_fabriques), lambda n: liens_fabriques[n], d_avant, False, jamais
+        )
     )
     attendu = (
         {
@@ -1155,21 +1271,26 @@ def auto_test():
         obtenu == attendu,
         f"obtenu : {obtenu}",
     )
-    a_egalite = partition_de(
-        ["a", "c", "neuf"],
-        lambda n: {"neuf": ["a", "c"]}.get(n, []),
-        {"a": 7, "c": 3},
-        False,
-        jamais,
-    )[0]
+    a_egalite = sans_chute(
+        lambda: partition_de(
+            ["a", "c", "neuf"],
+            lambda n: {"neuf": ["a", "c"]}.get(n, []),
+            {"a": 7, "c": 3},
+            False,
+            jamais,
+        )[0]
+    )
     verifier(
         "a egalite de voisins, le neuf va dans la communaute au plus petit identifiant",
         a_egalite == {3: ["c", "neuf"], 7: ["a"]},
         f"obtenu : {a_egalite}",
     )
     refaite = {0: ["a", "b"], 1: ["c"]}
-    demandee = partition_de(["a", "b", "c"], lambda n: [], {"a": 5}, True, lambda: refaite)
-    sans_avant = partition_de(["a", "b", "c"], lambda n: [], {}, False, lambda: refaite)
+    trois = ["a", "b", "c"]
+    demandee = sans_chute(
+        lambda: partition_de(trois, lambda n: [], {"a": 5}, True, lambda: refaite)
+    )
+    sans_avant = sans_chute(lambda: partition_de(trois, lambda n: [], {}, False, lambda: refaite))
     verifier(
         "la repartition entiere se fait sur demande, et quand il n y a aucun etat d avant",
         demandee == sans_avant == (refaite, "partition refaite : 2 communautes", False),
@@ -1195,10 +1316,17 @@ def auto_test():
         noeuds = {
             i: {"id": i, "source_file": "docs/page.md"} for ids in reste.values() for i in ids
         }
-        par_id = libeller(reste, noeuds, dossier, par_identifiant=True)
-        par_recouvrement = libeller(reste, noeuds, dossier)
-        lues = communautes_d_avant(dossier)
-        aucune = communautes_d_avant(dossier / "absent")
+        par_id = sans_chute(lambda: libeller(reste, noeuds, dossier, par_identifiant=True))
+        par_recouvrement = sans_chute(lambda: libeller(reste, noeuds, dossier))
+
+        def etat_lu():
+            lues = communautes_d_avant(dossier)
+            return lues.get("n3"), lues.get("y"), len(lues), communautes_d_avant(dossier / "absent")
+
+        resume_de_l_etat_lu = sans_chute(etat_lu)
+        # L'etat d'avant qu'on lui REMET n'est pas celui du fichier : `n0` y vivait avec la petite.
+        remis = {"n0": 1, "x": 0, "y": 0}
+        d_apres_l_etat_remis = sans_chute(lambda: libeller(reste, noeuds, dossier, d_avant=remis))
     verifier(
         "un libelle dont la communaute garde un seul membre se retrouve, par identifiant",
         par_id == {0: "La grande", 1: "La petite", 2: "docs - page"},
@@ -1210,9 +1338,14 @@ def auto_test():
         f"obtenu : {par_recouvrement}",
     )
     verifier(
+        "`libeller` suit l etat d avant qu on lui remet, sans relire le graphe du dossier",
+        d_apres_l_etat_remis == {0: "La petite", 1: "La grande", 2: "docs - page"},
+        f"obtenu : {d_apres_l_etat_remis}",
+    )
+    verifier(
         "l etat d avant se lit dans le graphe du dossier, et un dossier sans graphe n en a pas",
-        (lues.get("n3"), lues.get("y"), len(lues), aucune) == (0, 1, 12, {}),
-        f"obtenu : {(lues.get('n3'), lues.get('y'), len(lues), aucune)}",
+        resume_de_l_etat_lu == (0, 1, 12, {}),
+        f"obtenu : {resume_de_l_etat_lu}",
     )
 
     # 14 : la reconstruction remet les libelles a l'ecriture du graphe (#5964). Le moteur ne pose
@@ -1398,6 +1531,13 @@ def mets_a_jour(repartitionne: bool = False) -> int:
 def main(argv: list[str]) -> int:
     if "--auto-test" in argv:
         return auto_test()
+    inconnus = drapeaux_inconnus(argv)
+    if inconnus:
+        journal(
+            f"REFUS : drapeau(x) inconnu(s) : {', '.join(inconnus)}. "
+            f"Connus : {', '.join(DRAPEAUX)}. Rien n a ete touche."
+        )
+        return 2
     if not GRAPHE.exists():
         journal(
             "aucun graphe existant, rien a mettre a jour (lancer /graphify . une premiere fois)"
