@@ -51,7 +51,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.junit.platform.commons.support.AnnotationSupport;
 import picocli.CommandLine;
 
 /// Garde-fou de **documentation** (#1458) : une commande CLI sans ligne de doc, ou un écran sans fiche,
@@ -1180,8 +1179,9 @@ class DocumentationAJourTest {
 
     /// Dit si un cas est filmé sur la plateforme de test : sa méthode, ou sa classe, en porte le tag.
     ///
-    /// L'appartenance se lit comme le moteur de test la lit, et non sur un nom. Deux raisons, toutes
-    /// deux déjà dans le dépôt. Le tag se pose tantôt sur la classe, tantôt sur la seule méthode : une
+    /// L'appartenance se lit sur les tags posés, et non sur un nom. Elle ne suit pas une annotation
+    /// composée qui porterait le tag : le dépôt n'en emploie pas. Deux raisons, toutes deux déjà dans
+    /// le dépôt. Le tag se pose tantôt sur la classe, tantôt sur la seule méthode : une
     /// même classe `ScenarioConnecte...` porte un cas de cette plateforme et un cas qui ne l'est pas.
     /// Et une classe le porte sans ce préfixe : une règle de nommage la compterait parmi les clips
     /// ordinaires le jour où elle aura sa ligne.
@@ -1198,8 +1198,8 @@ class DocumentationAJourTest {
                         PLANCHERS_DES_TOURNAGES, cas)
                 .hasSize(1);
         return Stream.concat(
-                        AnnotationSupport.findRepeatableAnnotations(classe, Tag.class).stream(),
-                        AnnotationSupport.findRepeatableAnnotations(methodes.get(0), Tag.class).stream())
+                        Arrays.stream(classe.getAnnotationsByType(Tag.class)),
+                        Arrays.stream(methodes.get(0).getAnnotationsByType(Tag.class)))
                 .anyMatch(tag -> CibleLive.PLATEFORME_DE_TEST.equals(tag.value()));
     }
 
