@@ -88,6 +88,10 @@ LOCAUX = {
     # meme filtre a trois dossiers : les pages de la racine n avaient de noeud de fichier dans
     # aucune des deux, et corriger l une aurait laisse l autre fautive.
     "pont_doc_code",
+    # Le garde du titre, ajoute en #4837 : `verifie_corps_pr.py` lui emprunte `ELISION`, le motif
+    # de l elision sans apostrophe. Les deux gardes en tenaient chacun une ecriture, et elles
+    # jugeaient differemment une ligne a espace insecable, auto-tests verts des deux cotes.
+    "verifie_titre_pr",
 }
 
 
