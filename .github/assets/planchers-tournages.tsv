@@ -48,10 +48,6 @@ ScenarioDiagnosticPassageTest.les_deux_bords_manquent_et_l_alerte_ne_concede_rie
 ScenarioDiagnosticPassageTest.lire_le_diagnostic_d_un_passage	0.000	0.473	33
 ScenarioDiagnosticPassageTest.une_nuit_qui_couvre_ne_se_fait_pas_accuser	0.000	0.239	33
 ScenarioDiagnosticSansJournalTest.sans_journal_le_second_encart_se_tait	0.000	0.221	33
-ScenarioEmportExpediteurTest.emporter_une_nuit_et_ses_deux_refus	0.000	0.029	27
-ScenarioEmportExpediteurTest.reprendre_un_avis_et_le_second_qui_se_confirme	0.000	0.378	27
-ScenarioEmportRelecteurTest.relire_une_nuit_confiee	0.000	0.437	27
-ScenarioEmportRelecteurTest.renvoyer_son_avis	0.000	0.360	27
 ScenarioFicheSiteTest.ajouter_un_point_le_fait_paraitre_sur_la_fiche	0.000	0.232	27
 ScenarioFicheSiteTest.le_bandeau_dit_l_identite_du_carre	0.000	0.291	27
 ScenarioFicheSiteTest.le_carre_rattache_porte_son_badge	0.000	0.204	27

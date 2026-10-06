@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.BoutonsDeDialogue;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
@@ -23,6 +24,7 @@ import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CarteDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.recette.DialoguesALImage;
 import fr.univ_amu.iut.recette.ExecuteurTacheRalenti;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
@@ -37,7 +39,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
+import javafx.scene.control.Labeled;
 import javafx.stage.Stage;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -71,15 +75,17 @@ class ScenarioEmportRelecteurTest {
     /// Le relecteur, tel que la plateforme le connaît. C'est ce pseudo qui signera ses verdicts.
     private static final String PSEUDO = "chiro-pierre";
 
+    /// Ce que la question du remplacement dit, et que le cas attend de lire à l'image.
+    private static final String QUESTION_DU_REMPLACEMENT = "verdicts posés ici seront perdus";
+
     private Path carteSd;
 
     private Path echanges;
 
     private Injector injecteur;
 
-    private final java.util.List<String> comptesRendus = new java.util.ArrayList<>();
-
-    private final java.util.List<String> questions = new java.util.ArrayList<>();
+    /// La question et le compte rendu de la production, à l'image, auxquels le cas répond par un clic.
+    private DialoguesALImage dialogues;
 
     /// JUnit crée ce répertoire et le **supprime** en fin de test, là où
     /// `createTempDirectory` n'enlevait rien (#4876).
@@ -90,6 +96,7 @@ class ScenarioEmportRelecteurTest {
     void start(Stage stage) throws IOException {
         carteSd = CarteDeRecette.materialiser(FIXTURE);
         echanges = dossierTemporaire;
+        dialogues = new DialoguesALImage(() -> stage);
 
         injecteur = BancDeRecette.surLeChrome()
                 .taille(1180, 900)
@@ -111,6 +118,11 @@ class ScenarioEmportRelecteurTest {
         service.ajouterPoint(carre.id(), "A1", 43.42, 5.11, "Près du grand chêne");
     }
 
+    @AfterEach
+    void fermerLesDialogues() {
+        dialogues.toutFermer();
+    }
+
     @Test
     @CasDeRecette(
             value = {"S3-50", "S3-51"},
@@ -119,11 +131,8 @@ class ScenarioEmportRelecteurTest {
     void relire_une_nuit_confiee(FxRobot robot) throws TimeoutException, IOException {
         ouvrirLaVerification(robot);
         QualificationController controleur = controleurDeLEcran();
-        controleur.confirmateur().definir(message -> {
-            questions.add(message);
-            return true;
-        });
-        controleur.notificateur().definir((niveau, entete, message) -> comptesRendus.add(entete + " | " + message));
+        controleur.confirmateur().definir(dialogues.question());
+        controleur.notificateur().definir(dialogues.compteRendu());
 
         // Le paquet arrive **par la fixture**, pas par le menu : ce clip filme le rôle du relecteur, et
         // le voyage du fichier n'est filmable par aucune des deux familles. Le composer ici par le
@@ -135,17 +144,44 @@ class ScenarioEmportRelecteurTest {
 
         SelectionDao selections = injecteur.getInstance(SelectionDao.class);
         GesteVisible.choisir(robot, controleur.menuDeLaSelection(), "Ouvrir un paquet reçu…");
-        Respiration.surLeMomentCle(robot);
 
-        assertThat(questions)
-                .as("S3-50 : le remplacement de la sélection locale se confirme, il n'est pas tacite")
-                .anySatisfy(question -> assertThat(question).contains("verdicts posés ici seront perdus"));
+        // S3-50 : la question est à l'image, et rien n'est remplacé tant qu'on n'a pas répondu.
+        dialogues.attendre(QUESTION_DU_REMPLACEMENT);
         assertThat(selections.findByPassage(idPassage).orElseThrow().methode())
-                .as("S3-50 : la sélection reçue est figée, elle n'a pas été tirée ici")
-                .isEqualTo(MethodeSelection.RECUE_D_UN_PAQUET);
-        assertThat(comptesRendus)
+                .as("S3-50 : le remplacement se confirme, il n'est pas tacite : la question posée, rien n'a bougé")
+                .isNotEqualTo(MethodeSelection.RECUE_D_UN_PAQUET);
+        Respiration.surLeMomentCle(robot);
+        Respiration.leTempsDeLire(robot);
+        dialogues.repondre(robot, QUESTION_DU_REMPLACEMENT, BoutonsDeDialogue.CONFIRMER);
+
+        // S3-51 : le compte rendu dit qui signera.
+        dialogues.attendre(PSEUDO);
+        Respiration.surLeMomentCle(robot);
+        Respiration.leTempsDeLire(robot);
+        assertThat(dialogues.comptesRendus())
                 .as("S3-51 : le compte rendu dit qui signera les verdicts")
                 .anySatisfy(compte -> assertThat(compte).contains(PSEUDO));
+        dialogues.repondre(robot, PSEUDO, BoutonsDeDialogue.FERMER);
+        assertThat(selections.findByPassage(idPassage).orElseThrow().methode())
+                .as("S3-50 : confirmée, la sélection est celle du paquet, elle n'a pas été tirée ici")
+                .isEqualTo(MethodeSelection.RECUE_D_UN_PAQUET);
+
+        // S3-50 encore : la sélection reçue est figée, et l'écran dit pourquoi au lieu de griser.
+        GesteVisible.cliquer(robot, "#boutonRegenerer");
+        Attente.queSurLeFil(
+                () -> robot.lookup("#lblSelectionMessage")
+                        .tryQueryAs(Labeled.class)
+                        .filter(Labeled::isVisible)
+                        .map(Labeled::getText)
+                        .filter(texte -> texte.contains("figée"))
+                        .isPresent(),
+                "S3-50 : la régénération d'une sélection reçue est refusée avec son motif, affiché à l'écran",
+                APPARITION_SECONDES * 1000L);
+        assertThat(selections.findByPassage(idPassage).orElseThrow().methode())
+                .as("S3-50 : et le refus n'a rien régénéré")
+                .isEqualTo(MethodeSelection.RECUE_D_UN_PAQUET);
+        Respiration.surLeMomentCle(robot);
+        Respiration.leTempsDeLire(robot);
     }
 
     @Test
@@ -154,13 +190,25 @@ class ScenarioEmportRelecteurTest {
     void renvoyer_son_avis(FxRobot robot) throws TimeoutException, IOException {
         ouvrirLaVerification(robot);
         QualificationController controleur = controleurDeLEcran();
-        controleur.confirmateur().definir(message -> true);
-        controleur.notificateur().definir((niveau, entete, message) -> comptesRendus.add(entete + " | " + message));
+        controleur.confirmateur().definir(dialogues.question());
+        controleur.notificateur().definir(dialogues.compteRendu());
 
         Path retour = echanges.resolve("mon-avis.zip");
         definirSelecteur(robot, selecteur(retour));
         GesteVisible.choisir(robot, controleur.menuDeLaSelection(), "Renvoyer mon avis…");
+
+        // Le compte rendu est à l'image : il nomme qui signe, et combien de verdicts partent.
+        dialogues.attendre("Avis renvoyé");
         Respiration.surLeMomentCle(robot);
+        Respiration.leTempsDeLire(robot);
+        dialogues.repondre(robot, "Avis renvoyé", BoutonsDeDialogue.FERMER);
+        assertThat(dialogues.comptesRendus())
+                .as("S3-52 : le compte rendu nomme qui signe l'avis")
+                .singleElement()
+                .satisfies(compte -> assertThat(compte).contains("signés « " + PSEUDO + " »"));
+        assertThat(dialogues.questions())
+                .as("S3-52 : renvoyer son avis ne demande aucune confirmation")
+                .isEmpty();
 
         assertThat(Files.exists(retour)).as("S3-52 : l'avis part").isTrue();
         ManifestePaquet manifeste = ManifestePaquet.depuis(OuvertureDePaquet.lireManifeste(retour));

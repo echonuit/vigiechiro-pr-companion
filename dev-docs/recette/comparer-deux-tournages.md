@@ -127,7 +127,7 @@ paires en prouve d'autant moins. Le décompte des lignes par nombre de paires ne
 chaque mesure le déplace, et le fichier le dit mieux que cette page.
 
 Le fichier mêle deux populations, et chaque compte de cette page nomme la sienne. Les clips
-**ordinaires** qui ont un plancher sont <!--inv:clips-ordinaires-a-plancher-->94<!--/inv-->. Ceux de
+**ordinaires** qui ont un plancher sont <!--inv:clips-ordinaires-a-plancher-->90<!--/inv-->. Ceux de
 la **plateforme de test** sont <!--inv:clips-de-la-plateforme-de-test-a-plancher-->5<!--/inv-->, et
 ont leur propre section. Les clips **sans plancher**, ceux qui ont deux fins, sont au nombre de
 <!--inv:clips-sans-plancher-->1<!--/inv--> (voir plus bas). Ces trois comptes sont relus à chaque
