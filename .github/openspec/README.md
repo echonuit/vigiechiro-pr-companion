@@ -95,3 +95,19 @@ Chiffre daté, qui se refait plutôt qu'il ne se croit.
 
 Dependabot suit ce manifeste au même titre que `.github/release/` : figer sans surveiller
 échangerait un risque contre un autre.
+
+Cette phrase a été fausse du 26 août au 6 octobre 2026 : `.github/dependabot.yml` ne portait aucune
+entrée pour ce dossier, et l'épinglage est resté à 1.12.0 pendant que le registre passait à 1.14.1,
+sans que le dépôt l'apprenne (#6084). L'entrée existe depuis, mensuelle.
+
+## Ce qu'une demande Dependabot fait ici
+
+Elle ne se fusionne pas telle quelle, et c'est voulu. Elle déplace `package.json` et le lockfile
+sans toucher le `generatedBy` des douze compétences, donc
+`scripts/methode/verifie-version-openspec.py` rougit sur elle dans le job `lint`. Ce rouge n'est pas
+une panne : il dit qu'une version existe, et que personne n'a encore mesuré ce qu'elle change.
+
+Le geste est celui de la section « Pourquoi cette version-là, et pas la dernière » : engendrer les
+deux versions à côté, confronter, porter les écarts réels dans la réécriture, puis seulement changer
+la chaîne. Il se fait dans une demande à part : celle de Dependabot n'a plus d'objet une fois la
+montée fusionnée.

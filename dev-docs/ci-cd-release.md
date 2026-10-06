@@ -1881,6 +1881,9 @@ gh workflow run recette-filmee.yml -f sans_gestionnaire_de_fenetres=true   # le 
 
 Les mises à jour sont proposées par **Dependabot**
 ([`.github/dependabot.yml`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/dependabot.yml)),
-**mensuellement**, pour `maven`, `github-actions` et l'outillage de publication (`npm`, dans
-`/.github/release`). **JavaFX (`org.openjfx:*`) est volontairement exclu** de l'automatisation : ses
+**mensuellement**, pour `maven`, `github-actions` et les deux outillages figés par lockfile (`npm`,
+dans `/.github/release` et dans `/.github/openspec`). Une demande sur le second ne se fusionne pas
+telle quelle : `verifie-version-openspec.py` rougit sur elle, et
+[son README](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/openspec/README.md)
+dit le geste. **JavaFX (`org.openjfx:*`) est volontairement exclu** de l'automatisation : ses
 bumps ont un impact fort (rendu, Headless Platform) et se décident à la main.

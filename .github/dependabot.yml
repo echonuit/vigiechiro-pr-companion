@@ -51,3 +51,26 @@ updates:
       - "ci"
     commit-message:
       prefix: "chore(deps)"
+
+  # Outillage de spécification vivante (`@fission-ai/openspec`), figé par lockfile depuis #4512.
+  # Le README de ce dossier a écrit pendant six semaines que Dependabot suivait ce manifeste, et
+  # cette entrée n'existait pas : l'épinglage a vieilli de deux versions sans que rien ne le dise
+  # (#6084).
+  #
+  # Une demande ouverte par cette entrée NE SE FUSIONNE PAS telle quelle. Elle déplace le manifeste
+  # et le lockfile sans toucher le `generatedBy` des douze compétences, donc
+  # `scripts/methode/verifie-version-openspec.py` rougit sur elle. C'est le signal voulu : elle dit
+  # qu'une version existe, et le geste de montée est dans `.github/openspec/README.md`.
+  # Une seule demande à la fois : le manifeste ne déclare qu'une dépendance directe.
+  #
+  # Une seule étiquette, celle qui existe. Dependabot commente chaque demande dont une étiquette
+  # manque au dépôt, mesuré sur #5756 : « The following labels could not be found ».
+  - package-ecosystem: "npm"
+    directory: "/.github/openspec"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 1
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore(deps)"
