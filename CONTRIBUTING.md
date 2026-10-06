@@ -538,8 +538,7 @@ Construire un installeur **en local** (pour tester le packaging) :
 ## 8. Dépendances
 
 Les mises à jour sont gérées par **Dependabot** ([.github/dependabot.yml](.github/dependabot.yml)),
-mensuellement, pour `maven`, `github-actions` et les deux outillages `npm` figés par lockfile
-(`.github/release/` et `.github/openspec/`). **JavaFX (`org.openjfx:*`) est volontairement
+mensuellement, pour `maven` et `github-actions`. **JavaFX (`org.openjfx:*`) est volontairement
 exclu** de l'automatisation : ses bumps ont un impact fort (rendu, Headless Platform, plugin
 communautaire) et se décident à la main.
 

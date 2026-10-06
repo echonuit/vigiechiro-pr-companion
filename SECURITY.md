@@ -68,8 +68,7 @@ de points d'écoute d'**espèces protégées** ne doit pas être diffusée publi
 ## 5. Hygiène de la chaîne logicielle
 
 - **Dependabot** ([.github/dependabot.yml](.github/dependabot.yml)) propose mensuellement les mises à
-  jour `maven`, `github-actions` et `npm` (les deux outillages figés par lockfile, `.github/release/`
-  et `.github/openspec/`). Les bumps sont revus avant merge.
+  jour `maven` et `github-actions`. Les bumps sont revus avant merge.
 - **JavaFX (`org.openjfx:*`) est exclu** de l'automatisation : impact fort (rendu, *Headless
   Platform*), mises à jour décidées à la main.
 - **Accès natifs cadrés** : sous Java 25 (accès natif strict), seuls les modules qui en ont besoin

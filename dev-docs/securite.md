@@ -307,8 +307,7 @@ sert vraiment : si l'hébergement change, elle rougit là plutôt que chez un ut
 
 ## Chaîne d'approvisionnement
 
-- **Dependabot** propose mensuellement les mises à jour `maven`, `github-actions` et `npm` (les deux
-  outillages figés par lockfile, `.github/release/` et `.github/openspec/`) ; les bumps sont
+- **Dependabot** propose mensuellement les mises à jour `maven` et `github-actions` ; les bumps sont
   **revus avant merge** (cf. [CI/CD et release](ci-cd-release.md#dependances)).
 - **JavaFX (`org.openjfx:*`) est exclu** de l'automatisation (impact fort : rendu, Headless Platform) :
   mises à jour décidées à la main.

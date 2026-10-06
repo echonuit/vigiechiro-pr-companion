@@ -93,21 +93,29 @@ python3 scripts/methode/verifie-version-openspec.py --auto-test
 `npm audit` signale **0 paquet vulnérable** sur les 79 dépendances de l'arbre, au 26 août 2026.
 Chiffre daté, qui se refait plutôt qu'il ne se croit.
 
-Dependabot suit ce manifeste au même titre que `.github/release/` : figer sans surveiller
-échangerait un risque contre un autre.
+## Personne ne suit ce manifeste, et il faut le savoir
 
-Cette phrase a été fausse du 26 août au 6 octobre 2026 : `.github/dependabot.yml` ne portait aucune
-entrée pour ce dossier, et l'épinglage est resté à 1.12.0 pendant que le registre passait à 1.14.1,
-sans que le dépôt l'apprenne (#6084). L'entrée existe depuis, mensuelle.
+Cette page a écrit du 26 août au 6 octobre 2026 que Dependabot suivait ce manifeste au même titre
+que `.github/release/`. C'était faux deux fois (#6084).
 
-## Ce qu'une demande Dependabot fait ici
+`.github/dependabot.yml` n'a jamais porté d'entrée pour ce dossier. Et en poser une n'aurait rien
+changé : celle de `.github/release/` existe depuis #3252, et la forge refuse chacune des demandes que
+Dependabot tente d'y ouvrir. Il trouve la version, soumet la demande, et reçoit
+`dependency_file_not_supported`, « The request contains invalid or unauthorized changes ». Mesuré le
+2026-10-06 sur les exécutions « Dependabot Updates » du dépôt : 39 sur 39 ont échoué depuis le
+4 août, et sur 55 demandes ouvertes par Dependabot, aucune ne porte sur `npm`. L'échec se range dans
+l'onglet Actions, sous un atelier que personne n'est tenu de regarder.
 
-Elle ne se fusionne pas telle quelle, et c'est voulu. Elle déplace `package.json` et le lockfile
-sans toucher le `generatedBy` des douze compétences, donc
-`scripts/methode/verifie-version-openspec.py` rougit sur elle dans le job `lint`. Ce rouge n'est pas
-une panne : il dit qu'une version existe, et que personne n'a encore mesuré ce qu'elle change.
+La cause n'est pas établie. Les deux manifestes vivent sous `.github/`, et c'est l'hypothèse à
+éprouver en premier ; elle ne l'a pas été.
 
-Le geste est celui de la section « Pourquoi cette version-là, et pas la dernière » : engendrer les
-deux versions à côté, confronter, porter les écarts réels dans la réécriture, puis seulement changer
-la chaîne. Il se fait dans une demande à part : celle de Dependabot n'a plus d'objet une fois la
-montée fusionnée.
+**L'épinglage vieillit donc sans que rien ne le dise.** `verifie-version-openspec.py` tient une
+égalité, pas une fraîcheur : il reste vert sur une version dépassée. Au 2026-10-06, le dépôt épingle
+1.12.0 et le registre rend 1.14.1. La question se pose à la main :
+
+```bash
+npm view @fission-ai/openspec version
+```
+
+et la montée, quand on la décide, se fait par le geste de la section « Pourquoi cette version-là, et
+pas la dernière ».
