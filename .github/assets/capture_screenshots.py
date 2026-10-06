@@ -67,6 +67,7 @@ MAINS = (
     "fr.univ_amu.iut.importation.outils.CaptureImportTransformes",
     "fr.univ_amu.iut.importation.outils.CaptureCompteRenduParticipation",
     "fr.univ_amu.iut.qualification.outils.CaptureQualification",
+    "fr.univ_amu.iut.qualification.outils.CaptureQualificationEmport",
     "fr.univ_amu.iut.passage.outils.CapturePassage",
     "fr.univ_amu.iut.passage.outils.CaptureRefusRattachement",
     "fr.univ_amu.iut.lot.outils.CaptureLot",

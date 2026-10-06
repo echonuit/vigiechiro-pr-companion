@@ -484,7 +484,7 @@ L'assistant et **tous ses chemins non nominaux** : c'est la vue la plus riche en
 
 ## Qualification
 
-<sub>`qualification/view/Qualification.fxml` &middot; 3 capture(s)</sub>
+<sub>`qualification/view/Qualification.fxml` &middot; 5 capture(s)</sub>
 
 <table>
 <tr>
@@ -500,9 +500,20 @@ L'assistant et **tous ses chemins non nominaux** : c'est la vue la plus riche en
 <table>
 <tr>
 <th width="50%">À jeter</th>
+<th width="50%">Menu de l'emport</th>
 </tr>
 <tr>
 <td><a href="apercu-qualification-a-jeter.png"><img src="apercu-qualification-a-jeter.png" width="430" alt="À jeter"></a></td>
+<td><a href="apercu-qualification-menu-emport.png"><img src="apercu-qualification-menu-emport.png" width="430" alt="Menu de l'emport"></a></td>
+</tr>
+</table>
+
+<table>
+<tr>
+<th width="50%">Avis relecteur</th>
+</tr>
+<tr>
+<td><a href="apercu-qualification-avis-relecteur.png"><img src="apercu-qualification-avis-relecteur.png" width="430" alt="Avis relecteur"></a></td>
 </tr>
 </table>
 
