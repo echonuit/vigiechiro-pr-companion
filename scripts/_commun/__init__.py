@@ -104,7 +104,14 @@ PLANCHER = re.compile(r"^floor:\s*(\d+)\s*$", re.M)
 # different selon le dispositif (`suspects`/`cliquet` pour un cliquet, `mesure`/`plancher` pour un
 # plancher) et `lus` vaut `?` quand la population ne se compte pas. Ce qui fait foi est le couple
 # que tout dispositif rend : le NUMERO de l ADR, et son VERDICT.
-LIGNE_VERDICT = re.compile(r"^(?:ADR|PLANCHER) (\d+) \|.*?\bverdict=(\S+)\s*$", re.M)
+#
+# ⟨le mot de TETE dit la famille, et il y en a trois⟩ `ADR` ouvre la ligne d un cliquet, `PLANCHER`
+# celle d un plancher, `INVARIANT` celle d un invariant (#6059). Le troisieme n est pas un luxe : un
+# invariant peut partager son numero d ADR avec un cliquet, comme `4359-blocs-relus.py` avec
+# `4359-javadoc-narratif.py`, et `rapport.py` range par numero. Sous le mot `ADR`, sa ligne aurait
+# fait une SECONDE ligne 4359 dans la table des cliquets, avec une marge de zero que personne n a
+# declaree.
+LIGNE_VERDICT = re.compile(r"^(?:ADR|PLANCHER|INVARIANT) (\d+) \|.*?\bverdict=(\S+)\s*$", re.M)
 
 # ⟨les CHAMPS de la ligne, en seconde passe⟩ Le motif ci-dessus est LACHE sur le milieu, a dessein :
 # il survit a un champ qui s ajoute. Mais `rapport.py` a besoin des champs, et les lire par un motif
@@ -117,7 +124,7 @@ _CHAMP_DU_VERDICT = re.compile(r"\b([a-z_]+)=([^\s|]+)")
 def champs_du_verdict(ligne: str) -> dict[str, str] | None:
     """Les champs d une ligne de verdict, ou `None` si cette ligne n en est pas une.
 
-    Rend aussi `dispositif`, « ADR » ou « PLANCHER », et `numero`. Un appelant qui cherche un champ
+    Rend aussi `dispositif`, « ADR », « PLANCHER » ou « INVARIANT », et `numero`. Un appelant qui cherche un champ
     absent le verra manquer de son dictionnaire plutot que de ne pas voir la ligne du tout : c est la
     difference entre « je n ai pas compris cette ligne » et « je ne l ai pas vue ».
     """
@@ -139,7 +146,10 @@ def champs_du_verdict(ligne: str) -> dict[str, str] | None:
 # L ensemble vit ICI, a cote des deux fonctions qui le decident, et non chez ses lecteurs : recopie
 # ailleurs, il se perimerait en silence le jour ou un verdict s ajoute, et c est exactement la panne
 # qu il vient de causer.
-VERDICTS_QUI_REFUSENT = frozenset({"population-vide", "perte", "a-relever", "regression"})
+#
+# `refus` est le verdict d un INVARIANT qui a trouve ce qu il interdit (#6059). Il n a ni marge ni
+# sens de variation, donc aucun des trois mots du cliquet et du plancher ne lui va.
+VERDICTS_QUI_REFUSENT = frozenset({"population-vide", "perte", "a-relever", "regression", "refus"})
 
 
 def plancher(numero: str) -> int:
@@ -328,7 +338,59 @@ def rapporte(
     return 0
 
 
-# Le prefixe que les deux emetteurs donnent a chaque suspect, et dont `lignes_du_refus` se sert pour
+def rapporte_invariant(
+    numero: str, titre: str, suspects: list[str], *, lus: int, apercu: int | None = None
+) -> int:
+    """Rend le verdict d un INVARIANT, et le code de sortie : zero suspect, ou il refuse (#6059).
+
+    **Il ne lit aucun `ratchet:`, et c est ce qui le separe de `rapporte`.** Un invariant est vrai ou
+    faux : ce qu il interdit n est pas une dette qui descend, donc il n a pas de marge a declarer, et
+    en declarer une a zero dirait qu elle pourrait monter. `rapporte` exige cette marge dans l en-tete
+    de l ADR, si bien que les deux invariants numerotes de `scripts/adr` jugeaient sans rendre de
+    ligne : `rapport.py` les rangeait parmi les verdicts qu il n avait pas su lire, et ce qu ils
+    decidaient n entrait dans aucun compte.
+
+    **`lus` est EXIGE, par son nom et sans valeur par defaut.** Les trois emetteurs d avant acceptent
+    `None` parce que leurs appels se sont convertis un a un ; celui-ci nait apres, et un emetteur
+    neuf n a aucune raison de naitre muet. C est la signature qui le tient : un appel qui ne dit pas
+    `lus=` leve avant d avoir rien imprime, si bien que `verifie_verdicts_declares.py` n a pas a
+    apprendre ce quatrieme nom. `lus=0` refuse, comme partout : un invariant qui ne balaie rien est
+    tenu sans avoir juge.
+
+    Sortie normalisee, sous son propre mot de tete pour que `rapport.py` ne la range pas avec les
+    cliquets (voir `LIGNE_VERDICT`) :
+
+        INVARIANT 5087 | lus=62 | suspects=0 | verdict=ok
+    """
+    print(f"INVARIANT {numero} - {titre}")
+    montres, aveu = _a_montrer(suspects, apercu)
+    for suspect in montres:
+        print(f"{RETRAIT_DU_SUSPECT}{suspect}")
+    if aveu:
+        print(aveu)
+
+    verdict = "ok"
+    if lus == 0:
+        # AVANT le compte des suspects, comme dans `rapporte` : sur une population vide il ne veut
+        # rien dire, et l annoncer accuserait la mauvaise cause.
+        verdict = "population-vide"
+    elif suspects:
+        verdict = "refus"
+
+    print(f"\nINVARIANT {numero} | lus={lus} | suspects={len(suspects)} | verdict={verdict}")
+
+    if verdict == "population-vide":
+        print(
+            "\nÉCHEC : cet invariant n'a lu aucune unité. Son zéro suspect ne prouve rien.\n"
+            "Vérifiez sa population : un chemin qui a bougé, un motif qui ne s'apparie plus, ou un\n"
+            "lancement depuis un autre répertoire.",
+            file=sys.stderr,
+        )
+        return 1
+    return 1 if verdict == "refus" else 0
+
+
+# Le prefixe que les emetteurs donnent a chaque suspect, et dont `lignes_du_refus` se sert pour
 # les rattacher a leur ADR. Il vit a cote des `print` qui le posent, pour qu un changement de l un
 # oblige a regarder l autre.
 RETRAIT_DU_SUSPECT = "  "
