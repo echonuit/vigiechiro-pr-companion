@@ -97,11 +97,34 @@ d'architecture, cliquet, test de parcours, inventaire, garde de CI.
 Ce n'est pas un échec, c'est une information : le garde **promet plus qu'il ne tient**. On l'écrit
 dans son en-tête plutôt que d'emprunter la solidité du voisin.
 
+### Quand la mutation reste verte
+
+C'est le cas miroir, et il se lit pareil : un vert. Avant d'écrire « garde décoratif », relire ce que
+le garde **annonce** : son en-tête, son `CONTRAT` quand il en déclare un (`--contrat` l'imprime), son
+message de refus. Deux lectures, qui concluent à l'inverse :
+
+- la propriété mutée **est annoncée** : le garde promet plus qu'il ne tient, c'est le cas ci-dessus ;
+- elle **ne l'est pas** : la mutation demandait plus que le garde ne promet.
+
+**La seconde lecture ne se conclut pas en relisant.** Elle doit une seconde mutation, montée contre la
+phrase annoncée et **vue rouge** : c'est ce rouge qui dit que le garde tient, et on cite la phrase avec
+l'endroit où elle est écrite. Sans lui, « il ne l'a jamais promis » classerait n'importe quel survivant,
+et le garde reste non prouvé.
+
+Mesuré sur #5379 : retirer le `if:` d'**une** étape parmi plusieurs laissait
+`.github/scripts/verifie_portees_de_ci.py` vert. Sa règle 2, dans son en-tête, annonce « au moins une
+étape » conditionnée ; toutes les conditions du job retirées, il rougit et nomme le job. Le garde
+tenait ce qu'il annonce, la mutation posait une autre question.
+
+Un garde ne s'élargit pas « pour qu'il voie ce cas » : ce serait lui faire promettre ce que personne
+n'a décidé. Si la propriété non promise compte, c'est une trouvaille, et elle se consigne.
+
 ## Signaux d'alerte : on s'arrête
 
 | Pensée | Réalité |
 |---|---|
 | « Le test est vert, donc le garde marche » | Ce vert existerait-il si le dépôt était cassé ? |
+| « La mutation est restée verte, donc le garde est décoratif » | Le promettait-il ? Relire ce qu'il annonce, puis le voir rouge sur ce qu'il annonce |
 | « J'ai relu le garde, il est correct » | Trois dispositifs ont passé la relecture et échoué à la mutation |
 | « La mutation est évidente, je la saute » | Trois formes du défaut ne se voient qu'en la montant |
 | « Le pourcentage est bon » | Le pourcentage ne dit rien. Lisez les survivants |
