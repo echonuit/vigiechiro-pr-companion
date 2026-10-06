@@ -928,6 +928,14 @@ ce qui doit disparaître. Ce relevé mesure et borne ; il ne convertit rien.
 c'est la seule façon de répondre à la question posée : ce qu'un script **répond**, pas ce à quoi il
 ressemble.
 
+**Ce relevé est daté : il a été pris le 2026-09-03, sur les cinquante fichiers que le dépôt comptait
+ce jour-là.** Ses chiffres ne se rejouent plus, la population ayant été presque toute convertie
+depuis par les chantiers #5215 et #5235. Les scripts y sont nommés comme ils s'appellent
+aujourd'hui, en `.py` pour ceux qui ont été convertis. Ce qui reste ne se lit pas dans ces
+tableaux : le cliquet de
+l'[ADR 5188](decisions/5188-bash-disparait-une-tolerance-est-un-delai.md) en compte
+<!--inv:cliquet-corpus-shell-->2<!--/inv-->, et il les nomme.
+
 #### La population
 
 | | |
@@ -963,72 +971,22 @@ déjà**, parce que la question déclenche une compilation Maven puis un rendu J
 d'attente coupe à un endroit variable. Un contraste ne conclut que sur un script déterministe, et
 celui-ci ne l'est pas. Il est rangé parmi les outils.
 
-#### Les cinquante, un par un
+#### Ce qu'il en reste, un par un
 
 Un compte dit combien il reste ; il ne dit pas **quoi convertir**. Le dépôt nomme ses exceptions
-plutôt que de les compter, et une population qui doit disparaître se nomme pour la même raison : la
-liste est le plan de travail des chantiers de conversion.
+plutôt que de les compter, et une population qui doit disparaître se nomme pour la même raison.
 
-<div class="enrouleur" markdown>
+Cette section portait la liste des cinquante, tenue à la main, et elle servait de plan de travail aux
+chantiers de conversion. Chaque conversion y laissait une ligne qui annonçait encore « conversion »
+pour un fichier qui n'était plus en shell (#5227). **La liste est maintenant celle que rend le
+cliquet**, qui lit `git ls-files '*.sh'` :
 
-| script | ce qu'il est | la CI l'atteint | destination |
-|---|---|:---:|---|
-| `.github/assets/capture_screenshots.py` | outil | oui | conversion |
-| `.github/assets/check_capture_mains.py` | garde | oui | conversion |
-| `.github/assets/check_captures.py` | garde | oui | conversion |
-| `.github/assets/check_doc_images.py` | garde | oui | conversion |
-| `.github/assets/check_doc_videos.py` | garde | oui | conversion |
-| `.github/assets/compare_apercus.py` | garde | oui | conversion |
-| `.github/assets/compare_tournages.py` | garde | oui | conversion |
-| `.github/assets/filtrer_bruit_cartes.py` | garde | oui | conversion |
-| `.github/assets/mesure_pixels.py` | outil | oui | conversion |
-| `.github/scripts/cas_manquants_du_tournage.py` | garde | oui | conversion |
-| `.github/scripts/clips_orphelins.py` | garde | oui | conversion |
-| `.github/scripts/construit_appimage.py` | outil | oui | conversion |
-| `.github/scripts/installer_paquets.py` | garde | oui | conversion |
-| `.github/scripts/interroge_le_jeton.py` | garde | oui | conversion |
-| `.github/scripts/lance-test-filme.sh` | garde | oui | **après condition** : banc Java validé |
-| `.github/scripts/mesure_duree_portail.py` | garde | oui | conversion |
-| `.github/scripts/porte_sur_le_contrat_de_fichiers.py` | outil | oui | conversion |
-| `.github/scripts/rappelle_le_critere_de_fin.py` | garde | oui | conversion |
-| `.github/scripts/revoque_jeton.py` | garde | oui | conversion |
-| `.github/scripts/trie_les_echecs_de_plateforme.py` | garde | oui | conversion |
-| `.github/scripts/veille_contrat_api.py` | garde | oui | conversion |
-| `.github/scripts/veille_plateformes.py` | garde | oui | conversion |
-| `.github/scripts/verdict_du_tournage.py` | garde | oui | conversion |
-| `.github/scripts/verifie_affichage_flatpak.py` | garde | oui | conversion |
-| `.github/scripts/verifie_apt.py` | garde | oui | conversion |
-| `.github/scripts/verifie_butoirs.py` | garde | oui | conversion |
-| `.github/scripts/verifie_chemins_ascii.py` | garde | oui | conversion |
-| `.github/scripts/verifie_cloture_consignee.py` | garde | oui | conversion |
-| `.github/scripts/verifie_conditions_booleennes.py` | garde | oui | conversion |
-| `.github/scripts/verifie_conditions_de_job.py` | garde | oui | conversion |
-| `.github/scripts/verifie_corps_pr.py` | garde | oui | conversion |
-| `.github/scripts/verifie_decisions_du_tournage_connecte.py` | garde | oui | conversion |
-| `.github/scripts/verifie_demarrage_emballage.py` | garde | oui | conversion |
-| `.github/scripts/verifie_epinglage.py` | garde | oui | conversion |
-| `.github/scripts/verifie_forme_du_jeton.py` | garde | oui | conversion |
-| `.github/scripts/verifie_fraicheur_actions.py` | garde | oui | conversion |
-| `.github/scripts/verifie_inventaires_ci.py` | garde | oui | conversion |
-| `.github/scripts/verifie_jeton_vivant.py` | garde | oui | conversion |
-| `.github/scripts/verifie_jeton.py` | garde | oui | conversion |
-| `.github/scripts/verifie_noms_d_etapes.py` | garde | oui | conversion |
-| `.github/scripts/verifie_permissions.py` | garde | oui | conversion |
-| `.github/scripts/verifie_portee_des_secrets.py` | garde | oui | conversion |
-| `.github/scripts/verifie_renvois_workflows.py` | garde | oui | conversion |
-| `.github/scripts/verifie_secret_winget.py` | garde | oui | conversion |
-| `.github/scripts/verifie_specification_consignee.py` | garde | oui | conversion |
-| `.github/scripts/verifie_titre_pr.py` | garde | oui | conversion |
-| `.github/scripts/verifie_verdict_avant_fusion.py` | garde | oui | conversion |
-| `icone/genere_icones.py` | outil | **non** | conversion |
-| `scripts/doc-video/filme-un-parcours.sh` | garde | oui | conversion |
+```bash
+python3 scripts/adr/5188-corpus-shell.py
+```
 
-</div>
-
-La colonne **ce qu'il est** vient du contraste mesuré, pas d'une lecture du source. La colonne **la
-CI l'atteint** est transitive : un script lancé par un garde est exécuté par la CI aussi sûrement
-qu'un script cité dans un `run:`.
-
+Il nomme chaque script restant et, pour celui qui est toléré, la condition de sa tolérance. Ce que
+les autres sont devenus se lit dans les lots de #5215 et de #5235.
 
 #### Ce que la CI atteint
 
@@ -1046,7 +1004,9 @@ et un script lancé par un garde est exécuté par la CI aussi sûrement qu'un s
 #### Où chacun descend
 
 **Les cinquante disparaissent.** Bash n'a pas d'état stable dans ce dépôt, et une tolérance est un
-**délai daté, jamais une exemption** (ADR 5188).
+**délai daté, jamais une exemption** (ADR 5188). La répartition ci-dessous est celle qui a été
+décidée le 2026-09-03, sur les cinquante : elle dit où chacun devait descendre, pas ce qui reste à
+faire.
 
 | destination | n | ce qui la décide |
 |---|---:|---|
@@ -1058,14 +1018,22 @@ ce qu'il outille. Ce n'est pas un arbitrage laissé ouvert sur le fond : rien ne
 cinq outils qui ne sont pas des gardes ne font pas exception ; ils n'ont simplement pas la même
 urgence, n'étant tenus par aucun auto-test.
 
+Le sort de ce qui reste a été précisé depuis, par
+l'[ADR 5282](decisions/5282-les-huit-parcours-filmes-passent-au-banc-java.md). Elle décide que les
+huit parcours filmés migrent vers le banc Java, et elle écrit que « le retrait de
+`filme-un-parcours.sh` et la descente du cliquet » attendent que les huit soient portés. Elle est
+aussi la levée de la condition qui tolérait `lance-test-filme.sh` : sa conversion suit la migration
+des parcours.
+
 #### Deux limites de ce relevé, déclarées
 
 **L'inventaire de la CI compte les gardes shell par une recherche textuelle.**
 `verifie_inventaires_ci.py` retire les lignes de commentaire puis cherche la chaîne `--auto-test`,
 là où sa moitié Python fait un vrai contrôle par `ast` en excluant les docstrings depuis #5032.
 Confronté à la mesure par contraste, **il tombait juste : 45 des deux côtés, les mêmes 45** - une
-mesure prise avant les conversions de #5210, #5219, #5221, #5229, #5231, #5233 et #5236, qui ont
-ramené la moitié shell à **6**, contre **91** du côté Python. Le lot des outils, lui, n'y change rien :
+mesure prise avant les conversions de #5210, #5219, #5221, #5229, #5231, #5233 et #5236, qui
+avaient ramené la moitié shell à **6**, contre **91** du côté Python, à la clôture du dernier de ces
+lots, le 2026-09-04. Les deux moitiés ont bougé depuis. Le lot des outils, lui, n'y change rien :
 aucun des quatre ne dispatchait `--auto-test`, donc aucun n'était compté.
 La confrontation n'a pas été refaite depuis, et ce qui est déclaré ici est la **fragilité de la
 règle**, pas la fraîcheur du chiffre : elle est fragile par construction, et c'est un risque écrit
