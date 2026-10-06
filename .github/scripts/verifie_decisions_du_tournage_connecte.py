@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Neuf decisions des ateliers de tournage tiennent dans le YAML (#5221, porte du bash).
+"""Dix decisions des ateliers de tournage tiennent dans le YAML (#5221, porte du bash).
 
 Elles ne se tiennent pas par un test : elles vivent dans la forme de trois ateliers, et rien ne les
 relisait. Chacune a un cout connu si elle lache. Les cinq premieres sont celles du tournage connecte,
-qui a donne son nom au fichier ; les quatre dernieres sont celles de la mesure des planchers (#5885).
+qui a donne son nom au fichier ; les quatre suivantes sont celles de la mesure des planchers (#5885) ;
+la dixieme est celle de la comparaison d une execution (#5930).
 
 1. **`comparer-tournages.yml` REFUSE la source `clips-connectes`.** Comparer un tournage connecte a
    un autre mesure la plateforme au lieu du produit, et rend un chiffre qui a l air juste (#4306).
@@ -37,6 +38,14 @@ qui a donne son nom au fichier ; les quatre dernieres sont celles de la mesure d
    execution relancee en porte un par tentative (#5797). Les reprendre tous rangerait deux tournages
    sous le meme numero : la mesure comparerait alors un melange, et rien ne le dirait. Ajoutee a la
    cloture de #5644, dont la passe 6 a trouve ce refus ecrit et jamais eprouve.
+10. **`comparer-tournages.yml` reprend une EXECUTION avec les refus de la mesure, moins un.** Une
+   source purement numerique est un numero d execution : une branche se compare ainsi a `main` avant
+   fusion (#5930). L ADR 5854 avait ecarte cette entree parce qu elle ouvre une seconde voie de
+   reprise, a garder en parite avec la premiere. La parite se tient ICI : les refus de la sixieme et
+   de la neuvieme decision sont exiges de la comparaison par les memes phrases, face au meme leurre.
+   Un seul ne se reprend pas, celui du meme commit : il est juste pour un plancher, et il rendrait
+   la comparaison inutile, dont l objet est de mettre deux commits cote a cote. Et un artefact
+   EXPIRE se dit par son nom, au lieu d echouer au telechargement sans raison lisible.
 
 ## Le leurre pour `gh`, et pourquoi le verdict se prend sur le MESSAGE
 
@@ -320,17 +329,60 @@ def artefact_nomme_par_le_tournage(flux: pathlib.Path) -> bool:
 
 MESURE = "mesurer-les-planchers.yml"
 
-# Le leurre pour `gh run view <n> --json headSha,conclusion --jq ...`. Six executions : quatre du
-# meme commit, une d un AUTRE, une du meme commit qui a ECHOUE. Tout autre appel echoue, pour qu un
-# bloc qui irait chercher autre chose que ces deux champs le dise au lieu de passer.
-LEURRE_DES_EXECUTIONS = """#!/usr/bin/env bash
-[ "$1 $2" = "run view" ] || exit 1
-case "$3" in
-  1|2|3|4) echo "aaaaaaaaaaaaaaaa success" ;;
-  5) echo "bbbbbbbbbbbbbbbb success" ;;
-  6) echo "aaaaaaaaaaaaaaaa failure" ;;
-  *) exit 1 ;;
-esac
+# Le leurre des tournages, COMMUN a la mesure et a la comparaison. C est par lui que la parite des
+# deux reprises se tient (#5930) : un refus exige de l une et de l autre l est face aux memes
+# executions, et un leurre par atelier laisserait chacun repondre a sa propre fiction.
+#
+#   n   commit   conclusion   branche       artefacts de clips
+#   1   a        success      main          un
+#   2   a        success      main          deux (une execution relancee, #5797)
+#   3   a        success      main          aucun
+#   4   a        success      main          un, EXPIRE
+#   5   b        success      une-branche   un
+#   6   a        failure      main          un
+#
+# `gh run view <n> --json <champs> --jq ...` rend le commit et la conclusion, la branche entre les
+# deux pour qui la demande : la mesure lit deux champs, la comparaison trois. `gh api
+# .../runs/<n>/artifacts` rend les noms, suivis de l etat d expiration pour qui le demande. `gh run
+# download` fabrique un clip, pour que le bon cas aille au bout au lieu d echouer plus loin pour
+# une autre raison. Une seule version publiee existe, `v1.0.0`, et elle porte un clip. Tout autre
+# appel echoue, pour qu un bloc qui irait chercher autre chose le dise au lieu de passer.
+LEURRE_DES_TOURNAGES = """#!/usr/bin/env bash
+if [ "$1 $2" = "run view" ]; then
+  principale="" ; autre=""
+  case "$5" in *headBranch*) principale=" main" ; autre=" une-branche" ;; esac
+  case "$3" in
+    1|2|3|4) echo "aaaaaaaaaaaaaaaa${principale} success" ;;
+    5) echo "bbbbbbbbbbbbbbbb${autre} success" ;;
+    6) echo "aaaaaaaaaaaaaaaa${principale} failure" ;;
+    *) exit 1 ;;
+  esac
+  exit 0
+fi
+if [ "$1" = "api" ]; then
+  vif="" ; perime=""
+  case "$*" in *expired*) vif=" false" ; perime=" true" ;; esac
+  case "$2" in
+    */runs/1/artifacts|*/runs/5/artifacts|*/runs/6/artifacts) echo "clips-toutes-ubuntu-1${vif}" ;;
+    */runs/2/artifacts) printf 'clips-toutes-ubuntu-1%s\\nclips-toutes-ubuntu-2%s\\n' "$vif" "$vif" ;;
+    */runs/3/artifacts) ;;
+    */runs/4/artifacts) echo "clips-toutes-ubuntu-1${perime}" ;;
+    *) exit 1 ;;
+  esac
+  exit 0
+fi
+if [ "$1 $2" = "run download" ]; then
+  mkdir -p "$7/target/recette/clips" && : > "$7/target/recette/clips/Cas.mp4"
+  exit 0
+fi
+if [ "$1 $2 $3" = "release view v1.0.0" ]; then
+  exit 0
+fi
+if [ "$1 $2 $3" = "release download v1.0.0" ]; then
+  : > "$5/Cas.mp4"
+  exit 0
+fi
+exit 1
 """
 
 
@@ -357,13 +409,16 @@ def _joue_le_choix_des_tournages(flux: pathlib.Path):
 
     def lance(executions: str, temoins: str = "") -> str:
         return _lance_un_bloc(
-            blocs[0], LEURRE_DES_EXECUTIONS, {"EXECUTIONS": executions, "TEMOINS": temoins}
+            blocs[0], LEURRE_DES_TOURNAGES, {"EXECUTIONS": executions, "TEMOINS": temoins}
         )
 
     return lance
 
 
 AUTRE_COMMIT = "ne sont pas du même commit"
+# Les phrases de refus que la mesure ET la comparaison doivent rendre. Les nommer une fois est ce
+# qui fait de la parite une exigence : deux chaines recopiees pourraient diverger sans rien rougir.
+PAS_CONCLU = "pas conclu en succès"
 
 
 def planchers_d_un_seul_commit(flux: pathlib.Path) -> bool:
@@ -393,7 +448,7 @@ def planchers_d_un_seul_commit(flux: pathlib.Path) -> bool:
         print(f"❌ {MESURE} accepte un témoin d un autre commit que la mesure.")
         print("   Son écart serait un changement du produit, lu comme un plancher trop bas.")
         tiennent = False
-    if "pas conclu en succès" not in lance("1 6"):
+    if PAS_CONCLU not in lance("1 6"):
         print(f"❌ {MESURE} mesure un tournage qui n a pas conclu.")
         print("   Il lui manque des clips, et ceux qu il porte ont pu s arrêter avant leur fin.")
         tiennent = False
@@ -434,26 +489,6 @@ def mesure_sans_ecriture(flux: pathlib.Path) -> bool:
     return tiennent
 
 
-# Le leurre de la reprise. `gh api .../runs/<n>/artifacts` rend UN nom pour l execution 1, DEUX pour
-# la 2 (une execution relancee), aucun pour la 3. `gh run download` fabrique un clip, pour que le bon
-# cas aille au bout au lieu d echouer plus loin pour une autre raison.
-LEURRE_DES_ARTEFACTS = """#!/usr/bin/env bash
-if [ "$1" = "api" ]; then
-  case "$2" in
-    */runs/1/artifacts) echo "clips-toutes-ubuntu-1" ;;
-    */runs/2/artifacts) printf 'clips-toutes-ubuntu-1\\nclips-toutes-ubuntu-2\\n' ;;
-    */runs/3/artifacts) ;;
-    *) exit 1 ;;
-  esac
-  exit 0
-fi
-if [ "$1 $2" = "run download" ]; then
-  mkdir -p "$7/target/recette/clips" && : > "$7/target/recette/clips/Cas.mp4"
-  exit 0
-fi
-exit 1
-"""
-
 PLUSIEURS_ARTEFACTS = "ne porte pas UN artefact de clips"
 
 
@@ -476,7 +511,7 @@ def un_seul_artefact_de_clips(flux: pathlib.Path) -> bool:
     def lance(executions: str) -> str:
         return _lance_un_bloc(
             blocs[0],
-            LEURRE_DES_ARTEFACTS,
+            LEURRE_DES_TOURNAGES,
             {"EXECUTIONS": executions, "TEMOINS": "", "GH_REPO": "depot/essai"},
         )
 
@@ -496,8 +531,87 @@ def un_seul_artefact_de_clips(flux: pathlib.Path) -> bool:
     return tiennent
 
 
+COMPARAISON = "comparer-tournages.yml"
+EXPIRE = "a expiré"
+
+
+def une_execution_se_compare(flux: pathlib.Path) -> bool:
+    """La dixieme : la comparaison reprend une execution, avec les refus de la mesure moins un.
+
+    Les phrases exigees sont celles de la sixieme et de la neuvieme, face au meme leurre : c est
+    ainsi que les deux reprises restent en parite, ce que l ADR 5854 demandait de toute seconde
+    voie. Le verdict se prend sur le MESSAGE, pour la raison de la premiere.
+    """
+    blocs = [
+        e["run"]
+        for j in (_charge(flux / COMPARAISON)["jobs"]).values()
+        for e in j.get("steps", [])
+        if "reprendre()" in e.get("run", "")
+    ]
+    if len(blocs) != 1:
+        # La premiere decision le dit deja, avec sa raison : ici on se borne a ne rien lancer.
+        return False
+
+    def lance(avant: str, apres: str) -> str:
+        return _lance_un_bloc(
+            blocs[0],
+            LEURRE_DES_TOURNAGES,
+            {"AVANT": avant, "APRES": apres, "BANC": "bash", "GH_REPO": "depot/essai"},
+        )
+
+    tiennent = True
+    # L autre bord D ABORD, et c est aussi le seul refus de la mesure qui ne se reprend PAS : deux
+    # executions de deux COMMITS vont au bout, chacune disant son commit et sa branche.
+    rendu = lance("1", "5")
+    if (
+        "Exécution 1 (aaaaaaaaa, branche main) : 1 clip(s)." not in rendu
+        or "Exécution 5 (bbbbbbbbb, branche une-branche) : 1 clip(s)." not in rendu
+    ):
+        print(f"❌ {COMPARAISON} ne compare pas deux exécutions de deux commits.")
+        print("   C est l objet de cette source : une branche contre `main`, avant fusion. Et les")
+        print("   refus qui suivent ne discriminent plus, s ils tombent aussi sur le bon cas.")
+        tiennent = False
+    # La paire mixte : une version publiee d un cote, une execution de l autre.
+    rendu = lance("v1.0.0", "1")
+    if "« v1.0.0 » : 1 clip(s)." not in rendu or "Exécution 1 (aaaaaaaaa" not in rendu:
+        print(f"❌ {COMPARAISON} ne compare plus une version publiée à une exécution.")
+        tiennent = False
+    # Un numero n est JAMAIS cherche parmi les versions : inconnu, il se dit illisible.
+    rendu = lance("1", "99")
+    if "ne se lit pas" not in rendu or "ni un tag" in rendu:
+        print(f"❌ {COMPARAISON} cherche un numéro d exécution parmi les versions publiées.")
+        print("   Une exécution inconnue serait annoncée comme un tag introuvable.")
+        tiennent = False
+    if PAS_CONCLU not in lance("1", "6"):
+        print(f"❌ {COMPARAISON} compare un tournage qui n a pas conclu.")
+        print(f"   {MESURE} le refuse : les deux reprises ne sont plus en parité.")
+        tiennent = False
+    if PLUSIEURS_ARTEFACTS not in lance("1", "2"):
+        print(f"❌ {COMPARAISON} reprend une exécution qui porte DEUX artefacts de clips.")
+        print(f"   {MESURE} le refuse : les deux reprises ne sont plus en parité.")
+        tiennent = False
+    if PLUSIEURS_ARTEFACTS not in lance("1", "3"):
+        print(f"❌ {COMPARAISON} ne dit rien d une exécution sans artefact de clips.")
+        print(f"   {MESURE} le refuse : les deux reprises ne sont plus en parité.")
+        tiennent = False
+    if EXPIRE not in lance("1", "4"):
+        print(f"❌ {COMPARAISON} ne dit pas qu un artefact de clips a expiré.")
+        print(
+            "   Le téléchargement échouerait sans raison lisible, quatorze jours après le tournage."
+        )
+        tiennent = False
+    # Lire les artefacts d une AUTRE execution demande `actions: read`. Absente, la reprise echoue
+    # sur la forge et nulle part ailleurs : le leurre, lui, ne connait pas les permissions.
+    droits = _charge(flux / COMPARAISON).get("permissions")
+    if not isinstance(droits, dict) or droits.get("actions") != "read":
+        print(f"❌ {COMPARAISON} ne déclare pas `actions: read` : permissions = {droits!r}.")
+        print("   Sans elle, l atelier ne peut pas lire les artefacts d une autre exécution.")
+        tiennent = False
+    return tiennent
+
+
 def verdict(flux: pathlib.Path) -> bool:
-    """Les neuf, et le verdict d ensemble. Chacune s exprime, meme si une precedente a lache."""
+    """Les dix, et le verdict d ensemble. Chacune s exprime, meme si une precedente a lache."""
     tiennent = [
         refus_de_la_source_connectee(flux),
         versement_conditionne(flux),
@@ -508,6 +622,7 @@ def verdict(flux: pathlib.Path) -> bool:
         temoins_hors_de_la_mesure(flux),
         mesure_sans_ecriture(flux),
         un_seul_artefact_de_clips(flux),
+        une_execution_se_compare(flux),
     ]
     return all(tiennent)
 
@@ -656,17 +771,21 @@ def _refuse_la_precedente(dossier: pathlib.Path) -> None:
     )
 
 
-def _remplace_dans_la_mesure(dossier: pathlib.Path, avant: str, apres: str) -> None:
-    """Une substitution dans l atelier de mesure, qui LEVE si son motif n y est plus.
+def _remplace_dans(dossier: pathlib.Path, atelier: str, avant: str, apres: str) -> None:
+    """Une substitution dans un atelier, qui LEVE si son motif n y est plus.
 
     Une cassure qui ne casse rien laisserait l atelier sain, donc le cas rouge serait VERT et
     l auto-test le dirait. Mais il le dirait sans dire pourquoi : autant le dire ici.
     """
-    p = dossier / MESURE
+    p = dossier / atelier
     t = p.read_text(encoding="utf-8")
     if avant not in t:
-        raise AssertionError(f"motif absent de {MESURE} : {avant!r}")
+        raise AssertionError(f"motif absent de {atelier} : {avant!r}")
     p.write_text(t.replace(avant, apres, 1), encoding="utf-8")
+
+
+def _remplace_dans_la_mesure(dossier: pathlib.Path, avant: str, apres: str) -> None:
+    _remplace_dans(dossier, MESURE, avant, apres)
 
 
 def _mesure_entre_deux_commits(dossier: pathlib.Path) -> None:
@@ -721,6 +840,57 @@ def _reprend_sans_artefact(dossier: pathlib.Path) -> None:
     )
 
 
+COMPTE_DES_ARTEFACTS = (
+    """if [ -z "$liste" ] || [ "$(printf '%s\\n' "$liste" | wc -l)" -ne 1 ]; then"""
+)
+
+
+def _la_comparaison_ignore_les_executions(dossier: pathlib.Path) -> None:
+    """Un numero redevient une source comme une autre, cherchee parmi les versions."""
+    _remplace_dans(dossier, COMPARAISON, 'if [[ "$source" =~ ^[0-9]+$ ]]; then', "if false; then")
+
+
+def _la_comparaison_exige_le_meme_commit(dossier: pathlib.Path) -> None:
+    """Le refus de la mesure qui ne se reprend PAS, repris quand meme : tout autre commit est refuse."""
+    _remplace_dans(
+        dossier,
+        COMPARAISON,
+        'if [ "$fin" != "success" ]; then',
+        'if [ "$fin" != "success" ] || [ "$sha" != "aaaaaaaaaaaaaaaa" ]; then',
+    )
+
+
+def _la_comparaison_prend_un_tournage_echoue(dossier: pathlib.Path) -> None:
+    _remplace_dans(dossier, COMPARAISON, 'if [ "$fin" != "success" ]; then', "if false; then")
+
+
+def _la_comparaison_reprend_plusieurs_artefacts(dossier: pathlib.Path) -> None:
+    _remplace_dans(dossier, COMPARAISON, COMPTE_DES_ARTEFACTS, 'if [ -z "$liste" ]; then')
+
+
+def _la_comparaison_reprend_sans_artefact(dossier: pathlib.Path) -> None:
+    _remplace_dans(
+        dossier,
+        COMPARAISON,
+        COMPTE_DES_ARTEFACTS,
+        """if [ -n "$liste" ] && [ "$(printf '%s\\n' "$liste" | wc -l)" -ne 1 ]; then""",
+    )
+
+
+def _la_comparaison_reprend_un_artefact_expire(dossier: pathlib.Path) -> None:
+    _remplace_dans(dossier, COMPARAISON, 'if [ "$perime" = "true" ]; then', "if false; then")
+
+
+def _la_comparaison_ne_lit_plus_les_artefacts(dossier: pathlib.Path) -> None:
+    """La permission qui ne se voit manquer que sur la forge."""
+    _remplace_dans(
+        dossier,
+        COMPARAISON,
+        "permissions:\n  contents: read\n  actions: read\n",
+        "permissions:\n  contents: read\n",
+    )
+
+
 CASSURES = (
     (_casse_le_refus, "le refus de clips-connectes neutralisé"),
     (_casse_la_fonction_d_etat, "publier-connecte privé de sa fonction d état"),
@@ -741,6 +911,13 @@ CASSURES = (
     (_la_mesure_tait_ses_permissions, "atelier de mesure sans permissions déclarées"),
     (_reprend_plusieurs_artefacts, "reprise d une exécution à deux artefacts de clips"),
     (_reprend_sans_artefact, "reprise d une exécution sans artefact de clips"),
+    (_la_comparaison_ignore_les_executions, "numéro d exécution cherché parmi les versions"),
+    (_la_comparaison_exige_le_meme_commit, "comparaison tenue à un seul commit"),
+    (_la_comparaison_prend_un_tournage_echoue, "comparaison d un tournage qui n a pas conclu"),
+    (_la_comparaison_reprend_plusieurs_artefacts, "comparaison d une exécution à deux artefacts"),
+    (_la_comparaison_reprend_sans_artefact, "comparaison d une exécution sans artefact"),
+    (_la_comparaison_reprend_un_artefact_expire, "comparaison d un artefact de clips expiré"),
+    (_la_comparaison_ne_lit_plus_les_artefacts, "comparaison privée de sa lecture des artefacts"),
 )
 
 
@@ -796,12 +973,13 @@ if __name__ == "__main__":
     flux = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else RACINE / ".github" / "workflows"
     if verdict(flux):
         print(
-            "✓ Les neuf décisions des ateliers de tournage tiennent : refus de clips-connectes,"
+            "✓ Les dix décisions des ateliers de tournage tiennent : refus de clips-connectes,"
             " versement"
         )
         print("  conditionné, contrôle du jeton avant le tournage, artefact nommé par le tournage,")
         print("  tournage précédent gardé avant l'écrasement, planchers d'un seul commit, témoins")
-        print("  hors de la mesure, mesure sans écriture, un seul artefact de clips par exécution.")
+        print("  hors de la mesure, mesure sans écriture, un seul artefact de clips par exécution,")
+        print("  une exécution comparée avec les refus de la mesure.")
         sys.exit(0)
     print(
         "::error::Une décision des ateliers de tournage n est plus tenue par le YAML, cf. ci-dessus."

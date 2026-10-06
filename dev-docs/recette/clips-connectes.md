@@ -32,15 +32,16 @@ pas de plus de 0,503 %, sur quinze paires par clip. Leurs planchers sont dans
 `planchers-tournages.tsv`, et
 [la page de la comparaison](comparer-deux-tournages.md) dit comment les lire.
 
-`comparer-tournages.yml` prend ses deux tournages dans des versions publiées, et celle-ci est écrasée à
-chaque tournage. Le tournage d'avant est donc **gardé** : avant de verser, le job de publication
+Cette pré-version est écrasée à chaque tournage, et la comparaison veut deux côtés. Le tournage
+d'avant est donc **gardé** : avant de verser, le job de publication
 recopie la pré-version sur `clips-plateforme-de-test-precedent` (#5854). La comparaison se lance de
 l'une à l'autre, `avant` = `clips-plateforme-de-test-precedent`, `apres` = `clips-plateforme-de-test`.
 
 Les notes de chaque pré-version disent l'exécution et le commit qui l'ont tournée. Elles se lisent
 **avant** le rapport : deux tournages du même commit mesurent du bruit, deux commits différents
-mesurent ce que le second a changé. Seuls deux tournages consécutifs se comparent ainsi ; au-delà, les
-artefacts de leurs exécutions restent disponibles quatorze jours.
+mesurent ce que le second a changé. Seuls deux tournages consécutifs se comparent ainsi. Au-delà, deux
+exécutions se comparent par leurs numéros, tant que leurs artefacts vivent, soit quatorze jours
+([ADR 5930](../decisions/5930-une-comparaison-reprend-une-execution-avec-les-refus-de-la-mesure.md)).
 
 ## Ce qu'un clip connecté prouve, et qu'un autre ne peut pas
 
