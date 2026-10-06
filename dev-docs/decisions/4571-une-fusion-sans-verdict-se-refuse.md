@@ -84,6 +84,7 @@ même raison.
 désignée : un ruleset **d'organisation** restreint à ce dépôt, avec l'application GitHub Actions en
 contournement.
 
-**Comment on le voit rouge.** Huit cas, dont quatre contrôles négatifs, tournent dans `lint.yml`.
+**Comment on le voit rouge.** Dix-huit cas, dont sept attendent un vert, tournent dans `lint.yml`
+depuis #4581 ; ils étaient huit à la décision.
 Cinq mutations le font rougir. Et il a été confronté au cas d'origine : reconstitué depuis l'API à
 la minute de la fusion, `909aeafa8` le fait sortir en code 1.
