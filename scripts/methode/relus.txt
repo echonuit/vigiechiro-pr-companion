@@ -1101,6 +1101,7 @@ c221e37d54a6  src/main/java/fr/univ_amu/iut/qualification/model/SelectionDEcoute
 daa4e5bf4acf  src/main/java/fr/univ_amu/iut/qualification/model/ServiceQualification.java
 844f99fffe87  src/main/java/fr/univ_amu/iut/qualification/model/dao/SelectionDao.java
 8ad2172c4fa8  src/main/java/fr/univ_amu/iut/qualification/outils/CaptureQualification.java
+97affc6a0573  src/main/java/fr/univ_amu/iut/qualification/outils/CaptureQualificationEmport.java
 7a593892d348  src/main/java/fr/univ_amu/iut/qualification/view/ActionsEmport.java
 ac046feeabb5  src/main/java/fr/univ_amu/iut/qualification/view/BarreVerdicts.java
 2382be0584af  src/main/java/fr/univ_amu/iut/qualification/view/CompteRenduRegeneration.java

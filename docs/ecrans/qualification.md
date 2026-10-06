@@ -60,6 +60,8 @@ pictogramme sont ceux d'un avertissement.
 Une nuit peut se juger à deux. Les quatre gestes vivent dans le menu **☰ outils** de la liste, en deux
 groupes qui disent les deux rôles.
 
+![Le menu outils de la liste, ouvert : « Colonnes… », puis « Emporter cette nuit… » et « Ouvrir un paquet reçu… », puis « Renvoyer mon avis… » et « Reprendre un avis reçu… ».](../assets/captures/apercu-qualification-menu-emport.png)
+
 **Vous confiez la nuit.** « **Emporter cette nuit…** » vous demande où écrire le paquet, puis
 **annonce ce qu'il pèsera** avant d'écrire quoi que ce soit : le nombre de séquences, le volume total
 et la part d'audio. Rien n'est écrit tant que vous n'avez pas confirmé, et annuler ne laisse aucun
@@ -83,6 +85,8 @@ sur le verdict de la nuit : il s'affiche, il ne vote pas.
 
 Une séquence que personne n'a relue n'affiche **rien** dans cette colonne, plutôt qu'un badge qu'on
 prendrait pour un jugement.
+
+![La liste après la reprise d'un avis : la colonne « Avis relecteur » porte le verdict de « lucie » sur huit séquences, dont deux où il diffère du vôtre, et reste vide sur les séquences qu'elle n'a pas relues.](../assets/captures/apercu-qualification-avis-relecteur.png)
 
 **Si un deuxième relecteur répond**, l'application vous nomme celui qui est déjà là et le nombre de
 verdicts qui seraient perdus, et attend votre accord. Refuser ne change rien.

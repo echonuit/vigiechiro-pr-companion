@@ -226,7 +226,7 @@ public final class CaptureQualification {
         ApercuFx.enregistrerPng(new Scene(vue), fichier);
     }
 
-    private static long seeder(SourceDeDonnees source, Path workspace) throws IOException {
+    static long seeder(SourceDeDonnees source, Path workspace) throws IOException {
         new UtilisateurDao(source).insert(new Utilisateur(ID_UTILISATEUR, "Capitaine Chiro (demo)"));
         SiteDao siteDao = new SiteDao(source);
         PointDao pointDao = new PointDao(source);
