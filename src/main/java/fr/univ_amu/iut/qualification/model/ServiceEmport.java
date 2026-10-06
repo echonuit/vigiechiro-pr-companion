@@ -169,6 +169,24 @@ public class ServiceEmport {
     ///     séquence du paquet n'existe pas au poste destinataire
     /// @throws IOException sur échec de lecture
     public BilanReprise reprendre(Path paquet, Optional<ProfilVigieChiro> identite) throws IOException {
+        return reprendre(paquet, identite, true);
+    }
+
+    /// Reprend un paquet reçu, en disant si le remplacement d'une sélection déjà présente est confirmé.
+    ///
+    /// La forme à deux arguments est celle d'un appelant qui a déjà fait confirmer. Celle-ci sert à
+    /// qui ne peut pas poser la question avant : le passage que vise un paquet se résout ici, donc
+    /// seul le service sait si une sélection serait perdue. Le refus tombe avant toute écriture.
+    ///
+    /// @param paquet l'archive reçue
+    /// @param identite l'identité du relecteur, apposée à l'ouverture
+    /// @param remplacementConfirme `true` quand l'utilisateur a confirmé de perdre la sélection présente
+    /// @return ce que la reprise a posé
+    /// @throws IllegalStateException comme la forme à deux arguments, ou si la nuit porte déjà une
+    ///     sélection et que son remplacement n'est pas confirmé
+    /// @throws IOException sur échec de lecture
+    public BilanReprise reprendre(Path paquet, Optional<ProfilVigieChiro> identite, boolean remplacementConfirme)
+            throws IOException {
         Objects.requireNonNull(paquet, "paquet");
         PaquetOuvert ouvert = OuvertureDePaquet.ouvrir(paquet, identite);
         ManifestePaquet manifeste = ManifestePaquet.depuis(ouvert.manifeste());
@@ -191,6 +209,16 @@ public class ServiceEmport {
         // DataAccessException échappait aux catch de l'appelant : le geste ne rendait aucun compte,
         // ni succès ni refus (#4728).
         Optional<SelectionDEcoute> locale = selectionDao.findByPassage(passage.id());
+        if (locale.isPresent() && !remplacementConfirme) {
+            List<SequenceSelectionnee> perdues =
+                    selectionDao.listerSequences(locale.get().id());
+            long jugees = perdues.stream()
+                    .filter(perdue -> perdue.verdict() != VerdictFichier.NON_JUGE)
+                    .count();
+            throw new IllegalStateException("La sélection d'écoute de cette nuit (" + perdues.size()
+                    + " séquence(s), dont " + jugees + " jugée(s)) serait définitivement remplacée par celle du"
+                    + " paquet : ouverture non confirmée");
+        }
         uniteDeTravail.executer(connexion -> {
             if (locale.isPresent()) {
                 selectionDao.supprimerDansTransaction(connexion, locale.get().id());

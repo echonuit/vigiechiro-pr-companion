@@ -1106,8 +1106,42 @@ FIN
 
 # --- Le parcours d'emport en ligne de commande (#4729, article A19) --------------------------------
 #
-# Chaque commande est éprouvée sur un REFUS autant que sur un succès. En ligne de commande, un refus
-# muet coûte plus cher qu'ailleurs : aucun écran ne rattrape un code de sortie.
+# Chaque commande est éprouvée sur un REFUS : en ligne de commande, un refus muet coûte plus cher
+# qu'ailleurs, aucun écran ne rattrape un code de sortie. Deux le sont aussi sur un SUCCÈS joué de
+# bout en bout, `emporter-nuit` et `ouvrir-paquet-recu` ; `renvoyer-avis` et `reprendre-avis` n'en
+# ont pas encore.
+
+# Une nuit importée et sa sélection tirée ici : le poste de qui emporte, et aussi celui du relecteur
+# qui a regardé la nuit avant de recevoir le paquet.
+une_nuit_avec_sa_selection() {
+  local sd="${BATS_TEST_TMPDIR}/sd"
+  fabriquer_carte_sd "${sd}"
+  local site point
+  site=$(cli creer-site --carre 130711 --protocole STANDARD 2>/dev/null)
+  point=$(cli ajouter-point --site "${site}" --code A1 2>/dev/null)
+  cli importer --point "${point}" --source "${sd}" >/dev/null 2>&1
+  cli constituer-selection --passage 1 >/dev/null 2>&1
+}
+
+# L'identité s'appose à l'ouverture d'un paquet : sans connexion valide la commande refuse avant de
+# regarder la nuit, et le cas n'éprouverait pas le refus qu'il annonce. Le fichier est celui que
+# l'application écrit à la connexion, daté du jour pour ne pas être périmé.
+poser_une_connexion() {
+  printf '{"token":"jeton-de-banc","date":"%s","id":"507f1f77bcf86cd799439011","pseudo":"chiro-pierre","role":"Observateur"}' \
+    "$(date +%F)" > "${BATS_TEST_TMPDIR}/connexion.json"
+}
+
+# D'où vient la sélection de la nuit : tirée ici, ou reçue d'un paquet. Lue en base par le module
+# `sqlite3` de Python, comme le lien de participation plus bas.
+methode_de_la_selection() {
+  python3 - "${BATS_TEST_TMPDIR}/vigiechiro.db" << 'FIN'
+import sqlite3
+import sys
+with sqlite3.connect(sys.argv[1]) as connexion:
+    ligne = connexion.execute("SELECT selection_method FROM listening_selection WHERE passage_id = 1").fetchone()
+    print(ligne[0] if ligne else "aucune")
+FIN
+}
 
 @test "emporter-nuit sans --vers : erreur d'usage picocli, exit 2" {
   run cli emporter-nuit --passage 1
@@ -1120,9 +1154,20 @@ FIN
   [[ "${output}" == *"sélection"* ]]
 }
 
-@test "emporter-nuit sans --oui n ecrit rien : le volume s annonce avant" {
-  run cli emporter-nuit --passage 999999 --vers "${BATS_TEST_TMPDIR}/rien.zip"
-  [ ! -f "${BATS_TEST_TMPDIR}/rien.zip" ]
+@test "emporter-nuit annonce le volume sans rien écrire, puis écrit avec --oui" {
+  une_nuit_avec_sa_selection
+  local paquet="${BATS_TEST_TMPDIR}/nuit.zip"
+
+  run cli emporter-nuit --passage 1 --vers "${paquet}"
+  [ "${status}" -eq 0 ]
+  [ ! -e "${paquet}" ]
+  [[ "${output}" == *"séquence(s), "*"d'audio"* ]]
+  [[ "${output}" == *"Rien n'est écrit"* ]]
+
+  run cli emporter-nuit --passage 1 --vers "${paquet}" --oui
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"Paquet écrit"* ]]
+  [ -s "${paquet}" ]
 }
 
 @test "ouvrir-paquet-recu sans --fichier : erreur d'usage picocli, exit 2" {
@@ -1134,6 +1179,37 @@ FIN
   run cli ouvrir-paquet-recu --fichier "${BATS_TEST_TMPDIR}/absent.zip"
   [ "${status}" -ne 0 ]
   [[ "${output}" != *"à relire"* ]]
+}
+
+@test "ouvrir-paquet-recu sans --remplacer : refuse de remplacer la sélection de la nuit, qui reste" {
+  une_nuit_avec_sa_selection
+  local paquet="${BATS_TEST_TMPDIR}/nuit.zip"
+  cli emporter-nuit --passage 1 --vers "${paquet}" --oui >/dev/null 2>&1
+  [ -s "${paquet}" ]
+  poser_une_connexion
+  local avant
+  avant=$(methode_de_la_selection)
+  [ "${avant}" != "aucune" ]
+  [ "${avant}" != "Reçue d'un paquet" ]
+
+  run cli ouvrir-paquet-recu --fichier "${paquet}"
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *"serait définitivement remplacée"* ]]
+  [[ "${output}" != *"à relire"* ]]
+  [ "$(methode_de_la_selection)" = "${avant}" ]
+}
+
+@test "ouvrir-paquet-recu --remplacer : la sélection de l'expéditeur remplace celle de la nuit" {
+  une_nuit_avec_sa_selection
+  local paquet="${BATS_TEST_TMPDIR}/nuit.zip"
+  cli emporter-nuit --passage 1 --vers "${paquet}" --oui >/dev/null 2>&1
+  [ -s "${paquet}" ]
+  poser_une_connexion
+
+  run cli ouvrir-paquet-recu --fichier "${paquet}" --remplacer
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"à relire, signées « chiro-pierre »"* ]]
+  [ "$(methode_de_la_selection)" = "Reçue d'un paquet" ]
 }
 
 @test "renvoyer-avis sans --vers : erreur d'usage picocli, exit 2" {
