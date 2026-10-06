@@ -120,6 +120,12 @@ Si un **outil** a écrit des fichiers pour vous (un générateur, un bot, un éd
 `.gitattributes` : sans lui, la demande suivante porte la renormalisation du fichier sans l'avoir
 voulue, comme `mvnw.cmd` après un bump de dependabot (#5781). `git add --renormalize` le répare.
 
+Si vous sortez d'un **rebase** ou d'un `stash pop`, `scripts/methode/verifie-marqueurs-de-conflit.py`
+refuse une ligne qui commence par un marqueur de conflit dans un fichier suivi, et la nomme. Le
+23 août 2026, `main` en a porté trois dans `design.css` pendant plusieurs heures : la feuille livrée
+était amputée, et seule la suite Java le voyait, dans un ordre d'exécution sur deux (#4329). Il lit
+ce qui est commité ; une demande en conflit avec `main` n'a aucun run, et ce n'est pas lui qui le dit.
+
 Si vous avez écrit ou modifié un **garde**, `scripts/methode/verifie-dependances-declarees.py` exige
 qu'il déclare ce dont il a besoin. Si vous avez prescrit un **outil externe** dans la méthode,
 `scripts/methode/verifie-commandes-prescrites.py` exige que la **distribution** qui l'installe soit
