@@ -277,6 +277,7 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     @FXML
     private void initialize() {
         occupation = new IndicateurOccupation(hoteOccupation, executeur);
+        gestesEmport.rechargerPar(occupation, selectionVm);
         // Colonne gauche (sélection d'écoute) : sous-vue depuis #2745, à qui l'on passe NOS appuis.
         // Les deux gestes de son en-tête restent ici : « Personnaliser… » ouvre une modale que seul
         // ce controller sait situer, et « Régénérer » passe par NOS porteurs de confirmation et de
