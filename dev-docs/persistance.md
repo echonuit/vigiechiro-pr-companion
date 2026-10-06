@@ -47,6 +47,9 @@ en fait foi : il en contient aujourd'hui bien plus que trois (<!--inv:migrations
        migration présente** dans le dossier - **surtout pas** `V04`, le compteur est déjà bien plus
        haut.
     2. **Ajoutez son nom au tableau `MIGRATIONS`** de `MigrationSchema` - **l'ordre fait foi**.
+       `MigrationSchemaTest` refuse un nom listé sans fichier, un numéro en double et un ordre qui ne
+       croît pas. L'oubli inverse ne fait rien rougir : un fichier posé sans sa ligne part dans le jar
+       et ne s'exécute jamais (#4645).
     3. **N'y mettez ni `PRAGMA`, ni `VACUUM`, ni `BEGIN`/`COMMIT` explicite** : le script s'exécute
        dans une transaction (voir ci-dessous), et ces trois-là n'y survivent pas. Un `PRAGMA` y est
        silencieusement sans effet, ce qui est le pire des trois. Une migration qui en aurait
@@ -59,7 +62,26 @@ en fait foi : il en contient aujourd'hui bien plus que trois (<!--inv:migrations
     5. **Le nombre de migrations est un chiffre balisé.** `<!--inv:migrations-->` vit dans **deux**
        documents, `persistance.md` (ici) et `modele-de-donnees.md`, et `DocumentationAJourTest` les
        vérifie tous les deux. En corriger un seul laisse l'autre rouge.
-    6. **Une fois poussée, elle ne se modifie plus.** Elle est appliquée chez d'autres, et ne se
+    6. **Si elle crée ou retire une table, le nombre de tables bouge aussi.** `<!--inv:tables-->` ne
+       vit que dans `modele-de-donnees.md`, et `DocumentationAJourTest` le recompte sur le schéma
+       appliqué.
+    7. **Si elle ajoute une colonne de chemin** (`*_path TEXT`), inscrivez sa table dans
+       `TablesAChemin`. `TablesACheminTest` lit les scripts et refuse une table à chemin que la liste
+       ignore : ses fichiers ne suivraient pas leur dossier à la restauration.
+    8. **Si elle amène un DAO ou un service, fournissez-les dans un module d'injection** :
+       `PersistenceModule` pour le socle, le module `di/` de la feature sinon. Le dépôt les fournit par
+       `@Provides`, un par un, et l'oubli se voit à la composition : l'injecteur ne se construit plus.
+       Voir [Injection (Guice)](injection.md).
+    9. **Si du code Java l'accompagne, deux registres bougent avec lui.** Un fichier Java neuf, ou dont
+       la javadoc change, se marque relu par
+       `python3 scripts/methode/couverture-relecture.py --marque <fichier>` : le cliquet
+       `4468-javadoc-non-relue.py` refuse sinon. Et un renvoi d'issue qu'un fichier se met à porter en
+       javadoc fait monter un plancher, celui de la production
+       ([ADR 4395](decisions/4395-un-renvoi-porte-par-la-javadoc-ne-se-perd-pas.md)) ou celui des tests
+       ([ADR 4587](decisions/4587-le-plancher-des-renvois-de-test-est-distinct.md)).
+       `python3 scripts/methode/releve-les-planchers.py --ecrire` relève les trois endroits de chacun,
+       et un plancher resté en arrière **refuse** : `4395-renvois-en-javadoc.py` rend `a-relever`.
+    10. **Une fois poussée, elle ne se modifie plus.** Elle est appliquée chez d'autres, et ne se
        rejouera pas chez eux. Ce qu'il faut corriger se corrige dans une migration **suivante** ; une
        retouche du script déjà publié fait refuser le démarrage (voir ci-dessous).
 
@@ -316,7 +338,7 @@ l'ADR 3574 a démêlé (#3632).
     Ce que chacun **fait** de chaque table lui reste propre : le socle réenracine, la feature
     réenracine **et** renomme les noms logiques.
 
-    `TablesACheminTest` confronte cette liste aux colonnes de chemin déclarées par les 38 migrations.
+    `TablesACheminTest` confronte cette liste aux colonnes de chemin que déclarent les migrations.
     C'est le second filet, et il attrape autre chose que la déduplication : une **migration** qui
     ajoute une colonne de chemin à une table de plus, et que personne ne pense à inscrire.
 
