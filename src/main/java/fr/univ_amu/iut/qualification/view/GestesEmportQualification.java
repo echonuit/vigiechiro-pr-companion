@@ -1,12 +1,17 @@
 package fr.univ_amu.iut.qualification.view;
 
+import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.view.Confirmateur;
+import fr.univ_amu.iut.commun.view.IndicateurOccupation;
+import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.Notificateur;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
 import fr.univ_amu.iut.commun.view.Selecteurs;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.qualification.model.ServiceEmport;
+import fr.univ_amu.iut.qualification.viewmodel.SelectionEcouteViewModel;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 import javafx.stage.Window;
 
@@ -27,6 +32,10 @@ final class GestesEmportQualification {
     /// La nuit ouverte, que les gestes visent. `null` tant qu'aucune ne l'est.
     private Long idPassage;
 
+    /// Ce qui relit la sélection affichée après un geste qui l'a changée en base. Rien tant que
+    /// l'écran ne l'a pas branché.
+    private Runnable rechargement = () -> {};
+
     /// @param service le parcours d'emport
     /// @param connexion l'identité qui signe un avis renvoyé
     /// @param fenetre la fenêtre où poser les sélecteurs natifs
@@ -44,6 +53,25 @@ final class GestesEmportQualification {
     void relierAux(Notificateur notificateur, Confirmateur confirmateur) {
         actions.notificateur().definir(notificateur);
         actions.confirmateur().definir(confirmateur);
+    }
+
+    /// Branche le rechargement de la sélection affichée, **hors du fil JavaFX** et sous l'indicateur
+    /// d'occupation, comme l'ouverture de l'écran : relire la base sur le fil de l'interface la
+    /// figerait le temps de la lecture.
+    ///
+    /// @param occupation l'indicateur de l'écran, qui porte le travail hors du fil
+    /// @param selectionVm la sélection affichée
+    void rechargerPar(IndicateurOccupation occupation, SelectionEcouteViewModel selectionVm) {
+        this.rechargement = () -> {
+            Long nuit = idPassage;
+            if (nuit != null) {
+                occupation.occuper(
+                        "Relecture de la sélection…",
+                        () -> selectionVm.charger(nuit),
+                        donnees -> selectionVm.appliquer(nuit, donnees),
+                        erreur -> selectionVm.signalerErreur(nuit, erreur));
+            }
+        };
     }
 
     /// Le porteur du sélecteur, que la recette substitue (#4728).
@@ -71,17 +99,32 @@ final class GestesEmportQualification {
     }
 
     private void ouvrirPaquetRecu() {
-        actions.ouvrirPaquetRecu(connexion.profil());
-    }
-
-    /// Renvoie l'avis, signé de qui est connecté ici : sans connexion, il n'y a personne à nommer.
-    private void renvoyerAvis() {
-        if (idPassage != null) {
-            connexion.profil().ifPresent(profil -> actions.renvoyerAvis(idPassage, profil.pseudo()));
+        if (actions.ouvrirPaquetRecu(connexion.profil())) {
+            rechargement.run();
         }
     }
 
+    /// Renvoie l'avis, signé de qui est connecté ici. Sans connexion il n'y a personne à nommer, et
+    /// le geste le dit dans les mots de la commande jumelle plutôt que de se taire.
+    private void renvoyerAvis() {
+        if (idPassage == null) {
+            return;
+        }
+        Optional<ProfilVigieChiro> profil = connexion.profil();
+        if (profil.isEmpty()) {
+            actions.notificateur()
+                    .notifier(
+                            NiveauNotification.AVERTISSEMENT,
+                            "Avis non renvoyé",
+                            "Aucune identité : reconnectez-vous, sinon l'avis reviendrait anonyme.");
+            return;
+        }
+        actions.renvoyerAvis(idPassage, profil.get().pseudo());
+    }
+
     private void reprendreAvis() {
-        actions.importerAvis();
+        if (actions.importerAvis()) {
+            rechargement.run();
+        }
     }
 }

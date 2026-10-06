@@ -103,14 +103,15 @@ public final class ActionsEmport {
     /// Ouvre un paquet reçu : la sélection de l'expéditeur devient la nôtre, **figée**.
     ///
     /// @param identite l'identité du relecteur, apposée à l'ouverture
-    public void ouvrirPaquetRecu(Optional<ProfilVigieChiro> identite) {
+    /// @return `true` si le paquet a été ouvert : la sélection de la nuit a alors changé en base
+    public boolean ouvrirPaquetRecu(Optional<ProfilVigieChiro> identite) {
         Optional<Path> paquet = selecteur.choisirFichier("Ouvrir un paquet reçu", Optional.empty(), PAQUET);
         if (paquet.isEmpty()) {
-            return;
+            return false;
         }
         if (!confirmateur.confirmer("Ouvrir ce paquet remplacera la sélection d'écoute de cette nuit par"
                 + " celle de l'expéditeur, et les verdicts posés ici seront perdus. Continuer ?")) {
-            return;
+            return false;
         }
         try {
             ServiceEmport.BilanReprise bilan = service.reprendre(paquet.get(), identite);
@@ -118,6 +119,7 @@ public final class ActionsEmport {
                     NiveauNotification.INFORMATION,
                     "Paquet ouvert",
                     bilan.sequences() + " séquence(s) à relire, signées « " + bilan.pseudoRelecteur() + " ».");
+            return true;
         } catch (IllegalStateException refus) {
             notificateur.notifier(NiveauNotification.AVERTISSEMENT, "Paquet refusé", refus.getMessage());
         } catch (IOException echec) {
@@ -126,6 +128,7 @@ public final class ActionsEmport {
             // interrompu », a son test.
             notificateur.notifier(NiveauNotification.AVERTISSEMENT, "Paquet illisible", echec.getMessage());
         }
+        return false;
     }
 
     /// Renvoie l'avis du relecteur : un paquet **signé de lui**, sans aucune séquence (#4744).
@@ -155,10 +158,12 @@ public final class ActionsEmport {
     /// **La confirmation ne se demande que si elle a lieu d'être.** Le service refuse un remplacement
     /// non confirmé en nommant le relecteur présent ; ce refus devient alors la question posée, plutôt
     /// qu'une confirmation systématique que l'utilisateur apprendrait à cliquer sans lire.
-    public void importerAvis() {
+    ///
+    /// @return `true` si l'avis a été rangé : la sélection de la nuit a alors changé en base
+    public boolean importerAvis() {
         Optional<Path> avis = selecteur.choisirFichier("Reprendre un avis reçu", Optional.empty(), PAQUET);
         if (avis.isEmpty()) {
-            return;
+            return false;
         }
         try {
             ServiceEmport.ImportPrepare prepare = service.preparerImport(avis.get());
@@ -167,17 +172,19 @@ public final class ActionsEmport {
                         NiveauNotification.AVERTISSEMENT,
                         "Avis non repris",
                         String.join(" ; ", prepare.plan().refus()));
-                return;
+                return false;
             }
             if (prepare.plan().demandeConfirmation() && !confirmateur.confirmer(remplacement(prepare))) {
-                return;
+                return false;
             }
             rendreCompte(service.appliquerImport(prepare, true));
+            return true;
         } catch (IllegalStateException refus) {
             notificateur.notifier(NiveauNotification.AVERTISSEMENT, "Avis non repris", refus.getMessage());
         } catch (IOException echec) {
             notificateur.notifier(NiveauNotification.AVERTISSEMENT, "Avis illisible", echec.getMessage());
         }
+        return false;
     }
 
     /// Ce que la confirmation d'un second avis annonce : qui serait remplacé, et ce qui serait perdu.
