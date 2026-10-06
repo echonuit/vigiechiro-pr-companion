@@ -18,6 +18,7 @@ import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
+import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CarteDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.ExecuteurTacheRalenti;
@@ -163,12 +164,23 @@ class ScenarioBandeauLectureSeuleTest {
         GesteVisible.amenerDansLeCadre(robot, "#boutonImporter");
         GesteVisible.cliquer(robot, "#boutonImporter");
 
+        // Ce que le compte rendu DIT, et non sa présence : l'écran le déclare, donc il est dans le
+        // graphe dès le chargement, et attendre qu'il s'y trouve n'attendait rien. Le cas finissait
+        // sitôt l'import lancé : sur six tournages du même commit, ses six dernières images disaient
+        // « Préparation… » (#5911).
         Attente.queSurLeFil(
-                () -> robot.lookup("#compteRenduChiffre").tryQuery().isPresent(),
+                () -> !ceQueDitLeCompteRendu(robot).isBlank(),
                 "l'import n'a pas abouti alors que le bandeau ne fait qu'informer. C'est LE point du"
                         + " geste : Companion lit la source et n'y écrit jamais, y compris pour poser"
                         + " cette question - elle est posée au volume, sans aucune écriture (R9)",
                 FIN_SECONDES * 1000L);
+
+        // Le compte rendu vient au BAS de la page, et y reste le temps d'être lu : c'est le geste de
+        // `ScenarioConnecteAnnonceImportTest` sur ce même nœud (#5842, #5870).
+        GesteVisible.allerAuBasDeLaPage(robot, "#compteRenduChiffre");
+        Respiration.surLeMomentCle(robot);
+        Respiration.leTempsDeLire(robot);
+        exigerLeCompteRenduALImage(robot);
     }
 
     @Test
@@ -197,6 +209,28 @@ class ScenarioBandeauLectureSeuleTest {
                 .as("un message qui paraîtrait sur une carte saine ferait douter d'un support qui va"
                         + " bien, et l'observateur cesserait de le croire quand il compte")
                 .doesNotContain(LECTURE_SEULE);
+    }
+
+    /// Le compte rendu est-il À L'IMAGE, et dit-il quelque chose, quand le cas finit ?
+    ///
+    /// Le cas s'appelle « et l'import aboutit ». Sur six tournages du même commit, ses six dernières
+    /// images disaient « Préparation… » : il finissait sitôt l'import lancé (#5911).
+    private static void exigerLeCompteRenduALImage(FxRobot robot) {
+        Node compteRendu = robot.lookup("#compteRenduChiffre").query();
+        assertThat(compteRendu.isVisible() && CadreVisible.contient(compteRendu))
+                .as("le compte rendu doit être dans le cadre quand le cas finit : l'import abouti est"
+                        + " ce que le cas annonce, et un clip qui s'arrête avant ne le montre pas")
+                .isTrue();
+        assertThat(ceQueDitLeCompteRendu(robot))
+                .as("un compte rendu à l'image et vide ne dit pas que l'import a abouti")
+                .isNotBlank();
+    }
+
+    /// Tout ce que le compte rendu de fin dit, mis bout à bout. Vide tant que l'import n'a pas conclu.
+    private static String ceQueDitLeCompteRendu(FxRobot robot) {
+        StringBuilder dit = new StringBuilder();
+        robot.lookup("#compteRenduChiffre").tryQuery().ifPresent(noeud -> collecter(noeud, dit));
+        return dit.toString();
     }
 
     /// Tout ce que la zone des avertissements dit, mis bout à bout dans l'ordre de l'écran.
