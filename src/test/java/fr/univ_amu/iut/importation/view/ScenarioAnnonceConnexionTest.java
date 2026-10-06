@@ -45,6 +45,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.NodeQueryUtils;
 import org.testfx.util.WaitForAsyncUtils;
 
 /// Ce que l'import **annonce**, selon qu'on est connecté ou non (#3424, #3448, #3473).
@@ -81,6 +82,9 @@ class ScenarioAnnonceConnexionTest {
     private static final String LABEL_ORIGINAUX = "#labelOriginaux";
 
     private static final String PARTICIPATION = "participation";
+
+    /// Ce que le libellé de l'inspection dit une fois `sd-nominale` balayée.
+    private static final String ORIGINAUX_DE_LA_CARTE = "6 enregistrement";
 
     private Injector injecteur;
 
@@ -122,11 +126,15 @@ class ScenarioAnnonceConnexionTest {
         Respiration.surLeMomentCle(robot);
         GesteVisible.cliquer(robot, "#boutonParcourir");
         WaitForAsyncUtils.waitForFxEvents();
+        // Le VRAI compte, et non un libellé non vide : il affiche « 0 enregistrement(s) » dès que
+        // l'écran est chargé, si bien qu'attendre qu'il ne soit pas vide n'attendait rien (#5893).
+        // La carte porte six enregistrements.
         Attente.queSurLeFil(
-                () -> !texte(robot, LABEL_ORIGINAUX).isBlank(),
-                "l'inspection n'a jamais conclu",
+                () -> texte(robot, LABEL_ORIGINAUX).startsWith(ORIGINAUX_DE_LA_CARTE),
+                "l'inspection n'a jamais rendu les six enregistrements de la carte",
                 APPARITION_SECONDES * 1000L);
         importerAuPremierPoint(robot);
+        exigerLeCompteRenduALImage(robot);
 
         String compteRendu = texteDe(robot, "#compteRenduChiffre");
 
@@ -148,10 +156,36 @@ class ScenarioAnnonceConnexionTest {
         WaitForAsyncUtils.waitForFxEvents();
         GesteVisible.amenerDansLeCadre(robot, BOUTON_IMPORTER);
         GesteVisible.cliquer(robot, BOUTON_IMPORTER);
+        // Le TEXTE, et non la seule visibilité du nœud : le nœud paraît avant que son texte soit posé
+        // (#5804), et le cas finissait à cet instant-là.
         Attente.queSurLeFil(
-                () -> estVisible(robot, "#compteRenduChiffre"),
+                () -> !texteDe(robot, "#compteRenduChiffre").isBlank(),
                 "l'import n'a pas abouti : le compte rendu de fin n'a jamais paru",
                 FIN_SECONDES * 1000L);
+
+        // Le compte rendu vient au BAS de la page, et y reste le temps d'être lu. Sans ces trois
+        // lignes le cas finissait sitôt le nœud visible : la dernière image tombait avant ou après la
+        // conclusion, la page ayant suivi le compte rendu ou non. Sur huit tournages du même commit,
+        // six finissaient pendant la transformation et un seul montrait le
+        // compte rendu (#5893). C'est le geste de
+        // `ScenarioConnecteAnnonceImportTest` sur ce même nœud (#5842, #5870).
+        GesteVisible.allerAuBasDeLaPage(robot, "#compteRenduChiffre");
+        Respiration.surLeMomentCle(robot);
+        Respiration.leTempsDeLire(robot);
+    }
+
+    /// Le compte rendu est-il À L'IMAGE quand le cas finit ?
+    ///
+    /// Le cas se juge sur lui, et le banc le lit dans la scène : il le lisait donc aussi bien sous le
+    /// bord de la page. Le clip, lui, finissait sur le formulaire pendant la transformation, six fois
+    /// sur huit tournages du même commit, et le compte rendu n'y était à l'image qu'une fois (#5893).
+    private static void exigerLeCompteRenduALImage(FxRobot robot) {
+        assertThat(robot.lookup("#compteRenduChiffre")
+                        .match(NodeQueryUtils.isVisible())
+                        .tryQuery())
+                .as("le compte rendu doit être dans le cadre quand le cas finit : un verdict lu sous le"
+                        + " bord de la page est juste pour le banc et absent du clip")
+                .isPresent();
     }
 
     /// Tout ce qu'un nœud dit, mis bout à bout.
@@ -163,10 +197,6 @@ class ScenarioAnnonceConnexionTest {
         StringBuilder dit = new StringBuilder();
         collecter(parent, dit);
         return dit.toString();
-    }
-
-    private static boolean estVisible(FxRobot robot, String identifiant) {
-        return robot.lookup(identifiant).tryQuery().map(Node::isVisible).orElse(false);
     }
 
     private static void collecter(Node noeud, StringBuilder dit) {

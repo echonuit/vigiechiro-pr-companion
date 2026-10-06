@@ -45,6 +45,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.NodeQueryUtils;
 import org.testfx.util.WaitForAsyncUtils;
 
 /// Trois façons d'aborder l'import qui ne partent pas d'un dossier propre : des **rejets**, une
@@ -111,6 +112,7 @@ class ScenarioRejetsEtArchiveTest {
     void l_import_aboutit_malgre_les_rejets(FxRobot robot) throws TimeoutException, IOException {
         inspecter(robot, "sd-rejets");
         importerAuPremierPoint(robot);
+        exigerLeCompteRenduALImage(robot);
 
         String compteRendu = texteDe(robot, "#compteRenduChiffre");
 
@@ -165,10 +167,19 @@ class ScenarioRejetsEtArchiveTest {
                         + " celle de la décompression - et le cas ne prouverait rien")
                 .doesNotContain("6 enregistrement");
 
+        // Le VRAI compte, et non un libellé non vide. Il affiche « 0 enregistrement(s) » dès que
+        // l'écran est chargé : attendre qu'il ne soit pas vide n'attendait rien, et le cas finissait
+        // pendant la décompression sans avoir vu l'inspection la suivre. Sur huit tournages du même
+        // commit, les huit dernières images disaient « Préparation de la décompression… » (#5893).
         Attente.queSurLeFil(
-                () -> !texte(robot, LABEL_ORIGINAUX).isBlank(),
+                () -> texte(robot, LABEL_ORIGINAUX).startsWith("6 enregistrement"),
                 "l'inspection n'a jamais suivi la décompression : l'archive a été ouverte pour rien",
                 FIN_SECONDES * 1000L);
+
+        // Ce que l'inspection a rendu vient dans le cadre, et y reste le temps d'être lu : la page
+        // avait suivi la barre de progression deux fois sur huit, et le clip finissait alors ailleurs.
+        GesteVisible.amenerDansLeCadre(robot, "#sectionInspection");
+        Respiration.leTempsDeLire(robot);
     }
 
     @Test
@@ -220,10 +231,37 @@ class ScenarioRejetsEtArchiveTest {
         WaitForAsyncUtils.waitForFxEvents();
         GesteVisible.amenerDansLeCadre(robot, BOUTON_IMPORTER);
         GesteVisible.cliquer(robot, BOUTON_IMPORTER);
+        // Le TEXTE, et non la seule visibilité du nœud : le nœud paraît avant que son texte soit posé
+        // (#5804), et le cas finissait à cet instant-là.
         Attente.queSurLeFil(
-                () -> estVisible(robot, "#compteRenduChiffre"),
+                () -> !texteDe(robot, "#compteRenduChiffre").isBlank(),
                 "l'import n'a pas abouti : le compte rendu de fin n'a jamais paru",
                 FIN_SECONDES * 1000L);
+
+        // Le compte rendu vient au BAS de la page, et y reste le temps d'être lu. Sans ces trois
+        // lignes le cas finissait sitôt le nœud visible : la dernière image tombait avant ou après la
+        // conclusion, la page ayant suivi le compte rendu ou non. Sur huit tournages du même commit,
+        // quatre finissaient pendant la transformation et un seul montrait le
+        // compte rendu, en partie (#5893). C'est le geste de
+        // `ScenarioConnecteAnnonceImportTest` sur ce même nœud (#5842, #5870).
+        GesteVisible.allerAuBasDeLaPage(robot, "#compteRenduChiffre");
+        Respiration.surLeMomentCle(robot);
+        Respiration.leTempsDeLire(robot);
+    }
+
+    /// Le compte rendu est-il À L'IMAGE quand le cas finit ?
+    ///
+    /// Le cas se juge sur lui, et le banc le lit dans la scène : il le lisait donc aussi bien sous le
+    /// bord de la page. Le clip, lui, finissait sur le formulaire pendant la transformation, quatre
+    /// fois sur huit tournages du même commit, et le compte rendu n'y était à l'image qu'une fois,
+    /// en partie (#5893).
+    private static void exigerLeCompteRenduALImage(FxRobot robot) {
+        assertThat(robot.lookup("#compteRenduChiffre")
+                        .match(NodeQueryUtils.isVisible())
+                        .tryQuery())
+                .as("le compte rendu doit être dans le cadre quand le cas finit : un verdict lu sous le"
+                        + " bord de la page est juste pour le banc et absent du clip")
+                .isPresent();
     }
 
     /// Tout ce qu'un nœud dit, mis bout à bout.

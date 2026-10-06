@@ -74,6 +74,11 @@ baisse à mesure que les clips reçoivent leur remède. Le premier est sorti de 
 menu de ligne de l'import finit désormais sur son compte rendu, calé au bas de sa page, et a reçu son
 plancher (#5952). Six restent, et tout ce que cette page décide vaut pour eux sans changement.
 
+**Mise à jour du 6 octobre 2026.** Les trois clips de l'écran d'import sont sortis à leur tour
+(#5893). Deux finissaient sitôt leur compte rendu visible, sans caler la page ni tenir l'image ; le
+troisième attendait un libellé qui n'est jamais vide, et finissait pendant la décompression. Restent
+ceux de #5911.
+
 Une table de noms dans un outil vieillit si personne ne la relit. Chaque entrée porte donc son issue,
 dont le critère de fin comprend la sortie de la table.
 

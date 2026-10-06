@@ -112,25 +112,26 @@ runners GitHub distincts, soit **quinze paires** par clip. Mesurés le 5 octobre
 `mesurer-les-planchers.yml`, avec l'instrument du flux, ffmpeg 6.1.1 et ImageMagick 6.9.12-98
 (#5885).
 
-**Le fichier s'est complété depuis, et les paires ne sont plus uniformes.** Les clips de la session
-S2 en portent **vingt et une**, mesurées sur quatre tournages de plus (#5956), et celui du menu de
-ligne en porte **six**, sa ligne étant neuve. La quatrième colonne de `planchers-tournages.tsv` dit,
+**Le fichier s'est complété depuis, et les paires ne sont plus uniformes.** Chaque mesure ajoute les
+siennes à tous les clips des tournages qu'on lui donne (#5956, #5893), et un clip sorti de la table
+des clips sans plancher en porte moins que les autres, sa ligne étant neuve. La quatrième colonne de
+`planchers-tournages.tsv` dit,
 pour chaque clip, sur combien de paires son plancher a été pris - et un plancher tiré de peu de
 paires en prouve d'autant moins. Le décompte des lignes par nombre de paires ne s'écrit pas ici :
 chaque mesure le déplace, et le fichier le dit mieux que cette page.
 
 Le fichier mêle deux populations, et chaque compte de cette page nomme la sienne. Les clips
-**ordinaires** qui ont un plancher sont <!--inv:clips-ordinaires-a-plancher-->89<!--/inv-->. Ceux de
+**ordinaires** qui ont un plancher sont <!--inv:clips-ordinaires-a-plancher-->92<!--/inv-->. Ceux de
 la **plateforme de test** sont <!--inv:clips-de-la-plateforme-de-test-a-plancher-->5<!--/inv-->, et
 ont leur propre section. Les clips **sans plancher**, parce qu'ils ont deux fins, sont
-<!--inv:clips-sans-plancher-->6<!--/inv--> (voir plus bas). Ces trois comptes sont relus à chaque
+<!--inv:clips-sans-plancher-->3<!--/inv--> (voir plus bas). Ces trois comptes sont relus à chaque
 demande contre l'outil et son fichier : un clip corrigé qui quitte la table fait rougir cette page
 tant qu'elle ne le dit pas. Un cas est de la plateforme de test quand sa méthode, ou sa classe, en
 porte le tag : ni le nom de sa classe ni le tag de sa seule classe ne suffisent à le dire.
 
 La distribution des planchers des clips ordinaires, **relevée le 6 octobre 2026** sur le fichier de
-`main` à `358205ef5`. C'est une mesure datée : elle ne suit pas le fichier, et se relève quand
-l'argument qu'elle sert en a besoin.
+`main` à `358205ef5`, qui en portait alors 89. C'est une mesure datée : elle ne suit pas le fichier,
+et se relève quand l'argument qu'elle sert en a besoin.
 
 | plancher à 5 % de tolérance | cas |
 |---|---|
@@ -348,24 +349,23 @@ deux lancements, le second complétant le fichier rendu par le premier.
 ### Les clips auxquels on refuse un plancher
 
 Un plancher mesure le bruit d'un clip qui **finit sur son verdict**. Certains clips ont deux fins :
-deux tournages du même commit y diffèrent de 3 à 26 %, parce que le clip s'arrête pendant une
-transformation, pendant un fondu, ou sur une page que rien n'a calée.
+deux tournages du même commit y diffèrent de 3 à 26 %, parce que le clip s'arrête pendant un
+import, pendant un fondu, ou sur une page que rien n'a calée.
 
 Ce tableau est celui de la table `SANS_PLANCHER` de l'outil, et un test le confronte à elle dans
 les deux sens. Sa colonne du milieu est une mesure datée, prise le 5 octobre 2026 sur quinze paires.
 
 | clip | ses paires allaient jusqu'à, le 5 octobre 2026 | issue |
 |---|---|---|
-| `ScenarioAnnonceConnexionTest.deconnecte_le_compte_rendu_ne_pretend_rien` | 23,9 % | #5893 |
-| `ScenarioRejetsEtArchiveTest.l_import_aboutit_malgre_les_rejets` | 23,8 % | #5893 |
-| `ScenarioRejetsEtArchiveTest.la_decompression_se_voit_avant_l_inspection` | 22,5 % | #5893 |
 | `ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce` | 26,2 % | #5911 |
 | `ScenarioBandeauLectureSeuleTest.le_support_en_lecture_seule_s_annonce_et_l_import_aboutit` | 21,2 % | #5911 |
 | `ScenarioPassagePivotTest.modifier_le_passage` | 2,9 % | #5911 |
 
 Leur écrire ce chiffre rendrait la comparaison aveugle, sur ces clips, à tout changement plus petit.
 
-Ils sont donc nommés dans l'outil (`SANS_PLANCHER`), avec leur issue. La mesure affiche leur écart
+Ceux de l'écran d'import en sont sortis, une fois leur verdict tenu à l'image (#5952, #5893).
+
+Les autres sont nommés dans l'outil (`SANS_PLANCHER`), avec leur issue. La mesure affiche leur écart
 sans l'écrire, et la comparaison les annonce « sans plancher », suivi du numéro. Une ligne s'en
 retire avec l'issue qui la porte.
 
