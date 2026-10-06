@@ -71,8 +71,12 @@ dossier `sandbox/R202` : un worktree hors de cet arbre est invisible pour la per
 L'assignation est muette, le compte est partagé : une autre session peut déjà l'avoir prise.
 
 ```bash
-git -C <depot> worktree list      # une branche déjà sortie = quelqu'un y travaille
+git -C <depot> worktree list      # une branche déjà sortie = un worktree existe, à vérifier
 ```
+
+Une branche sortie dit qu'un worktree existe, pas qu'on y travaille : celui d'une issue livrée reste
+là tant que personne ne l'a retiré. La recette qui tranche est dans
+[`ouvrir-une-issue`](../ouvrir-une-issue/SKILL.md), « Vérifier une annonce reçue ».
 
 ## Avant d'affirmer qu'un travail n'a pas été fait
 
@@ -106,5 +110,9 @@ git -C <depot> log --oneline origin/main..main
 ## Nettoyer après fusion
 
 ```bash
+git -C <worktree> status --porcelain --untracked-files=all    # rien à perdre ?
 git -C <depot> worktree remove ../vigiechiro-wt/<branche>
 ```
+
+Un worktree qui reste fait passer une issue livrée pour une prise en cours. La branche locale, elle,
+survit au retrait : [`clore-une-pr`](../clore-une-pr/SKILL.md) dit comment le constater.
