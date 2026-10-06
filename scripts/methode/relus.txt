@@ -844,7 +844,7 @@ f474078974d5  src/main/java/fr/univ_amu/iut/lot/model/EmpreinteLot.java
 c1e446585a9d  src/main/java/fr/univ_amu/iut/lot/model/RearmementDepotUnites.java
 f6ac91375e04  src/main/java/fr/univ_amu/iut/lot/model/ReconciliationDepot.java
 aa4d07317db3  src/main/java/fr/univ_amu/iut/lot/model/RepertoireDepot.java
-a5de3c97fb8d  src/main/java/fr/univ_amu/iut/lot/model/ServiceLot.java
+d244d2288560  src/main/java/fr/univ_amu/iut/lot/model/ServiceLot.java
 19603165f2e6  src/main/java/fr/univ_amu/iut/lot/model/SourceArchivesRegenerables.java
 d91d0e80b23a  src/main/java/fr/univ_amu/iut/lot/model/SourceDepot.java
 f01c64b74a73  src/main/java/fr/univ_amu/iut/lot/model/StatutControle.java
@@ -1419,7 +1419,7 @@ ae0c4a7c81ee  src/test/java/fr/univ_amu/iut/cli/commande/DeposerVigieChiroTest.j
 d7b4ada3e18e  src/test/java/fr/univ_amu/iut/cli/commande/DiagnostiquerTest.java
 0598351a2e52  src/test/java/fr/univ_amu/iut/cli/commande/EtatTraitementVigieChiroInstantTest.java
 a81c090e58cd  src/test/java/fr/univ_amu/iut/cli/commande/EtatTraitementVigieChiroTest.java
-f39aade84c87  src/test/java/fr/univ_amu/iut/cli/commande/ExporterLotTest.java
+211b770c6e0d  src/test/java/fr/univ_amu/iut/cli/commande/ExporterLotTest.java
 911a6ddefb19  src/test/java/fr/univ_amu/iut/cli/commande/GardeJeuExistantTest.java
 9a44e7418863  src/test/java/fr/univ_amu/iut/cli/commande/ImporterRenduBilanTest.java
 66992066684a  src/test/java/fr/univ_amu/iut/cli/commande/ImporterTadaridaTest.java
@@ -1478,7 +1478,7 @@ b3aaf034461c  src/test/java/fr/univ_amu/iut/commun/api/ReponsesGrilleStocTest.ja
 07fb601235e0  src/test/java/fr/univ_amu/iut/commun/api/TraitementVigieChiroTest.java
 39defdc92f7f  src/test/java/fr/univ_amu/iut/commun/api/TransportVigieChiroTest.java
 efdb83418f82  src/test/java/fr/univ_amu/iut/commun/api/UrlSigneeAdmiseTest.java
-86f557b44ff9  src/test/java/fr/univ_amu/iut/commun/api/plateforme/ArchiveDuRepliSurLaPlateformeDeTestTest.java
+a1e593d0ca8a  src/test/java/fr/univ_amu/iut/commun/api/plateforme/ArchiveDuRepliSurLaPlateformeDeTestTest.java
 720ef0063de2  src/test/java/fr/univ_amu/iut/commun/api/plateforme/CibleLive.java
 eb4b2f869205  src/test/java/fr/univ_amu/iut/commun/api/plateforme/CibleLiveTest.java
 306bdc2a1902  src/test/java/fr/univ_amu/iut/commun/api/plateforme/DepotSurLaPlateformeDeTestTest.java
@@ -1859,7 +1859,7 @@ cc02b2cd91a1  src/test/java/fr/univ_amu/iut/lot/DepotUniteDaoTest.java
 2a3bfd660174  src/test/java/fr/univ_amu/iut/lot/LancementCalculGroupeTest.java
 9cd611a22679  src/test/java/fr/univ_amu/iut/lot/LotModuleTest.java
 0b05eabc5c5d  src/test/java/fr/univ_amu/iut/lot/PreparationGroupeeTest.java
-3a38410b382f  src/test/java/fr/univ_amu/iut/lot/RegenerationPendantUnDepotTest.java
+35289847fdda  src/test/java/fr/univ_amu/iut/lot/RegenerationPendantUnDepotTest.java
 9f96a1ede18a  src/test/java/fr/univ_amu/iut/lot/ServiceLotMockTest.java
 c297d804ea4c  src/test/java/fr/univ_amu/iut/lot/ServiceLotTest.java
 cf6b5fa299a2  src/test/java/fr/univ_amu/iut/lot/SeuilDisqueDepotTest.java

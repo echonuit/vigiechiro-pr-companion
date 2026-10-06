@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /// Service métier de la feature `lot` : prépare et trace le dépôt d'un passage sur
 /// Vigie-Chiro (parcours P4, épopée E4).
@@ -334,12 +335,31 @@ public class ServiceLot {
         }
         Path racineSession = Path.of(session.cheminRacine());
         String prefixe = racineSession.getFileName().toString(); // R22 : nom du dossier = préfixe R6
+        Set<String> dejaEnLigne = sequencesDejaEnLigne(idPassage);
         List<Path> fichiers = sequences.stream()
                 .map(s -> resoudreDansSession(session, s.cheminFichier()))
+                .filter(fichier -> !dejaEnLigne.contains(fichier.getFileName().toString()))
                 .toList();
+        if (fichiers.isEmpty()) {
+            throw new RegleMetierException("Toutes les séquences de cette nuit sont déjà sur Vigie-Chiro :"
+                    + " il ne reste rien à déposer à la main.");
+        }
         return compacteur
                 .get()
                 .compacter(fichiers, prefixe, repertoireDepot.dossier(session.cheminRacine()), progres, suivi);
+    }
+
+    /// Les séquences que le plan de dépôt dit **déposées**, par leur nom de fichier (#5975).
+    ///
+    /// Une archive qui les contiendrait les rendrait au serveur, qui ajoute chaque fichier d'une archive
+    /// sans chercher s'il est déjà là : elles figureraient deux fois dans la participation (#5970). Un
+    /// dépôt en archives n'en écarte aucune : ses unités portent des noms d'archives, que nulle séquence
+    /// ne porte, et le plan ne dit pas ce qu'une archive déposée contient. Sa régénération reste entière.
+    private Set<String> sequencesDejaEnLigne(Long idPassage) {
+        return depotUnites.parPassage(idPassage).stream()
+                .filter(unite -> unite.statut() == StatutDepotUnite.DEPOSE)
+                .map(DepotUnite::identifiantUnite)
+                .collect(Collectors.toSet());
     }
 
     /// La **forme** du dépôt de la nuit : celle d'un dépôt entamé, sinon celle du réglage (#5824).

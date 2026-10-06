@@ -33,8 +33,9 @@ final class RepliManuelUI {
 
     /// La consigne du repli : ce qui a été refusé, puis le geste.
     static String consigne(int sequences) {
-        return "Vigie-Chiro a refusé " + sequences + " séquence(s). Générez les archives ZIP de la nuit,"
-                + " déposez-les à la main sur le portail, puis marquez le passage déposé ci-dessous.";
+        return "Vigie-Chiro a refusé " + sequences + " séquence(s). Générez les archives ZIP des séquences qui ne"
+                + " sont pas en ligne, déposez-les à la main sur le portail, puis marquez le passage déposé"
+                + " ci-dessous.";
     }
 
     /// La carte des archives, son titre, sa consigne, la carte du téléversement qui la situe, et le
