@@ -470,7 +470,9 @@ def reconstruire(reference: Path | None = None, repartitionne: bool = False) -> 
     if apres < avant:
         journal(f"{avant - apres} noeud(s) de moins (dedoublonnage ou code supprime)")
         GRAPHE.unlink()
-    if not to_json(graphe, communautes, str(GRAPHE)):
+    # Les libelles partent AVEC le graphe : le moteur ne pose `community_name` sur un noeud que
+    # s'il les recoit, et c'est ce nom que `graphify explain` et `graphify query` affichent (#5964).
+    if not to_json(graphe, communautes, str(GRAPHE), community_labels=libelles):
         journal("ecriture de graph.json refusee")
         raise SystemExit(1)
     detection = corpus_du_depot()
@@ -1211,6 +1213,150 @@ def auto_test():
         "l etat d avant se lit dans le graphe du dossier, et un dossier sans graphe n en a pas",
         (lues.get("n3"), lues.get("y"), len(lues), aucune) == (0, 1, 12, {}),
         f"obtenu : {(lues.get('n3'), lues.get('y'), len(lues), aucune)}",
+    )
+
+    # 14 : la reconstruction remet les libelles a l'ecriture du graphe (#5964). Le moteur ne pose
+    # `community_name` sur un noeud que s'il les recoit : sans eux, `graphify explain` affiche le
+    # nom qu'un noeud portait en entrant, ou un numero. `reconstruire` est jouee ENTIERE, dans une
+    # sortie fabriquee, avec un faux moteur dont l'ecriture suit cette regle.
+    class FauxGraphe:
+        def __init__(self, extraction):
+            self.donnees = {n["id"]: n for n in extraction["nodes"]}
+            self.liens = list(extraction["edges"])
+            self.nodes = list(self.donnees)
+
+        def neighbors(self, noeud):
+            return [
+                b if a == noeud else a
+                for a, b in ((lien["source"], lien["target"]) for lien in self.liens)
+                if noeud in (a, b)
+            ]
+
+        def number_of_nodes(self):
+            return len(self.donnees)
+
+        def number_of_edges(self):
+            return len(self.liens)
+
+    recu_par_l_ecriture = {}
+
+    def fausse_ecriture(graphe, communautes, chemin, community_labels=None):
+        recu_par_l_ecriture["libelles"] = community_labels
+        de_noeud = {n: cid for cid, membres in communautes.items() for n in membres}
+        noms = {int(cle): valeur for cle, valeur in (community_labels or {}).items()}
+        ecrits = []
+        for identifiant, donnee in graphe.donnees.items():
+            noeud = dict(donnee)
+            noeud["community"] = de_noeud.get(identifiant)
+            if noeud["community"] is not None and noms:
+                noeud["community_name"] = noms.get(noeud["community"], "sans libelle")
+            ecrits.append(noeud)
+        Path(chemin).write_text(
+            json.dumps({"nodes": ecrits, "links": graphe.liens}), encoding="utf-8"
+        )
+        return True
+
+    faux_moteur = (
+        ("graphify.analyze", "god_nodes", lambda graphe: []),
+        ("graphify.analyze", "suggest_questions", lambda graphe, communautes, libelles: []),
+        ("graphify.analyze", "surprising_connections", lambda graphe, communautes: []),
+        (
+            "graphify.build",
+            "build_from_json",
+            lambda extraction, root=None, directed=False: FauxGraphe(extraction),
+        ),
+        (
+            "graphify.cluster",
+            "cluster",
+            lambda graphe: {-1: ["la partition entiere a ete demandee"]},
+        ),
+        ("graphify.cluster", "score_all", lambda graphe, communautes: {}),
+        ("graphify.export", "to_json", fausse_ecriture),
+        ("graphify.report", "generate", lambda *arguments, **nommes: "rapport"),
+        (
+            "graphify.detect",
+            "detect",
+            lambda racine: {"total_files": 1, "total_words": 1, "files": {}},
+        ),
+    )
+    constantes = ("RACINE", "SORTIE", "GRAPHE", "EXTRAIT")
+    constantes_d_avant = {nom: globals()[nom] for nom in constantes}
+    modules_d_avant = {
+        nom: sys.modules.get(nom) for nom in {"graphify", *(m for m, _, _ in faux_moteur)}
+    }
+    with tempfile.TemporaryDirectory() as temporaire:
+        sortie = Path(temporaire) / "graphify-out"
+        sortie.mkdir()
+        # Un noeud porte un nom perime, un autre n'en porte aucun : les deux formes du defaut.
+        (sortie / "graph.json").write_text(
+            json.dumps(
+                {
+                    "nodes": [
+                        {
+                            "id": "a",
+                            "community": 0,
+                            "community_name": "Nom perime",
+                            "source_file": "docs/a.md",
+                        },
+                        {"id": "b", "community": 0, "source_file": "docs/a.md"},
+                        {
+                            "id": "c",
+                            "community": 1,
+                            "community_name": "Autre nom perime",
+                            "source_file": "docs/c.md",
+                        },
+                    ],
+                    "links": [{"source": "a", "target": "b"}],
+                }
+            ),
+            encoding="utf-8",
+        )
+        (sortie / ".graphify_labels.json").write_text(
+            json.dumps({"0": "La premiere", "1": "La seconde"}), encoding="utf-8"
+        )
+        try:
+            paquet = types.ModuleType("graphify")
+            paquet.__path__ = []
+            sys.modules["graphify"] = paquet
+            faux_modules = {}
+            for nom, attribut, faux_objet in faux_moteur:
+                module = faux_modules.setdefault(nom, types.ModuleType(nom))
+                setattr(module, attribut, faux_objet)
+            sys.modules.update(faux_modules)
+            globals().update(
+                RACINE=Path(temporaire),
+                SORTIE=sortie,
+                GRAPHE=sortie / "graph.json",
+                EXTRAIT=sortie / ".graphify_extract.json",
+            )
+            reconstruire()
+            noms_ecrits = {
+                n["id"]: n.get("community_name")
+                for n in json.loads((sortie / "graph.json").read_text(encoding="utf-8"))["nodes"]
+            }
+            libelles_gardes = json.loads(
+                (sortie / ".graphify_labels.json").read_text(encoding="utf-8")
+            )
+        except (Exception, SystemExit) as erreur:  # noqa: BLE001
+            # Un rendu reconnaissable plutot qu'une chute hors de tout cas.
+            noms_ecrits = libelles_gardes = {"la reconstruction a leve": repr(erreur)}
+        finally:
+            globals().update(constantes_d_avant)
+            for nom, mod in modules_d_avant.items():
+                if mod is None:
+                    sys.modules.pop(nom, None)
+                else:
+                    sys.modules[nom] = mod
+    verifier(
+        "apres une reconstruction, chaque noeud porte le libelle de sa communaute",
+        noms_ecrits == {"a": "La premiere", "b": "La premiere", "c": "La seconde"},
+        f"obtenu : {noms_ecrits}",
+    )
+    verifier(
+        "l ecriture du graphe recoit les libelles que le fichier des libelles gardera",
+        (recu_par_l_ecriture.get("libelles"), libelles_gardes)
+        == ({0: "La premiere", 1: "La seconde"}, {"0": "La premiere", "1": "La seconde"}),
+        f"obtenu : {(recu_par_l_ecriture.get('libelles'), libelles_gardes)}",
     )
 
     if echecs:
