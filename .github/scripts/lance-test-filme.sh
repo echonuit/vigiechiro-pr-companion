@@ -348,6 +348,45 @@ ONGLET=$'\t'             # la tabulation du journal, nommée : illisible en litt
 CLIP_DUREE_MIN=0.20      # sous cette durée, un extrait ne montre rien et ffmpeg n'écrit rien de lisible
 COUVERTURE_MIN=0.6       # sous ce seuil, les plages ne désignent pas ce que le film montre
 
+# ## Ce que `arrêt - durée` SUPPOSE, et le refus qui le tient (#6017)
+#
+# « Rien n'est supposé » était faux d'une chose : que le film coure encore quand on lui ordonne
+# de s'arrêter. Le 6 octobre 2026, la séance a duré 32 min 38 s sous un plafond de 1800 s : le film
+# s'est arrêté seul, l'origine calculée est partie 158 s trop tard, et les 90 clips publiés
+# montraient chacun le cas d'avant. Rien n'a rougi, la couverture ne voyant pas un décalage dans
+# une séance continue de fenêtres.
+#
+# Le plafond vient du `timeout-minutes` du job `filmer` de `recette-filmee.yml`, 60 minutes : la
+# caméra démarre après le job, donc un film de cette longueur ne peut pas y finir avant la séance.
+# L'auto-test relit ce délai dans l'atelier. Mais un plafond se redépasse, sur un poste où rien ne
+# borne la séance comme en CI le jour où le délai monte : le vrai garde est le REFUS, dans
+# `montage_par_cas`, quand l'ordre d'arrêt n'a trouvé personne.
+PLAFOND_DU_FILM_S=3600
+
+# Rend les minutes accordées au job qui lance ce script, lues dans l'atelier et non recopiées.
+delai_du_job_qui_filme() {
+    awk '/^  filmer:/ { dans = 1; next }
+         dans && /^  [^ #]/ { exit }
+         dans && /^    timeout-minutes:/ { print $2; trouve = 1; exit }
+         END { exit !trouve }' "$RACINE/.github/workflows/recette-filmee.yml"
+}
+
+# Ordonne l'arrêt au film par son tube (fd 3), et rend 1 si le film n'était plus là pour le lire.
+#
+# C'est ce signal, et non une durée du brut proche du plafond, qui dit « film tronqué » : il vaut
+# quel que soit le plafond et quelle que soit la raison de l'arrêt, là où la durée demande une marge
+# que la mesure ne donne pas (le 1er octobre, le film coupé à 1800 s n'en durait que 1784,8).
+#
+# SIGPIPE est ignoré le temps de l'écriture. Selon l'appelant, écrire dans un tube sans lecteur tue
+# le script sans un mot, ou rend « Broken pipe » que personne ne lisait : les deux taisaient le fait.
+ordonner_l_arret() {
+    local rendu=0
+    trap '' PIPE
+    printf q >&3 2>/dev/null || rendu=1
+    trap - PIPE
+    return "$rendu"
+}
+
 # Rend « couverture utiles » : la part des images utiles du brut qui tombent dans une plage, et
 # leur nombre. Une couverture de -1 signifie qu'il n'y avait aucune image utile à couvrir.
 couverture_des_plages() {
@@ -473,9 +512,19 @@ plages_du_journal() {
 }
 
 montage_par_cas() {
-    local brut="$1" journal="$2" dossier="$3" arret_ms="$4"
+    local brut="$1" journal="$2" dossier="$3" arret_ms="$4" ordre_recu="${5:-non}"
     [ -s "$brut" ] || { echo "   index : rien n'a été filmé"; return 0; }
     [ -s "$journal" ] || { echo "   index : aucun repère, aucun test filmé ne cite de cas"; return 0; }
+    # AVANT tout calcul : l'instant d'arrêt n'est la fin du film que si le film a reçu l'ordre.
+    # Le défaut est « non » : un appelant qui oublie de le dire obtient un refus, pas un silence.
+    if [ "$ordre_recu" != oui ]; then
+        echo "⚠️ film tronqué : il s'était arrêté avant l'ordre d'arrêt, donc la séance a duré plus que lui"
+        echo "   (plafond de $PLAFOND_DU_FILM_S s atteint, ou ffmpeg mort en route). Son origine se calcule"
+        echo "   « arrêt moins durée » : elle serait fausse, et chaque clip montrerait un autre cas que le"
+        echo "   sien. Aucun clip produit. Le geste : relever PLAFOND_DU_FILM_S avec le timeout-minutes du"
+        echo "   job qui filme, ou raccourcir la séance, puis retourner."
+        return 1
+    fi
 
     local duree t0 plages mesure couverture utiles
     duree=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$brut" 2>/dev/null)
@@ -649,7 +698,7 @@ lancer() {
     rm -f "$tube"; mkfifo "$tube"
 
     ffmpeg -loglevel error -f x11grab -framerate 10 -video_size "${TAILLE%x*}" \
-        -i "$ECRAN" -t 1800 -c:v libx264 -preset ultrafast -crf 26 -g 20 -flush_packets 1 \
+        -i "$ECRAN" -t "$PLAFOND_DU_FILM_S" -c:v libx264 -preset ultrafast -crf 26 -g 20 -flush_packets 1 \
         -pix_fmt yuv420p -y "$brut" < "$tube" >/dev/null 2>&1 &
     local film=$!
     exec 3> "$tube"
@@ -665,7 +714,8 @@ lancer() {
         -Dtest="$classe" -DfailIfNoSpecifiedTests=false )
     local code=$?
 
-    printf q >&3
+    local ordre_recu=oui
+    ordonner_l_arret || ordre_recu=non
     # Relevé ICI, et non après `wait` : ffmpeg cesse de capturer quand il lit `q`, puis prend une
     # seconde à finaliser. Prendre l'heure après l'attente placerait l'image 0 une seconde trop
     # tôt, et décalerait TOUS les clips d'autant - sans rien casser d'apparent.
@@ -678,7 +728,7 @@ lancer() {
     # AVANT la coupe : elle supprime le brut, dans lequel les clips se taillent.
     local montage=0
     montage_par_cas "$brut" "$RACINE/target/recette-filmee/reperes.tsv" \
-        "$(dirname "$sortie")/clips" "$arret_ms" || montage=1
+        "$(dirname "$sortie")/clips" "$arret_ms" "$ordre_recu" || montage=1
 
     couper_par_luminance "$brut" "$sortie"
 
@@ -691,6 +741,11 @@ lancer() {
     # Un montage qui vise à côté est un DÉFAUT, pas une remarque : il livrerait des extraits
     # plausibles pris au mauvais endroit. Il fait donc échouer le lancement même quand les tests
     # sont verts - c'est justement le cas où personne ne regarderait.
+    #
+    # Sous des tests ROUGES le code reste celui de Maven, et ce n'est pas un oubli : l'atelier ne lit
+    # de ce code que vert ou rouge, et publie les clips d'une planche rouge. Ce qui arrête alors un
+    # film tronqué (#6017) est qu'un montage refusé ne laisse AUCUN clip : le remuxage n'a rien à
+    # prendre, le job échoue, et la publication qui en dépend ne part pas.
     if [ "$montage" -ne 0 ] && [ "$code" -eq 0 ]; then
         return 1
     fi
@@ -1126,15 +1181,53 @@ auto_test() {
     printf '# entête seule\n' > "$tmp/reperes-vides.tsv"
 
     essai "un montage aligné sur le geste est accepté" vert \
-        montage_par_cas "$tmp/sandwich.mkv" "$tmp/reperes-justes.tsv" "$tmp/clips-ok" 1000000000000
+        montage_par_cas "$tmp/sandwich.mkv" "$tmp/reperes-justes.tsv" "$tmp/clips-ok" 1000000000000 oui
     essai "des repères décalés de 3 s sont REFUSÉS" rouge \
-        montage_par_cas "$tmp/sandwich.mkv" "$tmp/reperes-decales.tsv" "$tmp/clips-ko" 1000000000000
+        montage_par_cas "$tmp/sandwich.mkv" "$tmp/reperes-decales.tsv" "$tmp/clips-ko" 1000000000000 oui
     essai "un journal sans passage ne casse rien" vert \
-        montage_par_cas "$tmp/sandwich.mkv" "$tmp/reperes-vides.tsv" "$tmp/clips-vide" 1000000000000
+        montage_par_cas "$tmp/sandwich.mkv" "$tmp/reperes-vides.tsv" "$tmp/clips-vide" 1000000000000 oui
     essai "l'index nomme le cas, pas seulement le test" vert \
         bash -c 'grep -q "| S1-01 |" "$1/index.md"' _ "$tmp/clips-ok"
     essai "un montage refusé ne laisse AUCUN clip" vert \
         bash -c '[ ! -d "$1" ]' _ "$tmp/clips-ko"
+
+    # --- le film arrêté AVANT l'ordre d'arrêt (#6017) ---
+    #
+    # Le cas que le contrôle de couverture ne voit pas : dans une séance continue, des clips taillés
+    # 158 s trop tôt tombent encore sur des fenêtres, celles des cas d'avant. Les repères sont donc
+    # JUSTES ici, et c'est tout le cas : seul le signal de l'ordre d'arrêt peut refuser.
+    essai "un film arrêté avant l'ordre est REFUSÉ" rouge \
+        montage_par_cas "$tmp/sandwich.mkv" "$tmp/reperes-justes.tsv" "$tmp/clips-tronque" 1000000000000 non
+    essai "un montage à qui l'on ne dit rien de l'ordre aussi" rouge \
+        montage_par_cas "$tmp/sandwich.mkv" "$tmp/reperes-justes.tsv" "$tmp/clips-muet" 1000000000000
+    essai "et il ne laisse AUCUN clip non plus" vert \
+        bash -c '[ ! -d "$1" ]' _ "$tmp/clips-tronque"
+    essai "son refus nomme la cause et le geste" vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"
+            sortie=$(montage_par_cas "$1" "$2" "$3" 1000000000000 non)
+            case "$sortie" in *"film tronqué"*"avant l"?"ordre"*PLAFOND_DU_FILM_S*retourner*) exit 0 ;; *) exit 1 ;; esac' \
+        "${BASH_SOURCE[0]}" "$tmp/sandwich.mkv" "$tmp/reperes-justes.tsv" "$tmp/clips-tronque-2"
+
+    # Le signal lui-même, sur un VRAI tube, des deux côtés : un film qui tourne, un film parti.
+    essai "l'ordre d'arrêt atteint un film qui tourne" vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; mkfifo "$1"
+            sleep 5 < "$1" & exec 3> "$1"
+            ordonner_l_arret; rendu=$?; kill $! 2>/dev/null; exit "$rendu"' \
+        "${BASH_SOURCE[0]}" "$tmp/tube-vivant"
+    # Le code se lit EXACTEMENT : 1 dit « le film était parti », alors que 141 dirait que le tube a
+    # tué le banc, et 127 que la fonction n'existe pas. Les trois sont non nuls.
+    essai "un film parti avant l'ordre se SAIT, sans tuer le banc" vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; mkfifo "$1"
+            true < "$1" & exec 3> "$1"; wait $!
+            ordonner_l_arret; [ "$?" -eq 1 ]' \
+        "${BASH_SOURCE[0]}" "$tmp/tube-parti"
+
+    # Le plafond se CONFRONTE au délai du job qui filme, il ne se recopie pas : relever
+    # `timeout-minutes` sans relever le plafond rougit ici, au lieu de décaler les clips en silence.
+    essai "le plafond du film couvre le délai du job qui filme" vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"
+            minutes=$(delai_du_job_qui_filme) || exit 1
+            [ "$PLAFOND_DU_FILM_S" -ge "$((minutes * 60))" ]' "${BASH_SOURCE[0]}"
 
     # Le cas que la première séance réelle a fait échouer : le geste appartient à un test qui ne
     # cite AUCUN cas. Il doit couvrir - sinon le contrôle refuse un alignement juste - et ne
@@ -1154,7 +1247,7 @@ auto_test() {
     printf '999999999500\tfin\tExemple.invisible\tS1-02\n' >> "$tmp/reperes-mixtes.tsv"
 
     essai "un montage mêlant visible et invisible est accepté" vert \
-        montage_par_cas "$tmp/sandwich.mkv" "$tmp/reperes-mixtes.tsv" "$tmp/clips-mixtes" 1000000000000
+        montage_par_cas "$tmp/sandwich.mkv" "$tmp/reperes-mixtes.tsv" "$tmp/clips-mixtes" 1000000000000 oui
     essai "le cas qui a paru à l'écran s'audite EN REGARDANT" vert \
         bash -c 'grep -q "| S1-01 |.*| en regardant |" "$1/index.md"' _ "$tmp/clips-mixtes"
     essai "le cas qui n'a rien montré s'audite EN LISANT" vert \
@@ -1174,7 +1267,7 @@ auto_test() {
         bash -c '[ "$(classes_de_la_planche "$1")" = "MainViewTest,MesSitesViewTest" ]' _ "$tmp/liste-pleine.txt"
 
     essai "un test NON cité couvre quand même le geste" vert \
-        montage_par_cas "$tmp/sandwich.mkv" "$tmp/reperes-sans-cas.tsv" "$tmp/clips-sc" 1000000000000
+        montage_par_cas "$tmp/sandwich.mkv" "$tmp/reperes-sans-cas.tsv" "$tmp/clips-sc" 1000000000000 oui
     essai "et il ne produit aucun extrait" vert \
         bash -c '! ls "$1"/*.mkv >/dev/null 2>&1' _ "$tmp/clips-sc"
 
