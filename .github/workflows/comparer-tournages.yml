@@ -14,6 +14,21 @@
 # roulante, elles n'en portent pas. Comparer les deux demande donc de retirer le préfixe après
 # téléchargement, sans quoi aucun cas ne se retrouverait des deux côtés et l'outil annoncerait
 # cinquante cas « apparus » et cinquante « disparus ».
+#
+# ## Une branche se compare à `main` avant fusion
+#
+# Chaque côté est une version publiée OU un numéro d'exécution de `tournage-recette.yml` (#5930,
+# ADR 5930). Une valeur purement numérique est une exécution : aucun tag de ce dépôt ne l'est. On
+# tourne la branche, on tourne `main`, et on donne les deux numéros.
+#
+# L'ADR 5854 avait écarté cette entrée : c'est une seconde voie de reprise, à garder en parité avec
+# celle de `mesurer-les-planchers.yml`, et un artefact expire. Les deux objections ont leur réponse
+# ici. Les refus sont ceux de la mesure, par les mêmes phrases, et le garde
+# `verifie_decisions_du_tournage_connecte.py` les exige des deux ateliers face au même leurre. Et un
+# artefact expiré se dit, au lieu d'échouer au téléchargement.
+#
+# Un seul refus de la mesure ne se reprend pas, celui du « même commit ». Il est juste pour un
+# plancher, qui est le bruit entre deux tournages identiques. Ici, deux commits sont l'objet.
 name: comparer deux tournages
 
 run-name: "comparaison ${{ inputs.avant }} → ${{ inputs.apres }} (banc ${{ inputs.banc }})"
@@ -22,15 +37,15 @@ on:
   workflow_dispatch:
     inputs:
       avant:
-        description: "Ce à quoi on compare : un tag de version, « clips-recette », ou « clips-plateforme-de-test-precedent »"
+        description: "Ce à quoi on compare : un tag de version, « clips-recette », « clips-plateforme-de-test-precedent », ou un numéro d'exécution de tournage"
         type: string
         required: true
       apres:
-        description: "Ce qu'on regarde : un tag de version, « clips-recette », ou « clips-plateforme-de-test »"
+        description: "Ce qu'on regarde : un tag de version, « clips-recette », « clips-plateforme-de-test », ou un numéro d'exécution de tournage"
         type: string
         default: "clips-recette"
       banc:
-        description: "Quel banc, sur les tags de version"
+        description: "Quel banc, sur les tags de version (sans effet sur une exécution)"
         type: choice
         default: "bash"
         options:
@@ -41,8 +56,10 @@ on:
         type: string
         default: "5"
 
+# Lire les artefacts d'une autre exécution demande `actions: read`. Rien d'autre.
 permissions:
   contents: read
+  actions: read
 
 jobs:
   comparer:
@@ -56,11 +73,65 @@ jobs:
       - name: Reprendre les clips des deux tournages
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
           AVANT: ${{ inputs.avant }}
           APRES: ${{ inputs.apres }}
           BANC: ${{ inputs.banc }}
         run: |
           set -euo pipefail
+
+          # Ce que chaque côté EST, écrit en tête du résumé. Un index qui ne dit pas quels commits il
+          # met côte à côte se relit trois jours plus tard sans qu'on sache ce qu'il a jugé.
+          annoncer() { # <dossier> <phrase>
+            echo "$2"
+            echo "- **$1** : $2" >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+          }
+
+          # Une exécution de `tournage-recette.yml` (#5930). Les refus sont ceux de
+          # `mesurer-les-planchers.yml`, par les mêmes phrases : le garde les exige des deux ateliers.
+          reprendre_une_execution() { # <numéro d'exécution> <dossier>
+            local n="$1" dossier="$2" lu sha branche fin liste nom perime compte
+            if ! lu=$(gh run view "$n" --json headSha,headBranch,conclusion \
+              --jq '.headSha + " " + .headBranch + " " + (.conclusion // "")'); then
+              echo "::error::L'exécution $n ne se lit pas : ni son commit ni sa conclusion."
+              exit 1
+            fi
+            read -r sha branche fin <<< "$lu"
+            # Un tournage amputé ne se compare pas : il lui manque des clips, et ceux qu'il porte
+            # peuvent s'être arrêtés avant leur fin.
+            if [ "$fin" != "success" ]; then
+              echo "::error::L'exécution $n n'a pas conclu en succès (« ${fin:-en cours} »)."
+              exit 1
+            fi
+            # AUCUN refus du « même commit », à dessein : deux commits sont l'objet d'une
+            # comparaison. C'est le seul refus de la mesure qui ne se reprend pas.
+
+            # UN artefact de clips, et un seul. Une exécution relancée en porte un par tentative, et
+            # reprendre « les clips » mêlerait deux tournages sous le même numéro (#5797).
+            liste=$(gh api "repos/${GH_REPO}/actions/runs/${n}/artifacts" --paginate \
+              --jq '.artifacts[] | select(.name | startswith("clips-")) | "\(.name) \(.expired)"')
+            if [ -z "$liste" ] || [ "$(printf '%s\n' "$liste" | wc -l)" -ne 1 ]; then
+              echo "::error::L'exécution $n ne porte pas UN artefact de clips, mais : « ${liste//$'\n'/, } »."
+              # Passé son délai, un artefact disparaît de la liste : une exécution du 4 septembre
+              # 2026 n'en rendait plus aucun le 6 octobre. Le vide a donc deux lectures.
+              echo "::error::Un artefact de clips est gardé quatorze jours : passé ce délai, l'exécution n'en liste plus."
+              exit 1
+            fi
+            read -r nom perime <<< "$liste"
+            if [ "$perime" = "true" ]; then
+              echo "::error::L'artefact de clips de l'exécution $n a expiré : il est gardé quatorze jours."
+              echo "::error::Relancer un tournage du commit ${sha:0:9}, et comparer à celui-là."
+              exit 1
+            fi
+            gh run download "$n" --name "$nom" --dir "repris/$n"
+            find "repris/$n" -name '*.mp4' -exec mv -t "$dossier" {} +
+            compte=$(find "$dossier" -name '*.mp4' | wc -l)
+            if [ "$compte" -eq 0 ]; then
+              echo "::error::Aucun clip repris de l'exécution $n. Un dossier vide n'est pas « rien n'a changé »."
+              exit 1
+            fi
+            annoncer "$dossier" "Exécution $n (${sha:0:9}, branche ${branche}) : ${compte} clip(s)."
+          }
 
           reprendre() { # <source> <dossier>
             local source="$1" dossier="$2" clip nu
@@ -78,6 +149,13 @@ jobs:
               echo "::error::plateforme : leur écran suit des données vivantes, et le plancher de bruit y"
               echo "::error::mesurerait la plateforme plutôt que le produit. Les regarder, pas les comparer."
               exit 1
+            fi
+            # Un nombre est une EXÉCUTION, jamais une version : aucun tag de ce dépôt n'est purement
+            # numérique. Il ne se cherche donc pas parmi les versions, et une exécution inconnue se
+            # dit illisible au lieu de s'annoncer comme un tag introuvable.
+            if [[ "$source" =~ ^[0-9]+$ ]]; then
+              reprendre_une_execution "$source" "$dossier"
+              return
             fi
             if ! gh release view "$source" >/dev/null 2>&1; then
               echo "::error::« $source » n'est ni un tag de version ni une pré-version de ce dépôt."
@@ -107,7 +185,7 @@ jobs:
 
             local compte
             compte=$(find "$dossier" -name '*.mp4' | wc -l)
-            echo "« $source » : ${compte} clip(s)."
+            annoncer "$dossier" "« $source » : ${compte} clip(s)."
             [ "$compte" -gt 0 ] || {
               echo "::error::Aucun clip repris de « $source ». Un dossier vide n'est pas « rien n'a changé »."
               exit 1
@@ -116,6 +194,8 @@ jobs:
 
           reprendre "$AVANT" avant
           reprendre "$APRES" apres
+          # Une ligne vide, pour que l'index qui suit ne se colle pas à la liste des deux côtés.
+          echo >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
 
       - name: Cache des paquets APT (ffmpeg, imagemagick)
         # Ce cache porte sur les `.deb`, pas sur l'état installé : `dpkg` tourne donc à chaque run,
