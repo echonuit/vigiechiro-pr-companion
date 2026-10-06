@@ -73,9 +73,10 @@ MOI = pathlib.Path(__file__).resolve().relative_to(RACINE / "scripts").as_posix(
 # point d entree rend une liste au lieu d un entier. Deux des sept gardes du corpus nomment la leur
 # `auto_test`, sans souligne : sans cette exemption, leur verdict ne voulait rien dire.
 #
-# L exemption se DERIVE du nom, elle ne s enumere pas : toute fonction dont le nom porte « auto »
-# et « test ». Une liste aurait vieilli au premier garde neuf, comme trois listes tenues a la main
-# l ont fait dans ce depot.
+# L exemption se DERIVE, elle ne s enumere pas. Elle se lisait sur le nom, toute fonction portant
+# « auto » et « test », jusqu a #5524 : ce motif epargnait aussi `porte_un_auto_test`, qui est la
+# detection de ce banc. Elle se lit desormais sur le graphe d appel, dans `_commun/mutation.py`, que
+# les trois bancs importent : est machinerie ce que seul le point d entree d auto-test atteint.
 
 
 def declare_un_contrat(chemin: pathlib.Path) -> bool:
@@ -230,16 +231,19 @@ def ligne_du_point_d_entree(source: str) -> int | None:
 
     ## Pourquoi elle est RECOPIEE et non partagee
 
-    `.github/scripts/temoins_de_ci_non_decoratifs.py` en porte une jumelle. La question du partage
-    s est posee, et la mesure la tranche contre : elle fait QUATORZE lignes la-bas et DIX-SEPT ici,
-    et les deux bancs ne partagent RIEN d autre - ni fonds, ni import, ni arbre. Les relier
-    demanderait un QUATRIEME domicile commun, apres `scripts/_commun/` et
-    `.github/scripts/_forge.py`, pour une fonction que chacun peut lire en entier sans quitter son
-    fichier.
+    Les deux autres bancs en portent chacun une jumelle. En #5263 la question du partage s est
+    posee et la mesure l a tranchee contre : les bancs ne partageaient alors RIEN - ni fonds, ni
+    import, ni arbre - et les relier aurait demande un domicile commun de plus.
 
-    C est la mesure de #5216 appliquee a ces deux-la : « le partage reel est plus etroit qu il n y
-    parait ». Ce qui protege ici n est pas le partage, c est que CHACUN porte son cas rouge : celui
-    de ce banc est plus bas, et celui de l autre vit dans son propre auto-test.
+    **Cet argument ne vaut plus, et la copie reste.** Depuis #5524 les trois bancs importent
+    `_commun/mutation.py` : le domicile existe. Mesure du 2026-10-06, par l arbre : le corps de
+    cette fonction est identique ici et au banc des ADR, et differe au banc de CI. Le porteur a
+    permis le meme jour de la deplacer si le diff restait petit (#6031). Il ne le restait pas :
+    toucher le fonds commun engage d autres gardes, pour une fonction que chacun peut lire en
+    entier sans quitter son fichier.
+
+    Ce qui protege ici n est pas le partage, c est que CHACUN porte son cas rouge : celui de ce
+    banc est plus bas, et celui des deux autres vit dans leur propre auto-test (ADR 5265).
     """
     for noeud in ast.parse(source).body:
         cible = getattr(noeud, "test", None)
@@ -715,7 +719,17 @@ def _auto_test() -> int:
 
 CONTRAT = {
     "geste": "auto-test de garde de methode qui reste vert sans detection",
-    "population": "les gardes de scripts/methode que la suite charge",
+    # ⟨d OU vient le corpus, et non le dossier ou il vivait (#5397, #6031)⟩ Ce champ disait « les
+    # gardes de scripts/methode que la suite charge ». Depuis #5397 le corpus se derive de tout ce que
+    # `lint.yml` lance sous `scripts/`, hors `scripts/adr` qui a son banc, et la porte
+    # `scripts/batterie.py` y est sans vivre dans `scripts/methode`.
+    #
+    # La seconde moitie de la phrase nomme `scripts/methode`, et ce n est pas un reste : ce banc
+    # parcourt AUSSI ce dossier, pour confronter `HORS_PORTEE`. Sans elle `loupe-5175` le releve,
+    # a raison, comme un garde qui lit un chemin que sa population ne nomme pas.
+    "population": "les gardes que lint.yml lance sous scripts/, hors scripts/adr, et qui declarent "
+    "un CONTRAT ; ceux de scripts/methode qui en declarent un sans etre lances sont nommes dans "
+    "HORS_PORTEE",
     "dispositif": "invariant",
     "seuil": "(sans objet)",
     "temoin": "scripts/methode/temoins-de-methode-non-decoratifs.py --auto-test",
