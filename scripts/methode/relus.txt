@@ -1297,6 +1297,7 @@ c768760b41eb  src/test/java/fr/univ_amu/iut/analyse/view/CriteresActiviteTest.ja
 a12caf7daa04  src/test/java/fr/univ_amu/iut/analyse/view/NatureNuitTest.java
 8f12eacb0e37  src/test/java/fr/univ_amu/iut/analyse/view/NavigationSyntheseViewTest.java
 bff8cd9b7713  src/test/java/fr/univ_amu/iut/analyse/view/PassageObserveTest.java
+7e29eaa0b2da  src/test/java/fr/univ_amu/iut/analyse/view/PastillesDuDetailDesObservationsTest.java
 e453f0b46c13  src/test/java/fr/univ_amu/iut/analyse/view/ScenarioCourbeActiviteTest.java
 3e4d63b5214a  src/test/java/fr/univ_amu/iut/analyse/view/SelecteurColonnesAnalyseTest.java
 910e6164fca6  src/test/java/fr/univ_amu/iut/analyse/view/SyntheseLargeurColonnesTest.java
@@ -1334,6 +1335,7 @@ b2938ad316fb  src/test/java/fr/univ_amu/iut/audio/view/LibellesAudioTest.java
 6636b079890f  src/test/java/fr/univ_amu/iut/audio/view/MetriquesAcoustiquesAudioTest.java
 222f29ca1e34  src/test/java/fr/univ_amu/iut/audio/view/NavigationAudioViewTest.java
 3f93944ed9df  src/test/java/fr/univ_amu/iut/audio/view/PanneauDiscussionTest.java
+3704d8d8f1a4  src/test/java/fr/univ_amu/iut/audio/view/PastillesDesObservationsAudioTest.java
 70849ea7e398  src/test/java/fr/univ_amu/iut/audio/view/PublicationCorrectionsUITest.java
 45935e4c9d37  src/test/java/fr/univ_amu/iut/audio/view/RevueClavierTest.java
 51fc348606d2  src/test/java/fr/univ_amu/iut/audio/view/ScenarioConnectePublicationTest.java
@@ -1681,6 +1683,8 @@ cd86f012a2f7  src/test/java/fr/univ_amu/iut/commun/view/OngletReglagesWiringTest
 e3b0c44298fc  src/test/java/fr/univ_amu/iut/commun/view/OuvreurDeLienSystemeTest.java
 d6c1b95423fc  src/test/java/fr/univ_amu/iut/commun/view/PanneauCompteRenduTest.java
 dad6df4d378f  src/test/java/fr/univ_amu/iut/commun/view/PanneauProgressionTest.java
+a2703635f260  src/test/java/fr/univ_amu/iut/commun/view/PastillesEntieres.java
+cd8ac93f8f33  src/test/java/fr/univ_amu/iut/commun/view/PastillesEntieresTest.java
 b834016de168  src/test/java/fr/univ_amu/iut/commun/view/PictogrammesFxmlTest.java
 c1388c59cf3b  src/test/java/fr/univ_amu/iut/commun/view/PoliceCouvreLIhmTest.java
 9509ea8ad595  src/test/java/fr/univ_amu/iut/commun/view/PreferenceSourceEspeceReglagesTest.java
@@ -1921,6 +1925,7 @@ b7330b61221d  src/test/java/fr/univ_amu/iut/multisite/view/MenuActionsMultisiteT
 f2f91d29f10c  src/test/java/fr/univ_amu/iut/multisite/view/MultisiteReleveViewTest.java
 ee9997dbf8fa  src/test/java/fr/univ_amu/iut/multisite/view/MultisiteViewTest.java
 9d50c5d0462b  src/test/java/fr/univ_amu/iut/multisite/view/MultisiteVueIntegrationTest.java
+d9db652ce770  src/test/java/fr/univ_amu/iut/multisite/view/PastillesDesPassagesTest.java
 5ab150579155  src/test/java/fr/univ_amu/iut/multisite/view/ReconstructionModaleViewTest.java
 470cbe7548a7  src/test/java/fr/univ_amu/iut/multisite/view/SortieEditionPositionsTest.java
 e96a5170cbb2  src/test/java/fr/univ_amu/iut/multisite/view/StyleControlesCarteTest.java
@@ -2137,6 +2142,7 @@ f07e72456d7d  src/test/java/fr/univ_amu/iut/saison/FiltresSaisonTest.java
 8af8ff2f5519  src/test/java/fr/univ_amu/iut/saison/SaisonViewModelTest.java
 46a3594e358d  src/test/java/fr/univ_amu/iut/saison/ServiceSoldeSaisonTest.java
 2868d8e5cc20  src/test/java/fr/univ_amu/iut/saison/view/ActiviteMaSaisonTest.java
+d21ddbec330c  src/test/java/fr/univ_amu/iut/saison/view/PastillesDeLaSaisonTest.java
 10f2d63c14a5  src/test/java/fr/univ_amu/iut/saison/view/SaisonViewTest.java
 489c012ff439  src/test/java/fr/univ_amu/iut/sites/PointCommuneDaoTest.java
 85059c293ec3  src/test/java/fr/univ_amu/iut/sites/PointDaoTest.java
@@ -2171,6 +2177,7 @@ be40f4ceca19  src/test/java/fr/univ_amu/iut/sites/view/MesSitesEtatVideViewTest.
 d8a89dd5ca6b  src/test/java/fr/univ_amu/iut/sites/view/ModaleSiteVerifierCarreViewTest.java
 ee56ade82e69  src/test/java/fr/univ_amu/iut/sites/view/ModaleSiteViewTest.java
 9ceba7fd6252  src/test/java/fr/univ_amu/iut/sites/view/NavigationSitesRapatriementTest.java
+48e071b03411  src/test/java/fr/univ_amu/iut/sites/view/PastillesDeLaFicheSiteTest.java
 ee14b0a35c3c  src/test/java/fr/univ_amu/iut/sites/view/ScenarioCarreAbsentTest.java
 c4fd0c174a99  src/test/java/fr/univ_amu/iut/sites/view/ScenarioFicheSiteTest.java
 b450728d5f05  src/test/java/fr/univ_amu/iut/sites/view/ScenarioModaleCarreTest.java

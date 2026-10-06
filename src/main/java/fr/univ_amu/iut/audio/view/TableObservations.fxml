@@ -42,7 +42,11 @@
       <TableColumn fx:id="colProba" text="Proba." prefWidth="70.0"/>
       <TableColumn fx:id="colObservateur" text="Votre taxon" prefWidth="180.0"/>
       <TableColumn fx:id="colCertitude" text="Certitude" prefWidth="90.0"/>
-      <TableColumn fx:id="colValidateur" text="Avis du validateur" prefWidth="180.0"/>
+      <!-- 290 px : la pastille écrit un nom de taxon puis une certitude, et le plus long du référentiel,
+           « Micromammifère de Turquie type 1 · Probable », demande 270 px. À 180 px, « Pipistrelle
+           commune · Probable » était déjà coupé (#6101). `PastillesDesObservationsAudioTest` tient
+           cette largeur. -->
+      <TableColumn fx:id="colValidateur" text="Avis du validateur" prefWidth="290.0"/>
       <TableColumn fx:id="colFrequence" text="Fréquence" prefWidth="100.0"/>
       <TableColumn fx:id="colFme" text="FME" prefWidth="90.0"/>
       <TableColumn fx:id="colFreqTerminale" text="Fréq. term." prefWidth="120.0"/>
