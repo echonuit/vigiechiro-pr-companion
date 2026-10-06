@@ -190,14 +190,28 @@ def a_reextraire(
     return modifiees, neuves, disparues
 
 
+# `œ` et `æ` ne se decomposent pas dans Unicode : l encodage en ASCII les RETIRAIT, et « nœud »
+# devenait `nud`. Ils se deplient d abord (#5966).
+LIGATURES = str.maketrans({"œ": "oe", "Œ": "OE", "æ": "ae", "Æ": "AE"})
+
+
+def sans_accent(texte: object) -> str:
+    """Le texte en ASCII, accents retires et ligatures depliees. `None` se lit vide.
+
+    C est la seule normalisation de ce script : `cle_de_libelle` et `mots_de` l ecrivaient chacune
+    de leur cote, a quatre-vingts lignes d ecart.
+    """
+    brut = "" if texte is None else str(texte).translate(LIGATURES)
+    return unicodedata.normalize("NFKD", brut).encode("ascii", "ignore").decode()
+
+
 def cle_de_libelle(libelle: object) -> str:
     """Le libelle reduit a ses lettres et chiffres, sans accent ni casse.
 
     C est ce que le dedoublonnage compare : « `WINGET_TOKEN` : huit jours » et « WINGET_TOKEN : huit
     jours » y sont le meme noeud, et l un efface l autre.
     """
-    plat = unicodedata.normalize("NFKD", str(libelle)).encode("ascii", "ignore").decode()
-    return re.sub(r"[^a-z0-9]", "", plat.casefold())
+    return re.sub(r"[^a-z0-9]", "", sans_accent(libelle).casefold())
 
 
 # Les mots qui ne disent rien d une question. Ecrits sans accent : `mots_de` les compare apres
@@ -279,8 +293,9 @@ def mots_de(texte: object) -> list[str]:
     sept lettres. « depots » et « depot », « relancable » et « relancables » se rejoignent sans
     qu aucun dictionnaire n entre au depot.
     """
-    plat = unicodedata.normalize("NFKD", str(texte or "")).encode("ascii", "ignore").decode()
-    mots = [m for m in re.findall(r"[a-z0-9]+", plat.casefold()) if m not in MOTS_VIDES]
+    mots = [
+        m for m in re.findall(r"[a-z0-9]+", sans_accent(texte).casefold()) if m not in MOTS_VIDES
+    ]
     return [(m[:-1] if len(m) > 3 and m[-1] in "sx" else m)[:7] for m in mots if len(m) > 1]
 
 
@@ -897,16 +912,12 @@ def commande_audite(dossier: Path) -> int:
 
 def commande_fusionne(dossier: Path, graphe: Path) -> int:
     """Fusionne les lots audites dans le graphe, puis rejoue les ponts et la reconstruction."""
-    try:
-        from graphify.build import build_merge
-    except ModuleNotFoundError:
-        print(
-            "REFUS : graphify n est pas importable par cet interprete. Ce refus parle du poste,"
-            " pas des lots : lancer avec l interprete de graphify-out/.graphify_python.",
-            file=sys.stderr,
-        )
-        return 2
     import rebuild
+
+    # Le refus et son remede sont ceux de `rebuild.py`, dits ici sur la sortie d erreur.
+    if rebuild.refus_sans_le_moteur(lambda ligne: print(ligne, file=sys.stderr)):
+        return 2
+    from graphify.build import build_merge
 
     if graphe.resolve() != rebuild.GRAPHE.resolve():
         # La fusion lirait le graphe designe et noterait son registre, mais la reconstruction
@@ -993,28 +1004,7 @@ def commande_fusionne(dossier: Path, graphe: Path) -> int:
         f" | amputees={sorted(retires)}"
     )
 
-    rebuild.EXTRAIT.write_text(
-        json.dumps(
-            {
-                "nodes": [{"id": n, **d} for n, d in fusion.nodes(data=True)],
-                "edges": [
-                    {
-                        **{
-                            k: v
-                            for k, v in d.items()
-                            if k not in ("_src", "_tgt", "source", "target")
-                        },
-                        "source": d.get("_src", u),
-                        "target": d.get("_tgt", v),
-                    }
-                    for u, v, d in fusion.edges(data=True)
-                ],
-                "hyperedges": tenues,
-            },
-            ensure_ascii=False,
-        ),
-        encoding="utf-8",
-    )
+    rebuild.ecrire_l_extrait(fusion, rebuild.EXTRAIT, tenues)
     try:
         rebuild.jouer_les_passes()
         rebuild.reconstruire()
@@ -1513,6 +1503,10 @@ def auto_test() -> int:
         def number_of_nodes(self):
             return len(self.nodes)
 
+    import rebuild as vrai_rebuild
+
+    dit_en_erreur: list[str] = []
+
     def par_fusionne(
         rendu,
         perdus_a_vide=(),
@@ -1561,6 +1555,9 @@ def auto_test() -> int:
             )
             extrait = dossier / "extrait.json"
             faux_rebuild = types.ModuleType("rebuild")
+            # Ce que `rebuild.py` partage avec ce script se joue pour de bon, pas par un faux.
+            faux_rebuild.refus_sans_le_moteur = vrai_rebuild.refus_sans_le_moteur
+            faux_rebuild.ecrire_l_extrait = vrai_rebuild.ecrire_l_extrait
             faux_rebuild.GRAPHE = graphe if graphe_de_l_arbre else dossier / "ailleurs.json"
             faux_rebuild.EXTRAIT = extrait
             faux_rebuild.jouer_les_passes = lambda: etapes.append(
@@ -1571,18 +1568,26 @@ def auto_test() -> int:
             faux_rebuild.reconstruire = lambda: etapes.append("reconstruction")
             sortie = io.StringIO()
             try:
-                if moteur_present:
+                if moteur_present is True:
                     paquet = types.ModuleType("graphify")
                     paquet.__path__ = []
                     module = types.ModuleType("graphify.build")
                     module.build_merge = faux_build_merge
                     sys.modules["graphify"], sys.modules["graphify.build"] = paquet, module
+                elif moteur_present == "homonyme":
+                    # Ce que voit l interprete du poste : `scripts/` est sur son chemin, donc le
+                    # dossier `scripts/graphify/` s importe sous le nom du moteur, sans `build`.
+                    paquet = types.ModuleType("graphify")
+                    paquet.__path__ = []
+                    sys.modules["graphify"] = paquet
+                    sys.modules.pop("graphify.build", None)
                 else:
                     # `None` dans `sys.modules` fait lever l import : un poste sans le module.
                     sys.modules["graphify"] = None
                     sys.modules.pop("graphify.build", None)
                 sys.modules["rebuild"] = faux_rebuild
-                with contextlib.redirect_stdout(sortie), contextlib.redirect_stderr(io.StringIO()):
+                erreur = io.StringIO()
+                with contextlib.redirect_stdout(sortie), contextlib.redirect_stderr(erreur):
                     code = main(
                         [
                             "couche_semantique.py",
@@ -1600,6 +1605,7 @@ def auto_test() -> int:
                     else:
                         sys.modules[nom] = module
             notees = sorted(notees_de(graphe)) if registre_de(graphe).is_file() else []
+            dit_en_erreur[:] = erreur.getvalue().splitlines()
             # Les verdicts sans le compte de noeuds, qui depend du lot et n est pas le propos.
             verdicts = [
                 ligne.split(" | ", 2)[2] if ligne.startswith(("FUSION", "ENONCES")) else ligne
@@ -1649,6 +1655,41 @@ def auto_test() -> int:
         "`fusionne` refuse en 2, avant tout audit, sur un poste sans le module graphify",
         lambda: par_fusionne(sain, moteur_present=False),
         (2, [], 0, False, [], []),
+    )
+    # Ce refus etait ecrit deux fois, ici et dans `rebuild.py`, avec deux textes : l un donnait le
+    # remede, l autre non (#5966). Il n y en a plus qu un, que chaque script dit sur son canal.
+    verifie(
+        "sans le moteur, `fusionne` dit le refus et le remede de `rebuild.py`, et rien d autre",
+        lambda: (par_fusionne(sain, moteur_present=False)[0], list(dit_en_erreur)),
+        (
+            2,
+            [
+                (
+                    "REFUS : graphify n est pas importable par cet interprete. Ce refus parle du"
+                    " poste, pas du depot, et rien n a ete touche."
+                ),
+                (
+                    "POUR REPARER : relancer avec l interprete de graphify, que nomme"
+                    " graphify-out/.graphify_python."
+                ),
+            ],
+        ),
+    )
+    # Vu en rejouant la fusion avec l interprete du poste, le 6 octobre 2026 : le controle partage
+    # demandait `import graphify`, que le dossier `scripts/graphify/` satisfait, et la fusion
+    # tombait une ligne plus loin dans une trace de pile.
+    verifie(
+        "un dossier qui s importe sous le nom du moteur ne passe pas pour lui : `fusionne` refuse",
+        lambda: (par_fusionne(sain, moteur_present="homonyme"), dit_en_erreur[:1]),
+        (
+            (2, [], 0, False, [], []),
+            [
+                (
+                    "REFUS : graphify n est pas importable par cet interprete. Ce refus parle du"
+                    " poste, pas du depot, et rien n a ete touche."
+                )
+            ],
+        ),
     )
     # Le graphe designe n est pas celui de l arbre du script : la fusion le lirait et noterait son
     # registre, mais la reconstruction ecrirait ailleurs. Joue pour de bon le 5 octobre 2026.
@@ -2426,6 +2467,50 @@ def auto_test() -> int:
         lambda: cherche("dépôt", corpus, "--nombre", "1")[2],
         ["e_par_defaut"],
     )
+    # ⟨ce que la relecture des lots 9 a 12 a trouve, #5966⟩ La normalisation RETIRAIT `œ` et `æ`
+    # au lieu de les deplier : « nœud » retenait `nud`, et la question « noeud » ne le trouvait pas.
+    verifie(
+        "« nœud » et « noeud » retiennent le meme mot, comme « cœur æquo » et « coeur aequo »",
+        lambda: (mots_de("nœud"), mots_de("Nœuds"), mots_de("noeud"), mots_de("CŒUR æquo")),
+        (["noeud"], ["noeud"], ["noeud"], ["coeur", "aequo"]),
+    )
+    a_ligature = enonce("e_ligature", "Le nœud de page")
+    verifie(
+        "la question « noeud » trouve l enonce qui ecrit « nœud »",
+        lambda: cherche("noeud", [a_ligature, par_defaut])[2],
+        ["e_ligature"],
+    )
+    verifie(
+        "un libelle a ligature et son jumeau sans ligature ont la meme cle, qui garde ses lettres",
+        lambda: (cle_de_libelle("Le nœud : page"), cle_de_libelle("le NOEUD page")),
+        ("lenoeudpage", "lenoeudpage"),
+    )
+    verifie(
+        "`--nombre` qui n est pas un entier fait refuser en 2, sans trace de pile",
+        lambda: dit_la_recherche("--graphe", "LE_GRAPHE", "--nombre", "abc", "dépôt"),
+        (2, "REFUS : `--nombre` attend un entier d au moins 1, pas « abc »."),
+    )
+    verifie(
+        "`--nombre 0` fait refuser, au lieu de dire qu aucun enonce ne porte ces mots",
+        lambda: dit_la_recherche("--graphe", "LE_GRAPHE", "--nombre", "0", "dépôt"),
+        (2, "REFUS : `--nombre` attend un entier d au moins 1, pas « 0 »."),
+    )
+    verifie(
+        "un drapeau inconnu fait refuser, au lieu de devenir un mot de la question",
+        lambda: dit_la_recherche("--graphe", "LE_GRAPHE", "--nombr", "3", "dépôt"),
+        (
+            2,
+            "REFUS : `--nombr` n est pas un drapeau de cette commande, ou il lui manque sa valeur.",
+        ),
+    )
+    verifie(
+        "un drapeau connu sans sa valeur fait refuser aussi, au lieu de passer pour une page",
+        lambda: dit_la_recherche("dépôt", "--graphe"),
+        (
+            2,
+            "REFUS : `--graphe` n est pas un drapeau de cette commande, ou il lui manque sa valeur.",
+        ),
+    )
 
     def aide() -> tuple[int, bool, str]:
         sortie, erreur = io.StringIO(), io.StringIO()
@@ -2459,6 +2544,13 @@ def main(argv: list[str]) -> int:
         return 2
 
 
+def _entier_d_au_moins_un(drapeau: str, valeur: str) -> int:
+    """La valeur d un drapeau qui compte, ou un refus : ni trace de pile, ni zero pris pour rien."""
+    if not valeur.isdigit() or int(valeur) < 1:
+        raise Refus(f"`{drapeau}` attend un entier d au moins 1, pas « {valeur} ».")
+    return int(valeur)
+
+
 def _joue(commande: str, reste: list[str]) -> int:
     dossier = graphe = commit = None
     nombre = 5
@@ -2474,12 +2566,17 @@ def _joue(commande: str, reste: list[str]) -> int:
         elif mot == "--commit" and reste:
             commit = reste.pop(0)
         elif mot == "--nombre" and reste:
-            nombre = int(reste.pop(0))
+            nombre = _entier_d_au_moins_un(mot, reste.pop(0))
         elif mot == "--racine" and reste:
             # Pour les cas de l auto-test, qui jouent l outil sur un depot temoin.
             racine = Path(reste.pop(0))
         elif mot in ("--a-reextraire", "--perimetre"):
             drapeaux.add(mot)
+        elif mot.startswith("--"):
+            # Un drapeau inconnu devenait une page, ou un mot de la question (#5966).
+            raise Refus(
+                f"`{mot}` n est pas un drapeau de cette commande, ou il lui manque sa valeur."
+            )
         else:
             pages.append(mot)
     graphe = graphe or racine / "graphify-out" / "graph.json"
