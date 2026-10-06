@@ -143,4 +143,45 @@ class StatutPassageTest {
         assertThat(objet.get("deposeLe")).isNull();
         assertThat(objet.get("cheminResultatsTadarida")).isNull();
     }
+
+    /// Une nuit dont la base porte des secondes **non nulles** : celles des enregistrements, que
+    /// personne n'a saisies. C'est la forme qui distingue une heure recopiée d'une heure lue.
+    private static DetailPassage passageAuxSecondes() {
+        return new DetailPassage(
+                1,
+                2026,
+                "2026-06-15",
+                "21:30:07",
+                "05:45:52",
+                "SM4-0042",
+                StatutWorkflow.IMPORTE,
+                null,
+                null,
+                0L,
+                0L,
+                0,
+                0.0,
+                new MeteoReleve(null, null, null, null),
+                new DecompteAudio(0, 0));
+    }
+
+    @Test
+    @DisplayName("#5974 : la ligne « Nuit » dit les heures comme la fiche d'un passage, sans leurs secondes")
+    void la_nuit_se_lit_sans_secondes() {
+        String texte = StatutPassage.rendreTexte(1L, passageAuxSecondes(), Optional.empty(), true);
+
+        assertThat(texte)
+                .as("la fiche d'un passage dit « 21:30 -> 05:45 » : la commande dit les mêmes heures")
+                .contains("15/06/2026  (21:30 → 05:45)")
+                .doesNotContain("21:30:07")
+                .doesNotContain("05:45:52");
+    }
+
+    @Test
+    @DisplayName("#5974 : le --json garde les heures de la base, secondes comprises : c'est un contrat de script")
+    void le_json_garde_les_heures_de_la_base() {
+        Map<String, Object> objet = StatutPassage.projeter(1L, passageAuxSecondes(), Optional.empty(), true);
+
+        assertThat(objet).containsEntry("heureDebut", "21:30:07").containsEntry("heureFin", "05:45:52");
+    }
 }
