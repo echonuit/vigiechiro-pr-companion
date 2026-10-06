@@ -710,6 +710,13 @@ jobs:
         # Ses six cas tiennent la borne du repli, qui est ce qui peut casser le train normal : deux
         # règles plausibles ont été essayées et écartées par la mesure avant celle-ci.
         run: python3 .github/scripts/resout_le_tag_de_version.py --auto-test
+      - name: Le signalement d'une version à moitié faite sait encore rougir
+        # Il ne tourne pour de vrai qu'en fin de train, et son cas INTÉRESSANT est celui d'une
+        # publication interrompue : quelques fois par an. Ses huit cas portent la lecture INVERSE des
+        # mêmes entrées que la résolution - un candidat y est une version à signaler, là où elle y
+        # voit un tag à reprendre - et sa décision est éprouvée à part, parce qu'un garde dont la
+        # décision n'est pas mutée peut s'inverser sans qu'aucun cas ne tombe (ADR 5987).
+        run: python3 .github/scripts/signale_une_version_sans_publication.py --auto-test
       - name: La garde du secret winget sait encore rougir
         # Elle ne tourne pour de vrai que dans winget.yml, sur dispatch manuel, c'est-à-dire quelques
         # fois par an : son autotest est le seul endroit où on la voit à l'œuvre entre deux

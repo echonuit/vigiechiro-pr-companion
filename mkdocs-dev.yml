@@ -448,6 +448,7 @@ nav:
     - 5930 · Une comparaison reprend une exécution de tournage: decisions/5930-une-comparaison-reprend-une-execution-avec-les-refus-de-la-mesure.md
     - 5970 · La plateforme de test joue l'extraction d'une archive par le code du serveur, sans embarquer son worker: decisions/5970-la-plateforme-de-test-joue-l-extraction-d-une-archive-par-le-code-du-serveur.md
     - 5265 · Trois bancs de mutation partagent ce qu'ils rendent, pas leur mécanique: decisions/5265-trois-bancs-partagent-ce-qu-ils-rendent-pas-leur-mecanique.md
+    - 5987 · Un tag de version sans publication se signale, et sa borne est la version et non le graphe: decisions/5987-un-tag-de-version-sans-publication-se-signale.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Retour de terrain de la 2.189.0: retours/2189-ce-que-ton-retour-a-produit.md

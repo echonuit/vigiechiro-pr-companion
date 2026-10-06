@@ -696,3 +696,36 @@ jobs:
     # C'est le trou que #4304 avait laissé : la règle « jamais `secrets: inherit` » y était écrite
     # côté APPELÉ, et l'appelant héritait quand même. Une déclaration nominale n'achète rien tant que
     # l'appelant hérite (#4349).
+
+  # ⟨signalement⟩ Le dernier mot du train : une version dont le tag existe sans publication se DIT,
+  # au lieu de rester invisible (#5987, ADR 5987).
+  #
+  # ## Pourquoi `!cancelled()` et non `needs.publish.result == 'success'`
+  #
+  # Parce que ce job sert précisément quand l'amont a échoué. Une condition sans fonction d'état est
+  # enveloppée par GitHub en `success() && (...)` sur tout le graphe amont : le job serait sauté dès
+  # que `release` rougit, c'est-à-dire exactement dans le cas qu'il existe pour signaler. C'est le
+  # piège de l'ADR 4079, qui a coûté les installeurs de la 2.186.0.
+  #
+  # ## Pourquoi il ne reste pas rouge
+  #
+  # Sa borne est la comparaison de versions : après un train réussi, la plus haute version publiée
+  # EST la dernière, donc aucun tag ne la dépasse et ce job est vert. Il s'éteint de lui-même dès que
+  # la version qu'il signalait est publiée, sans liste d'exceptions à tenir - et c'est ce qui le rend
+  # tenable ici plutôt qu'en vérification programmée.
+  signaler-une-version-a-moitie-faite:
+    needs: [release, installers, publish]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0 # il lit TOUS les tags de version, pas la pointe
+      - name: Une version dont le tag existe sans publication se dit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: python3 .github/scripts/signale_une_version_sans_publication.py
