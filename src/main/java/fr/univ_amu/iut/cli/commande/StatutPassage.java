@@ -98,8 +98,11 @@ public final class StatutPassage implements Callable<Integer>, LectureSeule {
         ligne(
                 texte,
                 "Nuit",
-                Horodatage.dateSeule(detail.dateEnregistrement()) + "  (" + detail.heureDebut() + " → "
-                        + detail.heureFin() + ")"
+                // Les heures se lisent comme sur la fiche du passage, sans les secondes que personne n'a
+                // saisies (#5974). Le --json, lui, garde la valeur de la base.
+                Horodatage.dateSeule(detail.dateEnregistrement()) + "  ("
+                        + Horodatage.heureCourte(detail.heureDebut()) + " → "
+                        + Horodatage.heureCourte(detail.heureFin()) + ")"
                         + (heuresProuvees ? "  [attestées par les enregistrements]" : "  [déclarées, modifiables]"));
         ligne(texte, "Enregistreur", detail.idEnregistreur());
         ligne(texte, "Statut", detail.statut().libelle());

@@ -1436,7 +1436,7 @@ d73272b0e764  src/test/java/fr/univ_amu/iut/cli/commande/ReconstruirePassageTest
 6fc4d0a6ea3d  src/test/java/fr/univ_amu/iut/cli/commande/RecupererCarreTest.java
 e121610792e9  src/test/java/fr/univ_amu/iut/cli/commande/RecupererVigieChiroTest.java
 dd0efb50ac31  src/test/java/fr/univ_amu/iut/cli/commande/ReinitialiserDepotTest.java
-bcde3826c9c8  src/test/java/fr/univ_amu/iut/cli/commande/StatutPassageTest.java
+3be476a60a7f  src/test/java/fr/univ_amu/iut/cli/commande/StatutPassageTest.java
 a940f4445874  src/test/java/fr/univ_amu/iut/cli/commande/SupprimerSiteTest.java
 c8cf6af621ab  src/test/java/fr/univ_amu/iut/cli/commande/TraiterPassagesTest.java
 376340338f89  src/test/java/fr/univ_amu/iut/cli/commande/VerifierDepotVigieChiroTest.java
