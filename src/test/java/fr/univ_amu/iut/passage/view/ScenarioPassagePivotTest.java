@@ -19,6 +19,7 @@ import fr.univ_amu.iut.passage.model.MeteoReleve;
 import fr.univ_amu.iut.passage.model.Vent;
 import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
+import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CarteDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.ExecuteurTacheRalenti;
@@ -375,7 +376,27 @@ class ScenarioPassagePivotTest {
                         recapAvant)
                 .isNotEqualTo(recapAvant);
 
+        // ─── la fin du clip ──────────────────────────────────────────────────────────────────────
+        // « Récupérer la météo » se désactive le temps de la récupération : le focus quitte le bouton
+        // pour le champ suivant, celui de l'enregistreur, et la modale défile jusqu'à lui. Selon la
+        // durée de la récupération, elle finissait en haut ou en bas : deux fois sur six en bas, sur
+        // six tournages du même commit (#5911). Le saut est un comportement du produit, consigné en
+        // #6054, et il reste visible dans le clip. La fin, elle, revient sur les champs que le
+        // bandeau demande de vérifier, et y reste le temps d'être lue.
+        GesteVisible.amenerDansLeCadre(robot, "#boutonTirerVigieChiro");
         Respiration.leTempsDeLire(robot);
+        exigerLaMeteoALImage(robot);
+    }
+
+    /// Les champs que « Météo pré-remplie : vérifiez puis appliquez » demande de vérifier sont-ils à
+    /// l'image quand le cas finit ? Sans le geste de fin, la modale a pu défiler jusqu'à son bas.
+    private static void exigerLaMeteoALImage(FxRobot robot) {
+        assertThat(CadreVisible.contient(robot.lookup("#champTemperature").query())
+                        && CadreVisible.contient(
+                                robot.lookup("#boutonRecupererMeteo").query()))
+                .as("la température relevée et le bouton qui l'a remplie doivent être dans le cadre de"
+                        + " la modale quand le cas finit : c'est ce que le bandeau demande de vérifier")
+                .isTrue();
     }
 
     @Test

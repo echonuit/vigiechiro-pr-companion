@@ -121,10 +121,10 @@ paires en prouve d'autant moins. Le décompte des lignes par nombre de paires ne
 chaque mesure le déplace, et le fichier le dit mieux que cette page.
 
 Le fichier mêle deux populations, et chaque compte de cette page nomme la sienne. Les clips
-**ordinaires** qui ont un plancher sont <!--inv:clips-ordinaires-a-plancher-->92<!--/inv-->. Ceux de
+**ordinaires** qui ont un plancher sont <!--inv:clips-ordinaires-a-plancher-->94<!--/inv-->. Ceux de
 la **plateforme de test** sont <!--inv:clips-de-la-plateforme-de-test-a-plancher-->5<!--/inv-->, et
-ont leur propre section. Les clips **sans plancher**, parce qu'ils ont deux fins, sont
-<!--inv:clips-sans-plancher-->3<!--/inv--> (voir plus bas). Ces trois comptes sont relus à chaque
+ont leur propre section. Les clips **sans plancher**, ceux qui ont deux fins, sont au nombre de
+<!--inv:clips-sans-plancher-->1<!--/inv--> (voir plus bas). Ces trois comptes sont relus à chaque
 demande contre l'outil et son fichier : un clip corrigé qui quitte la table fait rougir cette page
 tant qu'elle ne le dit pas. Un cas est de la plateforme de test quand sa méthode, ou sa classe, en
 porte le tag : ni le nom de sa classe ni le tag de sa seule classe ne suffisent à le dire.
@@ -353,21 +353,25 @@ deux tournages du même commit y diffèrent de 3 à 26 %, parce que le clip s'ar
 import, pendant un fondu, ou sur une page que rien n'a calée.
 
 Ce tableau est celui de la table `SANS_PLANCHER` de l'outil, et un test le confronte à elle dans
-les deux sens. Sa colonne du milieu est une mesure datée, prise le 5 octobre 2026 sur quinze paires.
+les deux sens. Sa colonne du milieu est une mesure datée, prise le 6 octobre 2026 sur six paires.
 
-| clip | ses paires allaient jusqu'à, le 5 octobre 2026 | issue |
+| clip | ses paires allaient jusqu'à, le 6 octobre 2026 | issue |
 |---|---|---|
-| `ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce` | 26,2 % | #5911 |
-| `ScenarioBandeauLectureSeuleTest.le_support_en_lecture_seule_s_annonce_et_l_import_aboutit` | 21,2 % | #5911 |
-| `ScenarioPassagePivotTest.modifier_le_passage` | 2,9 % | #5911 |
+| `ScenarioRejetsEtArchiveTest.la_decompression_se_voit_avant_l_inspection` | 20,9 % | #6069 |
 
-Leur écrire ce chiffre rendrait la comparaison aveugle, sur ces clips, à tout changement plus petit.
+Lui écrire ce chiffre rendrait la comparaison aveugle, sur ce clip, à tout changement plus petit.
 
-Ceux de l'écran d'import en sont sortis, une fois leur verdict tenu à l'image (#5952, #5893).
+**Ce clip y est revenu.** Il en était sorti avec un plancher de 0,274 %, pris sur six tournages qui
+finissaient tous de la même façon ; les six suivants ont montré sa seconde fin deux fois. Un mode
+qui sort deux fois sur douze ne se voit pas à coup sûr sur six tournages, et un plancher mesuré sans
+lui est faux sans que rien ne le dise.
 
-Les autres sont nommés dans l'outil (`SANS_PLANCHER`), avec leur issue. La mesure affiche leur écart
-sans l'écrire, et la comparaison les annonce « sans plancher », suivi du numéro. Une ligne s'en
-retire avec l'issue qui la porte.
+Les sept clips que l'[ADR 5911](../decisions/5911-un-clip-a-deux-fins-n-a-pas-de-plancher.md) y
+avait rangés en sont sortis, une fois leur verdict tenu à l'image (#5952, #5893, #5911).
+
+Un clip sans plancher est nommé dans l'outil, avec son issue. La mesure affiche son écart sans
+l'écrire, et la comparaison l'annonce « sans plancher », suivi du numéro. Sa ligne s'en retire avec
+l'issue qui la porte.
 
 Le critère n'est pas un seuil : c'est la **dernière image**, regardée. Un clip y entre quand deux
 tournages du même commit ne montrent pas le même écran, pas quand son chiffre est haut.

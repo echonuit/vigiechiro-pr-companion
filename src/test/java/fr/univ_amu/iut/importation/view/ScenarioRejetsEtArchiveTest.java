@@ -18,6 +18,7 @@ import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
+import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CarteDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.ExecuteurTacheRalenti;
@@ -45,7 +46,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
-import org.testfx.util.NodeQueryUtils;
 import org.testfx.util.WaitForAsyncUtils;
 
 /// Trois façons d'aborder l'import qui ne partent pas d'un dossier propre : des **rejets**, une
@@ -256,12 +256,11 @@ class ScenarioRejetsEtArchiveTest {
     /// fois sur huit tournages du même commit, et le compte rendu n'y était à l'image qu'une fois,
     /// en partie (#5893).
     private static void exigerLeCompteRenduALImage(FxRobot robot) {
-        assertThat(robot.lookup("#compteRenduChiffre")
-                        .match(NodeQueryUtils.isVisible())
-                        .tryQuery())
+        Node compteRendu = robot.lookup("#compteRenduChiffre").query();
+        assertThat(compteRendu.isVisible() && CadreVisible.contient(compteRendu))
                 .as("le compte rendu doit être dans le cadre quand le cas finit : un verdict lu sous le"
                         + " bord de la page est juste pour le banc et absent du clip")
-                .isPresent();
+                .isTrue();
     }
 
     /// Tout ce qu'un nœud dit, mis bout à bout.

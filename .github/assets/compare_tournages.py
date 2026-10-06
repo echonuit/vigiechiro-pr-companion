@@ -88,10 +88,13 @@ MARQUE_INSTRUMENT = "# Instrument : "
 # ecrire ce « plancher » rendrait la comparaison aveugle a tout changement plus petit, encart
 # compris (4,2 %). Ils restent donc sans plancher, et la comparaison le DIT au lieu de les ranger
 # parmi les cas stables. Une ligne se retire avec l issue qui la porte.
-SANS_PLANCHER = {
-    "ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce": "#5911",
-    "ScenarioBandeauLectureSeuleTest.le_support_en_lecture_seule_s_annonce_et_l_import_aboutit": "#5911",
-    "ScenarioPassagePivotTest.modifier_le_passage": "#5911",
+#
+# Les sept clips que l ADR 5911 y avait ranges en sont sortis, le dernier par #5911. Celui qui s y
+# trouve y est REVENU : #6027 l en avait sorti sur six tournages qui finissaient tous de la meme
+# facon, et les six suivants ont montre sa seconde fin deux fois (#6069). Une entree s ecrit
+# `"Classe.cas": "#issue",`, une par ligne : `DocumentationAJourTest` la relit telle quelle.
+SANS_PLANCHER: dict[str, str] = {
+    "ScenarioRejetsEtArchiveTest.la_decompression_se_voit_avant_l_inspection": "#6069",
 }
 
 
