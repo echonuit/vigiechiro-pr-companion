@@ -97,8 +97,8 @@ téléchargement. C'est le seul point où les deux reprises ne sont pas en parit
 la mesure : #5979 le porte.
 
 Deux exécutions de populations différentes, l'une ordinaire et l'autre de la plateforme de test, n'ont
-aucun cas commun. La comparaison annonce alors tout apparu et tout disparu, et sort en 0 : #5934 le
-porte.
+aucun cas commun. La comparaison annonce alors tout apparu et tout disparu. Elle sortait en 0 ;
+depuis #5934 elle sort en 1, son index écrit et versé au résumé, parce que rien n'a été comparé.
 
 ## Ce qu'on ne sait pas
 

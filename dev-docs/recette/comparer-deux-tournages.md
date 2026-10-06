@@ -53,7 +53,13 @@ et le geste est de relancer un tournage du commit voulu.
 
 Une paire mixte est permise, une version d'un côté et une exécution de l'autre. Deux exécutions de
 populations différentes, l'une ordinaire et l'autre de la plateforme de test, n'ont en revanche aucun
-cas commun : tout sort « apparu » ou « disparu », et rien n'est comparé (#5934).
+cas commun : tout sort « apparu » ou « disparu », et rien n'est comparé.
+
+**Une comparaison sans aucun cas commun échoue**, et le dit (#5934). L'outil sort en 1, avec « Aucun
+cas commun aux deux tournages : rien n'a été comparé ». Il écrit quand même l'index, un avertissement
+en tête, et l'atelier le verse au résumé avant de rendre ce code : la liste des cas apparus et
+disparus est tout ce qu'il reste à lire, et c'est elle qu'on veut le jour où tous les clips ont été
+renommés. Un seul cas commun suffit à en refaire une comparaison, qui sort en 0.
 
 !!! note "Pourquoi rien n'est committé"
 
