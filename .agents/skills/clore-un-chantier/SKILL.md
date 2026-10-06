@@ -179,6 +179,17 @@ Le modèle vit dans [`dev-docs/cycle-de-chantier.md`](../../../dev-docs/cycle-de
 avant de le fermer. Son en-tête `## Clôture de chantier` est ce que le garde cherche : une clôture qui
 l'omet ne se distingue d'aucune manière d'une clôture qui n'a pas eu lieu.
 
+**L'EPIC se ferme à la main, une fois la trace collée** : par `gh issue close <EPIC>`, et non par un
+mot-clé dans une demande de fusion. La demande qui porte la clôture cite l'EPIC par `Refs #<EPIC>`,
+jamais par `Closes #<EPIC>`. Un mot-clé attache la fermeture à la fusion, et la fusion peut arriver
+avant la trace. Quand l'EPIC n'a pas de parent, la demande rougit en plus :
+`.github/scripts/verifie_chantier_de_l_issue.py` refuse de fermer par mot-clé une issue qui
+n'appartient à aucun chantier, sur un message qui parle de rattachement et pas de clôture. Un
+sous-chantier a un parent et passe ce garde ; la règle vaut pour lui aussi, pour la première raison.
+
+Vécu le 31 août 2026 à la clôture de #4955 : une demande rouge, et le temps de comprendre qu'un
+message parlant de chantier répondait à qui essayait d'en fermer un.
+
 **Une passe non tenue se coche quand même, en le disant.** Une case laissée vide sans un mot laisse
 croire à un oubli ; une case qui porte « sans objet : aucun écran touché » est une décision, et se
 relit comme telle.
