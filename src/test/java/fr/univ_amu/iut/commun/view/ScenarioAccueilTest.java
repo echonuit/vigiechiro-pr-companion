@@ -121,7 +121,7 @@ class ScenarioAccueilTest {
         // L'accueil revenu finit son fondu d'entrée, puis reste le temps d'être lu. Le cas finissait
         // sitôt ses cartes de retour dans le graphe, donc pendant le fondu : trois fois sur quatre en
         // séance filmée, son opacité valait encore 0,7 à cet instant (#5911).
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> opaciteDeLAccueil(robot) == 1.0,
                 "le fondu d'entrée de l'accueil ne s'est jamais achevé",
                 DELAI_ECRAN_S * 1_000L);
@@ -135,26 +135,22 @@ class ScenarioAccueilTest {
     /// le graphe dès le début du fondu : s'arrêter sur leur présence, c'est finir sur un accueil
     /// délavé, une fois sur quatre à 26 % d'écart entre deux tournages du même commit (#5911).
     private static void exigerLAccueilPose(FxRobot robot) {
-        assertThat(opaciteDeLAccueil(robot))
+        double opacite =
+                Attente.surLeFil(() -> opaciteDeLAccueil(robot), "lire l'opacité de l'accueil", DELAI_ECRAN_S * 1_000L);
+        assertThat(opacite)
                 .as("l'accueil doit avoir fini son fondu d'entrée quand le cas finit : un clip qui"
                         + " s'arrête pendant le fondu montre un écran que personne ne voit")
                 .isEqualTo(1.0);
     }
 
     /// L'opacité à laquelle une carte de l'accueil est rendue : le produit de celles de ses ancêtres.
+    /// Se lit SUR LE FIL JavaFX, comme tout ce qui touche le graphe de scène (ADR 5278).
     private static double opaciteDeLAccueil(FxRobot robot) {
-        return Attente.surLeFil(
-                () -> {
-                    double opacite = 1.0;
-                    for (Node noeud = robot.lookup(".carte-activite").query();
-                            noeud != null;
-                            noeud = noeud.getParent()) {
-                        opacite *= noeud.getOpacity();
-                    }
-                    return opacite;
-                },
-                "lire l'opacité de l'accueil",
-                DELAI_ECRAN_S * 1_000L);
+        double opacite = 1.0;
+        for (Node noeud = robot.lookup(".carte-activite").query(); noeud != null; noeud = noeud.getParent()) {
+            opacite *= noeud.getOpacity();
+        }
+        return opacite;
     }
 
     @Test
