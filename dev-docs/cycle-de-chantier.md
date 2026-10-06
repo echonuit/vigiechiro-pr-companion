@@ -4,38 +4,38 @@ Un **chantier** est un lot de travail d'ampleur **EPIC** : une évolution qui ne
 seule PR et se découpe en plusieurs (ex. l'EPIC « Réglages auto-découverts → feature = plugin »). Là
 où [Ajouter une fonctionnalité](ajouter-une-fonctionnalite.md) décrit une **PR** et
 [CONTRIBUTING.md](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/CONTRIBUTING.md)
-le **flux de contribution**, cette page décrit le niveau au-dessus : comment on **ouvre** et on
-**clôt** un chantier entier.
+le **flux de contribution**, cette page décrit le niveau au-dessus : comment on ouvre et on
+clôt un chantier entier.
 
-Le principe : un chantier ne se termine pas au dernier `feat:` mergé. Une fois le cœur livré, une
+Le principe : un chantier ne se termine pas au dernier `feat:` fusionné. Une fois le cœur livré, une
 **clôture en 14 passes** (numérotées **0 à 12**, plus la **6b** qui prolonge la 6) garantit que l'évolution est intégrée, cohérente
-entre les deux surfaces (IHM et CLI), documentée, testée, harmonisée, **regardée**, et que la suite
+entre les deux surfaces (IHM et CLI), documentée, testée, harmonisée, regardée, et que la suite
 est cadrée.
 
 !!! info "Pourquoi la numérotation commence à 0 et pas à 1"
     Les passes **1 à 9 ne changent pas de numéro**, et c'est délibéré. Le dépôt compte **42 citations**
-    de passes numérotées, dont **35 dans `dev-docs/decisions/`** - des documents que la règle déclare
+    de passes numérotées, dont **35 dans `dev-docs/decisions/`**, des documents que la règle déclare
     **immuables**. Décaler la série rendrait fausses 35 références qu'on s'interdit d'éditer, sans que
-    rien ne rougisse. Les deux passes ajoutées se placent donc **aux extrémités** : la 0 en tête, la 10
+    rien ne rougisse. Les deux passes ajoutées se placent donc aux extrémités : la 0 en tête, la 10
     et la 11 en queue.
 
-    Le « 0 » n'est pas un pis-aller : l'ouverture d'un chantier a **déjà** son étape 0, et c'est déjà
+    Le « 0 » n'est pas un pis-aller : l'ouverture d'un chantier a déjà son étape 0, et c'est déjà
     *relire l'existant avant d'agir*. La même figure aux deux bouts.
 
 !!! note "Où est la règle courte ?"
     La version concise pour les contributeurs vit dans la section « Cycle de vie d'un chantier » de
     [CONTRIBUTING.md](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/CONTRIBUTING.md).
-    Cette page en est la version approfondie : la **raison d'être** et le **mode opératoire** de
+    Cette page en est la version approfondie : la raison d'être et le mode opératoire de
     chaque passe.
 
 ## À l'ouverture : l'analyse de départ
 
 Avant d'écrire du code :
 
-0. **Trier et regrouper les issues existantes** : **avant** la cartographie et le plan. Voir
+0. **Trier et regrouper les issues existantes** : avant la cartographie et le plan. Voir
    ci-dessous : c'est l'étape qui décide de quoi le chantier est fait.
 1. **Cartographier l'existant.** Repérer les **patterns déjà en place** qui répondent (au moins en
-   partie) au besoin, pour les **réutiliser** plutôt que réinventer. La plupart des extensions du
+   partie) au besoin, pour les réutiliser plutôt que réinventer. La plupart des extensions du
    socle se calquent sur un pattern existant (`Multibinder<ActiviteAccueil>`, contrats `Ouvrir*`,
    patron DAO, `Capture*`…). Voir [Patterns et principes](patterns.md).
 2. **Rédiger un plan** : découpage, contraintes d'architecture ([Architecture](architecture.md) et les
@@ -49,7 +49,7 @@ Avant d'écrire du code :
 **Rien ne garantit qu'une issue soit rattachée au bon chantier.** Elles naissent une par une, souvent
 en passe 9 d'une clôture, avec le vocabulaire du chantier qui les a trouvées plutôt que celui du
 problème qu'elles décrivent. Deux issues sur le même sujet, écrites depuis deux angles, ne se
-ressemblent pas : et le recoupement ne se découvre qu'au **conflit de fusion**, quand deux chantiers
+ressemblent pas : et le recoupement ne se découvre qu'au conflit de fusion, quand deux chantiers
 ont déjà construit deux chemins.
 
 Avant de cartographier quoi que ce soit, donc :
@@ -65,7 +65,7 @@ Avant de cartographier quoi que ce soit, donc :
    explicitement** et l'écrire dans les deux, plutôt que de laisser la fusion arbitrer.
    **Vérifier ce qui est déjà pris** : `gh issue list --assignee "*"` donne la liste, et le commentaire
    de prise dit le chantier, la branche et le remède envisagé (voir ci-dessous). Une revendication
-   **ancienne se vérifie** au lieu de se croire (branche vivante ? PR ouverte ?) parce qu'une
+   ancienne se vérifie au lieu de se croire (branche vivante ? PR ouverte ?) parce qu'une
    revendication oubliée fait passer une issue libre pour prise.
 4. **Recadrer titre et corps** des issues déplacées. Un recadrage laissé en commentaire sous un corps
    périmé ne recadre rien : qui lit en diagonale retient la première version.
@@ -82,7 +82,7 @@ Avant de cartographier quoi que ce soit, donc :
 ### Interroger le graphe du dépôt, pour ce que `grep` ne relie pas
 
 Le tri « par concept, pas par mot-clé » exigé ci-dessus se heurte à un outil qui ne sait chercher que
-des **chaînes**. Le dépôt se donne donc un **graphe de connaissances**, reconstruit régulièrement dans
+des chaînes. Le dépôt se donne donc un **graphe de connaissances**, reconstruit régulièrement dans
 `graphify-out/` (hors du suivi Git) : environ **21 800 nœuds** et **77 500 arêtes** couvrant le code,
 les workflows, les tests `bats`, la documentation utilisateur, les dev-docs et le brief, **mêlés dans le
 même graphe**.
@@ -93,11 +93,11 @@ graphify query "<question>" --budget 2500   # depuis la racine du dépôt
 
 Ce qu'il apporte et que `grep` ne peut pas donner :
 
-- les arêtes `calls` descendent au niveau **méthode** : « qui appelle réellement ceci ? » et,
-  symétriquement, « ce code sert-il encore à quelqu'un ? ». Pour une méthode **Java** dont le nom est
-  porté par plusieurs classes, `scripts/qualite/appelants.py` rend la réponse **résolue** plutôt
+- les arêtes `calls` descendent au niveau méthode : « qui appelle réellement ceci ? » et,
+  symétriquement, « ce code sert-il encore à quelqu'un ? ». Pour une méthode Java dont le nom est
+  porté par plusieurs classes, `scripts/qualite/appelants.py` rend la réponse résolue plutôt
   qu'inférée, et c'est là que les deux se complètent (#5532) ;
-- les arêtes `conceptually_related_to` répondent à « **qui d'autre fait X ?** » quand X est une **idée**
+- les arêtes `conceptually_related_to` répondent à « **qui d'autre fait X ?** » quand X est une idée
   et non un identifiant ;
 - il **traverse les corpus** : quelles maquettes du brief décrivent ce composant, quelles pages
   documentent cet écran, quelles ADR citent ce workflow.
@@ -111,19 +111,19 @@ cartographie), l'**investigation d'un défaut** (chercher le jumeau), et l'**aud
       montré une **troisième**, `CarreGeo.departement()`, qui ne cite aucun de ces noms. Ses arêtes ont
       révélé du même coup qu'elle n'avait **aucun appelant** ;
     - #3197 : `ServiceReset.executer` et `ServiceImport.ecraserEtImporter` écrivent eux aussi dans
-      `sauvegardes/` - deux sources d'accumulation que l'issue ne nommait pas ;
+      `sauvegardes/` : deux sources d'accumulation que l'issue ne nommait pas ;
     - #2739 : un **troisième** job (`publish`) dans `release.yml`, absent de l'en-tête du fichier, et
       les deux ADR qui référencent ce workflow. La forme du remède en a changé.
 
 !!! warning "Deux limites, et la seconde décide de comment on lit sa sortie"
-    **Il ne modélise que NOTRE code.** Aucun nœud pour le JDK ni pour les bibliothèques : demander qui
+    **Il ne modélise que notre code.** Aucun nœud pour le JDK ni pour les bibliothèques : demander qui
     appelle `Files.readAllLines` rend zéro, et un zéro se lit comme une absence. Sur ces questions-là
-    `grep` est le bon outil et le graphe est muet - mesuré sur #3222, six lectures d'API JDK.
+    `grep` est le bon outil et le graphe est muet (mesuré sur #3222, six lectures d'API JDK).
 
-    **Sa traversée est bruitée**, il photographie un commit (`built_at_commit`) donc il **vieillit**, et
-    14 % de ses arêtes sont **inférées**. Sa sortie est une **hypothèse à confirmer** par une mesure
-    exacte - lecture du fichier, `grep` ciblé -, **jamais un inventaire**. C'est exactement le régime que
-    la passe 6 impose déjà au `grep` : *un zéro se confirme à la main*. Le graphe **oriente** la
+    **Sa traversée est bruitée**, il photographie un commit (`built_at_commit`) donc il vieillit, et
+    14 % de ses arêtes sont inférées. Sa sortie est une **hypothèse à confirmer** par une mesure
+    exacte (lecture du fichier, `grep` ciblé), **jamais un inventaire**. C'est le régime que
+    la passe 6 impose déjà au `grep` : *un zéro se confirme à la main*. Le graphe oriente la
     recherche, il ne remplace pas la lecture.
 
 ### Au commencement de chaque issue : rappeler ce qu'on fait et pourquoi maintenant
@@ -147,14 +147,14 @@ sans continuité écrite devient un correctif isolé dont personne ne sait s'il 
 se déposent en commentaire ; le critère, lui, s'écrit dans le **corps** de l'issue, qui est un lot de
 son chantier. La compétence `ouvrir-une-issue` porte le geste et dit pourquoi le corps et non le fil.
 
-**Trois** moments le tiennent, et **aucun ne bloque** ([ADR 4992](decisions/4992-le-critere-de-fin-se-rappelle-et-se-mesure-il-ne-se-refuse-pas.md),
+Trois moments le tiennent, et **aucun ne bloque** ([ADR 4992](decisions/4992-le-critere-de-fin-se-rappelle-et-se-mesure-il-ne-se-refuse-pas.md),
 [ADR 5211](decisions/5211-un-rappel-parle-au-moment-ou-l-on-travaille.md)) : un lot ouvert sans critère
 reçoit un **commentaire** de rappel, une seule fois ; une demande qui ferme un lot muet en reçoit un
-second, qui **nomme** les lots concernés ; et la loupe `scripts/adr/loupe-4992-lots-sans-critere.py`
+second, qui nomme les lots concernés ; et la loupe `scripts/adr/loupe-4992-lots-sans-critere.py`
 compte les lots muets au rapport du lundi. **Aucune demande de fusion ne peut rougir pour cette
 raison**, et c'est délibéré : l'arbitrage de #4961 a écarté le rouge, pas le signalement.
 
-Le deuxième est arrivé en #5211, parce que le premier **ne repasse pas** et que le troisième voit moins
+Le deuxième est arrivé en #5211, parce que le premier ne repasse pas et que le troisième voit moins
 qu'on ne croyait : la loupe ne lit que les sous-issues **ouvertes** et ne passe que le lundi, donc sur
 386 lots clos nés depuis la règle, **49 seulement**, soit 13 %, ont pu traverser un de ses passages. La
 médiane de vie d'un lot est de 4,4 h.
@@ -168,39 +168,39 @@ Les deux ensemble, pas l'un ou l'autre, parce qu'ils ne servent pas à la même 
 
 - **l'assignee est le signal machine.** `gh issue list --assignee "*"` répond « voici tout ce qui est
   pris » en une commande. Un commentaire, lui, oblige à ouvrir chaque issue pour savoir ;
-- **le commentaire porte ce que l'assignee ne dit pas** : de quel **chantier** l'issue relève, sur quelle
-  **branche** le travail se fait, et surtout **quel remède est envisagé**.
+- **le commentaire porte ce que l'assignee ne dit pas** : de quel chantier l'issue relève, sur quelle
+  branche le travail se fait, et surtout **quel remède est envisagé**.
 
 Ce dernier point est le vrai gain, et il dépasse la simple réservation. Deux personnes peuvent voir le
 même défaut et imaginer deux corrections dont l'une est meilleure ; si chacune est annoncée, le
-désaccord se règle **avant** le code. Sinon il se règle au moment de choisir laquelle des deux branches
+désaccord se règle avant le code. Sinon il se règle au moment de choisir laquelle des deux branches
 on jette.
 
 **Un signalement se relâche.** Quand on s'arrête (reporté, bloqué, abandonné) on **retire l'assignee et
-on le dit**. Une revendication oubliée depuis trois semaines est **pire que rien** : elle fait passer une
+on le dit**. Une revendication oubliée depuis trois semaines est pire que rien : elle fait passer une
 issue libre pour prise, et personne ne la reprendra. Au triage (étape 0), une revendication ancienne se
-**vérifie** (branche vivante ? PR ouverte ?) au lieu de se croire.
+vérifie (branche vivante ? PR ouverte ?) au lieu de se croire.
 
 !!! warning "Ce que le signalement ne couvre pas"
-    Il répond à « **cette issue est-elle prise ?** ». Il ne répond **pas** à « **cette issue est-elle la
+    Il répond à « **cette issue est-elle prise ?** ». Il ne répond pas à « **cette issue est-elle la
     même que celle-là, sous d'autres mots ?** » : et c'est cette seconde question qui a produit le
     doublon le plus coûteux du dépôt : deux issues sur le même sujet, écrites depuis deux angles, ne se
     ressemblent pas, et aucune n'était assignée.
 
-    Le signalement est un **filet**, pas une garantie : il repose sur la discipline, et la discipline
+    Le signalement est un filet, pas une garantie : il repose sur la discipline, et la discipline
     lâche exactement quand ça va vite, c'est-à-dire quand les collisions arrivent. Il complète l'étape 0,
     il ne la remplace pas.
 
 ## Pendant l'issue : rouge, vert, refactor, autant de fois qu'il le faut
 
-Le cycle décrit longuement comment on **clôt**. Ce qui se passe entre le commentaire de prise et la
+Le cycle décrit longuement comment on clôt. Ce qui se passe entre le commentaire de prise et la
 pull request tenait, jusqu'à #3505, en une consigne implicite et fausse :
 [Ajouter une fonctionnalité](ajouter-une-fonctionnalite.md) numérotait « Tester » en **étape 8 sur 8**.
 La page qui apprend à écrire une fonctionnalité enseignait l'ordre inverse de celui qu'on veut.
 
 ### C'est une BOUCLE, pas une étape
 
-Rouge, vert, refactor n'est pas une checklist qu'on parcourt une fois par issue. C'est un **tour**, et
+Rouge, vert, refactor n'est pas une liste qu'on parcourt une fois par issue. C'est un **tour**, et
 une issue en compte **autant que de petits pas** : quelques minutes chacun, souvent plusieurs dizaines
 avant que le comportement soit complet.
 
@@ -218,7 +218,7 @@ Trois raisons, et la troisième est celle qui décide :
   d'écrire. Sur un grand pas, elle est quelque part dans une heure de travail ;
 - **le refactor devient possible.** On ne retravaille sereinement qu'un code couvert : chaque tour
   élargit le filet sous les pas suivants. Un refactoring tenté après coup, sur du code écrit d'un bloc,
-  se fait sans filet - c'est-à-dire qu'il ne se fait pas ;
+  se fait sans filet, c'est-à-dire qu'il ne se fait pas ;
 - **le pas suivant se choisit en connaissance de cause.** Le vert précédent apprend quelque chose sur le
   domaine, et il arrive qu'il démente le plan. Sur #3483, le tour qui figeait les états capturés a rendu
   visible la monotonie de la fraction, qui n'était dans aucun plan.
@@ -226,7 +226,7 @@ Trois raisons, et la troisième est celle qui décide :
 !!! tip "Le signal que le pas était trop grand"
     **Le rouge dure.** Si l'on reste plus de quelques minutes en rouge, ou s'il faut écrire plusieurs
     classes pour revenir au vert, le pas était trop gros : on **revient au dernier vert** et on le coupe
-    en deux. Rester longtemps en rouge fait perdre ce que la boucle apporte - on retombe dans « j'écris
+    en deux. Rester longtemps en rouge fait perdre ce que la boucle apporte : on retombe dans « j'écris
     tout, je teste après », avec un test écrit avant en guise d'alibi.
 
     Le corollaire vaut aussi dans l'autre sens : un pas qui passe au vert **du premier coup, sans rien
@@ -236,7 +236,7 @@ Trois raisons, et la troisième est celle qui décide :
 
 Le dépôt tient déjà la moitié de cette règle, sous un autre nom : **un garde-fou de non-régression se
 vérifie en le voyant rouge** (passe 6, [ADR 2748](decisions/2748-un-dispositif-qui-peut-ne-rien-verifier-le-dit.md)).
-Le rouge du TDD est cette même exigence, déplacée **avant** le code, là où elle est gratuite.
+Le rouge du TDD est cette même exigence, déplacée avant le code, là où elle est gratuite.
 
 Après coup, elle se paie. Sur #3483, la règle ArchUnit qui interdit à un outil de capture de lire
 l'horloge a dû être vérifiée en **réintroduisant le défaut à la main**, en relançant, puis en
@@ -250,16 +250,16 @@ geste n'est donc pas « écrire le test », c'est **écrire le test qui reprodui
 le produit est faux, et il passe au vert quand il ne l'est plus. Un test de caractérisation reste du
 rouge d'abord.
 
-Le corollaire vaut pour les gardes de **forme** ([ADR 3412](decisions/3412-un-alias-n-est-pas-une-police.md)) :
+Le corollaire vaut pour les gardes de forme ([ADR 3412](decisions/3412-un-alias-n-est-pas-une-police.md)) :
 on ne sait ce qu'il faut interdire qu'une fois le défaut lu. Le garde s'écrit donc après l'analyse mais
-**avant** le correctif, et se confronte aux **lignes fautives d'origine** - c'est ce qui a fait
+avant le correctif, et se confronte aux **lignes fautives d'origine** : c'est ce qui a fait
 abandonner un garde textuel sur les fuseaux, qui aurait manqué les deux moitiés du défaut.
 
 **Et avant de corriger, chercher le jumeau.** Un défaut a rarement un seul site : la question n'est pas
 « où est ce symptôme ? » mais « **qui d'autre fait la même chose ?** ». C'est le moment d'interroger le
 [graphe du dépôt](#interroger-le-graphe-du-depot-pour-ce-que-grep-ne-relie-pas) plutôt que de se fier à
 un `grep` sur le nom de la méthode fautive : sur #3197, il a désigné deux services qui écrivaient au
-même endroit sans que l'issue les nomme. Le test qui reproduit doit couvrir **tous** les jumeaux
+même endroit sans que l'issue les nomme. Le test qui reproduit doit couvrir tous les jumeaux
 trouvés, sans quoi le correctif en laisse un derrière lui.
 
 ### Un rouge inattendu est une trouvaille
@@ -276,7 +276,7 @@ décroissante.
 
 ### Une trouvaille se consigne en ISSUE, au moment où on la fait
 
-Le paragraphe ci-dessus dit de **lire** la trouvaille. Celui-ci dit ce qu'on en fait ensuite, et le
+Le paragraphe ci-dessus dit de lire la trouvaille. Celui-ci dit ce qu'on en fait ensuite, et le
 geste est immédiat : **on ouvre l'issue tout de suite**, avant de revenir au travail en cours.
 
 Pas à la clôture, et pas en commentaire. Un commentaire n'a pas d'état, ne se filtre pas, ne remonte
@@ -315,7 +315,7 @@ n'a pas besoin d'issue. Le corps de la PR la porte, et rien ne peut se perdre en
 son remède puisqu'ils voyagent ensemble. C'est le cas de l'auto-test absent découvert en traitant
 #4544, corrigé dans la même PR et jamais consigné ailleurs.
 
-Elle cesse de s'appliquer dès que le remède **sort** de cette PR, pour quelque raison que ce soit :
+Elle cesse de s'appliquer dès que le remède sort de cette PR, pour quelque raison que ce soit :
 périmètre, taille, ou simplement le fait qu'on le remette à plus tard. À cet instant précis, l'issue
 s'ouvre. « Je le corrige tout de suite » est la formule qui fait disparaître les trouvailles quand
 elle se révèle fausse une heure après.
@@ -328,8 +328,8 @@ elle se révèle fausse une heure après.
 
     Vécu sur #4522, qui en a produit trois. Une seule est devenue une issue sur le coup, #4544, et
     c'est la seule qui n'a jamais risqué de disparaître. Les deux autres, #4553 et #4554, n'ont été
-    ouvertes qu'après réclamation explicite, alors qu'elles avaient été **décrites** dès leur
-    découverte. Le signalement ne manquait pas ; il n'avait simplement aucun support qui survive.
+    ouvertes qu'après réclamation explicite, alors qu'elles avaient été décrites dès leur
+    découverte. Le signalement ne manquait pas ; il n'avait aucun support qui survive.
 
 **Ce n'est pas une charge nouvelle.** C'est le même travail que la passe 9 demandait déjà, fait au
 moment où le contexte est frais plutôt que reconstitué. Ce qui change est le coût : quelques minutes
@@ -340,12 +340,12 @@ tard, pour un résultat moins juste.
 
 **Le refactoring appartient au cycle, pas seulement à la clôture.** Il est **tenté à chaque tour de
 boucle**, c'est-à-dire des dizaines de fois par issue : pas nécessairement appliqué, mais
-systématiquement **regardé**. C'est la troisième phase du tour, pas une étape de fin d'issue - la sauter
+systématiquement regardé. C'est la troisième phase du tour, pas une étape de fin d'issue : la sauter
 « parce qu'on y reviendra » est la façon habituelle de ne jamais y revenir. Le moment le moins cher pour
 retravailler un code est celui où l'on se souvient encore pourquoi il est ainsi, et ce moment dure un
 tour.
 
-Ce qui se regarde à ce moment-là est **petit** : un nom qui ne dit pas ce que fait la méthode, une
+Ce qui se regarde à ce moment-là est petit : un nom qui ne dit pas ce que fait la méthode, une
 duplication qui vient d'apparaître entre le pas précédent et celui-ci, une condition qui gagnerait à
 être nommée. Ce qui déborde du pas courant n'appartient pas au tour : ça se note, et ça revient en
 passe 7.
@@ -363,7 +363,7 @@ ce sont **deux échelles** :
 Sans cette frontière, l'une des deux règles cède à l'autre. Avec elle, elles ne se croisent jamais.
 
 Ce que le cycle attrape et que la passe 7 attrape mal : sur #3442, le PMD `GodClass` a mordu
-**pendant** l'issue et forcé l'extraction de `HorairesDistants`. Le résultat porte un **concept nommé**
+pendant l'issue et forcé l'extraction de `HorairesDistants`. Le résultat porte un **concept nommé**
 - *une borne distante se lit dans le fuseau de son point* - parce qu'il a été écrit par quelqu'un qui
 avait encore la raison en tête. Une passe 7 aurait produit la même extraction, au bon endroit, sous un
 nom quelconque.
@@ -452,14 +452,14 @@ de sa **pull request**.
 ### Le corps porte la vérité, les commentaires portent le journal
 
 Une issue vit : la prémisse se révèle fausse, une mesure contredit l'intuition, le remède change. Rien
-de cela ne doit rester **uniquement** en commentaire.
+de cela ne doit rester uniquement en commentaire.
 
 - **le corps** dit l'**état courant de la vérité** : ce qu'on fait, pourquoi, ce qui a été décidé ;
-- **les commentaires** portent le **journal** : mesures, pistes essayées, et la **trace** des
+- **les commentaires** portent le **journal** : mesures, pistes essayées, et la trace des
   trouvailles incidentes.
 
 Une trouvaille incidente s'écrit donc à deux endroits, et le commentaire n'est pas le second : elle a
-**déjà** son issue, ouverte au moment où on l'a faite (voir « Une trouvaille se consigne en ISSUE »
+déjà son issue, ouverte au moment où on l'a faite (voir « Une trouvaille se consigne en ISSUE »
 ci-dessus). Le commentaire en garde la trace dans le fil ; c'est l'issue qui la porte.
 
 D'où la règle : **tout commentaire qui change la lecture de l'issue est suivi d'une édition du corps.**
@@ -470,7 +470,7 @@ commentaire sous un corps périmé ne recadre rien ». Elle vaut pour toute la v
 seulement quand on la déplace d'un chantier à l'autre.
 
 !!! warning "Deux dettes de ce type, laissées dans le dépôt"
-    Sur #3451, une prémisse fausse - une mesure de mutation lue comme « ce code est atteignable » - a
+    Sur #3451, une prémisse fausse (une mesure de mutation lue comme « ce code est atteignable ») a
     été corrigée **en commentaire**, le corps gardant la version fausse. Sur #3439, une mesure erronée
     a connu le même sort. Qui ouvre ces issues aujourd'hui lit d'abord l'erreur, et la correction
     ensuite, s'il descend jusque-là.
@@ -481,7 +481,7 @@ Avant de fusionner : **le corps de la pull request et celui de l'issue se lisent
 six mois, sans la discussion ?** Ils doivent dire ce qui a été fait et pourquoi, pas retracer les
 hésitations qui y ont mené.
 
-Ce n'est pas de la cosmétique. Le **titre de la pull request devient le sujet du commit de squash**, et
+Le **titre de la pull request devient le sujet du commit de squash**, et
 son corps est ce qu'atteint quiconque remonte depuis `git log`. C'est la seule trace qui survive à la
 fermeture de l'onglet.
 
@@ -491,7 +491,7 @@ Elles s'exécutent **dans l'ordre** : la relecture des ADR remet l'existant en t
 à quoi que ce soit, l'audit d'intégration peut révéler du travail à faire avant de documenter, la
 cohérence CLI peut révéler une commande à ajouter (qui sera alors documentée et testée par les passes
 suivantes), l'harmonisation peut **casser un écran sans casser un test** (d'où la revue visuelle
-**juste après** elle), la revue visuelle peut faire émerger de nouveaux chantiers, les ADR s'écrivent
+juste après elle), la revue visuelle peut faire émerger de nouveaux chantiers, les ADR s'écrivent
 quand toutes les décisions sont prises, et le bilan vient en dernier parce qu'il y renvoie.
 
 ### 0. Relecture des ADR existantes
@@ -553,17 +553,17 @@ La procédure vit dans la compétence [`rendre-le-bilan`](https://github.com/ech
 ## Les suites d'une clôture se closent aussi
 
 La passe 9 consolide les issues ouvertes en chemin ; la passe 12 les nomme « dette restante » et clôt
-l'EPIC. Ces issues, une fois livrées, forment un **nouveau delta** - et rien ne les rattrape si l'on
+l'EPIC. Ces issues, une fois livrées, forment un **nouveau delta**, et rien ne les rattrape si l'on
 considère que le chantier est fini.
 
-Le dépôt l'a vécu **trois fois** : les suites de l'EPIC #1662 ont formé l'EPIC #1863, dont les suites
+Le dépôt l'a vécu trois fois : les suites de l'EPIC #1662 ont formé l'EPIC #1863, dont les suites
 ont formé le delta clos par #1920 ; les suites de #1838 ont eu leur propre clôture (#1921). Le patron
 est donc régulier, pas accidentel.
 
 **Les suites d'un chantier se closent par les mêmes 14 passes**, appliquées à leur seul delta
 (`git log <sha-de-la-clôture-précédente>..origin/main`, **entier et non filtré** : le code des suites
-doit se juger à côté de ce qui a été fusionné pendant qu'elles couraient). C'est peu coûteux - le
-périmètre est étroit - et c'est là qu'on trouve ce que le travail de suite a laissé derrière lui : une
+doit se juger à côté de ce qui a été fusionné pendant qu'elles couraient). C'est peu coûteux (le
+périmètre est étroit) et c'est là qu'on trouve ce que le travail de suite a laissé derrière lui : une
 capacité livrée d'un seul côté, un état visuel sans capture, une règle construite par quatre PR
 qu'aucune ADR ne porte.
 
