@@ -423,7 +423,11 @@ jobs:
           # l'interprète au lieu de le supposer. Les autres appels de gardes Python vivent sur
           # `ubuntu-latest`, où `python3` est là par construction ; ici seulement la question se pose.
           py=python3; command -v "$py" >/dev/null 2>&1 || py=python
-          verdict=$("$py" .github/scripts/verdict_du_tournage.py target/surefire-reports)
+          # `CorrespondanceRecetteTest` est nommée HORS DU COMPTE : le pas « Dériver les classes de la
+          # session » la joue avant de filmer, et ses quinze tests restaient dans le dossier lu ici.
+          # Le verdict annonçait 122 « cas joués » pour 107 tests filmés (#5865). Rouge, elle arrête
+          # ce job avant ce pas ; et si elle est renommée sans que cette ligne suive, le verdict le dit.
+          verdict=$("$py" .github/scripts/verdict_du_tournage.py target/surefire-reports CorrespondanceRecetteTest)
           printf '%s\n' "${verdict}"
 
           {
