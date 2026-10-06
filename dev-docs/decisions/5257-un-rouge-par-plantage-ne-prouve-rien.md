@@ -10,6 +10,7 @@ enforced_by:
   - ".github/scripts/temoins_de_ci_non_decoratifs.py"
 relations:
   completee_par: ["5743-un-invariant-se-borne-par-une-liste-nommee"]
+  amende: ["4490-un-temoin-se-prouve-par-mutation-mecaniquement"]
 verified:
   - by: machine:ci
     at: 2026-09-05

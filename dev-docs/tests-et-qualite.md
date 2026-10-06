@@ -798,8 +798,9 @@ from _commun import DECISIONS, rapporte
 **Soixante-seize points d'entrée** répondent à `--contrat` et déclarent six champs : les **47** de
 `scripts/adr`, les **28** de `scripts/methode`, et **la porte elle-même**, `scripts/batterie.py`, qui
 vit à la racine de `scripts/`. Cette troisième famille ne compte qu'un fichier, et la page l'a ignorée
-tant qu'elle n'énumérait que deux dossiers : c'est le même angle mort que l'issue #5397 relève pour
-les bancs de mutation, où un garde à la racine tombe entre eux.
+tant qu'elle n'énumérait que deux dossiers : c'est le même angle mort que l'issue #5397 relevait pour
+les bancs de mutation, où un garde à la racine tombait entre eux. #5480 l'a fermé : la porte est dans
+le corpus du banc de méthode.
 
 Relevé à la clôture de #5402, en **lançant** les points d'entrée un par un plutôt qu'en recopiant le
 chiffre. Le geste n'est pas décoratif : chercher `sort_si_contrat_demande` dans le texte en rend
