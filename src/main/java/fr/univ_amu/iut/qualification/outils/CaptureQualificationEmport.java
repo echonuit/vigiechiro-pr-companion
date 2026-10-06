@@ -39,7 +39,7 @@ import javafx.scene.control.MenuButton;
 public final class CaptureQualificationEmport {
 
     private static final String QUALIF_FXML = "/fr/univ_amu/iut/qualification/view/Qualification.fxml";
-    private static final String RELECTEUR = "claire";
+    private static final String RELECTEUR = "lucie";
     private static final int TAILLE_SELECTION = 30;
     private static final int NB_JUGEES = 12;
     private static final int NB_RELUES = 8;
