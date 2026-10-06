@@ -1828,7 +1828,7 @@ d49c5a1ab907  src/test/java/fr/univ_amu/iut/importation/view/ConfirmationsImport
 837d09ad81c0  src/test/java/fr/univ_amu/iut/importation/view/ImportationVueIntegrationTest.java
 f7da17f4e1d8  src/test/java/fr/univ_amu/iut/importation/view/ParcoursImporterUneNuitTest.java
 8ffdac54cb48  src/test/java/fr/univ_amu/iut/importation/view/PreambuleImport.java
-855feca7c987  src/test/java/fr/univ_amu/iut/importation/view/ScenarioAnnonceConnexionTest.java
+389ba9914a3a  src/test/java/fr/univ_amu/iut/importation/view/ScenarioAnnonceConnexionTest.java
 8d4f927f4340  src/test/java/fr/univ_amu/iut/importation/view/ScenarioBandeauLectureSeuleTest.java
 e37c915aa4db  src/test/java/fr/univ_amu/iut/importation/view/ScenarioBandeauxDInspectionTest.java
 186f46208167  src/test/java/fr/univ_amu/iut/importation/view/ScenarioCarteMultiNuitsTest.java
@@ -1836,7 +1836,7 @@ e37c915aa4db  src/test/java/fr/univ_amu/iut/importation/view/ScenarioBandeauxDIn
 c9e8e1a12452  src/test/java/fr/univ_amu/iut/importation/view/ScenarioImportNominalTest.java
 7e677ede1765  src/test/java/fr/univ_amu/iut/importation/view/ScenarioJournalAbsentTest.java
 50b97d3ba2a4  src/test/java/fr/univ_amu/iut/importation/view/ScenarioMenuDeLigneImportTest.java
-61baa82e82c8  src/test/java/fr/univ_amu/iut/importation/view/ScenarioRejetsEtArchiveTest.java
+5f15516007f1  src/test/java/fr/univ_amu/iut/importation/view/ScenarioRejetsEtArchiveTest.java
 b1d6fa384619  src/test/java/fr/univ_amu/iut/importation/view/TableNuitsTest.java
 fd7a84ce2c5e  src/test/java/fr/univ_amu/iut/importation/view/ZoneNuitsTest.java
 140614766d08  src/test/java/fr/univ_amu/iut/importation/viewmodel/ApercuPrefixeTest.java
