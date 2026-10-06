@@ -65,8 +65,10 @@ Avant de cartographier quoi que ce soit, donc :
    explicitement** et l'écrire dans les deux, plutôt que de laisser la fusion arbitrer.
    **Vérifier ce qui est déjà pris** : `gh issue list --assignee "*"` donne la liste, et le commentaire
    de prise dit le chantier, la branche et le remède envisagé (voir ci-dessous). Une revendication
-   ancienne se vérifie au lieu de se croire (branche vivante ? PR ouverte ?) parce qu'une
-   revendication oubliée fait passer une issue libre pour prise.
+   ancienne se vérifie au lieu de se croire (la demande de sa branche est-elle ouverte, ou déjà
+   fusionnée ?) parce qu'une revendication oubliée fait passer une issue libre pour prise. Git seul
+   n'y répond pas : après un squash, il dit la branche en avance pour toujours. La recette est dans la
+   compétence `ouvrir-une-issue`.
 4. **Recadrer titre et corps** des issues déplacées. Un recadrage laissé en commentaire sous un corps
    périmé ne recadre rien : qui lit en diagonale retient la première version.
 
@@ -179,7 +181,7 @@ on jette.
 **Un signalement se relâche.** Quand on s'arrête (reporté, bloqué, abandonné) on **retire l'assignee et
 on le dit**. Une revendication oubliée depuis trois semaines est pire que rien : elle fait passer une
 issue libre pour prise, et personne ne la reprendra. Au triage (étape 0), une revendication ancienne se
-vérifie (branche vivante ? PR ouverte ?) au lieu de se croire.
+vérifie (la demande de sa branche est-elle ouverte, ou déjà fusionnée ?) au lieu de se croire.
 
 !!! warning "Ce que le signalement ne couvre pas"
     Il répond à « **cette issue est-elle prise ?** ». Il ne répond pas à « **cette issue est-elle la

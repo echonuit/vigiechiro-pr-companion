@@ -63,7 +63,7 @@ symptôme.
 
 ## La condition de sortie peut renvoyer la clôture en arrière
 
-C'est ce qui distingue cette passe des douze autres : elle peut décider qu'une suite est **dans** le
+C'est ce qui distingue cette passe des treize autres : elle peut décider qu'une suite est **dans** le
 périmètre du chantier. Cette suite se livre alors avant que la clôture conclue, et les passes qui
 l'auraient balayée se rejouent.
 
