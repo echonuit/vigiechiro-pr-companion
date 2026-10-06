@@ -112,9 +112,9 @@ mécaniquement. Un record de trente champs n'est pas un suspect : les étiquette
 exclues, avec leurs suites, et deux cas du banc le tiennent.
 
 **Le cliquet a ouvert à 3 641**, sur 713 blocs dans 572 fichiers. Il vaut
-**<!--inv:cliquet-javadoc-->739<!--/inv-->** sur 319 blocs dans 254 fichiers, après les tranches
-#4397, #4401, #4424 et celle de #4502. Le registre attendu est écrit dans `CONTRIBUTING.md` : il
-n'existait nulle part.
+**<!--inv:cliquet-javadoc-->739<!--/inv-->**, soit 314 blocs dans 252 fichiers au 2026-10-06, après
+les tranches #4397, #4401, #4424 et celle de #4502. Le registre attendu est écrit dans
+`CONTRIBUTING.md` : il n'existait nulle part.
 
 **Un bloc relu et gardé volontairement s'inscrit, et son inscription se périme** (#4414). Cette
 décision dit plus haut que le cliquet ne descendra pas à zéro. Rien ne distinguait pourtant un bloc
@@ -155,16 +155,16 @@ qui mentaient - l'un annonçant quatre onglets là où le code en rend six, l'au
 comportement d'avant sa propre correction. Tous deux attrapés **par accident**, parce qu'ils se
 contredisaient eux-mêmes ; un bloc faux et cohérent serait passé.
 
-**Un second garde reste à écrire.** Une ligne de javadoc répétée juste après elle-même est une coupe
-ratée, et elle passe la compilation, spotless et les tests : le lecteur voit la phrase deux fois,
-aucun garde ne la voit. Elle a une seconde forme, plus discrète : la ligne d'avant n'est pas
-identique, elle est le début tronqué de la suivante. Rien ne refuse ni l'une ni l'autre ici. Le
-dépôt jumeau a rencontré les deux en résorbant sa dette (#4334), ce qui dit quand ce garde devient
-nécessaire : au moment où les coupes commencent, pas avant.
+**Un second garde refuse la coupe ratée** (#4474). Une ligne de javadoc répétée juste après
+elle-même passe la compilation, spotless et les tests : le lecteur voit la phrase deux fois. Elle a
+une seconde forme, plus discrète : la ligne d'avant n'est pas identique, elle est le début tronqué de
+la suivante. `scripts/adr/verifie_javadoc_sans_doublon.py` refuse l'une et l'autre. Le dépôt jumeau
+a rencontré les deux en résorbant sa dette (#4334), ce qui a dit quand l'écrire : au moment où les
+coupes commencent, pas avant.
 
 **Et tout n'est pas du récit.** `ParserCsvTadarida` documente un format et un mapping de colonnes,
-`TransformationAudio` l'arithmétique du découpage. Ces blocs dépassent le seuil et le méritent : le
-cliquet ne descendra pas à zéro, il compte une dette, pas une faute.
+`SaisonActivite` des bornes issues d'une publication citée. Ces blocs dépassent le seuil et le
+méritent : le cliquet ne descendra pas à zéro, il compte une dette, pas une faute.
 
 ## Alternatives écartées
 
