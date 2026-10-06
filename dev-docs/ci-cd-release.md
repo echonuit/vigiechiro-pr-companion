@@ -827,7 +827,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
     qui interroge la forge, la copie devient une dette qui se paie trois fois : rouvrez #4954 et
     tranchez **avant** de le finir, pas après.
 
-| `lance-test-filme.sh` | un runner **pilote** un test filmé, et refuse de le lancer sans gestionnaire de fenêtres | `recette-filmee.yml` - workflow **manuel** |
+| `lance-test-filme.sh` | un runner **pilote** un test filmé, et refuse de le lancer sans gestionnaire de fenêtres ; son montage refuse un film arrêté avant l'ordre d'arrêt, dont tous les clips seraient décalés (#6017) | `recette-filmee.yml` - workflow **manuel** |
 | `filtrer_bruit_cartes.py` | rend leur version committée aux aperçus de carte dont **seul le fond** a changé | `capture-vues.yml` |
 | `compare_apercus.py` | montre, sur une PR, les écrans qu'elle change : avant/après accolés, part de pixels, et le **dit** quand aucun ne change | `capture-vues.yml` (autotest : `lint.yml`) |
 | `compare_tournages.py` | montre ce qui a changé entre **deux tournages** : présence du cas, image finale accolée, carte des différences, durée. Le chiffre **trie**, la carte **localise** ; une mesure impossible se compte au lieu de passer pour « rien n'a changé ». Mesure aussi les **planchers** par cas, toutes paires, et écrit en en-tête l'**instrument** qui les a pris : il refuse de comparer contre des planchers pris par un autre, ou de les compléter, en nommant les deux (#5885). Les clips qui ont deux fins n'ont pas de plancher, et la comparaison le dit avec leur issue : leur compte et leurs noms se lisent dans `comparer-deux-tournages.md`, où un test les confronte à la table `SANS_PLANCHER` (#5953) | `comparer-tournages.yml`, `mesurer-les-planchers.yml` (autotest : `lint.yml`) |
@@ -1802,10 +1802,19 @@ compte depuis son début, et l'instant de l'image 0 n'est pas celui où l'on a l
 s'initialise, et cette latence varie. On la rend sans objet en prenant l'heure au moment où l'on
 demande l'arrêt, puis en retranchant la durée du fichier obtenu.
 
+**Cette mesure tient à une condition : que le film tourne encore quand on lui demande de s'arrêter.**
+Le film a un plafond, tiré du `timeout-minutes` du job qui filme, et une séance qui le dépasse laisse
+un film arrêté seul : l'origine calculée part alors trop tard, et chaque clip montre un autre cas
+que le sien. Le 6 octobre 2026, 90 clips ont été publiés ainsi, décalés de 158 secondes, sans
+qu'aucun contrôle rougisse (#6017). Le montage **refuse** donc un film qui n'a pas reçu l'ordre
+d'arrêt, et le dit en nommant le plafond à relever.
+
 **Le contrôle porte sur la couverture, pas sur la clarté des clips.** Exiger qu'un clip soit clair
 ferait rougir un test de ViewModel, qui cite des cas et n'ouvre légitimement aucune fenêtre. Ce qui
 est exigé : les images où quelque chose est à l'écran doivent tomber **dans** les plages calculées.
-Un `t0` faux les fait toutes tomber à côté.
+Un `t0` faux les fait tomber à côté sur un film où le geste est isolé. Dans une séance continue de
+fenêtres, elles retombent dans les plages des cas voisins et la couverture reste haute : c'est le
+refus ci-dessus qui tient ce cas-là.
 
 Les plages sont celles de **tous** les tests, pas seulement des tests cités. La première séance
 réelle a refusé un alignement correct pour cette raison : `ConnexionModaleViewTest` compte dix tests
