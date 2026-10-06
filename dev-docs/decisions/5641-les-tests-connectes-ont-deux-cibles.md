@@ -14,11 +14,19 @@ verified:
 relations:
   amende: ["4444-un-back-local-etalonne-les-sondes-il-ne-tourne-aucun-clip", "4291-un-clip-tourne-contre-la-plateforme-ne-se-range-pas-avec-les-autres"]
   prolonge: ["4406-l-etat-de-depart-d-un-cas-se-declare-il-ne-s-enregistre-pas", "0020-ecrire-sur-la-plateforme-ne-rien-inventer-ni-effacer"]
+  completee_par: ["5970-la-plateforme-de-test-joue-l-extraction-d-une-archive-par-le-code-du-serveur"]
 generated:
   by: "process:assistance-par-agents"
 ---
 
 # Les tests connectés ont deux cibles, et la plateforme nationale confronte la plateforme de test
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-06** : « la plateforme de test n'embarque pas le worker de traitement » est
+    **complété** par
+    [5970](5970-la-plateforme-de-test-joue-l-extraction-d-une-archive-par-le-code-du-serveur.md).
+    Un banc peut lui faire jouer la seule extraction d'une archive, par le code du serveur. Le
+    reste fait foi.
 
 ## Le contexte
 

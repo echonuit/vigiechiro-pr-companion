@@ -548,7 +548,11 @@ décision, qui se dit dans la demande qui la porte.
 - **La signature v2** des dépôts : en mode `DEV_FAKE_S3_URL`, l'API ne signe aucune URL, et toutes
   les parties d'un multipart arrivent sur la même adresse (#5658).
 - **Le traitement** : pas de worker Tadarida. Une participation « traitée » vient de l'état
-  déclaré, et un calcul lancé reste planifié.
+  déclaré, et un calcul lancé reste planifié. Une seule moitié du worker s'y joue, à la demande d'un
+  banc : l'**extraction d'une archive**, par le code du serveur lui-même
+  (`WorkerDeLaPlateformeDeTest.jouerLExtraction`,
+  [ADR 5970](decisions/5970-la-plateforme-de-test-joue-l-extraction-d-une-archive-par-le-code-du-serveur.md)).
+  C'est elle qui dit ce que le serveur fait d'un son qu'une archive lui rend alors qu'il l'a déjà.
 - **La lecture par la fiche web** des écritures de Companion : c'est le lot #5645.
 - **Un transfert ou une durée** : sur un lien local, la latence est nulle (lot #5646).
 
