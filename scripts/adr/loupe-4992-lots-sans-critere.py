@@ -49,6 +49,20 @@ definitions est consignee en #4948, et elle n'est pas de son ressort.
 Sans `gh`, elle ne rend pas un rapport vide qui se lirait comme « aucun lot muet ». Elle sort en 2 et
 le dit, conformement a l'ADR 2748 : un dispositif qui peut ne rien verifier le declare.
 
+## Au plafond, elle refuse
+
+Quand la collecte atteint `_commun.PLAFOND_ISSUES`, la forge en porte peut-etre davantage. Cette
+loupe sort alors en 2, avec un message sur sa sortie d'erreur, avant tout filtrage.
+
+La raison tient a ce qu'elle rend : un COMPTE, « N sur M lots, K chantiers ». Une collecte tronquee
+le fausserait dans le sens qui rassure, et rien dans le chiffre ne le dirait (#5348, ADR 4967).
+
+`loupe-5539` partage ce plafond, lit la meme population, et s'y conduit autrement : elle avertit et
+conclut en 0, parce que ses candidats se lisent un par un et qu'une troncature lui en fait manquer
+sans lui en faire inventer. Les deux conduites ne sont pas alignees, et #5567 a laisse la question a
+qui arbitre. Dans le rapport du lundi c'est ce refus-ci qui se voit, l'avertissement de l'autre n'y
+arrivant pas.
+
 Usage : loupe-4992-lots-sans-critere.py [--auto-test]
 """
 
