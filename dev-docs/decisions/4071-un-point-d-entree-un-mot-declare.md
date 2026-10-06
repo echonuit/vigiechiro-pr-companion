@@ -70,8 +70,13 @@ seule raison qu'un `bin/VigieChiroCompanion` ne se tape pas sous Unix.
 
 ## Ce que la décision NE couvre pas
 
-- **macOS.** Le lanceur vit dans `Contents/MacOS/` : exécutable par chemin complet, pas appelable
-  depuis un terminal. Ce qui l'y mettra se décidera avec le cask Homebrew de #2110.
+- **macOS, où la doc suffit.** Le lanceur vit dans `Contents/MacOS/`, hors du `PATH` : il s'exécute
+  par son chemin complet et ne s'appelle pas par son nom. Arbitré le 6 octobre 2026 (#4088) : rien
+  n'est posé à l'installation, et `docs/ligne-de-commande.md` donne le chemin et l'alias à poser dans
+  `~/.zshrc`. Le cask Homebrew, dont la stanza `binary` aurait fait le lien, est écarté depuis le
+  8 septembre (#2110), et un `.dmg` n'a pas de script d'installation qui le poserait. La question se
+  rouvrirait sur une demande d'utilisateur macOS constatée plutôt que supposée, ou si #2110 était
+  rouvert.
 - **Les réglages par propriété JVM.** Trois refus conseillent un `-D` que le produit installé ne peut
   pas passer : c'est #4075, un sujet voisin et distinct.
 - **L'écran Réglages.** Rien n'y change : les bornes de lecture et d'extraction restent délibérément
