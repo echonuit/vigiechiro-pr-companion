@@ -34,7 +34,9 @@ décisions se cadrent pour l'**utilisateur final**, pas pour un contexte pédago
   ```
 
   Les worktrees vivent **à côté** du dépôt (`SAE201/vigiechiro-wt/<branche>`), jamais dans `/tmp` :
-  sinon ils n'apparaissent pas dans l'arbre VSCode. `git worktree remove` après fusion.
+  sinon ils n'apparaissent pas dans l'arbre VSCode. `git worktree remove` après fusion, une fois lus
+  les fichiers qu'il porte encore (`git status --porcelain --untracked-files=all`) : un refus du
+  retrait nomme un travail qui n'est pas parti, et ne se force pas.
 
   **Pourquoi c'est non négociable** : plusieurs sessions travaillent en parallèle sur ce dépôt, et un
   arbre de travail partagé produit des dégâts **silencieux**. Tous vécus le 2026-08-12 sur #3616 : une

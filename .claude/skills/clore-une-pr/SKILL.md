@@ -240,8 +240,8 @@ git -C <depot> branch --list <branche>               # le poste l'a encore
 ```
 
 Cette page ne prescrit pas de la supprimer : effacer une branche dont le commit n'est pas sur `main`
-est un geste destructif, laissé à l'arbitrage (#5487). Qui la rencontre ne la croit donc pas sur sa
-présence, et la vérifie par la demande de sa branche, comme le décrit
+est un geste destructif, et le porteur a décidé le 6 octobre 2026 de ne pas le prescrire (#5487).
+La branche locale reste donc, par décision. Qui la rencontre ne la croit pas sur sa présence, et la vérifie par la demande de sa branche, comme le décrit
 [`ouvrir-une-issue`](../ouvrir-une-issue/SKILL.md).
 
 ## Signaux d'alerte : on s'arrête
