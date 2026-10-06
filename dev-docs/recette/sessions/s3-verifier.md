@@ -123,11 +123,12 @@ arrive.
 
 *Poste relecteur.*
 
-- **S3-50** · *geste: relire-une-nuit-confiee* · « Ouvrir un paquet reçu… » installe la sélection de
-  l'expéditeur, **figée** : la régénération est refusée **avec son motif**, pas grisée sans
-  explication.
-- **S3-51** · *geste: relire-une-nuit-confiee* · L'identité du relecteur est relevée **à l'ouverture**,
-  et c'est elle qui signera ses verdicts.
+- **S3-50** · *geste: relire-une-nuit-confiee* · « Ouvrir un paquet reçu… » remplace, une fois
+  confirmé, la sélection de la nuit par celle de l'expéditeur, **figée** : la régénération est refusée
+  **avec son motif**, pas grisée sans explication.
+- **S3-51** · *geste: relire-une-nuit-confiee* · L'identité du relecteur est relevée **à l'ouverture** :
+  le compte rendu « Paquet ouvert » nomme son pseudo. Elle n'est pas conservée, et l'avis renvoyé est
+  signé du profil connecté au moment du renvoi (#4703).
 - **S3-52** · *geste: relire-une-nuit-confiee* · « Renvoyer mon avis… » écrit un paquet **signé de
   lui**, sans les séquences que l'expéditeur possède déjà.
 - **S3-53** · Diagnostic d'une nuit, plages horaires : la fin exigée par le protocole s'affiche **arrondie à la minute supérieure**, le début à la minute inférieure. Programmer l'enregistreur sur l'heure de fin affichée ne déclenche pas l'alerte « horaires non respectés ». `vigiechiro diagnostiquer` donne les mêmes heures (#5601).
