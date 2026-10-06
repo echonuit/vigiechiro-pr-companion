@@ -224,7 +224,7 @@ a454de20a45a  src/main/java/fr/univ_amu/iut/cli/commande/ListerSitesVigieChiro.j
 627662fc7d03  src/main/java/fr/univ_amu/iut/cli/commande/ModifierCampagne.java
 a1e0bd537cb6  src/main/java/fr/univ_amu/iut/cli/commande/ModifierPoint.java
 d9edbce511fe  src/main/java/fr/univ_amu/iut/cli/commande/ModifierSite.java
-8ef6fd8677d4  src/main/java/fr/univ_amu/iut/cli/commande/OuvrirPaquetRecu.java
+d161fa90b344  src/main/java/fr/univ_amu/iut/cli/commande/OuvrirPaquetRecu.java
 cbcdce6c7033  src/main/java/fr/univ_amu/iut/cli/commande/PoserCertitude.java
 d77fae41bfd7  src/main/java/fr/univ_amu/iut/cli/commande/PreCheck.java
 04e9290b8962  src/main/java/fr/univ_amu/iut/cli/commande/PublierCorrectionsVigieChiro.java
@@ -1097,7 +1097,7 @@ ea1562f90716  src/main/java/fr/univ_amu/iut/qualification/model/RepriseAvis.java
 c221e37d54a6  src/main/java/fr/univ_amu/iut/qualification/model/SelectionDEcoute.java
 3cfa8aee6a4b  src/main/java/fr/univ_amu/iut/qualification/model/SequenceEnSelection.java
 5d875b0c1ac4  src/main/java/fr/univ_amu/iut/qualification/model/SequenceSelectionnee.java
-c31324514cf8  src/main/java/fr/univ_amu/iut/qualification/model/ServiceEmport.java
+2d6f6cf6f294  src/main/java/fr/univ_amu/iut/qualification/model/ServiceEmport.java
 daa4e5bf4acf  src/main/java/fr/univ_amu/iut/qualification/model/ServiceQualification.java
 844f99fffe87  src/main/java/fr/univ_amu/iut/qualification/model/dao/SelectionDao.java
 8ad2172c4fa8  src/main/java/fr/univ_amu/iut/qualification/outils/CaptureQualification.java
@@ -2020,6 +2020,7 @@ b175a4d32440  src/test/java/fr/univ_amu/iut/qualification/PlanDeRepriseTest.java
 40b670ed59ee  src/test/java/fr/univ_amu/iut/qualification/RepriseAvisTest.java
 33533e7deecc  src/test/java/fr/univ_amu/iut/qualification/SelectionDaoTest.java
 9501a6d14d9c  src/test/java/fr/univ_amu/iut/qualification/SequenceSelectionneeTest.java
+4cd79be81325  src/test/java/fr/univ_amu/iut/qualification/ServiceEmportRemplacementTest.java
 7f919527003e  src/test/java/fr/univ_amu/iut/qualification/ServiceEmportTest.java
 a343b5ab6bf1  src/test/java/fr/univ_amu/iut/qualification/ServiceQualificationMockTest.java
 ecf099c1b090  src/test/java/fr/univ_amu/iut/qualification/ServiceQualificationTest.java

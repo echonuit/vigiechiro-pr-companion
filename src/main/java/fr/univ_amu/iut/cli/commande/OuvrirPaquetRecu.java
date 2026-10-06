@@ -18,8 +18,12 @@ import picocli.CommandLine.Spec;
 /// L'identité s'appose **à l'ouverture** et non au jugement (#4626) : sans connexion valide, la
 /// commande refuse plutôt que de recueillir des verdicts que personne ne pourrait attribuer.
 ///
-/// Refus métier (nuit inconnue du poste, séquence absente, identité manquante) : code 1.
-@Command(name = "ouvrir-paquet-recu", description = "Ouvre un paquet reçu et crée la sélection figée de l'expéditeur.")
+/// Refus métier (nuit inconnue du poste, séquence absente, identité manquante, sélection déjà
+/// présente sans `--remplacer`) : code 1.
+@Command(
+        name = "ouvrir-paquet-recu",
+        description = "Ouvre un paquet reçu et crée la sélection figée de l'expéditeur."
+                + " --remplacer pour écraser une sélection présente.")
 public final class OuvrirPaquetRecu implements Callable<Integer> {
 
     @Spec
@@ -27,6 +31,9 @@ public final class OuvrirPaquetRecu implements Callable<Integer> {
 
     @Option(names = "--fichier", required = true, paramLabel = "<v>", description = "Paquet reçu à ouvrir.")
     private Path paquet;
+
+    @Option(names = "--remplacer", description = "Remplace la sélection d'écoute déjà présente sur cette nuit.")
+    private boolean remplacer;
 
     private final ServiceEmport service;
 
@@ -40,7 +47,9 @@ public final class OuvrirPaquetRecu implements Callable<Integer> {
 
     @Override
     public Integer call() throws IOException {
-        ServiceEmport.BilanReprise bilan = service.reprendre(paquet, connexion.profil());
+        // Aucun garde ici : `reprendre` refuse déjà de remplacer une sélection sans confirmation, en
+        // nommant ce qui serait perdu. La commande ne peut pas le savoir avant lui.
+        ServiceEmport.BilanReprise bilan = service.reprendre(paquet, connexion.profil(), remplacer);
         spec.commandLine()
                 .getOut()
                 .println(bilan.sequences() + " séquence(s) à relire, signées « " + bilan.pseudoRelecteur()
