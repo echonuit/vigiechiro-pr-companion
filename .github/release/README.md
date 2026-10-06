@@ -28,8 +28,9 @@ npm view @semantic-release/changelog version
 npm view @semantic-release/git version
 ```
 
-`npm outdated` ne convient pas ici : sans `node_modules/`, que ce dossier n'a que sur le runner, il ne
-rend rien et sort en 0, ce qui se lit « tout est à jour ».
+`npm outdated` ne convient pas ici : sans `node_modules/`, que rien ne pose dans un arbre neuf (le
+crochet `post-checkout` ne pose que l'outil OpenSpec), il ne rend rien et sort en 0, ce qui se lit
+« tout est à jour ».
 
 ## Les deux configurations, et pourquoi elles diffèrent
 
