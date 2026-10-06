@@ -37,7 +37,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
-import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -286,10 +285,5 @@ class ScenarioEmportExpediteurTest {
                 return Optional.empty();
             }
         };
-    }
-
-    @SuppressWarnings("unused")
-    private TableView<?> table(FxRobot robot) {
-        return robot.lookup("#tableSequences").queryAs(TableView.class);
     }
 }
