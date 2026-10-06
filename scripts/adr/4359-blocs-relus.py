@@ -23,8 +23,8 @@ Sans ce refus, le registre accumulerait des lignes mortes et personne ne le saur
 
 ## Ce qu il NE FAIT PAS, et c est la decision
 
-**Il ne fait pas baisser le cliquet.** La dette reste annoncee en entier, 3 248 lignes. Le registre
-dit « ce bloc a ete lu », pas « cette dette n existe plus ».
+**Il ne fait pas baisser le cliquet.** La dette reste annoncee en entier. Le registre dit « ce bloc
+a ete lu », pas « cette dette n existe plus ».
 
 Confondre les deux transformerait une **memoire de revue** en **desserrement**, et le depot separe
 precisement ces deux gestes : un cliquet qui baisse est une bonne nouvelle mesuree, une exemption
@@ -80,7 +80,13 @@ def empreinte(lignes: list[str]) -> str:
 
 
 def blocs_du_corpus(racine: pathlib.Path | None = None) -> dict[str, str]:
-    """Empreinte -> chemin, pour chaque bloc SOUS CLIQUET du code de production."""
+    """Empreinte -> chemin, pour chaque bloc SOUS CLIQUET, c est-a-dire au-dela du seuil de SA NATURE.
+
+    Le seuil est celui que le cliquet applique, `SEUILS`, et non le seuil plat `SEUIL` (#6007). Au
+    seuil plat, un bloc de type de 9 a 15 lignes passait pour « sous cliquet » alors que le cliquet
+    ne le compte pas : le registre annoncait 920 blocs quand le cliquet en comptait 314, et une
+    entree dont le bloc etait passe sous le seuil restait acceptee, ce que ce garde dit refuser.
+    """
     base = racine or RACINE
     trouves = {}
     # Les DEUX arbres, comme le cliquet qu il accompagne : un registre qui ne couvrirait que la
@@ -89,8 +95,8 @@ def blocs_du_corpus(racine: pathlib.Path | None = None) -> dict[str, str]:
     arbres = [base / "src/main/java", base / "src/test/java"]
     for fichier in sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.java")):
         lignes = fichier.read_text(encoding="utf-8").split("\n")
-        for depart, prose in _garde.blocs(fichier):
-            if prose <= _garde.SEUIL:
+        for depart, prose, quoi in _garde.blocs_par_nature(fichier):
+            if prose <= _garde.SEUILS[quoi]:
                 continue
             j = depart - 1
             k = j
