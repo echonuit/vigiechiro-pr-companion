@@ -467,6 +467,18 @@ def comparer(
         "l'afficher partout n'écrirait que des zéros. Son silence veut dire « vérifiée et stable »,",
         "pas « pas regardée ».",
     ]
+    # Aucun cas COMMUN n est pas un resultat non plus : un cote absent, un cote vide, ou deux
+    # populations qui ne se recouvrent pas. L index s ecrit quand meme, parce que la liste des cas
+    # apparus et disparus est tout ce qu il reste a lire quand les clips ont ete renommes ; c est le
+    # code de sortie qui dit que rien n a ete compare (#5934).
+    rien_de_commun = communs == 0
+    if rien_de_commun:
+        corps[2:2] = [
+            "⚠️ **Aucun cas commun aux deux tournages : rien n'a été comparé.** Les cas ci-dessous sont",
+            "ceux d'un seul côté. Vérifier que les deux sources sont de la même population, et qu'aucune",
+            "n'est vide.",
+            "",
+        ]
     if planchers:
         corps += [
             "",
@@ -513,6 +525,9 @@ def comparer(
             f"{communs} cas comparé(s), {bouges} qui bougent, {apparus} apparu(s), "
             f"{disparus} disparu(s), {illisibles} mesure(s) impossible(s)."
         )
+    if rien_de_commun:
+        print("::error::Aucun cas commun aux deux tournages : rien n'a été comparé.")
+        return 1
     return 0
 
 
@@ -1139,6 +1154,76 @@ def _auto_test() -> int:
             "et aucun des deux refus n'a touché le fichier",
             "intact",
             lambda: "intact" if texte_de(trois)() == avant_panne else "réécrit",
+        )
+
+        # 23 a 26. Une comparaison qui n a compare AUCUN cas est une panne, et elle se DIT (#5934).
+        #
+        # Le defaut d origine : « 0 cas comparé(s), 1 apparu(s) » et un code 0. Le trou etait entre
+        # deux refus deja tenus, deux dossiers vides (cas 1) et une mesure sans paire (cas 22). Le code
+        # se juge par `verifie`, et non par un `if code == 0` muet : un cas qui rougit se nomme.
+        #
+        # L index est exige A CHAQUE fois : la liste des cas apparus et disparus reste le seul resultat
+        # lisible quand tous les clips ont ete renommes, et un refus qui ne l ecrirait pas la perdrait.
+        (bac / "plein").mkdir()
+        clip(bac / "plein/un.mp4", "white")
+
+        # 23. Un cote ABSENT.
+        sortie, code = joue(
+            lambda: comparer(bac / "nulle-part", bac / "plein", bac / "cote-absent")
+        )
+        verifie("un côté absent : la comparaison sort en 1", "code 1", f"code {code}")
+        verifie("et elle dit que rien n'a été comparé", "Aucun cas commun", sortie)
+        verifie(
+            "et l'index garde le cas apparu",
+            "cas **apparu**",
+            texte_de(bac / "cote-absent" / "index.md"),
+        )
+
+        # 24. Un cote VIDE, et de l autre cote cette fois : le cas est disparu, pas apparu.
+        sortie, code = joue(lambda: comparer(bac / "plein", bac / "vide-a", bac / "cote-vide"))
+        verifie("un côté vide : la comparaison sort en 1", "code 1", f"code {code}")
+        verifie("et elle dit que rien n'a été comparé", "Aucun cas commun", sortie)
+        verifie(
+            "et l'index garde le cas disparu",
+            "cas **disparu**",
+            texte_de(bac / "cote-vide" / "index.md"),
+        )
+
+        # 25. Deux cotes PLEINS sans aucun cas commun : deux populations, ou tous les clips renommes.
+        sortie, code = joue(lambda: comparer(bac / "plein", bac / "seul", bac / "sans-commun"))
+        verifie(
+            "deux côtés pleins sans cas commun : la comparaison sort en 1", "code 1", f"code {code}"
+        )
+        verifie("et elle dit que rien n'a été comparé", "Aucun cas commun", sortie)
+        verifie(
+            "et l'index l'avertit en tête, avant le tableau",
+            "rien n'a été comparé",
+            lambda: texte_de(bac / "sans-commun" / "index.md")().partition("| Cas |")[0],
+        )
+        verifie(
+            "et l'index garde le cas apparu, par son nom",
+            "| `autre` | cas **apparu**",
+            texte_de(bac / "sans-commun" / "index.md"),
+        )
+        verifie(
+            "et le cas disparu, par le sien",
+            "| `un` | cas **disparu**",
+            texte_de(bac / "sans-commun" / "index.md"),
+        )
+
+        # 26. Le temoin : UN cas commun parmi des cas apparus reste une comparaison faite.
+        shutil.copy(bac / "plein/un.mp4", bac / "seul/un.mp4")
+        sortie, code = joue(lambda: comparer(bac / "plein", bac / "seul", bac / "un-commun"))
+        verifie(
+            "un cas commun parmi des cas apparus : la comparaison sort en 0",
+            "code 0",
+            f"code {code}",
+        )
+        verifie("et elle compte ce qu'elle a comparé", "1 cas comparé(s)", sortie)
+        verifie(
+            "sans parler de panne",
+            "sans panne",
+            "avec panne" if "Aucun cas commun" in sortie else "sans panne",
         )
 
     if echecs == 0:
