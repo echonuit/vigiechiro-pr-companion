@@ -71,7 +71,10 @@ appris ; un compilateur voit ce qu'il refuse.**
 - deux dépendances de plus, dans un profil **hors build par défaut**. Leurs versions vivent dans le
   `pom.xml`, **où Dependabot les voit** : posées dans un workflow, elles ne seraient surveillées par
   personne - c'est exactement le défaut que l'[ADR 2748](2748-un-dispositif-qui-peut-ne-rien-verifier-le-dit.md)
-  et #3382 viennent de traiter.
+  et #3382 viennent de traiter. Depuis #6090 elles sont **trois**, et elles montent ensemble :
+  `plexus-compiler-api` est déclarée à la même propriété que `plexus-compiler-eclipse`, parce que
+  `maven-compiler-plugin` l'épingle de son côté et qu'une classe fille plus récente que sa classe mère
+  a rendu un `NoSuchMethodError` ; `ecj` suit la version que `plexus-compiler-eclipse` demande.
 
 ### `module-info.java` est exclu de cette passe
 
