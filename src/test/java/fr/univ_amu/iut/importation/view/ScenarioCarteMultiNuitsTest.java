@@ -84,9 +84,9 @@ class ScenarioCarteMultiNuitsTest {
     /// Ce que `NuitVM#badge()` rend pour une nuit dont le journal atteste la fin.
     private static final String COMPLETE = "complète";
 
-    /// Et pour une nuit dont le journal ne dit rien. Le libellé s'affiche tronqué dans une colonne de
-    /// 130 px (#5111) : le banc cherche donc son début, qui suffit à la distinguer de « complète ».
-    private static final String INCONNUE = "complétude inco";
+    /// Et pour une nuit dont le journal ne dit rien. Le libellé est cherché en entier : la colonne
+    /// État le montre sans le couper depuis #5111, et c'est `TableNuitsTest` qui garde cette largeur.
+    private static final String INCONNUE = "complétude inconnue";
 
     private static final String BOUTON_IMPORTER = "#boutonImporter";
 
