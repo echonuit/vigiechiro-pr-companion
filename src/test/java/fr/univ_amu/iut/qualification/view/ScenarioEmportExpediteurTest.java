@@ -38,7 +38,9 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
+import javafx.geometry.Bounds;
 import javafx.scene.control.Labeled;
+import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -79,6 +81,9 @@ class ScenarioEmportExpediteurTest {
     private static final String COMPTE_RENDU_DE_L_EMPORT = "Nuit emportée";
 
     private static final String QUESTION_DU_SECOND_AVIS = "seraient définitivement remplacés";
+
+    /// La marge que l'ascenseur vertical de la table prend sur son bord droit, quand il paraît.
+    private static final double LARGEUR_DE_L_ASCENSEUR = 18;
 
     private Path carteSd;
 
@@ -182,6 +187,8 @@ class ScenarioEmportExpediteurTest {
         Respiration.surLeMomentCle(robot);
         Respiration.leTempsDeLire(robot);
         dialogues.repondre(robot, COMPTE_RENDU_DE_L_EMPORT, BoutonsDeDialogue.FERMER);
+        // Le clip finit sur l'écran retrouvé, dialogue fermé, et non sur le clic qui le ferme.
+        Respiration.surLeMomentCle(robot);
     }
 
     @Test
@@ -250,13 +257,26 @@ class ScenarioEmportExpediteurTest {
 
     // Ce que la table REND dans sa colonne d'avis, et non ce que son modèle porte : l'écran se relit
     // après une reprise, et c'est l'état réel sur lequel le clip attend avant de laisser lire.
+    //
+    // La colonne est la dernière d'une table plus large que son cadre : elle y est amenée, puis c'est
+    // la POSITION du badge qui est exigée, entier dans le cadre de la table. Sa seule présence dans le
+    // graphe ne dit pas qu'on le lit : rogné par le bord, il n'aurait montré que le verdict.
     private static void attendreLAvisAffiche(FxRobot robot, String pseudo) {
         Attente.queSurLeFil(
-                () -> robot.lookup("#tableSequences").queryTableView().lookupAll(".label").stream()
-                        .anyMatch(noeud -> noeud instanceof Labeled libelle
-                                && libelle.getText() != null
-                                && libelle.getText().endsWith("· " + pseudo)),
-                "l'avis de « " + pseudo + " » paraît dans la colonne « Avis relecteur » de la table affichée",
+                () -> {
+                    TableView<?> table = robot.lookup("#tableSequences").queryTableView();
+                    table.scrollToColumnIndex(table.getColumns().size() - 1);
+                    Bounds cadre = table.localToScene(table.getLayoutBounds());
+                    return table.lookupAll(".label").stream()
+                            .filter(noeud -> noeud instanceof Labeled libelle
+                                    && libelle.getText() != null
+                                    && libelle.getText().endsWith("· " + pseudo))
+                            .map(noeud -> noeud.localToScene(noeud.getLayoutBounds()))
+                            .anyMatch(badge -> badge.getMinX() >= cadre.getMinX()
+                                    && badge.getMaxX() <= cadre.getMaxX() - LARGEUR_DE_L_ASCENSEUR);
+                },
+                "l'avis de « " + pseudo + " » se lit en entier, badge dans le cadre de la table, dans la colonne"
+                        + " « Avis relecteur »",
                 APPARITION_SECONDES * 1000L);
     }
 

@@ -210,6 +210,9 @@ class ScenarioEmportRelecteurTest {
                 .as("S3-52 : renvoyer son avis ne demande aucune confirmation")
                 .isEmpty();
 
+        // Le clip finit sur l'écran retrouvé, dialogue fermé, et non sur le clic qui le ferme.
+        Respiration.surLeMomentCle(robot);
+
         assertThat(Files.exists(retour)).as("S3-52 : l'avis part").isTrue();
         ManifestePaquet manifeste = ManifestePaquet.depuis(OuvertureDePaquet.lireManifeste(retour));
         assertThat(manifeste.pseudoJugeur())
