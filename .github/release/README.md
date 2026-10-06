@@ -80,8 +80,10 @@ il reste à poser à la main, dans chaque arbre de travail où l'on veut vérifi
 
 ## Ce que l'audit dit aujourd'hui
 
-`npm audit` signale **7 paquets vulnérables** (2 hautes, 5 moyennes), contre **18** (15 hautes) avant
-le passage en `semantic-release@25` (#3264). Ces vulnérabilités **existaient déjà** avec `npx --yes` ;
+`npm audit` signalait **7 paquets vulnérables** (2 hautes, 5 moyennes) au passage en
+`semantic-release@25` (#3264), contre **18** (15 hautes) avant lui. **Refait le 2026-10-06 sur le même
+lockfile : 17 paquets, 16 hautes et 1 moyenne.** La base des avis a grandi, l'arbre n'a pas bougé, et
+ce qui suit décrit l'état d'août : la relecture de ces dix-sept n'est pas faite (#5290). Ces vulnérabilités **existaient déjà** avec `npx --yes` ;
 la différence est qu'elles sont désormais **visibles**, et c'était l'objet du lockfile.
 
 Ce qui reste **ne se corrige pas ici**, à aucune version de `semantic-release` : les deux hautes
