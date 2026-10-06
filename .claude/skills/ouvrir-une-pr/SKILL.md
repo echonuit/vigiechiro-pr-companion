@@ -310,10 +310,20 @@ Trois issues, donc trois codes :
 Un rouge sort donc bien en `0` et l'intention d'origine tient. Ce que le script ajoute à la règle tient
 en une phrase : **ne pas avoir lu n'est pas un verdict**.
 
-**Une liste vide n'est pas une panne.** La forge rend `[]` tant qu'elle n'a pas créé les check-runs,
-et c'est une lecture réussie qui dit « rien encore ». Les deux moniteurs du 2026-09-30 en étaient
-protégés **par accident** : leur garde `-gt 0` visait ce cas-là, et attrapait la coupure réseau par
-coïncidence. Une protection qu'on ne s'est pas formulée ne se rejoue pas à volonté.
+**Une demande sans vérification encore n'est pas une panne.** Tant que la forge n'a pas créé les
+check-runs, `gh pr checks --json` ne rend pas `[]` : il sort en 1, n'écrit rien sur sa sortie et dit
+`no checks reported` sur l'erreur. Le script lit cette marque comme une lecture réussie qui dit
+« rien encore », imprime des sondes à 0 vérification et attend. Toute autre erreur reste une panne.
+
+Cette page affirmait que la forge rendait `[]`, et le script le croyait : lancé à l'ouverture, il
+sortait en `4` en dix secondes, au moment précis où la surveillance devait commencer (#5976). Mesuré
+le 2026-10-06 sur #6053 : la fenêtre sans vérification y a duré cinq minutes. Une demande qui n'aura
+jamais de vérification, parce qu'elle est en conflit, est donc sondée jusqu'au bout du budget,
+1 800 secondes par défaut, puis rendue en `3` avec « aucune verification creee ».
+
+Les deux moniteurs du 2026-09-30 étaient protégés de la liste vide **par accident** : leur garde
+`-gt 0` visait ce cas-là, et attrapait la coupure réseau par coïncidence. Une protection qu'on ne
+s'est pas formulée ne se rejoue pas à volonté.
 
 Quand le verdict tombe, [`clore-une-pr`](../clore-une-pr/SKILL.md) prend la suite : ce qui juge
 vraiment ce changement, ce qu'un rouge vaut, et l'issue mère qui ne se ferme pas toute seule.

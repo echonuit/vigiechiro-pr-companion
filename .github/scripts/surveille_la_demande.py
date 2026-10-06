@@ -35,12 +35,25 @@ pas a volonte.
 Un rouge sort donc en **0** : c est un verdict, et l intention d origine tient. Ne pas avoir lu n est
 pas un verdict, et c est la seule chose que ce script ajoute a la regle.
 
-## Une liste VIDE n est pas une panne
+## Une demande SANS verification encore n est pas une panne
 
-La forge rend `[]` legitimement tant qu elle n a pas cree les check-runs. C est une lecture REUSSIE
-qui dit « rien encore », donc `en cours`, et surtout pas `illisible`. C est la distinction que le
-`-gt 0` couvrait sans le dire, et la confondre ferait abandonner la surveillance a la seconde ou elle
-commence.
+Tant que la forge n a pas cree les check-runs, `gh pr checks --json` ne rend PAS `[]` : il sort en 1,
+n ecrit RIEN sur sa sortie, et dit `no checks reported on the '<branche>' branch` sur l erreur. Cette
+page affirmait le contraire jusqu a #5976, et son cas d auto-test fabriquait un `[]` que `gh` ne
+produit pas a ce moment-la. Le script lisait donc une panne, et rendait la main en 4 a la seconde ou
+la surveillance commence : vecu sur #5914, puis six fois le 2026-10-06, dont deux sur #6053 ou la
+fenetre sans verification a dure cinq minutes.
+
+La marque sur l erreur est une lecture REUSSIE qui dit « rien encore », donc `en cours`, et surtout
+pas `illisible`. La lecture des verifications la traduit en liste vide, et elle SEULE la passe a
+`_lit`. Toute AUTRE erreur reste une panne, sans quoi une coupure reseau redeviendrait une attente
+(#5621) : un cas le tient. La tete et les ateliers attendent un objet et non une liste, donc une
+liste vide y resterait une panne meme si la marque leur parvenait ; aucun cas ne le dit, parce
+qu aucune mutation de cette lecture ne pourrait le faire rougir.
+
+**Ce que cela fait du budget** : une demande qui n aura jamais de verification, parce qu elle est en
+conflit, n est plus quittee en dix secondes. Elle est sondee jusqu au bout du budget, 1800 s par
+defaut, puis rendue en 3 avec « aucune verification creee ».
 
 ## Un ensemble PARTIELLEMENT CREE ressemble a un ensemble conclu
 
@@ -100,12 +113,23 @@ TENTATIVES = 3
 # ferait crier sur des demandes saines - c est le second piege que `ouvrir-une-pr` nomme deja.
 EN_ATTENTE = "pending"
 
+# ⟨la marque de `gh` sur une demande sans verification (#5976)⟩ Litteral ANGLAIS, non localise, lu
+# sur la sortie d ERREUR. Releve avec gh 2.97.0 le 2026-10-06 : sur #6053, 28 secondes apres son
+# ouverture, et sur des demandes fermees sans verification (#3928, #3353). Si une version de `gh`
+# reformule ce message, la lecture redevient une panne et le moniteur sort en 4 : il se tait trop
+# tot, il ne conclut jamais a tort.
+AUCUNE_VERIFICATION = "no checks reported"
 
-def _lit(arguments: list[str], lanceur, dors) -> object | None:
+
+def _lit(arguments: list[str], lanceur, dors, vide_si: str | None = None) -> object | None:
     """Le JSON rendu par `gh`, ou `None` quand on n a PAS PU LIRE. Trois tentatives.
 
     Un seul endroit lit la forge, parce que les deux interrogations de ce script doivent refuser de
     la MEME facon : deux refus ecrits a deux endroits divergent a la premiere reformulation.
+
+    `vide_si` nomme une marque de la sortie d ERREUR qui vaut « rien encore » : sortie vide et marque
+    presente rendent une liste vide, sans reprise, parce que c est une reponse et non un hoquet.
+    Seul qui sait qu une telle reponse existe le passe.
     """
     for essai in range(1, TENTATIVES + 1):
         # ⟨`gh` ABSENT leve, et `check=False` ne le couvre pas⟩ `check=False` parle du code de sortie ;
@@ -124,6 +148,8 @@ def _lit(arguments: list[str], lanceur, dors) -> object | None:
                 return json.loads(rendu.stdout)
             except json.JSONDecodeError:
                 pass
+        elif vide_si and vide_si in (rendu.stderr or ""):
+            return []
         if essai < TENTATIVES:
             dors(PAUSE_DE_REPRISE)
     return None
@@ -139,6 +165,7 @@ def interroge(depot: str, numero: int, lanceur=subprocess.run, dors=time.sleep) 
         ["gh", "pr", "checks", str(numero), "--repo", depot, "--json", "name,bucket"],
         lanceur,
         dors,
+        vide_si=AUCUNE_VERIFICATION,
     )
     return rendu if isinstance(rendu, list) else None
 
@@ -338,8 +365,8 @@ def _auto_test() -> int:
     # ⟨les lectures elles-memes, par une COUTURE et non par le reseau⟩ Les cas ci-dessus remplacent
     # les lecteurs ; ceux-ci les exercent, sans quoi rien ne prouverait que leurs branches repondent.
     class Rendu:
-        def __init__(self, code, sortie):
-            self.returncode, self.stdout, self.stderr = code, sortie, ""
+        def __init__(self, code, sortie, erreur=""):
+            self.returncode, self.stdout, self.stderr = code, sortie, erreur
 
     verifie(
         "gh NON NUL avec du JSON valide est une LECTURE, pas une panne",
@@ -351,10 +378,50 @@ def _auto_test() -> int:
         lambda: interroge("d", 1, lanceur=lambda *a, **k: Rendu(0, ""), dors=dors),
         None,
     )
+    # ⟨ce `[]` est FABRIQUE : `gh` ne le rend pas a l ouverture (#5976)⟩ Le chemin JSON reste vrai et
+    # ce cas le tient, mais il ne dit rien du moment ou la demande vient de s ouvrir.
     verifie(
         "gh qui rend [] est une lecture reussie, et rend []",
         lambda: interroge("d", 1, lanceur=lambda *a, **k: Rendu(0, "[]"), dors=dors),
         [],
+    )
+
+    # ⟨CE QUE `gh` REND VRAIMENT sur une demande sans verification (#5976)⟩ Releve le 2026-10-06 sur
+    # #6053, 28 secondes apres son ouverture, gh 2.97.0 : code 1, RIEN sur la sortie, et cette ligne
+    # sur l erreur. Le moniteur y lisait une panne et rendait la main en 4, deux fois de suite.
+    PAS_ENCORE = "no checks reported on the 'fix/4837-elision-un-seul-motif' branch\n"
+    verifie(
+        "une demande SANS verification encore est une lecture reussie, et rend []",
+        lambda: interroge("d", 1, lanceur=lambda *a, **k: Rendu(1, "", PAS_ENCORE), dors=dors),
+        [],
+    )
+    # Le controle apparie : sans lui, le remede serait de lire TOUTE erreur comme une attente, donc
+    # de recreer le defaut que ce script existe pour ne plus ecrire (#5621).
+    verifie(
+        "une AUTRE erreur sur la sortie d erreur reste une panne",
+        lambda: interroge(
+            "d",
+            1,
+            lanceur=lambda *a, **k: Rendu(1, "", "error connecting to api.github.com\n"),
+            dors=dors,
+        ),
+        None,
+    )
+    # Et de bout en bout, par la VRAIE lecture : la marque d abord, puis les verifications creees.
+    # ⟨la marque est rendue AUTANT de fois qu une lecture a de tentatives⟩ Rendue une seule fois, ce
+    # cas restait vert sans le remede : la reprise de `_lit` consommait la reponse suivante de la
+    # serie, et la lecture « reussissait » au deuxieme essai. Vu en retirant le remede.
+    de_l_ouverture = _serie([Rendu(1, "", PAS_ENCORE)] * TENTATIVES + [Rendu(0, json.dumps(VERT))])
+    verifie(
+        "le moniteur lance a l ouverture ATTEND, puis conclut quand les verifications arrivent",
+        lambda: surveille(
+            "d",
+            1,
+            lire=lambda: interroge("d", 1, lanceur=lambda *a, **k: de_l_ouverture(), dors=dors),
+            en_vol=rien_en_vol,
+            dors=dors,
+        ),
+        CONCLU,
     )
     verifie(
         "une tete illisible rend 4 : on ne juge pas les ateliers d un commit inconnu",
