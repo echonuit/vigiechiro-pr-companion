@@ -48,6 +48,10 @@ ScenarioDiagnosticPassageTest.les_deux_bords_manquent_et_l_alerte_ne_concede_rie
 ScenarioDiagnosticPassageTest.lire_le_diagnostic_d_un_passage	0.000	0.473	33
 ScenarioDiagnosticPassageTest.une_nuit_qui_couvre_ne_se_fait_pas_accuser	0.000	0.239	33
 ScenarioDiagnosticSansJournalTest.sans_journal_le_second_encart_se_tait	0.000	0.221	33
+ScenarioEmportExpediteurTest.emporter_une_nuit_et_ses_deux_refus	0.000	0.009	6
+ScenarioEmportExpediteurTest.reprendre_un_avis_et_le_second_qui_se_confirme	0.000	0.000	6
+ScenarioEmportRelecteurTest.relire_une_nuit_confiee	0.000	0.002	6
+ScenarioEmportRelecteurTest.renvoyer_son_avis	0.000	0.025	6
 ScenarioFicheSiteTest.ajouter_un_point_le_fait_paraitre_sur_la_fiche	0.000	0.232	27
 ScenarioFicheSiteTest.le_bandeau_dit_l_identite_du_carre	0.000	0.291	27
 ScenarioFicheSiteTest.le_carre_rattache_porte_son_badge	0.000	0.204	27
@@ -95,8 +99,8 @@ ScenarioPerceptifIssuesConnexionTest.succes_dit_ce_qui_a_ete_rapatrie	0.000	0.16
 ScenarioPerceptifRecuperationCarreTest.la_recuperation_ramene_sur_mes_sites	0.000	0.114	27
 ScenarioPerceptifRefusDepotTest.le_compte_rendu_dit_les_refus_et_conseille_la_reconnexion	0.000	0.512	27
 ScenarioPerceptifRefusDepotTest.ouvrir_le_dossier_de_depot_demande_un_dossier	0.000	0.713	27
-ScenarioRaccourcisVerificationTest.les_raccourcis_clavier_de_la_verification	0.000	0.334	27
+ScenarioRaccourcisVerificationTest.les_raccourcis_clavier_de_la_verification	0.000	0.334	33
 ScenarioRejetsEtArchiveTest.l_import_aboutit_malgre_les_rejets	0.000	0.819	12
 ScenarioRejetsEtArchiveTest.reimporter_une_nuit_deja_connue	0.000	0.938	33
 ScenarioReveilParBoutonTest.un_reveil_par_bouton_n_est_pas_une_anomalie	0.000	0.292	33
-ScenarioSelectionEcouteTest.personnaliser_la_selection_d_ecoute	0.000	0.851	27
+ScenarioSelectionEcouteTest.personnaliser_la_selection_d_ecoute	0.000	0.851	33
