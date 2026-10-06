@@ -19,6 +19,20 @@ Les adresses viennent de la pré-version roulante `clips-recette`, alimentée pa
 **recette filmée** avec `publier_les_clips`. Un lecteur vide dit que le tournage n'a pas eu lieu
 depuis que ce cas existe, pas que le produit est cassé.
 
+!!! warning "Quel tournage ces lecteurs jouent"
+
+    Tous les lecteurs de cette page lisent la pré-version roulante `clips-recette`, qui porte le
+    dernier tournage et non une version figée. Avant de vous fier à ce qu'un clip montre, ouvrez
+    [ses notes](https://github.com/echonuit/vigiechiro-pr-companion/releases/tag/clips-recette) :
+    le flux recette filmée les réécrit à chaque tournage. Elles nomment la version montrée quand
+    c'est le train qui a tourné, ou disent « Tournage manuel » avec le commit tourné, et ces clips
+    ne correspondent alors à aucune version publiée. Leur dernière ligne donne le jour et l'heure
+    du tournage.
+
+    Si ce n'est pas la version que vous validez, cherchez ses clips sur son tag :
+    [Regarder les clips de recette](clips.md) dit depuis quand le train les y verse, et sous quels
+    noms.
+
 ## ScenarioPerceptifIssuesConnexionTest
 
 ### S1-04 · `les_trois_etapes_de_la_modale`
