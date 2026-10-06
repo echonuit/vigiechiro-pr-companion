@@ -44,9 +44,10 @@ section est dans le cadre quand même, et le geste conclut.
 fins, et ne tenait donc rien.
 
 Le défaut du geste se reproduit à coup sûr dans un banc. La course du cas réel, dont la fenêtre est
-d'une pulsation, n'est sortie sur un poste ni en vingt passes filmées, ni en deux autres jouées sous
-une charge étrangère. Que cet ordre soit celui des deux tournages n'est donc pas observé : c'est ce
-que leurs images et le code laissent conclure.
+d'une pulsation, n'est pas sortie sur un poste en dix passes filmées, dont deux sous une charge
+étrangère. Douze passes plus anciennes ne comptent pas : leur témoin lisait la page avant le geste,
+et laissait passer la mise en page. Que cet ordre soit celui des deux tournages n'est donc pas
+observé : c'est ce que leurs images et le code laissent conclure.
 
 ## Décision
 
