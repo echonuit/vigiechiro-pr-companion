@@ -446,6 +446,7 @@ nav:
     - 5862 · La vue d'un passage vérifie le traitement, dans les mots de l'écran de lot: decisions/5862-la-vue-d-un-passage-verifie-le-traitement-dans-les-mots-de-l-ecran-de-lot.md
     - 5975 · Les archives du repli manuel ne rendent au serveur que ce qu'il n'a pas: decisions/5975-les-archives-du-repli-ne-rendent-au-serveur-que-ce-qu-il-n-a-pas.md
     - 5930 · Une comparaison reprend une exécution de tournage: decisions/5930-une-comparaison-reprend-une-execution-avec-les-refus-de-la-mesure.md
+    - 5970 · La plateforme de test joue l'extraction d'une archive par le code du serveur, sans embarquer son worker: decisions/5970-la-plateforme-de-test-joue-l-extraction-d-une-archive-par-le-code-du-serveur.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Retour de terrain de la 2.189.0: retours/2189-ce-que-ton-retour-a-produit.md

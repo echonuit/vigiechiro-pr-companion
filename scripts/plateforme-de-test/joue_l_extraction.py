@@ -9,11 +9,15 @@ y est deja, a la revision epinglee.
 
 ## La question qu il sert
 
-Le repli manuel (ADR 5867) fait deposer des archives de TOUTE la nuit, sequences deja en ligne
-comprises. Que fait le serveur d un son qu il recoit deux fois ? La plateforme de test n a pas de
-worker (ADR 5641) : une archive deposee y reste une archive. Ce script lance la moitie du worker qui
-repond, `extract_zipped_files_in_participation`, puis `Participation.load_pjs`, qui regroupe les
-fichiers pour l analyse.
+Le repli manuel (ADR 5867) faisait deposer des archives de TOUTE la nuit, sequences deja en ligne
+comprises. Que fait le serveur d un son qu il recoit deux fois ? Il le garde en double, et depuis
+#5975 les archives du repli ne contiennent plus que ce qui n est pas en ligne (ADR 5975) : le banc
+qui se sert de ce script tient le fait qui a fonde la regle, et son remede.
+
+La plateforme de test n a pas de worker (ADR 5641) : une archive deposee y reste une archive. Ce
+script lance la moitie du worker qui repond, `extract_zipped_files_in_participation`, puis
+`Participation.load_pjs`, qui regroupe les fichiers pour l analyse. Pourquoi cette moitie, et elle
+seule : ADR 5970.
 
 ## Ce qui est du serveur, et ce qui est remplace
 

@@ -160,7 +160,7 @@ L'infobulle du bouton et la question SHALL lire la même phrase.
 
 Connecté et en forme WAV, l'écran de lot SHALL offrir le repli manuel dès qu'au moins une séquence du dépôt
 est refusée définitivement par le stockage de Vigie-Chiro ou pour son contenu : une carte sans numéro,
-« Repli : déposer à la main », placée sous la carte du téléversement, qui génère les archives ZIP de la nuit,
+« Repli : déposer à la main », placée sous la carte du téléversement, qui génère les archives ZIP des séquences qui ne sont pas en ligne,
 et avec elle les éléments du dépôt manuel. Il SHALL NOT l'offrir tant qu'aucun téléversement n'a été refusé,
 ni après un échec que la reprise peut lever, ni quand les seuls refus tiennent aux droits, qu'une reconnexion
 réarme. Le fil d'étapes SHALL rester à trois étapes, et leurs numéros inchangés. Le repli SHALL être offert
@@ -280,3 +280,37 @@ seule, les fait rougir.
 
 - **WHEN** `statut-passage --json` rend ce passage
 - **THEN** la clé `deposeLe` porte la valeur de la base, inchangée
+
+### Requirement: Les archives d'un dépôt entamé en séquences ne rendent que ce qui manque
+
+Sur une nuit dont le dépôt en séquences WAV est entamé, la génération d'archives SHALL n'y mettre que les
+séquences que le plan de dépôt ne dit pas déposées. Elle MUST NOT y remettre une séquence déjà en ligne : le
+serveur l'ajouterait une seconde fois aux fichiers de la participation (#5970). L'écran et la commande
+`exporter-lot` SHALL suivre la même règle. Quand toutes les séquences sont déposées, la génération SHALL
+refuser en le disant, plutôt que d'écrire une archive vide. Une nuit sans plan de dépôt, ou dont le dépôt est
+en archives, SHALL se générer en entier.
+
+*Vérifié par* : `RegenerationPendantUnDepotTest` (la règle sur une vraie base avec le moteur de dépôt, ses deux
+témoins et le refus), `ExporterLotTest` (la commande passe par la même génération, et n'annonce aucune archive
+quand elle refuse) et `ArchiveDuRepliSurLaPlateformeDeTestTest` (sur le code du serveur, une archive des seules
+séquences absentes ne laisse aucun titre en double).
+
+#### Scenario: Quatre séquences sur dix déjà en ligne
+
+- **WHEN** l'utilisateur génère les archives d'une nuit de dix séquences dont quatre sont déposées en WAV
+- **THEN** les archives contiennent les six autres séquences, et aucune des quatre
+
+#### Scenario: Une nuit jamais déposée
+
+- **WHEN** l'utilisateur génère les archives d'une nuit qui n'a aucun plan de dépôt
+- **THEN** les archives contiennent toutes les séquences de la nuit
+
+#### Scenario: Un dépôt entamé en archives
+
+- **WHEN** l'utilisateur régénère les archives d'une nuit dont une archive est déjà en ligne
+- **THEN** les archives contiennent toutes les séquences de la nuit, comme avant ce changement
+
+#### Scenario: Tout est déjà en ligne
+
+- **WHEN** la commande `exporter-lot` vise une nuit dont toutes les séquences sont déposées en WAV
+- **THEN** elle refuse, et dit qu'il ne reste aucune séquence à déposer à la main
