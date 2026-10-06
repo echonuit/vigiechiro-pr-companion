@@ -53,7 +53,7 @@ reste propre à chacun, et chaque écart porte sa raison là où il est écrit.
 
 La seconde ligne a trois raisons. Le banc des ADR lance les scripts qu'il éprouve et se rappellerait
 sans fin. Celui de méthode ne mute que de faux gardes dans son auto-test, donc il peut se muter. Celui de CI s'écarte de son corpus, et un cas le tient. Depuis #5550, celui de
-méthode le dit aussi par un cas qui peut rougir ; celui des ADR le tient par conséquence.
+méthode le dit aussi par un cas qui peut rougir, et celui des ADR depuis #6031.
 
 La confrontation de la table est écrite trois fois. Son noyau tient en deux différences d'ensembles,
 et ce qui l'entoure diffère : la borne du second sens, et la forme des non concluants.

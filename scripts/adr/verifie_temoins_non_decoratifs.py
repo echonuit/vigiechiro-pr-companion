@@ -48,8 +48,15 @@ from _commun.mutation import neutralisation
 
 ADR = "4490"
 DOSSIER = pathlib.Path(__file__).resolve().parent
-# Ce garde LANCE les scripts qu il eprouve : il ne se prend jamais lui-meme pour cible, sous peine
-# de se rappeler sans fin. Meme barriere que `verifie_contrats_tiennent.py` (#5119).
+# ⟨ce banc et son propre corpus : DEUX reponses, une par moitie (#5550, #6031)⟩
+# Il ne se LANCE jamais lui-meme : la moitie `autonomes` joue le `--auto-test` des gardes qu elle
+# eprouve, et s y trouver le ferait se rappeler sans fin. Meme barriere que
+# `verifie_contrats_tiennent.py` (#5119). Elle tient par la vraie raison, la suite le charge, et non
+# par un filtre sur son nom.
+# Il se MUTE en revanche : la moitie `mutes` neutralise chaque garde que `verifie_scripts.py`
+# charge puis joue cette suite, et ce banc est l un d eux. Deux cas de l auto-test l affirment,
+# `MOI in autonomes()` faux et `MOI in mutes()` vrai. Les bancs de methode et de CI repondent
+# autrement, chacun pour sa raison (ADR 5265).
 MOI = pathlib.Path(__file__).name
 SUITE = DOSSIER / "verifie_scripts.py"
 
@@ -60,9 +67,11 @@ SUITE = DOSSIER / "verifie_scripts.py"
 # dossier, et `cas_d_auto_test`, la fabrique partagee. Les detruire faisait sortir sept gardes en 1
 # sans qu un seul cas ait joue, et ce banc les comptait comme eprouves.
 #
-# Par NOM EXACT, jamais par motif. Le banc de methode epargne tout nom portant « auto » et « test » ;
-# ici, ce motif epargnerait aussi `auto_test_rougit` et `porte_son_auto_test`, qui SONT la detection de
-# ce banc - et il se mute lui-meme par sa moitie `mutes`. Mesure du 2026-09-08 sur quarante-sept gardes.
+# Par NOM EXACT, jamais par motif. Le banc de methode epargnait alors tout nom portant « auto » et
+# « test » ; ici, ce motif epargnerait aussi `auto_test_rougit` et `porte_son_auto_test`, qui SONT la
+# detection de ce banc - et il se mute lui-meme par sa moitie `mutes`. Mesure du 2026-09-08 sur
+# quarante-sept gardes. Depuis #5524 les trois bancs ne lisent plus de motif : ils importent
+# `neutralisation` de `_commun/mutation.py`, qui derive l exemption du graphe d appel.
 EPARGNES = ("rapporte", "main", "auto_test", "cas_d_auto_test")
 
 # Les temoins qui n eprouvent AUCUNE fonction de module, et que la mutation ne peut donc pas tuer.
@@ -1265,6 +1274,13 @@ def auto_test() -> int:
 
     # La population des autonomes se DERIVE, et ne recoupe pas celle du harnais.
     verifie("ce garde ne s eprouve jamais lui-meme", MOI in autonomes(), False)
+    # ⟨l autre moitie, affirmee et non deduite (#6031)⟩ Le cas ci-dessus dit ou ce banc n est PAS.
+    # Celui-ci dit ou il EST : la suite le charge, donc `mutes()` le rend, donc il est mute comme
+    # tout autre garde. Jusqu ici cela ne tenait que par consequence, par le cas « le corpus juge est
+    # celui du chemin par defaut, ce banc compris », qui compare deux populations sans nommer `MOI`.
+    verifie(
+        "et la suite qui le charge le mute : il est dans `mutes()`", lambda: MOI in mutes(), True
+    )
     verifie("aucun garde n est compte deux fois", set(autonomes()) & set(gardes()), set())
     verifie("une mention en prose ne vaut pas dispatch", porte_son_auto_test("_commun.py"), False)
     with arbre_jetable() as faux:

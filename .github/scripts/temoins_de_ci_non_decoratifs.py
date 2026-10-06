@@ -123,12 +123,14 @@ CONDUITE_SUR_LA_TABLE = (
 # Ce qu on insere pour retirer sa detection a un garde, sans toucher a ce qui le decrit.
 #
 # La fonction d auto-test est EPARGNEE, et c est ce qui rend la mesure honnete : la neutraliser
-# ferait rougir le garde trivialement, non parce qu il a cesse de detecter. L exemption se DERIVE du
-# nom - toute fonction dont le nom porte « auto » et « test » - plutot que de s enumerer, parce
-# qu une liste vieillit au premier garde neuf.
+# ferait rougir le garde trivialement, non parce qu il a cesse de detecter. L exemption se DERIVE
+# plutot que de s enumerer, parce qu une liste vieillit au premier garde neuf. Elle se lisait sur le
+# nom - toute fonction portant « auto » et « test » - jusqu a #5524, et ce motif epargnait
+# `autotestes`, la detection de `verifie_inventaires_ci.py`. Elle se lit desormais sur le graphe
+# d appel, dans `_commun/mutation.py`.
 #
-# Identique a celle du banc de methode, et deliberement : deux neutralisations differentes
-# rendraient deux mesures qu on ne pourrait plus comparer.
+# La meme que celle des deux autres bancs, et deliberement : ils importent tous trois ce module,
+# parce que deux neutralisations differentes rendraient deux mesures qu on ne pourrait plus comparer.
 
 
 CONTRAT = {
@@ -145,9 +147,11 @@ CONTRAT = {
 """,
     # ⟨`invariant` et non `cliquet` (#5498)⟩ Le critere est ecrit dans `dev-docs/ci-cd-release.md` :
     # « c est un invariant, pas un cliquet : il n y a pas de marge a relever, et l echappatoire est
-    # une liste d exceptions NOMMEES ». Zero decoratif n a pas de marge, et l echappatoire est
-    # `HORS_PORTEE`. Les trois bancs remplissent les deux conditions et le declarent desormais
-    # pareil ; `verifie_contrat_obligatoire.py`, que la meme page decrit ainsi, declare de meme.
+    # une liste d exceptions NOMMEES ». Zero decoratif n a pas de marge. L echappatoire, elle, est
+    # `HORS_PORTEE` chez les deux autres bancs ; CE banc n en porte aucune, son corpus se derive des
+    # ateliers et rien n en est ecarte par son nom, hors lui-meme. Ses listes nommees sont celles de
+    # ses non concluants. Les trois bancs le declarent pareil ; `verifie_contrat_obligatoire.py`,
+    # que la meme page decrit ainsi, declare de meme.
     "dispositif": "invariant",
     "seuil": "(sans objet)",
     "temoin": ".github/scripts/temoins_de_ci_non_decoratifs.py --auto-test",
