@@ -1426,8 +1426,10 @@ jobs:
         # les non concluants se comptent à part au lieu d'être rangés avec les rouges. Sur les 43 :
         # 34 tiennent, 9 ne concluent pas, et AUCUN n'est décoratif.
         #
-        # Il ne refuse que sur un décoratif. Un non concluant se nomme et se compte : refuser dessus
-        # serait refuser sur ce qu'il n'a pas su lire.
+        # Un non concluant ne le fait pas rougir par lui-même : refuser dessus serait refuser sur ce
+        # qu'il n'a pas su lire. Mais la liste de ces gardes est NOMMÉE dans le banc depuis #5497,
+        # et confrontée dans les deux sens (ADR 5743) : un plantage de plus, ou une entrée qui ne
+        # plante plus, le fait sortir en 1. Le banc de méthode, juste au-dessus, fait de même.
         run: |
           python3 .github/scripts/temoins_de_ci_non_decoratifs.py --auto-test
           python3 .github/scripts/temoins_de_ci_non_decoratifs.py
