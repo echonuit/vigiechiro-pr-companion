@@ -81,11 +81,13 @@ ceux de #5911.
 
 **Seconde mise à jour du 6 octobre 2026.** Les trois derniers sont sortis (#5911) : un clip finissait
 sitôt l'import lancé, un autre pendant le fondu d'entrée de l'accueil, et le troisième sur une modale
-que le produit fait défiler quand un bouton perd le focus (#6054). La même mesure a fait **revenir**
-un clip que #5893 avait sorti : `la_decompression_se_voit_avant_l_inspection`, dont le plancher avait
-été pris sur six tournages d'un seul mode, et dont la seconde fin est sortie deux fois sur les six
-suivants (#6069). La table porte donc une entrée, et la règle a servi comme elle a été écrite :
-un clip y entre quand la mesure montre ses deux fins.
+que le produit fait défiler quand un bouton perd le focus (#6054).
+
+**Un clip sorti est revenu dans la table, puis en est ressorti (#6069).** Le plancher de
+`la_decompression_se_voit_avant_l_inspection` avait été pris sur six tournages d'un seul mode ; les
+six suivants ont montré sa seconde fin deux fois. Son dernier geste réglait la page avant la mise en
+page qui fait paraître la section, puis concluait parce qu'elle était dans le cadre. Un geste neuf
+pose la position et la vérifie, et douze tournages finissent sur la même image. La table est vide.
 
 Une table de noms dans un outil vieillit si personne ne la relit. Chaque entrée porte donc son issue,
 dont le critère de fin comprend la sortie de la table.

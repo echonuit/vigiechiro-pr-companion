@@ -127,10 +127,10 @@ paires en prouve d'autant moins. Le décompte des lignes par nombre de paires ne
 chaque mesure le déplace, et le fichier le dit mieux que cette page.
 
 Le fichier mêle deux populations, et chaque compte de cette page nomme la sienne. Les clips
-**ordinaires** qui ont un plancher sont <!--inv:clips-ordinaires-a-plancher-->94<!--/inv-->. Ceux de
+**ordinaires** qui ont un plancher sont <!--inv:clips-ordinaires-a-plancher-->95<!--/inv-->. Ceux de
 la **plateforme de test** sont <!--inv:clips-de-la-plateforme-de-test-a-plancher-->5<!--/inv-->, et
 ont leur propre section. Les clips **sans plancher**, ceux qui ont deux fins, sont au nombre de
-<!--inv:clips-sans-plancher-->1<!--/inv--> (voir plus bas). Ces trois comptes sont relus à chaque
+<!--inv:clips-sans-plancher-->0<!--/inv--> (voir plus bas). Ces trois comptes sont relus à chaque
 demande contre l'outil et son fichier : un clip corrigé qui quitte la table fait rougir cette page
 tant qu'elle ne le dit pas. Un cas est de la plateforme de test quand sa méthode, ou sa classe, en
 porte le tag : ni le nom de sa classe ni le tag de sa seule classe ne suffisent à le dire.
@@ -237,6 +237,10 @@ clips se comparent.
     reproduite par un banc (`GesteVisibleBasDePageTest`), et son remède : un clip dont le verdict est
     le dernier élément de sa page finit par `GesteVisible.allerAuBasDeLaPage` (#5870). Les quinze
     paires ci-dessus ne montrent plus ce mode.
+
+    Un verdict qui est ailleurs dans sa page se **pose** par `GesteVisible.poserDansLeCadre`, et
+    l'assertion de fin relit cette position : « dans le cadre » est vrai à plusieurs endroits de la
+    page, et un clip y a gagné une seconde fin que six tournages n'avaient pas montrée (#6069).
 
 !!! note "Une dernière image qui change tout"
 
@@ -354,30 +358,25 @@ deux lancements, le second complétant le fichier rendu par le premier.
 
 ### Les clips auxquels on refuse un plancher
 
-Un plancher mesure le bruit d'un clip qui **finit sur son verdict**. Certains clips ont deux fins :
-deux tournages du même commit y diffèrent de 3 à 26 %, parce que le clip s'arrête pendant un
-import, pendant un fondu, ou sur une page que rien n'a calée.
+Un plancher mesure le bruit d'un clip qui **finit sur son verdict**. Un clip peut avoir deux fins :
+deux tournages du même commit y diffèrent alors de 3 à 26 %, parce qu'il s'arrête pendant un import,
+pendant un fondu, ou sur une page que rien n'a posée. Lui écrire ce chiffre rendrait la comparaison
+aveugle, sur lui, à tout changement plus petit.
 
-Ce tableau est celui de la table `SANS_PLANCHER` de l'outil, et un test le confronte à elle dans
-les deux sens. Sa colonne du milieu est une mesure datée, prise le 6 octobre 2026 sur six paires.
+Un tel clip est nommé dans l'outil (`SANS_PLANCHER`), avec son issue. La mesure affiche son écart
+sans l'écrire, et la comparaison l'annonce « sans plancher », suivi du numéro. Sa ligne s'en retire
+avec l'issue qui la porte. Un test confronte cette section à la table dans les deux sens : un clip
+qui y entre doit paraître ici dans un tableau, son nom entre accents graves et son issue en dernière
+colonne.
 
-| clip | ses paires allaient jusqu'à, le 6 octobre 2026 | issue |
-|---|---|---|
-| `ScenarioRejetsEtArchiveTest.la_decompression_se_voit_avant_l_inspection` | 20,9 % | #6069 |
+**La table est vide.** Les sept clips que
+l'[ADR 5911](../decisions/5911-un-clip-a-deux-fins-n-a-pas-de-plancher.md) y avait rangés en sont
+sortis, une fois leur verdict tenu à l'image (#5952, #5893, #5911).
 
-Lui écrire ce chiffre rendrait la comparaison aveugle, sur ce clip, à tout changement plus petit.
-
-**Ce clip y est revenu.** Il en était sorti avec un plancher de 0,274 %, pris sur six tournages qui
-finissaient tous de la même façon ; les six suivants ont montré sa seconde fin deux fois. Un mode
-qui sort deux fois sur douze ne se voit pas à coup sûr sur six tournages, et un plancher mesuré sans
-lui est faux sans que rien ne le dise.
-
-Les sept clips que l'[ADR 5911](../decisions/5911-un-clip-a-deux-fins-n-a-pas-de-plancher.md) y
-avait rangés en sont sortis, une fois leur verdict tenu à l'image (#5952, #5893, #5911).
-
-Un clip sans plancher est nommé dans l'outil, avec son issue. La mesure affiche son écart sans
-l'écrire, et la comparaison l'annonce « sans plancher », suivi du numéro. Sa ligne s'en retire avec
-l'issue qui la porte.
+**L'un d'eux y est revenu, puis en est ressorti** (#6069). Son plancher avait été pris sur six
+tournages qui finissaient tous de la même façon ; les six suivants ont montré sa seconde fin deux
+fois. Un mode qui sort deux fois sur douze ne se voit pas à coup sûr sur six tournages, et un
+plancher mesuré sans lui est faux sans que rien ne le dise. Sa seconde sortie s'est jugée sur douze.
 
 Le critère n'est pas un seuil : c'est la **dernière image**, regardée. Un clip y entre quand deux
 tournages du même commit ne montrent pas le même écran, pas quand son chiffre est haut.
