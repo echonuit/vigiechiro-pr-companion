@@ -166,6 +166,33 @@ Le mode d'emploi et les pièges du banc vivent dans
 vidéo parfaitement valide : ce qui fait foi reste l'assertion pour un cas asserté, et le **regard
 d'un humain** pour un cas perceptif.
 
+### Un cas qui passe par une modale se filme avec ses deux écrans (#4188)
+
+Une modale montée seule donne un clip où elle flotte sur du noir : on n'y voit ni le geste qui l'a
+ouverte, ni ce qu'elle a changé. L'[ADR 4188](../decisions/4188-une-modale-se-filme-avec-son-ecran.md)
+pose donc qu'un cas de recette qui passe par une modale se filme en trois temps :
+
+1. l'**écran de départ**, où le geste qui ouvre la modale est fait : un clic sur son bouton, pas un
+   appel de navigation ;
+2. la **modale**, remplie par des gestes ;
+3. l'**écran d'arrivée**, une fois la modale refermée, tenu assez longtemps pour qu'on voie ce qui a
+   changé.
+
+Le cas appartient au scénario qui montre le geste. La classe qui monte la modale seule garde ses
+assertions, qui éprouvent son câblage, et perd son cas : `ClipDeModaleTest` refuse qu'une classe de
+test cite un `@CasDeRecette` et charge elle-même un FXML dont le nom contient `Modale`. Il saute une
+classe qui porte `@FixtureDeRecette`. Il ne voit ni que l'ouverture est un clic, ni que le scénario
+s'arrête assez longtemps sur l'écran d'arrivée : cela se juge en regardant le clip.
+
+La règle vaut pour les modales d'une feature, celles qu'un `*Modale*.fxml` décrit. Leur navigation
+les ouvre en `show()`, si bien qu'elles se pilotent en headless comme n'importe quelle fenêtre. Les
+dialogues du socle, une alerte ou une confirmation par exemple, s'ouvrent en `showAndWait()`, qui
+fige TestFX : un test les remplace par un double, la règle ne les couvre pas et le garde ne les
+regarde pas.
+
+`ScenarioModaleCarreTest` sert de modèle : il part de « Mes sites », ouvre la déclaration par son
+bouton et laisse la fenêtre derrière la modale.
+
 ## La fiche d'évaluation : six axes
 
 Chaque écran est noté sur **six axes**, verdict trivalué (**OK / remarque / bloquant**). Les axes **P**
