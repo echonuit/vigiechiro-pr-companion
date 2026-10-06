@@ -26,6 +26,7 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.lot.model.ArchiveDepot;
 import fr.univ_amu.iut.lot.model.BilanDepot;
 import fr.univ_amu.iut.lot.model.CauseRefus;
 import fr.univ_amu.iut.lot.model.CompacteurDepot;
@@ -55,10 +56,14 @@ import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.IntStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -331,12 +336,114 @@ class RegenerationPendantUnDepotTest {
                 .hasSize(2);
     }
 
+    /// Les noms des fichiers que les archives contiennent, lus dans les ZIP et non dans leur compte.
+    private static List<String> contenu(List<ArchiveDepot> archives) throws Exception {
+        List<String> noms = new ArrayList<>();
+        for (ArchiveDepot archive : archives) {
+            try (ZipFile zip = new ZipFile(archive.chemin().toFile())) {
+                zip.stream().map(ZipEntry::getName).forEach(noms::add);
+            }
+        }
+        return noms.stream().sorted().toList();
+    }
+
+    private static String sequence(int index) {
+        return PREFIXE.nommerSequence(NOM_ORIGINAL, index);
+    }
+
+    /// Le stockage accepte les `acceptees` premières séquences et refuse les autres pour leur contenu.
+    private void refuserLesSequencesAPartirDe(int acceptees) {
+        List<String> enLigne =
+                IntStream.range(0, acceptees).mapToObj(i -> sequence(i)).toList();
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
+                .thenAnswer(appel -> {
+                    Path fichier = appel.getArgument(1);
+                    return enLigne.contains(fichier.getFileName().toString())
+                            ? ReponseApi.succes("")
+                            : ReponseApi.refuse(422, "contenu refusé");
+                });
+    }
+
+    /// Le repli manuel faisait générer des archives de toute la nuit. Le serveur ajoute chaque fichier
+    /// d'une archive sans chercher s'il est déjà là (#5970) : une séquence déjà en ligne y revenait en
+    /// double. La génération lit donc le plan de dépôt, et n'archive que ce qu'il ne dit pas déposé.
+    @Test
+    @DisplayName(
+            "#5975 : sur un dépôt entamé en WAV, les archives ne contiennent que les séquences qui ne sont pas en ligne")
+    void les_archives_d_un_depot_entame_en_wav_ne_rendent_que_ce_qui_manque() throws Exception {
+        Long id = passagePrepare(10);
+        mode.set(ModeDepot.SEQUENCES_WAV);
+        refuserLesSequencesAPartirDe(4);
+        BilanDepot depose = depot.deposer(id, service.sourceDepotParDefaut(id), () -> false, SuiviDepot.inerte());
+        assertThat(depose.deposees()).as("quatre séquences sont en ligne").isEqualTo(4);
+        assertThat(depose.echecs()).as("six sont refusées sans recours").hasSize(6);
+
+        List<ArchiveDepot> archives = service.genererArchivesDepot(id);
+
+        assertThat(contenu(archives))
+                .as("les six séquences refusées, et aucune des quatre déjà en ligne")
+                .containsExactlyElementsOf(IntStream.range(4, 10)
+                        .mapToObj(i -> sequence(i))
+                        .sorted()
+                        .toList());
+    }
+
+    @Test
+    @DisplayName("#5975 : témoin, une nuit jamais déposée se génère en entier")
+    void une_nuit_jamais_deposee_se_genere_en_entier() throws Exception {
+        Long id = passagePrepare(10);
+
+        assertThat(contenu(service.genererArchivesDepot(id)))
+                .as("sans plan de dépôt, rien n'est en ligne : toute la nuit part")
+                .hasSize(10);
+    }
+
+    @Test
+    @DisplayName("#5975 : témoin, un dépôt entamé en archives se régénère en entier")
+    void un_depot_entame_en_archives_se_regenere_en_entier() throws Exception {
+        Long id = passagePrepare(10);
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
+                .thenAnswer(appel -> {
+                    Path archive = appel.getArgument(1);
+                    return archive.getFileName().toString().endsWith("-1.zip")
+                            ? ReponseApi.succes("")
+                            : ReponseApi.refuse(422, "contenu refusé");
+                });
+        BilanDepot depose = depot.deposer(id, service.sourceDepotParDefaut(id), () -> false, SuiviDepot.inerte());
+        assertThat(depose.deposees()).as("une archive est en ligne").isEqualTo(1);
+
+        assertThat(contenu(service.genererArchivesDepot(id)))
+                .as("le plan ne dit pas quelles séquences une archive déposée contient : la nuit entière se régénère")
+                .hasSize(10);
+    }
+
+    @Test
+    @DisplayName(
+            "#5975 : quand toutes les séquences sont en ligne, la génération refuse au lieu d'écrire une archive vide")
+    void tout_est_en_ligne_la_generation_refuse() throws Exception {
+        Long id = passagePrepare(3);
+        mode.set(ModeDepot.SEQUENCES_WAV);
+        refuserLesSequencesAPartirDe(3);
+        BilanDepot depose = depot.deposer(id, service.sourceDepotParDefaut(id), () -> false, SuiviDepot.inerte());
+        assertThat(depose.deposees()).isEqualTo(3);
+
+        assertThatThrownBy(() -> service.genererArchivesDepot(id))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("déjà sur Vigie-Chiro")
+                .hasMessageContaining("à la main");
+    }
+
     private StatutWorkflow statut(Long id) {
         return passageDao.findById(id).orElseThrow().statutWorkflow();
     }
 
     /// Un passage « Prêt à déposer », avec deux séquences réelles sur le disque.
     private Long passagePrepare() throws Exception {
+        return passagePrepare(2);
+    }
+
+    /// Le même, avec `nombre` séquences : assez pour qu'une partie soit en ligne et une autre non.
+    private Long passagePrepare(int nombre) throws Exception {
         Passage passage = JeuDeDonneesPassage.dans(source)
                 .utilisateur("u-1")
                 .carre("040962")
@@ -358,7 +465,7 @@ class RegenerationPendantUnDepotTest {
                 .id();
         Path transformes = Files.createDirectories(racine.resolve("transformes"));
         SequenceDao sequences = new SequenceDao(source);
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < nombre; i++) {
             String nom = PREFIXE.nommerSequence(NOM_ORIGINAL, i);
             sequences.insert(
                     new SequenceDEcoute(null, nom, idOriginal, i, i * 5.0, 5.0, "transformes/" + nom, true, idSession));

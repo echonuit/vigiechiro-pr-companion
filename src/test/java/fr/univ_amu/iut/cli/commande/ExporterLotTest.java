@@ -8,6 +8,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.lot.model.ArchiveDepot;
 import fr.univ_amu.iut.lot.model.EtatLot;
@@ -94,5 +95,21 @@ class ExporterLotTest {
         assertThat(sortie.toString())
                 .contains("Dépôt prêt pour le passage #42.")
                 .contains("Dossier   : /ws/s");
+    }
+
+    /// La commande et l'écran passent par la même génération : ce que le service refuse, la commande
+    /// ne le maquille pas (#5975). Quand toutes les séquences sont déjà en ligne, il n'y a rien à
+    /// déposer à la main, et aucune archive n'est annoncée.
+    @Test
+    @DisplayName("#5975 : quand le service refuse parce que tout est en ligne, la commande n'annonce aucune archive")
+    void tout_est_en_ligne_la_commande_n_annonce_aucune_archive() {
+        passageAuStatut(StatutWorkflow.DEPOT_EN_COURS);
+        when(service.genererArchivesDepot(PASSAGE))
+                .thenThrow(new RegleMetierException("Toutes les séquences de cette nuit sont déjà sur Vigie-Chiro :"
+                        + " il ne reste rien à déposer à la main."));
+
+        assertThat(executer()).as("un refus n'est pas un succès").isNotZero();
+
+        assertThat(sortie.toString()).doesNotContain("Archives de dépôt");
     }
 }

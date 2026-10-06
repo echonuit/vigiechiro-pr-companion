@@ -175,7 +175,7 @@ reconnexion ne lèveront, c'est-à-dire un refus du stockage ou un contenu refus
 **« Repli : déposer à la main »** apparaît **sous** l'étape de téléversement.
 
 Elle dit combien de séquences ont été refusées, et offre « **Générer les archives de dépôt** » : les
-archives ZIP de la nuit sont écrites dans le sous-dossier `depot/`. Le chemin de ce dossier et
+archives ZIP des séquences qui ne sont pas en ligne sont écrites dans le sous-dossier `depot/`. Le chemin de ce dossier et
 « Ouvrir le dossier (dépôt manuel) » reviennent avec elle, dans l'étape de téléversement. Déposez ces
 archives à la main sur le portail, puis cliquez « **Marquer le passage déposé** », dans la même carte :
 le bouton s'ouvre une fois les archives générées. Il reste alors à « Lancer la participation », comme
@@ -184,7 +184,8 @@ après tout dépôt.
 Le fil d'étapes ne change pas : il compte toujours trois étapes. Le repli n'est pas une étape de plus,
 c'est l'issue de celle qui vient d'être refusée.
 
-Les archives contiennent **toute la nuit**, séquences déjà en ligne comprises.
+Les archives ne contiennent que les séquences que Vigie-Chiro **n'a pas** : celles qui sont déjà en ligne
+n'y sont pas remises, parce que la plateforme les garderait en double.
 
 Un refus de **droits** n'offre pas le repli, puisqu'il suffit de vous reconnecter. Un échec que
 « Reprendre le dépôt » peut rattraper ne l'offre pas non plus.

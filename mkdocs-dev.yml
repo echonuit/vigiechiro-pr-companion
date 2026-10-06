@@ -444,6 +444,7 @@ nav:
     - 5941 · Le crochet de commit relit la structure des pages: decisions/5941-le-crochet-relit-la-structure-des-pages-en-une-extraction-avec-le-code.md
     - 5940 · La partition du graphe se garde: decisions/5940-la-partition-du-graphe-se-garde-et-ne-se-refait-que-sur-demande.md
     - 5862 · La vue d'un passage vérifie le traitement, dans les mots de l'écran de lot: decisions/5862-la-vue-d-un-passage-verifie-le-traitement-dans-les-mots-de-l-ecran-de-lot.md
+    - 5975 · Les archives du repli manuel ne rendent au serveur que ce qu'il n'a pas: decisions/5975-les-archives-du-repli-ne-rendent-au-serveur-que-ce-qu-il-n-a-pas.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Retour de terrain de la 2.189.0: retours/2189-ce-que-ton-retour-a-produit.md

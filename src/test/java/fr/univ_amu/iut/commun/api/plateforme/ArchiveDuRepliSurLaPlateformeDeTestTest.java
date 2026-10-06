@@ -31,22 +31,25 @@ import org.junit.jupiter.api.io.TempDir;
 /// Ce que le serveur fait d'une archive du repli manuel dont une partie des sons est déjà en ligne
 /// (#5970, cas de recette `S4-105`).
 ///
-/// Le repli manuel (ADR 5867) fait générer des archives de **toute** la nuit, séquences déjà en ligne
-/// comprises. L'ADR tenait pour une hypothèse ce que le portail en fait. Ce banc l'observe sur le code
-/// du serveur à la révision épinglée : il dépose par le client de l'application, puis fait jouer au
-/// serveur l'extraction que son worker lance au traitement d'une participation.
+/// Le repli manuel (ADR 5867) faisait générer des archives de **toute** la nuit, séquences déjà en
+/// ligne comprises, et l'ADR tenait pour une hypothèse ce que le portail en fait. Ce banc l'observe sur
+/// le code du serveur à la révision épinglée : il dépose par le client de l'application, puis fait
+/// jouer au serveur l'extraction que son worker lance au traitement d'une participation.
 ///
 /// Ce qu'il établit : le serveur ajoute chaque fichier de l'archive **sans chercher** s'il est déjà là.
 /// Un son déjà en ligne figure donc deux fois dans les fichiers de la participation, alors que
 /// l'analyse n'en tire qu'une donnée. Le jour où le serveur dédoublonnera, ce banc rougira, et c'est
 /// le signal attendu : le repli pourra alors se relire.
 ///
+/// C'est pourquoi le repli n'archive plus que ce qui n'est pas en ligne (#5975) : le troisième cas
+/// tient le remède sur le même serveur, une archive des seuls sons absents ne laissant aucun doublon.
+///
 /// Ce qu'il ne joue pas : le dépôt à la main dans le navigateur du portail, et l'analyse Tadarida.
 @Tag("plateforme-de-test")
 @ExtendWith(PlateformeDeTest.class)
 class ArchiveDuRepliSurLaPlateformeDeTestTest {
 
-    /// Le préfixe que le serveur exige d'un son de Point Fixe, puis de quoi distinguer les deux cas : la
+    /// Le préfixe que le serveur exige d'un son de Point Fixe, puis de quoi distinguer les trois cas : la
     /// participation d'essai sert à d'autres bancs, et chaque cas ne compte que ses propres sons.
     private static final String NUIT = "Car130711-2026-Pass1-Z1-";
 
@@ -84,8 +87,8 @@ class ArchiveDuRepliSurLaPlateformeDeTestTest {
                 .isInstanceOf(ReponseApi.Succes.class);
     }
 
-    /// L'archive du repli : **tous** les sons de la nuit, déposée comme une archive de dépôt.
-    private Path deposerLArchiveDeLaNuit(String titreDeLArchive, List<String> sons, Path dossier) throws IOException {
+    /// Une archive des `sons` donnés, déposée comme une archive de dépôt : toute la nuit, ou ce qui manque.
+    private Path deposerUneArchive(String titreDeLArchive, List<String> sons, Path dossier) throws IOException {
         Path archive = dossier.resolve(titreDeLArchive);
         try (OutputStream flux = Files.newOutputStream(archive);
                 ZipOutputStream zip = new ZipOutputStream(flux)) {
@@ -123,7 +126,7 @@ class ArchiveDuRepliSurLaPlateformeDeTestTest {
         List<String> sons = titres(prefixe);
         String titreDeLArchive = prefixe + "-1.zip";
 
-        Path archive = deposerLArchiveDeLaNuit(titreDeLArchive, sons, dossier);
+        Path archive = deposerUneArchive(titreDeLArchive, sons, dossier);
         JsonObject bilan =
                 WorkerDeLaPlateformeDeTest.jouerLExtraction(participation, Map.of(titreDeLArchive, archive), prefixe);
 
@@ -146,8 +149,8 @@ class ArchiveDuRepliSurLaPlateformeDeTestTest {
 
         // Ce que le dépôt en séquences WAV a laissé en ligne avant d'être refusé pour le reste.
         dejaEnLigne.forEach(titre -> deposer(titre, son(titre), "audio/wav"));
-        // Le repli : l'archive de TOUTE la nuit, déposée à la main.
-        Path archive = deposerLArchiveDeLaNuit(titreDeLArchive, sons, dossier);
+        // Le repli d'avant #5975 : l'archive de TOUTE la nuit, déposée à la main.
+        Path archive = deposerUneArchive(titreDeLArchive, sons, dossier);
         JsonObject bilan =
                 WorkerDeLaPlateformeDeTest.jouerLExtraction(participation, Map.of(titreDeLArchive, archive), prefixe);
 
@@ -168,5 +171,29 @@ class ArchiveDuRepliSurLaPlateformeDeTestTest {
                 .containsEntry(sons.get(1), 2L)
                 .containsEntry(sons.get(2), 1L)
                 .containsEntry(sons.get(3), 1L);
+    }
+
+    @Test
+    @DisplayName("#5975 : le remède, une archive des seuls sons absents ne laisse aucun son en double")
+    void l_archive_des_seuls_sons_absents_ne_laisse_aucun_doublon(@TempDir Path dossier) throws IOException {
+        String prefixe = NUIT + "remede5975";
+        List<String> sons = titres(prefixe);
+        List<String> dejaEnLigne = sons.subList(0, 2);
+        List<String> absents = sons.subList(2, SONS_DE_LA_NUIT);
+        String titreDeLArchive = prefixe + "-1.zip";
+
+        dejaEnLigne.forEach(titre -> deposer(titre, son(titre), "audio/wav"));
+        // Ce que la génération produit depuis #5975 : seulement ce que le plan ne dit pas déposé.
+        Path archive = deposerUneArchive(titreDeLArchive, absents, dossier);
+        JsonObject bilan =
+                WorkerDeLaPlateformeDeTest.jouerLExtraction(participation, Map.of(titreDeLArchive, archive), prefixe);
+
+        assertThat(bilan.get("wav_apres").getAsInt())
+                .as("deux sons en ligne, deux rendus par l'archive : quatre fichiers pour quatre sons")
+                .isEqualTo(SONS_DE_LA_NUIT);
+        assertThat(enDouble(bilan)).isEmpty();
+        assertThat(bilan.get("donnees").getAsInt()).isEqualTo(SONS_DE_LA_NUIT);
+        assertThat(sonsRelusParLApplication(prefixe)).hasSize(SONS_DE_LA_NUIT).containsOnlyKeys(sons);
+        assertThat(sonsRelusParLApplication(prefixe).values()).containsOnly(1L);
     }
 }

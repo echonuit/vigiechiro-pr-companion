@@ -20,6 +20,7 @@ enforced_by:
 verification_note: "la première classe tient la règle cause par cause sur le plan enregistré dans une vraie base ; la deuxième, le repli offert ou non selon la forme, la connexion et le statut ; la troisième fait refuser un téléversement à l écran, trouve la carte sous celle du téléversement et clique son dernier geste ; la quatrième, le refus définitif gardé au rechargement ; les trois dernières, la sortie des deux commandes et le verdict de récupérabilité. Aucune ne dit ce que le serveur fait d une archive en partie déjà en ligne : c est observé à part, par ArchiveDuRepliSurLaPlateformeDeTestTest (#5970), et dit plus bas"
 relations:
   complete: ["5677-le-depot-part-en-wav-et-un-depot-entame-garde-son-mode", "5824-l-ecran-et-la-commande-n-offrent-et-ne-nomment-que-ce-qui-sert"]
+  amendee_par: ["5975-les-archives-du-repli-ne-rendent-au-serveur-que-ce-qu-il-n-a-pas"]
 verified:
   - by: machine:ci
     at: 2026-10-05
@@ -29,6 +30,11 @@ generated:
 ---
 
 # Le repli manuel s'offre après un refus sans recours, et n'est pas une étape
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-05** : cette décision est **amendée** par
+    [5975](5975-les-archives-du-repli-ne-rendent-au-serveur-que-ce-qu-il-n-a-pas.md). Les archives du repli ne contiennent plus toute la nuit : seulement les séquences
+    qui ne sont pas en ligne. Le reste fait foi.
 
 ## Contexte
 
@@ -104,10 +110,9 @@ le compte vit sur le modèle de vue du dépôt, dont c'est l'état.
 
 ## Conséquences
 
-Les archives du repli contiennent **toute la nuit**, séquences déjà en ligne comprises : le générateur n'est
-pas touché. Le serveur les ajoute sans chercher si elles y sont déjà (#5970) : une séquence déjà en ligne
-figure **deux fois** dans les fichiers de la participation, et **une fois** dans ses observations.
-`ArchiveDuRepliSurLaPlateformeDeTestTest` le tient ; ce que le repli doit contenir reste à décider.
+Les archives du repli contenaient **toute la nuit**, séquences déjà en ligne comprises. Le serveur les
+ajoute sans chercher si elles y sont déjà (#5970) : une séquence déjà en ligne figurait deux fois dans les
+fichiers de la participation. L'ADR [5975](5975-les-archives-du-repli-ne-rendent-au-serveur-que-ce-qu-il-n-a-pas.md) n'y met plus que ce qui manque.
 
 Une nuit finie par le repli est annoncée perdue par le bilan de récupérabilité si son disque ne suffit pas,
 avec le compte de ce qui manque.
