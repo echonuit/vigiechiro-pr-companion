@@ -1,8 +1,12 @@
 package fr.univ_amu.iut.commun.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.Workspace;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -11,6 +15,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -26,6 +31,14 @@ import org.junit.jupiter.api.io.TempDir;
 /// Ces tests transforment cette collision en **échec de build**, au lieu d'une base incomplète chez
 /// l'utilisateur.
 class MigrationSchemaTest {
+
+    // Le dossier des SOURCES, et non le classpath : target/classes garde les fichiers d'un bâti
+    // précédent, si bien qu'un fichier retiré du dossier y survivrait et que le garde tairait son
+    // retrait. Lire les sources en relatif est l'idiome du dépôt (voir ChargementFxmlTest).
+    private static final Path DOSSIER_DES_MIGRATIONS = Path.of("src", "main", "resources", "db", "migration");
+
+    // Le nom de l'intrus du témoin : assez haut pour ne jamais heurter une vraie migration.
+    private static final String INTRUS = "V99__temoin.sql";
 
     @TempDir
     Path racine;
@@ -52,6 +65,38 @@ class MigrationSchemaTest {
                     .as("migration listée mais absente des ressources : %s", fichier)
                     .isNotNull();
         }
+    }
+
+    @Test
+    @DisplayName("le dossier db/migration et la liste MIGRATIONS portent les mêmes fichiers (#4645)")
+    void le_dossier_et_la_liste_coincident() throws IOException {
+        assertThat(DOSSIER_DES_MIGRATIONS)
+                .as("ce cas lit les sources par un chemin relatif : joué hors de la racine du dépôt, il ne"
+                        + " dirait rien du catalogue, il dirait son répertoire courant")
+                .isDirectory();
+
+        exigerQueLeDossierSoitLaListe(DOSSIER_DES_MIGRATIONS);
+    }
+
+    @Test
+    @DisplayName("un fichier posé dans le dossier sans sa ligne dans MIGRATIONS fait rougir, en le nommant (#4645)")
+    void un_fichier_hors_liste_fait_rougir() throws IOException {
+        Path dossier = Files.createDirectory(racine.resolve("migration"));
+        for (String fichier : MigrationSchema.MIGRATIONS) {
+            Files.createFile(dossier.resolve(fichier));
+        }
+        assertThatCode(() -> exigerQueLeDossierSoitLaListe(dossier))
+                .as("contrôle positif : ce dossier passe AVANT qu'on y pose l'intrus. Sans lui, le refus"
+                        + " ci-dessous pourrait venir du dossier jetable et non du fichier en trop")
+                .doesNotThrowAnyException();
+
+        Files.createFile(dossier.resolve(INTRUS));
+
+        assertThatThrownBy(() -> exigerQueLeDossierSoitLaListe(dossier))
+                .as("le garde doit refuser, et son message doit NOMMER le fichier : un refus qui dit"
+                        + " seulement « les deux ne coïncident pas » laisse chercher lequel des 45")
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining(INTRUS);
     }
 
     @Test
@@ -129,6 +174,20 @@ class MigrationSchemaTest {
             assertThat(rs.next()).isTrue();
             assertThat(rs.getString(1)).isEqualTo("Aix-en-Provence");
         }
+    }
+
+    private static void exigerQueLeDossierSoitLaListe(Path dossier) throws IOException {
+        List<String> presents;
+        try (Stream<Path> fichiers = Files.list(dossier)) {
+            presents = fichiers.map(f -> f.getFileName().toString()).sorted().toList();
+        }
+
+        assertThat(presents)
+                .as("le dossier db/migration et MigrationSchema.MIGRATIONS doivent porter les mêmes"
+                        + " fichiers. Un fichier présent ici et absent de la liste part dans le jar et ne"
+                        + " s'exécute JAMAIS : ajoutez sa ligne à MIGRATIONS, l'ordre fait foi. Une entrée"
+                        + " de liste sans fichier se dit ici aussi.")
+                .containsExactlyInAnyOrder(MigrationSchema.MIGRATIONS);
     }
 
     private static List<Integer> versionsEnBase(SourceDeDonnees source) throws SQLException {

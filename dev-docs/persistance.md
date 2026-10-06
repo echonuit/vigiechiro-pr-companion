@@ -47,9 +47,10 @@ en fait foi : il en contient aujourd'hui bien plus que trois (<!--inv:migrations
        migration présente** dans le dossier - **surtout pas** `V04`, le compteur est déjà bien plus
        haut.
     2. **Ajoutez son nom au tableau `MIGRATIONS`** de `MigrationSchema` - **l'ordre fait foi**.
-       `MigrationSchemaTest` refuse un nom listé sans fichier, un numéro en double et un ordre qui ne
-       croît pas. L'oubli inverse ne fait rien rougir : un fichier posé sans sa ligne part dans le jar
-       et ne s'exécute jamais (#4645).
+       `MigrationSchemaTest` refuse un nom listé sans fichier, un fichier posé sans sa ligne, un
+       numéro en double et un ordre qui ne croît pas. L'oubli dans un sens comme dans l'autre fait
+       donc rougir, depuis #4645 : avant lui, un fichier posé sans sa ligne partait dans le jar et ne
+       s'exécutait jamais.
     3. **N'y mettez ni `PRAGMA`, ni `VACUUM`, ni `BEGIN`/`COMMIT` explicite** : le script s'exécute
        dans une transaction (voir ci-dessous), et ces trois-là n'y survivent pas. Un `PRAGMA` y est
        silencieusement sans effet, ce qui est le pire des trois. Une migration qui en aurait
