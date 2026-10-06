@@ -1636,7 +1636,7 @@ comme « tag posé, pas de publication ». Il reste trois états, et chacun a sa
 |---|---|---|---|---|
 | avant le tag | le commit `chore(release)` et l'entrée de `CHANGELOG.md`, sur `main` | le tag, la note, la publication, les installeurs | **poser le tag à la main** sur le commit de version, puis relancer l'atelier | **non, déduite** : aucune panne connue ne s'est arrêtée là |
 | après le tag, avant la publication | commit, journal, **tag** ; parfois la note | la publication, les installeurs | **créer le brouillon à la main** sur le tag, avec la section du `CHANGELOG.md` ; pousser la note si elle manque ; relancer l'atelier | **oui**, sur `v2.197.0` le 2026-10-06 : publication complète en dix-sept minutes, installeurs construits par la chaîne |
-| après la publication | commit, journal, tag, note, **brouillon** | les installeurs attachés, et le brouillon reste brouillon | **relancer l'atelier**, qui téléverse sur la publication existante | **non** : #4083 a au contraire **supprimé** le brouillon, la relance butant alors sur la tête de `main` |
+| après la publication | commit, journal, tag, note, **brouillon** | les installeurs attachés, et le brouillon reste brouillon | **relancer l'atelier**, qui téléverse sur la publication existante | **non** : #4083 a au contraire **supprimé** le brouillon, la relance butant alors sur la tête de `main` - obstacle **levé depuis** par #6023 |
 
 !!! warning "Une seule de ces trois reprises a été jouée"
     Celle du deuxième état, et elle est vérifiable - exécution 37454826583, `completed/success`, 202
@@ -1644,10 +1644,10 @@ comme « tag posé, pas de publication ». Il reste trois états, et chacun a sa
     pas la même chose qu'un geste éprouvé.
 
     La troisième mérite une mise en garde particulière : #4083 l'a **écartée** pour la 2.186.0, et non
-    parce qu'elle était fausse en principe. La relance butait sur la résolution du tag, qui dépend de
-    la tête de `main` - `main` portait alors 46 commits de plus que le tag. C'est la fragilité décrite
-    plus bas, et c'est elle qui rendra cette reprise praticable une fois levée. Tant qu'elle tient,
-    « relancer l'atelier » n'est une reprise que si la tête de `main` est encore le commit taggué.
+    parce qu'elle était fausse en principe. La relance butait sur la résolution du tag, qui dépendait
+    alors de la tête de `main` - `main` portait 46 commits de plus que le tag. **Cet obstacle est levé
+    depuis #6023**, et cette reprise est donc praticable aujourd'hui ; elle reste néanmoins **non
+    jouée**, et ce n'est pas la même chose qu'éprouvée.
 
 **Le premier état est le plus dangereux, et c'est le moins visible.** Sans tag, le train suivant
 recalcule la **même** version - il compte depuis le dernier tag, qui est celui d'avant - et
@@ -1673,16 +1673,24 @@ Essayées ou écartées sur les cas réels, pour éviter de les réessayer :
 - **Supprimer le tag et recommencer.** Écarté par #4083 : le `CHANGELOG.md` porte déjà l'entrée, et
   semantic-release recréerait la même version avec une seconde entrée.
 
-### Ce que la reprise suppose encore, et qui est fragile
+### Ce dont la reprise ne dépend plus, et comment elle en a été affranchie
 
-L'étape « Récupérer le tag fraîchement créé » du job `release` résout le tag par
-`git describe --tags --exact-match HEAD`. **La reprise dépend donc de la tête de `main`** : elle
-n'aboutit que si cette tête est encore le commit taggué. Une fusion entre l'échec et la relance, et
-`installers` comme `publish` sont sautés une seconde fois, par leur garde `tag != ''`. Le 2026-10-06,
-`main` avait avancé six minutes après la relance - la reprise a tenu de peu.
+Jusqu'à #6023, l'étape qui résout le tag le cherchait par `git describe --tags --exact-match HEAD`.
+**La reprise dépendait donc de la tête de `main`** : elle n'aboutissait que si cette tête était encore
+le commit taggué. Une fusion entre l'échec et la relance, et `installers` comme `publish` étaient
+sautés une seconde fois. Le 2026-10-06, `main` avait avancé six minutes après la relance - la reprise
+a tenu de peu, et #4083 avait buté sur le même mur avec 46 commits d'écart.
 
-Tout l'aval, lui, est juste : il consomme `needs.release.outputs.tag`, et `installers` extrait déjà
-`ref: <tag>`. La fragilité est confinée à cette **unique résolution**.
+La résolution vit maintenant dans `.github/scripts/resout_le_tag_de_version.py`, et elle garde ce
+premier moyen pour le train normal. Un **repli** ne sert qu'à la reprise : est candidat un tag dont la
+**version** dépasse la plus haute version **publiée**, et plusieurs candidats font refuser plutôt que
+d'en choisir un. La borne est la version et non le graphe, pour la raison que l'encadré de la section
+suivante donne. Elle est sortie du YAML pour être éprouvable : du shell dans `release.yml` ne se joue
+qu'en publiant, et son banc porte sept cas.
+
+Tout l'aval était déjà juste : il consomme `needs.release.outputs.tag`, et `installers` extrait
+`ref: <tag>`. La fragilité était confinée à cette **unique résolution**, et c'est ce qui a rendu le
+remède petit.
 
 ### Trois occurrences, et un état qui persiste
 
