@@ -61,7 +61,9 @@ class PastillesDeLaSaisonTest {
                 new SaisonViewModel(service, "u-1"), mock(OuvrirPassage.class), mock(OuvrirSite.class)));
         Parent vue = chargeur.load();
         table = (TableView<?>) vue.lookup("#tableSaison");
-        FenetreAjustable.poser(fenetre, vue, 1400, 600);
+        // Habillée, comme dans le chrome qui l'empile : sans la feuille de base, la scène prend la
+        // police du système, et la largeur mesurée n'est plus celle de l'application.
+        FenetreAjustable.poserHabillee(fenetre, vue, 1400, 600);
         FenetreAjustable.afficher(fenetre);
     }
 

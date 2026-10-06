@@ -64,7 +64,7 @@ class PastillesDeLaFicheSiteTest {
         FXMLLoader chargeur = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         chargeur.setControllerFactory(DiagnosticGuice.pour(injecteur));
         Parent racine = chargeur.load();
-        FenetreAjustable.poser(fenetre, racine, 1100, 760);
+        FenetreAjustable.poserHabillee(fenetre, racine, 1100, 760);
         injecteur.getInstance(NavigationSites.class).ouvrirDetail(site);
         FenetreAjustable.afficher(fenetre);
     }
