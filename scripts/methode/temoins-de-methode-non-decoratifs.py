@@ -29,6 +29,7 @@ Usage :
 
 import ast
 import contextlib
+import io
 import pathlib
 import re
 import shutil
@@ -38,7 +39,7 @@ import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import cas_d_auto_test, sort_si_contrat_demande
+from _commun import MARQUE_CAUSE, MARQUE_GESTE, cas_d_auto_test, sort_si_contrat_demande
 from _commun.mutation import neutralisation
 
 ATELIER = RACINE / ".github" / "workflows" / "lint.yml"
@@ -358,6 +359,75 @@ def code_de_sortie(decoratifs: list[str], illisibles: list[str]) -> int:
     return 1 if (decoratifs or illisibles) else 0
 
 
+# ⟨les gardes qui PLANTENT sous mutation, nommes un par un (#5497)⟩ Un plantage ne fait pas refuser
+# (ADR 5257), et c est juste. Mais rien ne BORNAIT ces gardes : ils s imprimaient sous un banc vert,
+# et leur compte est passe de 6 a 11 en un mois sans qu une seule demande rougisse.
+#
+# **Une liste NOMMEE et non un cliquet**, comme le banc des ADR depuis #5743 et pour la meme raison :
+# ce banc se declare `invariant`, et l ADR 5743 borne le residu d un invariant par une liste verifiee
+# DANS LES DEUX SENS. Un compte laisserait echanger un plantage repare contre un plantage neuf.
+#
+# Les cles ont la FORME du corpus, un chemin relatif a `scripts/`. La valeur de chaque entree est sa
+# classification, lue dans la trace du garde mute le 2026-10-06 et non recopiee d un motif : six
+# recoivent une liste la ou ils attendaient un autre TYPE, quatre lisent le PREMIER element d une
+# liste que la neutralisation a videe. Aucun n est repare ici : borner n est pas vider (EPIC #5265).
+PLANTENT_SOUS_MUTATION: dict[str, str] = {
+    "methode/couverture-openspec.py": "type sous neutralisation : un chemin attendu, `/` sur une liste",
+    "methode/prepare-l-environnement.py": "type sous neutralisation : un entier attendu, `>` sur une liste",
+    "methode/releve-les-harnais-muets.py": "type sous neutralisation : un deballage de trois valeurs sur un vide",
+    "methode/releve-les-planchers.py": "type sous neutralisation : un dict attendu, une cle lue dans une liste",
+    "methode/verifie-adoption-openspec.py": "index sous neutralisation : `entrees(r)[0]` sur une liste videe",
+    "methode/verifie-commandes-prescrites.py": "index sous neutralisation : `suspects(muet)[0]` sur une liste videe",
+    "methode/verifie-normalisation-git.py": "type sous neutralisation : un deballage de deux valeurs sur un vide",
+    "methode/verifie-sous-commandes-openspec.py": "index sous neutralisation : `fichiers(r)[0]` sur une liste videe",
+    "methode/verifie-specs-valides.py": "type sous neutralisation : un chemin attendu, une liste passee a `copytree`",
+    "methode/verifie-version-openspec.py": "index sous neutralisation : `competences(r)[0]` sur une liste videe",
+}
+
+CONDUITE_SUR_LA_TABLE = (
+    "Un garde qui plante : le reparer pour qu il ASSERTE au lieu de planter, ou le nommer dans "
+    "PLANTENT_SOUS_MUTATION avec sa raison. Une entree qui ne plante plus : la retirer."
+)
+
+
+def ecarts_de_la_table(non_concluants: list[str]) -> tuple[list[str], list[str]]:
+    """Les deux ecarts entre ce qui plante et ce que la table nomme : (inattendus, perimes).
+
+    Les deux sens valent toujours ici : ce banc mute son corpus ENTIER a chaque lancement. Il n a
+    donc pas la borne de portee que le banc des ADR pose sur le second sens.
+    """
+    plantent = {ligne.split(" : ", 1)[0] for ligne in non_concluants}
+    return (
+        sorted(plantent - set(PLANTENT_SOUS_MUTATION)),
+        sorted(set(PLANTENT_SOUS_MUTATION) - plantent),
+    )
+
+
+def conclut_sur_la_table(non_concluants: list[str]) -> None:
+    """Sort en 1 avec un CONSTAT si la table ne decrit plus ce qui plante, et rien sinon.
+
+    Un constat et non un refus : le banc a mute son corpus et compare, donc il a JUGE (ADR 5774). Il
+    sort en `1` SANS les marques de refus, que la porte lirait « ce garde n a pas pu juger ».
+    """
+    inattendus, perimes = ecarts_de_la_table(non_concluants)
+    if not (inattendus or perimes):
+        return
+    dits = []
+    if inattendus:
+        dits.append(
+            f"{len(inattendus)} garde(s) plantent sous mutation sans etre nommes : "
+            + ", ".join(inattendus)
+        )
+    if perimes:
+        dits.append(
+            f"{len(perimes)} entree(s) de PLANTENT_SOUS_MUTATION ne plantent plus : "
+            + ", ".join(perimes)
+        )
+    print("\n" + " ; ".join(dits), file=sys.stderr)
+    print(CONDUITE_SUR_LA_TABLE, file=sys.stderr)
+    raise SystemExit(1)
+
+
 def _auto_test() -> int:
     verifie, echecs = cas_d_auto_test()
 
@@ -584,6 +654,62 @@ def _auto_test() -> int:
     verifie("un garde decoratif refuse", code_de_sortie(["x"], []), 1)
     verifie("un garde SANS POINT D ENTREE refuse aussi", code_de_sortie([], ["y"]), 1)
     verifie("et les deux ensemble refusent", code_de_sortie(["x"], ["y"]), 1)
+
+    # ⟨#5497⟩ La table des non concluants, confrontee dans les deux sens. Les cas eprouvent la
+    # fonction et le geste sur des lignes FABRIQUEES : muter trente gardes pour savoir ce que rend
+    # une difference d ensembles ne prouverait rien de plus.
+    connus = [f"{nom} : peu importe" for nom in PLANTENT_SOUS_MUTATION]
+    verifie(
+        "les nommes qui plantent ne font aucun ecart",
+        lambda: ecarts_de_la_table(connus),
+        ([], []),
+    )
+    verifie(
+        "un garde de PLUS qui plante est un inattendu, et il se nomme",
+        lambda: ecarts_de_la_table([*connus, "methode/neuf.py : boum"]),
+        (["methode/neuf.py"], []),
+    )
+    # ⟨le sens que n aurait pas un cliquet⟩ Un compte reste VERT quand un plantage est repare.
+    verifie(
+        "une entree qui ne plante plus est perimee, et elle se nomme aussi",
+        lambda: ecarts_de_la_table(connus[1:]),
+        ([], ["methode/couverture-openspec.py"]),
+    )
+    # ⟨la table n est ni vide ni bavarde⟩ Vidée, chaque plantage serait un inattendu ; et une cle
+    # qui n aurait pas la forme du corpus ne rencontrerait jamais ce que `suspects()` rend.
+    verifie(
+        "chaque entree de la table est un garde du corpus, sous sa forme",
+        lambda: sorted(set(PLANTENT_SOUS_MUTATION) - set(corpus())),
+        [],
+    )
+
+    # ⟨le GESTE, et son CANAL⟩ Les cas ci-dessus eprouvent le calcul ; ceux-ci, qu on AGIT dessus.
+    def sortie_de(lignes: list[str]) -> tuple[object, str]:
+        tampon = io.StringIO()
+        with contextlib.redirect_stderr(tampon):
+            try:
+                conclut_sur_la_table(lignes)
+            except SystemExit as sortie:
+                return sortie.code, tampon.getvalue()
+        return "aucun constat", tampon.getvalue()
+
+    verifie(
+        "un plantage de plus rend un constat ROUGE, en 1 : ce banc a juge",
+        lambda: sortie_de([*connus, "methode/neuf.py : boum"])[0],
+        1,
+    )
+    verifie("une entree perimee rend un constat rouge aussi", lambda: sortie_de(connus[1:])[0], 1)
+    verifie("et les nommes ne rendent aucun constat", lambda: sortie_de(connus)[0], "aucun constat")
+    # La porte classe par les MARQUES : un constat qui les porterait serait lu « muet » (ADR 5774).
+    verifie(
+        "et le constat ne porte AUCUNE marque de refus",
+        lambda: [
+            m
+            for m in (MARQUE_CAUSE, MARQUE_GESTE)
+            if m in sortie_de([*connus, "methode/neuf.py : boum"])[1]
+        ],
+        [],
+    )
     return echecs()
 
 
@@ -643,4 +769,6 @@ if __name__ == "__main__":
             f"{len(non_concluants)} ne concluent pas, {len(illisibles)} sont illisibles : "
             f"soit {tenus + len(non_concluants) + len(illisibles)} sur {len(corpus())}."
         )
+    # Le compte sort AVANT la confrontation : un constat qui le precederait le ferait disparaitre.
+    conclut_sur_la_table(non_concluants)
     raise SystemExit(code_de_sortie(decoratifs, illisibles))

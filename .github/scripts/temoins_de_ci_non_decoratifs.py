@@ -34,8 +34,12 @@ demander (ADR 5102).
 
 ## Ce qui fait rougir ce garde
 
-UN SEUL cas : un garde dont l auto-test reste VERT sous mutation. Un non concluant ne fait pas
-rougir, il se compte et se nomme - sinon ce garde refuserait sur ce qu il n a pas su lire.
+Un garde dont l auto-test reste VERT sous mutation. Un non concluant ne fait pas rougir par
+lui-meme, il se compte et se nomme - sinon ce garde refuserait sur ce qu il n a pas su lire.
+
+Et, depuis #5497, un ECART entre ce qui plante et la table `PLANTENT_SOUS_MUTATION` : un garde qui
+plante sans y etre nomme, ou une entree qui ne plante plus. C est un constat sur la table, rendu en
+1 sans marque de refus (ADR 5743, ADR 5774).
 
 ## La population est DERIVEE, et de TOUS les ateliers
 
@@ -49,6 +53,8 @@ Usage : python3 .github/scripts/temoins_de_ci_non_decoratifs.py [--auto-test] [-
 from __future__ import annotations
 
 import ast
+import contextlib
+import io
 import pathlib
 import shutil
 import subprocess
@@ -60,7 +66,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 # que d en recopier une, comme `verifie_butoirs.py` du meme dossier.
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "scripts"))
 
-from _commun import cas_d_auto_test
+from _commun import MARQUE_CAUSE, MARQUE_GESTE, cas_d_auto_test
 from _commun.mutation import neutralisation
 from _forge import dispatche_l_option
 
@@ -70,6 +76,49 @@ DOSSIERS = (".github/scripts", ".github/assets")
 MOI = pathlib.Path(__file__).name
 
 TRACE = "Traceback (most recent call last)"
+
+# ⟨les gardes qui PLANTENT sous mutation, nommes un par un (#5497)⟩ Un plantage ne fait pas rougir
+# ce banc (ADR 5257), et c est juste. Mais rien ne BORNAIT ces gardes : ils s imprimaient sous
+# `verdict=ok`, et un garde neuf pouvait les rejoindre sans qu une seule demande rougisse.
+#
+# **Une liste NOMMEE et non un cliquet**, comme le banc des ADR depuis #5743 et pour la meme raison :
+# ce banc se declare `invariant`, et l ADR 5743 borne le residu d un invariant par une liste verifiee
+# DANS LES DEUX SENS. Un compte laisserait echanger un plantage repare contre un plantage neuf.
+#
+# Les cles sont des noms NUS, la forme que `juge` imprime. La valeur de chaque entree est sa
+# classification, lue dans la trace du garde mute le 2026-10-06 : huit recoivent une liste la ou ils
+# attendaient un autre TYPE, trois ouvrent une FIXTURE que la fonction neutralisee devait creer.
+# Aucun n est repare ici : borner n est pas vider (EPIC #5265).
+PLANTENT_SOUS_MUTATION: dict[str, str] = {
+    "cas_manquants_du_tournage.py": "type sous neutralisation : un deballage de deux valeurs sur un vide",
+    "clips_orphelins.py": "type sous neutralisation : un deballage de deux valeurs sur un vide",
+    "mesure_minutes_par_pr.py": "type sous neutralisation : un deballage de deux valeurs sur un vide",
+    "veille_contrat_api.py": "type sous neutralisation : une chaine attendue, `+` sur une liste",
+    "verifie_cloture_consignee.py": "type sous neutralisation : le deballage de la fabrique de forge, mutee",
+    "verifie_jeton_vivant.py": "type sous neutralisation : une liste employee comme cle de dictionnaire",
+    "verifie_specification_consignee.py": "type sous neutralisation : le deballage de la fabrique de forge, mutee",
+    "check_capture_mains.py": "fixture sous neutralisation : le fichier que la fonction mutee devait ecrire",
+    "compare_apercus.py": "fixture sous neutralisation : l index que la fonction mutee devait ecrire",
+    "compare_tournages.py": "fixture sous neutralisation : les planchers que la fonction mutee devait ecrire",
+    "filtrer_bruit_cartes.py": "type sous neutralisation : un deballage de deux valeurs sur un vide",
+}
+
+# ⟨deux entrees ne plantent que la ou leur auto-test JOUE⟩ Elles ouvrent leur auto-test par un
+# prealable d outil et sortent en 2 sans trace quand il manque : ce banc lit alors « tient ». Le
+# runner du job `temoins` n a ni ImageMagick ni ffmpeg, un poste de developpement les a souvent.
+# Mesure du 2026-10-06, meme commit : 9 non concluants sur le runner, 11 sur un poste outille, et 9
+# sur ce poste une fois les outils retires du PATH. Sans cette borne, la table rougirait d un cote
+# ou de l autre. Un garde qui a refuse de jouer n a pas ete visite, et l ADR 5743 ne juge le second
+# sens que sur ce qui l a ete.
+NE_JOUENT_QU_AVEC: dict[str, tuple[str, ...]] = {
+    "compare_apercus.py": ("convert",),
+    "compare_tournages.py": ("ffmpeg", "compare"),
+}
+
+CONDUITE_SUR_LA_TABLE = (
+    "Un garde qui plante : le reparer pour qu il ASSERTE au lieu de planter, ou le nommer dans "
+    "PLANTENT_SOUS_MUTATION avec sa raison. Une entree qui ne plante plus : la retirer."
+)
 
 # Ce qu on insere pour retirer sa detection a un garde, sans toucher a ce qui le decrit.
 #
@@ -211,7 +260,53 @@ def eprouve(garde: pathlib.Path) -> tuple[str, str]:
     return "tient", ""
 
 
+def ecarts_de_la_table(
+    plantent: list[str], entier: bool = True, present=shutil.which
+) -> tuple[list[str], list[str]]:
+    """Les deux ecarts entre ce qui plante et ce que la table nomme : (inattendus, perimes).
+
+    Le premier sens vaut toujours. Le second ne se juge que sur ce qui a ete VISITE : le corpus
+    entier, et, pour les entrees de `NE_JOUENT_QU_AVEC`, un hote qui porte leurs outils. `present`
+    s injecte pour qu un cas eprouve les deux hotes sans desinstaller quoi que ce soit.
+    """
+    inattendus = sorted(set(plantent) - set(PLANTENT_SOUS_MUTATION))
+    if not entier:
+        return inattendus, []
+    non_visites = {
+        nom
+        for nom, outils in NE_JOUENT_QU_AVEC.items()
+        if not all(present(outil) for outil in outils)
+    }
+    return inattendus, sorted(set(PLANTENT_SOUS_MUTATION) - set(plantent) - non_visites)
+
+
+def conclut_sur_la_table(plantent: list[str], entier: bool = True, present=shutil.which) -> int:
+    """Rend 1 avec un CONSTAT si la table ne decrit plus ce qui plante, et 0 sinon.
+
+    Un constat et non un refus : le banc a mute son corpus et compare, donc il a JUGE (ADR 5774). Il
+    rend `1` SANS les marques de refus, que la porte lirait « ce garde n a pas pu juger ».
+    """
+    inattendus, perimes = ecarts_de_la_table(plantent, entier, present)
+    if not (inattendus or perimes):
+        return 0
+    dits = []
+    if inattendus:
+        dits.append(
+            f"{len(inattendus)} garde(s) plantent sous mutation sans etre nommes : "
+            + ", ".join(inattendus)
+        )
+    if perimes:
+        dits.append(
+            f"{len(perimes)} entree(s) de PLANTENT_SOUS_MUTATION ne plantent plus : "
+            + ", ".join(perimes)
+        )
+    print("\n" + " ; ".join(dits), file=sys.stderr)
+    print(CONDUITE_SUR_LA_TABLE, file=sys.stderr)
+    return 1
+
+
 def juge(gardes: list[pathlib.Path] | None = None) -> int:
+    entier = gardes is None
     gardes = corpus() if gardes is None else gardes
     tient, non_concluants, decoratifs = 0, [], []
     for g in gardes:
@@ -240,7 +335,10 @@ def juge(gardes: list[pathlib.Path] | None = None) -> int:
     print(
         f"ADR 4490 | lus={len(gardes)} | suspects={len(decoratifs)} | cliquet=0 | verdict={verdict}"
     )
-    return 1 if decoratifs else 0
+    # La ligne de verdict sort AVANT la confrontation : la porte la lit, et un constat qui la
+    # precederait la ferait disparaitre de la sortie.
+    constat = conclut_sur_la_table([nom for nom, _ in non_concluants], entier)
+    return 1 if (decoratifs or constat) else 0
 
 
 GARDE_QUI_TIENT = '''#!/usr/bin/env python3
@@ -376,6 +474,82 @@ def _auto_test() -> int:
     verifie("tient", GARDE_QUI_TIENT, "un auto-test qui lit sa detection rougit")
     verifie("decoratif", GARDE_DECORATIF, "un auto-test qui ne la lit pas reste vert")
     verifie("non concluant", GARDE_QUI_PLANTE, "un depaquetage sur [] ne conclut pas")
+
+    # ⟨#5497⟩ La table des non concluants, confrontee dans les deux sens. Les cas eprouvent la
+    # fonction et le geste sur des noms FABRIQUES : muter quarante-huit gardes pour savoir ce que
+    # rend une difference d ensembles ne prouverait rien de plus.
+    connus = list(PLANTENT_SOUS_MUTATION)
+    outille = lambda _outil: "/usr/bin/present"
+    cas += 9
+    asserte(
+        "les nommes qui plantent ne font aucun ecart",
+        lambda: ecarts_de_la_table(connus, present=outille),
+        ([], []),
+    )
+    asserte(
+        "un garde de PLUS qui plante est un inattendu, et il se nomme",
+        lambda: ecarts_de_la_table([*connus, "neuf.py"], present=outille),
+        (["neuf.py"], []),
+    )
+    # ⟨le sens que n aurait pas un cliquet⟩ Un compte reste VERT quand un plantage est repare.
+    asserte(
+        "une entree qui ne plante plus est perimee, et elle se nomme aussi",
+        lambda: ecarts_de_la_table(connus[1:], present=outille),
+        ([], ["cas_manquants_du_tournage.py"]),
+    )
+    # ⟨LES DEUX HOTES⟩ Sans leurs outils, deux entrees refusent de jouer et ne plantent pas : le
+    # runner du job `temoins` est cet hote-la. Elles n y sont pas dites perimees.
+    sans_outils = [nom for nom in connus if nom not in NE_JOUENT_QU_AVEC]
+    asserte(
+        "sur un hote SANS leurs outils, les entrees qui n ont pas joue ne sont pas perimees",
+        lambda: ecarts_de_la_table(sans_outils, present=lambda _outil: None),
+        ([], []),
+    )
+    asserte(
+        "sur un hote qui les porte, les memes le sont",
+        lambda: ecarts_de_la_table(sans_outils, present=outille),
+        ([], sorted(NE_JOUENT_QU_AVEC)),
+    )
+    asserte(
+        "sur un corpus PARTIEL, aucune entree n est dite perimee",
+        lambda: ecarts_de_la_table([], entier=False, present=outille),
+        ([], []),
+    )
+    # Une cle qui ne serait pas un garde du corpus ne rencontrerait jamais ce que `juge` rend.
+    asserte(
+        "chaque entree des deux tables est un garde du corpus",
+        lambda: (
+            sorted(
+                (set(PLANTENT_SOUS_MUTATION) | set(NE_JOUENT_QU_AVEC)) - {g.name for g in corpus()}
+            )
+            + sorted(set(NE_JOUENT_QU_AVEC) - set(PLANTENT_SOUS_MUTATION))
+        ),
+        [],
+    )
+
+    # ⟨le GESTE, et son CANAL⟩ Les cas ci-dessus eprouvent le calcul ; ceux-ci, qu on AGIT dessus.
+    def sortie_de(noms: list[str]) -> tuple[int, str]:
+        tampon = io.StringIO()
+        with contextlib.redirect_stderr(tampon):
+            return conclut_sur_la_table(noms, present=outille), tampon.getvalue()
+
+    asserte(
+        "un ecart rend un constat ROUGE, en 1, et les nommes n en rendent aucun",
+        lambda: (
+            sortie_de([*connus, "neuf.py"])[0],
+            sortie_de(connus[1:])[0],
+            sortie_de(connus)[0],
+        ),
+        (1, 1, 0),
+    )
+    # La porte classe par les MARQUES : un constat qui les porterait serait lu « muet » (ADR 5774).
+    asserte(
+        "et le constat ne porte AUCUNE marque de refus",
+        lambda: [
+            m for m in (MARQUE_CAUSE, MARQUE_GESTE) if m in sortie_de([*connus, "neuf.py"])[1]
+        ],
+        [],
+    )
 
     print()
     print(f"{cas} cas, dont {rouges} qui DOIVENT rougir.")

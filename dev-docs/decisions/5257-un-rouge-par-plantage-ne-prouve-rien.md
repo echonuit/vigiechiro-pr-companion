@@ -8,6 +8,8 @@ decided_at: 2026-09-05
 verification: certaine
 enforced_by:
   - ".github/scripts/temoins_de_ci_non_decoratifs.py"
+relations:
+  completee_par: ["5743-un-invariant-se-borne-par-une-liste-nommee"]
 verified:
   - by: machine:ci
     at: 2026-09-05
@@ -17,6 +19,27 @@ generated:
 ---
 
 # Un banc de mutation compte trois verdicts, parce qu'un rouge par plantage ne prouve rien
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-06** : cette décision est **complétée** par
+    [5743](5743-un-invariant-se-borne-par-une-liste-nommee.md), et trois phrases de son texte ne
+    décrivent plus le dépôt. Ses mesures, datées du 2026-09-05, restent ce qu'elles étaient.
+
+    **La question du cliquet n'est plus ouverte.** « Faut-il un cliquet sur le compte des non
+    concluants ? » : la mesure demandée a été faite (#5497), et la réponse est une liste **nommée**,
+    non un cliquet. Chaque banc porte une table `PLANTENT_SOUS_MUTATION`, confrontée dans les deux
+    sens. Un compte aurait laissé échanger un plantage réparé contre un plantage neuf.
+
+    **« Il ne refuse que sur un décoratif » se lit avec cette table.** Un non concluant ne fait
+    toujours pas rougir par lui-même. Un garde qui plante sans y être nommé, ou une entrée qui ne
+    plante plus, fait en revanche sortir le banc en 1 : c'est un constat sur la table, rendu sans
+    marque de refus, et non un refus sur ce que le banc n'a pas su lire.
+
+    **« Les deux bancs de `scripts/` n'ont pas encore ce verdict » est tenu** depuis #5271. Les
+    trois bancs rendent trois comptes et portent chacun leur table : celui des ADR depuis #5905,
+    ceux de `scripts/methode` et de `.github/scripts` depuis #5497.
+
+    Le reste fait foi.
 
 ## Contexte
 

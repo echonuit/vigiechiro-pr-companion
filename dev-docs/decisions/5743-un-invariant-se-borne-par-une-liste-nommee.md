@@ -13,7 +13,7 @@ verified:
     at: 2026-10-05
 relations:
   prolonge: ["4682-un-cliquet-unique-sur-deux-zones-laisse-une-regression-se-payer"]
-  complete: ["5774-un-refus-ne-voyage-pas-dans-le-canal-des-constats"]
+  complete: ["5774-un-refus-ne-voyage-pas-dans-le-canal-des-constats", "5257-un-rouge-par-plantage-ne-prouve-rien"]
 generated:
   by: "process:assistance-par-agents"
 ---
