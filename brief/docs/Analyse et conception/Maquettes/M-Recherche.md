@@ -66,11 +66,11 @@ La recherche globale permet de **sauter directement** à un site, un point, un p
   <!-- Groupe Passages -->
   <text x="838" y="228" class="grp">PASSAGES</text>
   <text x="838" y="252" class="res-main">640380 / A1 · n° 1</text>
-  <text x="838" y="268" class="res-detail">Passage 2026 · 2026-06-08</text>
+  <text x="838" y="268" class="res-detail">Passage 2026 · 08/06/2026</text>
   <text x="838" y="296" class="res-main">640380 / A1 · n° 2</text>
-  <text x="838" y="312" class="res-detail">Passage 2026 · 2026-06-22</text>
+  <text x="838" y="312" class="res-detail">Passage 2026 · 22/06/2026</text>
   <text x="838" y="340" class="res-main">640381 / B2 · n° 1</text>
-  <text x="838" y="356" class="res-detail">Passage 2026 · 2026-06-15</text>
+  <text x="838" y="356" class="res-detail">Passage 2026 · 15/06/2026</text>
   <line x1="822" y1="374" x2="1158" y2="374" class="sep"/>
 
   <!-- Groupe Espèces -->

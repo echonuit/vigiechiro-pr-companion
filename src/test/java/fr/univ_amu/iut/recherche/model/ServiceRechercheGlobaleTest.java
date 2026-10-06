@@ -146,6 +146,39 @@ class ServiceRechercheGlobaleTest {
     }
 
     @Test
+    @DisplayName("#5949 : le détail d'un passage dit la date de la nuit en français, comme le reste de l'application")
+    void le_detail_d_un_passage_dit_la_date_en_francais() {
+        when(multisite.listerPassages(UTILISATEUR))
+                .thenReturn(List.of(passage(42L, "640380", "A1", 2026, 12, "2026-06-21", null)));
+
+        assertThat(recherche.rechercher("640380"))
+                .filteredOn(r -> r.type() == TypeResultat.PASSAGE)
+                .singleElement()
+                .satisfies(r -> assertThat(r.details()).isEqualTo("Passage 2026 · 21/06/2026"));
+    }
+
+    @Test
+    @DisplayName("#5949 : une nuit se cherche par la date qu'on lit, « 21/06 », et encore par sa forme ISO")
+    void une_nuit_se_cherche_par_la_date_qu_on_lit() {
+        // Afficher « 21/06/2026 » sans le chercher ferait taper à l'utilisateur ce qu'il lit sans rien
+        // trouver : ce qui s'affiche et ce qui se cherche changent ensemble.
+        when(multisite.listerPassages(UTILISATEUR))
+                .thenReturn(List.of(passage(42L, "640380", "A1", 2026, 12, "2026-06-21", null)));
+
+        for (String requete : List.of("21/06", "21/06/2026", "06/2026")) {
+            assertThat(recherche.rechercher(requete))
+                    .as("requête « %s »", requete)
+                    .anyMatch(r -> r.type() == TypeResultat.PASSAGE);
+        }
+        assertThat(recherche.rechercher("2026-06-21"))
+                .as("la forme ISO, que des habitués tapent peut-être, trouve toujours la nuit")
+                .anyMatch(r -> r.type() == TypeResultat.PASSAGE);
+        assertThat(recherche.rechercher("22/06"))
+                .as("le témoin : une autre date ne trouve pas cette nuit")
+                .noneMatch(r -> r.type() == TypeResultat.PASSAGE);
+    }
+
+    @Test
     @DisplayName("les points sont plafonnés ; listerPoints n'est plus appelé une fois le plafond atteint")
     void points_plafonnes_et_court_circuites() {
         // Beaucoup de sites (noms qui ne matchent PAS « zone ») ayant chacun un point dont la description
@@ -219,7 +252,7 @@ class ServiceRechercheGlobaleTest {
                 .singleElement()
                 .satisfies(r -> assertThat(r.details())
                         .as("la mention nomme le plan : « à enjeu » seul se lirait comme un jugement du produit")
-                        .isEqualTo("Chiroptères · prioritaire (PNA) · 640380 / A1 · n°2 · 2026-06-21"));
+                        .isEqualTo("Chiroptères · prioritaire (PNA) · 640380 / A1 · n°2 · 21/06/2026"));
     }
 
     @Test

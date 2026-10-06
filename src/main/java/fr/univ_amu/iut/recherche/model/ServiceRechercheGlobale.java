@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.recherche.model;
 
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.RechercheGlobale;
 import fr.univ_amu.iut.commun.model.ResultatRecherche;
@@ -138,7 +139,9 @@ public class ServiceRechercheGlobale implements RechercheGlobale {
                     ligne.commune(),
                     Integer.toString(ligne.numeroPassage()),
                     Integer.toString(ligne.annee()),
-                    ligne.dateEnregistrement());
+                    ligne.dateEnregistrement(),
+                    // La forme qu'on lit dans le détail se cherche aussi (#5949) ; l'ISO reste trouvée.
+                    Horodatage.dateSeule(ligne.dateEnregistrement()));
             if (trouve) {
                 passages.add(resultatPassage(ligne));
             }
@@ -171,7 +174,7 @@ public class ServiceRechercheGlobale implements RechercheGlobale {
         String libelle =
                 carreEtPoint(ligne.numeroCarre(), ligne.codePoint()) + SEPARATEUR + "n°" + ligne.numeroPassage();
         String details = ligne.dateEnregistrement() != null
-                ? "Passage " + ligne.annee() + SEPARATEUR + ligne.dateEnregistrement()
+                ? "Passage " + ligne.annee() + SEPARATEUR + Horodatage.dateSeule(ligne.dateEnregistrement())
                 : "Passage " + ligne.annee();
         return new ResultatRecherche(
                 TypeResultat.PASSAGE,
@@ -202,7 +205,9 @@ public class ServiceRechercheGlobale implements RechercheGlobale {
         String details = prefixeGroupe + mentionEnjeu + carreEtPoint(espece.numeroCarre(), espece.codePoint())
                 + SEPARATEUR + "n°"
                 + espece.numeroPassage()
-                + (espece.dateEnregistrement() != null ? SEPARATEUR + espece.dateEnregistrement() : "");
+                + (espece.dateEnregistrement() != null
+                        ? SEPARATEUR + Horodatage.dateSeule(espece.dateEnregistrement())
+                        : "");
         return new ResultatRecherche(
                 TypeResultat.ESPECE,
                 libelle,
