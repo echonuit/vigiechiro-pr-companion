@@ -201,3 +201,54 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
           exit "$frais"
+
+  # La troisième chaîne : les deux outillages `npm` figés par lockfile (#6095, chantier #5290).
+  #
+  # `.github/release/` publie, `.github/openspec/` outille la spécification vivante. Leur lockfile
+  # garde leur COHÉRENCE, et `verifie-version-openspec.py` une égalité : ni l'un ni l'autre ne dit
+  # qu'une version plus récente existe. Dependabot devait le dire et ne le peut pas : son service
+  # refuse chacune des demandes qu'il soumet pour ces dossiers, 40 exécutions en échec sur 40 au
+  # 2026-10-06, et l'échec se range sous un atelier que personne n'est tenu de regarder. Mesuré ce
+  # jour-là : deux greffons de l'outillage de publication avaient une majeure de retard depuis
+  # juillet, et le dépôt ne le savait pas.
+  fraicheur-des-outillages-npm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # ⟨portee⟩ Même règle que `fraicheur-des-actions` : le job ne juge pour de vrai que le lundi,
+      # par `schedule`, où la portée n'a pas de base et rend `oui`. Sur une demande, il conclut
+      # « sans objet » plutôt que d'être absent du récapitulatif, sauf si elle touche le garde, son
+      # atelier ou l'un des deux manifestes.
+      - name: "Ce diff touche-t-il le garde de fraîcheur npm, son atelier ou un manifeste (#6095)"
+        id: portee
+        shell: bash
+        timeout-minutes: 3
+        env:
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: python3 .github/scripts/porte_du_job.py fraicheur-des-outillages-npm
+
+      # Le registre `npm` se lit sans jeton et sans outil : le garde n'emploie que la bibliothèque
+      # standard de Python, donc ni `node` ni `npm` ne sont installés ici.
+      #
+      # Sur une demande, `--constat` : le retard RÉEL du dépôt s'écrit dans le récapitulatif mais
+      # ne fait pas rougir un diff qui n'y est pour rien. Ce que la demande doit prouver est que
+      # l'étape fonctionne, et un registre illisible la fait toujours sortir en 2.
+      - name: Les outillages npm figés ont-ils pris du retard ?
+        if: steps.portee.outputs.concerne == 'oui'
+        shell: bash
+        timeout-minutes: 5
+        env:
+          MODE: ${{ github.event_name == 'pull_request' && '--constat' || '' }}
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC2086  # $MODE est vide ou un seul drapeau, jamais une saisie.
+          python3 .github/scripts/verifie_fraicheur_npm.py $MODE > verdict.txt && code=0 || code=$?
+          cat verdict.txt
+          {
+            echo "## Fraîcheur des outillages npm figés"
+            echo
+            sed 's/^/    /' verdict.txt
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$code"

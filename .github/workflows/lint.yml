@@ -684,6 +684,11 @@ jobs:
         run: |
           chmod +x .github/scripts/verifie_fraicheur_actions.py
           python3 .github/scripts/verifie_fraicheur_actions.py --auto-test
+      - name: Le garde de fraîcheur des outillages npm sait encore rougir
+        # Même raison que le pas précédent, dont il reprend la règle (#6095) : il ne mesure pour de
+        # vrai que le lundi, et son autotest hors ligne est le seul contrôle qui passe à chaque PR.
+        # Le registre s'y injecte, donc aucun appel réseau ici.
+        run: python3 .github/scripts/verifie_fraicheur_npm.py --auto-test
       - name: La veille de fraîcheur du contrat API sait encore rougir
         # Elle ne tourne pour de vrai que dans api-live.yml, une fois par semaine : son autotest est
         # le seul endroit où on la voit à l'œuvre à chaque PR. Sans lui, un durcissement de seuil ou

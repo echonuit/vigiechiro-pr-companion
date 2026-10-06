@@ -28,7 +28,7 @@ publication.
 | [release.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/release.yml) | **hebdomadaire (mercredi 6 h UTC)** + manuel | Version + Release + installeurs natifs (dormant tant que `ENABLE_RELEASE` ≠ true). Le **train de publication** depuis l'ADR 2744 - la ligne disait encore « push `main` » neuf jours après le changement. Ne part pas sans preuve fraîche des plateformes, sauf contournement écrit (cf. plus bas) | — |
 | [api-live.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/api-live.yml) | hebdomadaire (lundi) + manuel | Contrat de l'API Vigie-Chiro, **en lecture seule** ; sépare « jeton mort » (warning) de « contrat cassé » (rouge), et **rougit au bout de trois semaines sans vérification réelle** (cf. ci-dessous) | — |
 | [codeql.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/codeql.yml) | push `main` + PR + hebdomadaire (lundi 5 h UTC) | Analyse statique de sécurité **CodeQL** sur le code Java (cf. plus bas). Le `schedule` n'est pas décoratif : les requêtes CodeQL évoluent, donc **une base de code inchangée peut devenir signalable** sans qu'aucun commit l'ait touchée | **Oui** sur PR |
-| [securite-dependances.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/securite-dependances.yml) | hebdomadaire (lundi 6 h UTC) + PR sur `pom.xml` | Rapport de vulnérabilités des dépendances livrées (cf. plus bas). Le filtre de chemins inclut le workflow lui-même : une étape que **seul un `schedule` exerce** peut être fusionnée cassée, et ce chemin la fait tourner sur la PR qui la modifie | — |
+| [securite-dependances.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/securite-dependances.yml) | hebdomadaire (lundi 6 h UTC) + PR sur `pom.xml` | Rapport de vulnérabilités des dépendances livrées (cf. plus bas), et deux mesures de fraîcheur : les actions épinglées et les outillages `npm` figés. Le filtre de chemins inclut le workflow lui-même : une étape que **seul un `schedule` exerce** peut être fusionnée cassée, et ce chemin la fait tourner sur la PR qui la modifie | — |
 | [adr-rapport.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/adr-rapport.yml) | hebdomadaire + manuel | Rapport ADR (calibration des cliquets et des loupes) | — |
 | [mutation-model.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/mutation-model.yml) | quotidien (3 h UTC) + manuel | Mesure de mutation PIT sur **un paquet `model` par tour** (rotation sans état, cycle de 17 jours), **E2E et `commun.api` exclus** : bilan dans le résumé du job, rapport détaillé en artefact | — |
 | [mutation-ihm.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/mutation-ihm.yml) | quotidien (5 h UTC) + manuel | Mesure de mutation PIT sur les vues d'**une feature par tour** (rotation sans état, cycle de 15 jours), **E2E exclus** | — |
@@ -808,6 +808,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `trie_les_echecs_de_plateforme.py` | ce que la suite donne sur une plateforme, TestFX à part, et si le passage est bien **allé au bout** : un job coupé par `timeout-minutes` rendait le même tableau sous le titre « toutes les classes de test », 618 sur 758, sans un échec et avec un code 0 (#4544) | `suite-sous-windows-et-macos.yml` (autotest : `lint.yml`) |
 | `veille_contrat_api.py` | le contrat d'API a **réellement** tourné il y a moins de trois semaines | `api-live.yml` (autotest : `lint.yml`) |
 | `verifie_fraicheur_actions.py` | un épinglage **cohérent** peut être **périmé** : il date les SHA épinglés | `securite-dependances.yml` et `winget.yml` (autotest : `lint.yml`) |
+| `verifie_fraicheur_npm.py` | un outillage `npm` **figé par lockfile** peut être périmé sans que rien ne le dise, Dependabot ne pouvant ouvrir aucune demande sous `.github/openspec/` ni `.github/release/` (#6095) : il compare chaque dépendance épinglée au registre, et date le retard depuis la première version stable manquée. Un registre muet le fait **refuser** en 2, il ne rend pas « à jour » | `securite-dependances.yml`, le lundi ; en constat sur une demande qui touche le garde, l'atelier ou un manifeste (autotest : `lint.yml`) |
 | `verifie_affichage_flatpak.py` | le Flatpak déclare ce qu'il faut pour démarrer **sur un bureau Wayland** | `flatpak.yml` (autotest : `lint.yml`) |
 | `mesure_duree_portail.py` | l'**allongement** d'un atelier, médiane contre médiane. Il **déclare la composition** de ses deux fenêtres et **refuse de conclure** quand elles ne sont pas faites des mêmes déclencheurs (#5626) : `release.yml` annonçait **+709 %** en comparant douze poussées d'août, retirées de son bloc `on:` depuis, à des releases de septembre - un faux positif qui ne se serait **jamais** résorbé. **Et il ne conclut pas sans la dispersion** (#5628) : un écart plus petit que la dispersion de ses propres fenêtres est un tirage, pas une dérive - `mutation-ihm.yml` annonçait +59 % pour **0,42 dispersion**, à corpus constant et avec la même dispersion des deux côtés. La dispersion d'une médiane est l'**écart absolu médian** et non l'écart-type : groupé sur les 24 il inclut le changement de régime, donc aucun des dix ateliers n'atteignait une unité, `release.yml` et ses +708 % compris, et un seuil là aurait rendu l'avertisseur **entièrement muet**. Deux ateliers cessent d'avertir, et c'est l'effet voulu. Il rend donc **quatre** réponses, après les trois de #5615 : une mesure, « pas encore d'historique », et « sans objet » quand l'atelier ne se déclenche pas sur `main` - `titre-pr.yml` et `corps-pr.yml` n'y auront jamais d'exécution, et leur annoncer « historique illisible » produisait un avertissement qu'on ne peut **jamais** lever. Le prédicat se dérive du bloc `on:` et a été confronté aux exécutions réelles des vingt ateliers, **0 désaccord**. Il prend l'atelier en argument depuis #3508, et depuis #5540 il en suit **deux** : les mesures sont **croisées**, aucun atelier ne se mesurant plus lui-même | `maven.yml` (il y lit `lint.yml`) **et** `lint.yml` (il y lit `maven.yml`) - il **avertit**, il ne bloque pas (autotest : `lint.yml`) |
 | `verifie_cloture_consignee.py` | un EPIC clos **sans trace de clôture**. Le dépôt écrit à trois endroits que tout chantier se clôt par quatorze passes, et rien ne le vérifiait : 43 sur 64 n'en portaient aucune. La cause n'était pas l'inattention - la compétence `clore-un-chantier` ne mentionnait nulle part le modèle à coller, et qui la suivait à la lettre ne laissait donc aucune trace ([ADR 4659](decisions/4659-une-cloture-sans-trace-ne-se-distingue-pas-d-une-cloture-absente.md)). **Cliquet** à 65, qui ne peut que descendre : les anciennes sont assumées, une de plus rougit. Il **refuse** si la forge ne répond pas, et depuis #4967 **si sa collecte touche le plafond**, un corpus tronqué le faisant passer au lieu de rougir. Le cliquet est passé de 42 à 65 parce que #4967 a corrigé sa **population** : il demandait `--label epic`, donc 58 EPIC clos sur 154 ne lui étaient jamais soumis, dont 23 sans trace | `lint.yml` - bloquant (autotest : `lint.yml`, hors ligne) |
@@ -1331,6 +1332,35 @@ compter sur le mécanisme censé le combler :
 | version indéterminée après trois tentatives | **rouge** |
 | commit épinglé **180 jours** plus vieux que le HEAD amont | **avertissement**, non bloquant |
 | commit épinglé **365 jours** plus vieux que le HEAD amont | **rouge** |
+
+#### La fraîcheur des outillages npm, sur la même règle (#6095)
+
+Les deux outillages figés par lockfile, `.github/release/` et `.github/openspec/`, n'avaient aucun
+signal de retard. Dependabot porte une entrée pour le premier et ne peut ouvrir aucune demande : son
+service refuse chaque soumission, 40 exécutions en échec sur 40 au 2026-10-06. Ce jour-là, deux
+greffons de l'outillage de publication avaient une majeure de retard depuis juillet.
+
+Un troisième job du même atelier, `fraicheur-des-outillages-npm`, lance
+`verifie_fraicheur_npm.py`. Sa règle est celle du tableau ci-dessus, et ses seuils sont les mêmes,
+pour ne pas avoir deux gardes de fraîcheur qui jugent différemment :
+
+| Écart constaté | Verdict |
+|---|---|
+| même version, ou préversion plus récente seule | rien à dire |
+| retard dans la même majeure | **signalé**, non bloquant |
+| retard d'une **majeure entière** | **rouge** |
+| retard dans la même majeure depuis **365 jours** | **rouge** |
+| épinglage par intervalle, manifeste illisible | **rouge** |
+| registre muet après trois tentatives | **refus**, code 2 |
+
+Deux choses le séparent de son patron. L'âge n'est pas celui de la version épinglée mais celui du
+**retard** : les jours écoulés depuis la première version stable que l'épinglage n'a pas. Un paquet
+que son auteur ne republie plus est ancien et à jour. Et un registre muet ne rend pas un rouge mais
+un refus, parce qu'« indéterminé » n'est ni frais ni périmé.
+
+Sur une demande qui touche le garde, son atelier ou un manifeste, le job tourne en `--constat` : il
+écrit le retard réel dans le récapitulatif sans faire rougir un diff qui n'y est pour rien. La
+demande prouve que l'étape fonctionne ; le lundi juge.
 
 #### Un tag qui ne bouge jamais rendait cette mesure aveugle (#2213)
 
@@ -1884,6 +1914,7 @@ Les mises à jour sont proposées par **Dependabot**
 **mensuellement**, pour `maven` et `github-actions`. Une troisième entrée vise l'outillage de
 publication (`npm`, dans `/.github/release`) et **n'a jamais ouvert de demande** : la forge refuse
 celles que Dependabot y soumet, 39 exécutions sur 39 en échec au 2026-10-06 (#6084). Les deux
-outillages figés par lockfile, celui-ci et `.github/openspec/`, ne sont donc suivis par personne, et
-leurs README disent comment poser la question à la main. **JavaFX (`org.openjfx:*`) est volontairement exclu** de l'automatisation : ses
+outillages figés par lockfile, celui-ci et `.github/openspec/`, sont donc suivis par un garde et non
+par Dependabot : `verifie_fraicheur_npm.py`, chaque lundi (voir « La fraîcheur des outillages npm »
+plus haut). **JavaFX (`org.openjfx:*`) est volontairement exclu** de l'automatisation : ses
 bumps ont un impact fort (rendu, Headless Platform) et se décident à la main.

@@ -105,7 +105,7 @@ qu'il propose est un retour à 0.17.2. Ce que cet avis expose réellement ici n'
 
 [GHSA-vfj7-8cjw-p6xm]: https://github.com/advisories/GHSA-vfj7-8cjw-p6xm
 
-## Personne ne suit ce manifeste, et il faut le savoir
+## Qui suit ce manifeste : un garde hebdomadaire, et pas Dependabot
 
 Cette page a écrit du 26 août au 6 octobre 2026 que Dependabot suivait ce manifeste au même titre
 que `.github/release/`. C'était faux deux fois (#6084).
@@ -118,16 +118,22 @@ Dependabot tente d'y ouvrir. Il trouve la version, soumet la demande, et reçoit
 4 août, et sur 55 demandes ouvertes par Dependabot, aucune ne porte sur `npm`. L'échec se range dans
 l'onglet Actions, sous un atelier que personne n'est tenu de regarder.
 
-La cause n'est pas établie. Les deux manifestes vivent sous `.github/`, et c'est l'hypothèse à
-éprouver en premier ; elle ne l'a pas été.
+Le refus vient du service de Dependabot lui-même, à l'étape `create_pull_request`, avant toute
+branche et tout commit. Il est connu en amont et n'est pas corrigé (`dependabot/dependabot-core`
+#15721 et #15237). Que la cause soit l'emplacement sous `.github/` reste une hypothèse : le relevé
+complet, qui sépare le prouvé du supposé, est dans le corps de #5290.
 
-**L'épinglage vieillit donc sans que rien ne le dise.** `verifie-version-openspec.py` tient une
-égalité, pas une fraîcheur : il reste vert sur une version dépassée. Au 2026-10-06, le dépôt épingle
-1.12.0 et le registre rend 1.14.1. La question se pose à la main :
+**Un garde le dit donc à sa place, depuis #6095.** `verifie-version-openspec.py` tient une égalité,
+pas une fraîcheur : il reste vert sur une version dépassée. `.github/scripts/verifie_fraicheur_npm.py`
+interroge le registre chaque lundi, dans `securite-dependances.yml`, pour ce manifeste et pour celui
+de `.github/release/`. Une majeure de retard le fait rougir ; un retard dans la même majeure est
+signalé sans bloquer, et bloque au-delà de 365 jours. Il se lance aussi à la main, sans `node` ni
+`npm` :
 
 ```bash
-npm view @fission-ai/openspec version
+python3 .github/scripts/verifie_fraicheur_npm.py
 ```
 
-et la montée, quand on la décide, se fait par le geste de la section « Pourquoi cette version-là, et
-pas la dernière ».
+Au 2026-10-06 il rend, pour ce manifeste : « 1.12.0 -> 1.14.1, en retard depuis 27 jours », signalé
+et non bloquant. Il dit le retard, il ne le résorbe pas : la montée, quand on la décide, se fait par
+le geste de la section « Pourquoi cette version-là, et pas la dernière ».

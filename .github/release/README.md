@@ -18,19 +18,22 @@ forge refuse : `dependency_file_not_supported`, « The request contains invalid 
 changes ». Mesuré le 2026-10-06 : 39 exécutions `npm` sur 39 en échec depuis le 4 août, les montées
 de version comme les correctifs de sécurité, et aucune demande `npm` parmi les 55 que Dependabot a
 ouvertes ici. Ce jour-là, `@semantic-release/changelog` est épinglé à 6.0.3 quand le registre rend
-7.0.0, et `@semantic-release/git` à 10.0.1 quand il rend 11.0.1. La cause du refus n'est pas établie ;
-ce manifeste vit sous `.github/`, et c'est l'hypothèse à éprouver en premier. D'ici là, la fraîcheur
-de cet outillage se demande à la main, paquet par paquet :
+7.0.0, et `@semantic-release/git` à 10.0.1 quand il rend 11.0.1. Le refus vient du service de
+Dependabot, il est connu en amont et n'est pas corrigé (`dependabot/dependabot-core` #15721, dont le
+manifeste porte les mêmes paquets que celui-ci, et #15237) ; le relevé est dans le corps de #5290.
+
+**Un garde dit ce retard à sa place, depuis #6095.** `.github/scripts/verifie_fraicheur_npm.py`
+interroge le registre chaque lundi, dans `securite-dependances.yml`. Une majeure de retard le fait
+rougir : le premier lundi après sa pose, il rougit donc sur les deux greffons ci-dessus, et il
+rougira jusqu'à leur montée. Il se lance aussi à la main, sans `node` ni `npm` :
 
 ```bash
-npm view semantic-release version
-npm view @semantic-release/changelog version
-npm view @semantic-release/git version
+python3 .github/scripts/verifie_fraicheur_npm.py
 ```
 
-`npm outdated` ne convient pas ici : sans `node_modules/`, que rien ne pose dans un arbre neuf (le
-crochet `post-checkout` ne pose que l'outil OpenSpec), il ne rend rien et sort en 0, ce qui se lit
-« tout est à jour ».
+`npm outdated` ne convient pas pour cette question : sans `node_modules/`, que rien ne pose dans un
+arbre neuf (le crochet `post-checkout` ne pose que l'outil OpenSpec), il ne rend rien et sort en 0,
+ce qui se lit « tout est à jour ».
 
 ## Les deux configurations, et pourquoi elles diffèrent
 
