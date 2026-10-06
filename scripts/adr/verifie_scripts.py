@@ -802,6 +802,51 @@ def test_4359_blocs_relus() -> None:
         True,
     )
 
+    # LA POPULATION est celle du cliquet, seuil PAR NATURE (#6007). Les cas du dessus batissent leur
+    # corpus a la main : aucun ne passait par `blocs_du_corpus`, et le registre a compte 920 blocs
+    # « sous cliquet » au seuil plat quand le cliquet en comptait 314. Les seuils sont lus du
+    # cliquet, sans quoi ce temoin eprouverait une troisieme definition.
+    seuils = m._garde.SEUILS
+
+    def bloc(n: int, declaration: str) -> str:
+        return "\n".join(f"/// Ligne {i}." for i in range(n)) + "\n" + declaration + "\n"
+
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        entre = (seuils["methode"] + seuils["type"]) // 2
+        _ecrire(racine, "src/main/java/Entre.java", bloc(entre, "class Entre {}"))
+        _ecrire(racine, "src/main/java/Borne.java", bloc(seuils["type"], "class Borne {}"))
+        _ecrire(racine, "src/main/java/Long.java", bloc(seuils["type"] + 1, "class Long {}"))
+        # Dans l arbre de TEST : le registre suit les deux arbres, comme le cliquet.
+        _ecrire(
+            racine,
+            "src/test/java/Methode.java",
+            "class Methode {\n" + bloc(seuils["methode"] + 1, "    void f() {}") + "}\n",
+        )
+        # `dict(...)` et non `.values()` sur le rendu : le banc des temoins neutralise la fonction en
+        # liste vide, et un `.values()` y PLANTAIT au lieu de laisser les cas rougir (#6007).
+        sous_cliquet = set(dict(m.blocs_du_corpus(racine)).values())
+        _verifie(
+            "4359 registre : un type entre le seuil des methodes et le sien n est pas sous cliquet",
+            "src/main/java/Entre.java" in sous_cliquet,
+            False,
+        )
+        _verifie(
+            "4359 registre : un type exactement a son seuil n est pas sous cliquet",
+            "src/main/java/Borne.java" in sous_cliquet,
+            False,
+        )
+        _verifie(
+            "4359 registre : un type au-dela de son seuil est sous cliquet",
+            "src/main/java/Long.java" in sous_cliquet,
+            True,
+        )
+        _verifie(
+            "4359 registre : une methode au-dela du sien l est aussi, dans l arbre de test",
+            "src/test/java/Methode.java" in sous_cliquet,
+            True,
+        )
+
 
 def test_loupe_4359_javadoc_vieillie() -> None:
     m = _charge("loupe-4359-javadoc-vieillie.py")
