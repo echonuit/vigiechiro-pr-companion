@@ -27,6 +27,39 @@ passe.
 
 « J'utilise la compétence clore-un-chantier pour clore <l'EPIC>, passe par passe. »
 
+## Avant la passe 0 : prévenir les pairs
+
+Une clôture dure des heures, lit le delta entier et peut produire du code de production. Elle ne
+laisse pourtant rien qu'une autre session puisse voir avant la passe 12 :
+
+- pas de bloc de prise, parce qu'une clôture n'est pas une issue ;
+- pas d'assignation, parce qu'un EPIC ouvert n'en porte pas pour sa clôture ;
+- pas de branche, tant que la première passe n'a rien produit.
+
+Consigné le 29 septembre 2026 dans #5577 : la clôture de #5452 a été menée par deux sessions à la
+fois pendant plusieurs heures, sans qu'aucune le sache, et l'une des deux a été perdue en entier.
+
+**Un message par pair, avant la passe 0**, quand l'environnement en expose :
+
+```
+Je clos le chantier #N sur <depot>. Si tu travailles ailleurs, ignore ce message.
+Delta lu : <sha d'ouverture>..origin/main. Ce que le chantier a touché : <dossiers ou fichiers>
+```
+
+Une prise d'issue se dit par son numéro et sa branche. Une clôture se dit par son EPIC et par le
+**delta** qu'elle lit, parce que c'est lui qui dit à un pair si elle le concerne : l'EPIC lui apprend
+qu'il ne doit pas clore le même chantier, les zones touchées qu'une passe peut écrire là où il
+travaille.
+
+Le reste est la règle des issues, et elle vit dans
+[`ouvrir-une-issue`](../ouvrir-une-issue/SKILL.md), section « Prévenir les pairs, parce que la forge
+ne réveille personne » : une annonce reçue vaut prise, et un listing dit à qui écrire, jamais qui
+détient. Une clôture qui s'arrête avant la passe 12 le dit aux mêmes pairs, comme une prise se relâche.
+
+Aucun garde ne tient ce geste : un message ne laisse aucune trace dans le dépôt, et une clôture porte
+sur un delta, pas sur un ticket. C'est le cas que règle
+l'[ADR 5414](../../../dev-docs/decisions/5414-une-regle-que-rien-ne-peut-garder-se-declare.md).
+
 ## Les quatorze passes
 
 | # | Passe | Ce qu'elle produit | Compétence |
