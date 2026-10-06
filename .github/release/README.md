@@ -28,8 +28,9 @@ npm view @semantic-release/changelog version
 npm view @semantic-release/git version
 ```
 
-`npm outdated` ne convient pas ici : sans `node_modules/`, que ce dossier n'a que sur le runner, il ne
-rend rien et sort en 0, ce qui se lit « tout est à jour ».
+`npm outdated` ne convient pas ici : sans `node_modules/`, que rien ne pose dans un arbre neuf (le
+crochet `post-checkout` ne pose que l'outil OpenSpec), il ne rend rien et sort en 0, ce qui se lit
+« tout est à jour ».
 
 ## Les deux configurations, et pourquoi elles diffèrent
 
@@ -80,8 +81,10 @@ il reste à poser à la main, dans chaque arbre de travail où l'on veut vérifi
 
 ## Ce que l'audit dit aujourd'hui
 
-`npm audit` signale **7 paquets vulnérables** (2 hautes, 5 moyennes), contre **18** (15 hautes) avant
-le passage en `semantic-release@25` (#3264). Ces vulnérabilités **existaient déjà** avec `npx --yes` ;
+`npm audit` signalait **7 paquets vulnérables** (2 hautes, 5 moyennes) au passage en
+`semantic-release@25` (#3264), contre **18** (15 hautes) avant lui. **Refait le 2026-10-06 sur le même
+lockfile : 17 paquets, 16 hautes et 1 moyenne.** La base des avis a grandi, l'arbre n'a pas bougé, et
+ce qui suit décrit l'état d'août : la relecture de ces dix-sept n'est pas faite (#5290). Ces vulnérabilités **existaient déjà** avec `npx --yes` ;
 la différence est qu'elles sont désormais **visibles**, et c'était l'objet du lockfile.
 
 Ce qui reste **ne se corrige pas ici**, à aucune version de `semantic-release` : les deux hautes

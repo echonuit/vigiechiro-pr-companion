@@ -90,8 +90,20 @@ python3 scripts/methode/verifie-version-openspec.py --auto-test
 
 ## Ce que l'audit dit aujourd'hui
 
-`npm audit` signale **0 paquet vulnérable** sur les 79 dépendances de l'arbre, au 26 août 2026.
-Chiffre daté, qui se refait plutôt qu'il ne se croit.
+`npm audit` signale **4 paquets**, tous au niveau élevé, sur les 80 dépendances de l'arbre, au
+6 octobre 2026. Chiffre daté, qui se refait plutôt qu'il ne se croit : il valait 0 sur 79 le 26 août.
+
+Un seul avis porte les quatre : `braces`, [GHSA-vfj7-8cjw-p6xm], un déni de service par motif
+profondément imbriqué, publié le 18 septembre 2026, donc après la montée en 1.12.0. Il remonte par
+`micromatch`, `fast-glob`, puis `@fission-ai/openspec` lui-même. **Monter de version ne le corrige
+pas** : l'audit range toutes les versions depuis 0.18.0 dans la plage touchée, et le seul correctif
+qu'il propose est un retour à 0.17.2. Ce que cet avis expose réellement ici n'a pas été évalué.
+
+```bash
+(cd .github/openspec && npm audit)
+```
+
+[GHSA-vfj7-8cjw-p6xm]: https://github.com/advisories/GHSA-vfj7-8cjw-p6xm
 
 ## Personne ne suit ce manifeste, et il faut le savoir
 
