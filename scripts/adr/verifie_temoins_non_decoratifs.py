@@ -111,6 +111,20 @@ HORS_PORTEE = {
 }
 
 
+def exemptions_perimees(
+    dossier: pathlib.Path | None = None, exemptions: dict[str, str] | None = None
+) -> list[str]:
+    """Les entrees de `HORS_PORTEE` qui ne correspondent plus a aucun fichier du dossier (#5495).
+
+    C est la moitie qui fait d une liste un INVENTAIRE : sans elle, une entree survivrait au garde
+    qu elle exempte et couvrirait alors un garde neuf portant le meme nom, en silence. L autre sens,
+    un garde hors des deux moities sans etre declare, est tenu par `_partition_du_corpus`.
+    """
+    dossier = DOSSIER if dossier is None else dossier
+    exemptions = HORS_PORTEE if exemptions is None else exemptions
+    return sorted(n for n in exemptions if not (dossier / n).is_file())
+
+
 def charges(source: str) -> list[str]:
     """Les gardes qu une suite charge, litteral OU constante (issue #5134).
 
@@ -1139,6 +1153,25 @@ def _auto_test_du_rouge_muet() -> int:
     return echecs
 
 
+def _auto_test_des_exemptions() -> int:
+    """`HORS_PORTEE` se confronte a ses fichiers, et c est le cas FABRIQUE qui juge (#5495).
+
+    Sur le depot reel la liste est vide, donc le premier cas est vrai a vide : une fonction qui
+    rendrait toujours `[]` le passerait. Le second compare une valeur NON VIDE, sur un dossier jouet.
+    """
+    verifie, echecs = cas_d_auto_test()
+    verifie("aucune exemption n a survecu a son fichier", lambda: exemptions_perimees(), [])
+    with tempfile.TemporaryDirectory(prefix="vc-exemptions-") as tmp:
+        faux = pathlib.Path(tmp)
+        (faux / "exempte.py").write_text("", encoding="utf-8")
+        verifie(
+            "une exemption dont le fichier a disparu se NOMME, et elle seule",
+            lambda: exemptions_perimees(faux, {"disparu.py": "raison", "exempte.py": "raison"}),
+            ["disparu.py"],
+        )
+    return echecs()
+
+
 def auto_test() -> int:
     """Le mecanisme se prouve dans les DEUX sens, sinon il ne prouve rien.
 
@@ -1290,7 +1323,13 @@ def auto_test() -> int:
     # `echecs` est le LECTEUR de la marque depuis #5460, pas un entier : il se LIT, il ne
     # s additionne pas. Les sous-auto-tests de la portee et du rouge MUET (#5499) gardent chacun
     # leur compte a eux.
-    return echecs() + _auto_test_de_portee() + _auto_test_du_rouge_muet() + _auto_test_de_la_table()
+    return (
+        echecs()
+        + _auto_test_de_portee()
+        + _auto_test_du_rouge_muet()
+        + _auto_test_de_la_table()
+        + _auto_test_des_exemptions()
+    )
 
 
 CONTRAT = {
