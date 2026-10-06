@@ -279,6 +279,38 @@ class ServiceEmportTest {
     }
 
     @Test
+    @DisplayName("Un chemin de séquence stocké relatif part résolu contre la racine de sa session")
+    void un_chemin_relatif_part_resolu_contre_la_racine_de_sa_session() throws IOException {
+        Path racine = Files.createDirectories(dossier.resolve("nuit-heritee"));
+        new SessionDao(source).update(new SessionDEnregistrement(idSession, racine.toString(), null, null, idPassage));
+        String nom = "Car040962-2026-Pass1-A1-000.wav";
+        Path fichier = Files.writeString(
+                Files.createDirectories(racine.resolve("transformes")).resolve(nom), "contenu");
+        // Par `insert` et non par `majChemin`, qui force l'absolu : le cas ne se poserait pas.
+        SequenceDEcoute heritee = sequenceDao.insert(new SequenceDEcoute(
+                null, nom, idOriginal, 0, 0.0, 5.0, "transformes/" + nom, false, idSession, null, null));
+        SelectionDEcoute selection =
+                selectionDao.insert(new SelectionDEcoute(null, MethodeSelection.MANUEL, 1, idPassage));
+        selectionDao.attacherSequence(new SequenceSelectionnee(selection.id(), heritee.id(), 0, false));
+
+        Path paquet = dossier.resolve("heritee.zip");
+        ServiceEmport.EmportPrepare prepare = emport.preparer(idPassage, paquet);
+
+        assertThat(prepare.fichiers())
+                .as("le chemin relatif part résolu : tel quel, il se lirait depuis le répertoire courant")
+                .containsExactly(fichier);
+        assertThat(prepare.plan().avertissements())
+                .as("le fichier existe sous la racine de sa session : le plan n'a rien à lui reprocher")
+                .isEmpty();
+
+        emport.ecrire(prepare);
+
+        assertThat(OuvertureDePaquet.ouvrir(paquet, Optional.of(RELECTEUR)).sequences())
+                .as("et le paquet s'écrit, avec la séquence dedans")
+                .containsExactly("sequences/" + nom);
+    }
+
+    @Test
     @DisplayName("L'aller-retour complet : l'avis revient signé, et se range à côté sans écraser")
     void l_aller_retour_complet_range_l_avis_a_cote() throws IOException {
         Path paquet = unPaquetDeDeuxSequences();
