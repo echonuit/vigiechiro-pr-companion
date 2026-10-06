@@ -610,6 +610,155 @@ def annonce_la_duree(engages: list[str]) -> None:
             print(f"        {d:5.0f} s  {g}", flush=True)
 
 
+# ⟨LE TIR MAVEN DE LA PORTE : une commande, une annonce, une lecture, un resume (#5994, #6000)⟩
+#
+# La porte lance une JVM des que le diff engage le rapport PMD. Elle le faisait sans le dire avant,
+# et son compte rendu ne nommait que ce qu elle ne joue PAS : deux sessions ont clos une fenetre
+# Maven aupres de leurs pairs, puis lance la porte, qui a tenu une JVM une minute sans annonce. Une
+# duree mesuree par un pair pendant ces secondes est faussee sans qu il puisse savoir pourquoi.
+#
+# Les quatre morceaux sont des fonctions PURES, parce que rien de tout cela ne doit exiger une JVM
+# pour s eprouver : la commande se compose, l annonce et le resume s ecrivent, le rendu se lit. Le
+# lancement lui-meme passe par un lanceur injectable, comme `rapport.collecter` (ADR 3624).
+CLE_DU_TIR = "./mvnw (le tir de la porte)"
+EXECUTION_DES_DEPENDANCES = "analyze-only@verdict-dependances"
+VERSION_DU_GREFFON = re.compile(
+    r"<maven\.dependency\.plugin\.version>\s*([^<\s]+)\s*</maven\.dependency\.plugin\.version>"
+)
+
+
+def tir_maven(racine: pathlib.Path | None = None) -> list[str]:
+    """La commande du SEUL tir Maven de la porte : compiler, PMD, et le controle des dependances.
+
+    **Le troisieme but est celui de #6000.** `verdict-dependances` est lie a la phase `verify`, que
+    seul le job `build` atteint : un diff qui importait une classe arrivee par transitivite sortait
+    d une porte a zero refus et rougissait en CI neuf minutes plus tard. Il se joint au tir qui
+    existe deja plutot que d en ouvrir un second : les classes sont compilees a ce stade, et une
+    seconde JVM couterait un demarrage de plus pour rien.
+
+    **Il vient en DERNIER.** S il refuse, `pmd:pmd` a deja ecrit son rapport, et le cliquet 4617
+    juge quand meme : un refus de dependances ne doit pas en fabriquer un second, muet celui-la.
+
+    **La version se LIT dans le `pom.xml`.** L ecrire ici en ferait une seconde source, que le
+    premier bump de Dependabot perimerait sans que rien ne rougisse : la porte jouerait alors une
+    autre version que la CI. Sans la propriete, on retombe sur le prefixe, que Maven resout contre
+    le meme `pom.xml`.
+    """
+    pom = (racine or RACINE) / "pom.xml"
+    try:
+        trouve = VERSION_DU_GREFFON.search(pom.read_text(encoding="utf-8"))
+    except OSError:
+        trouve = None
+    but = (
+        f"org.apache.maven.plugins:maven-dependency-plugin:{trouve.group(1)}:"
+        f"{EXECUTION_DES_DEPENDANCES}"
+        if trouve
+        else f"dependency:{EXECUTION_DES_DEPENDANCES}"
+    )
+    return ["./mvnw", "-B", "-o", "-q", "test-compile", "pmd:pmd", but]
+
+
+def annonce_du_tir(
+    commande: list[str], ou: pathlib.Path, connue: float | None, imminent: bool
+) -> list[str]:
+    """Ce que la porte dit AVANT que la JVM parte : qu elle part, ou, par quoi, pour combien.
+
+    Elle le dit DEUX fois, et les deux comptent. Au releve, sans `--lance`, c est le seul moment ou
+    l appelant peut encore prevenir ses pairs : la porte, elle, ne previent personne. Puis juste
+    avant le lancement, pour que la ligne precede la charge dans le journal au lieu de la suivre.
+
+    La duree est celle du passage PRECEDENT sur cet arbre quand elle est connue. Sinon on donne les
+    deux mesures de #5994 pour ce qu elles sont, datees, et prises avant que le controle des
+    dependances ne rejoigne le tir : un ordre de grandeur, que le premier passage remplacera.
+    """
+    tete = (
+        "  UNE JVM PART MAINTENANT, lancee par cette porte :"
+        if imminent
+        else "  UNE JVM PARTIRA avec `--lance` : ce diff engage le rapport PMD."
+    )
+    duree = (
+        f"environ {connue:.0f} s, d apres le passage precedent sur cet arbre"
+        if connue
+        else "duree inconnue sur cet arbre ; 58 s et 63 s mesures le 2026-10-06 sur un `target/`"
+        " nettoye, avant que le controle des dependances ne rejoigne ce tir"
+    )
+    lignes = [
+        tete,
+        f"    {' '.join(commande)}",
+        f"    dans {ou}",
+        f"    {duree}",
+        (
+            "    Elle compile, produit le rapport PMD que `4617` exige, et joue le controle des"
+            " dependances de la phase `verify`."
+        ),
+    ]
+    if not imminent:
+        lignes.append(
+            "    Si d autres sessions partagent le poste, annoncez-la AVANT de lancer, puis dites"
+            " « fini » : la porte ne previent personne."
+        )
+    return lignes
+
+
+MARQUE_DES_DEPENDANCES = re.compile(r"dependenc(?:y|ies) (?:problems )?found:?\s*$")
+COORDONNEES = re.compile(r"^[\w.-]+(?::[\w.-]+){2,5}$")
+NIVEAU_MAVEN = re.compile(r"^\[(?:ERROR|WARNING|INFO)\]\s*")
+
+
+def lit_le_tir(code: int, sortie: str) -> tuple[str, list[str]]:
+    """L issue du tir, et les lignes du controle des dependances quand c est lui qui refuse.
+
+    Trois issues, parce que les deux refus n appellent pas le meme geste. `echec` : le tir n est pas
+    alle au bout, le plus souvent parce que l arbre ne compile pas, et le rapport PMD manque.
+    `dependances` : tout a compile, PMD a ecrit son rapport, et le DERNIER but a refuse - c est un
+    jugement sur le diff, que la porte compte parmi ses refus. `produit` : rien a redire.
+
+    Le refus se reconnait a ce que le greffon ECRIT, et non au code : Maven sort en 1 dans les deux
+    cas. Le motif est pris a la lettre du journal de la demande #5993, qui a rougi ainsi :
+
+        [ERROR] Used undeclared dependencies found:
+        [ERROR]    org.junit.platform:junit-platform-commons:jar:6.1.3:test
+    """
+    if code == 0:
+        return "produit", []
+    retenues: list[str] = []
+    sous_un_titre = False
+    for brute in sortie.splitlines():
+        ligne = NIVEAU_MAVEN.sub("", brute).strip()
+        if MARQUE_DES_DEPENDANCES.search(ligne):
+            retenues.append(ligne)
+            sous_un_titre = True
+        elif sous_un_titre and COORDONNEES.match(ligne):
+            retenues.append(f"  {ligne}")
+        else:
+            sous_un_titre = False
+    return ("dependances", retenues) if retenues else ("echec", [])
+
+
+def resume_du_tir(tir: tuple[list[str], pathlib.Path, float, str] | None) -> str:
+    """La ligne du RESUME, a cote du verdict : une JVM a-t-elle tourne, combien de temps, pour quoi.
+
+    Une session pair a lu la fin du rendu, qui liste sous « RESTE A LANCER » ce que la porte ne joue
+    pas, et en a conclu qu aucun Maven n etait parti. Il etait parti plus haut. Dire avant ne suffit
+    donc pas : le resume est ce qu on lit, et il doit porter la charge avec le verdict (#5994).
+
+    Elle dit aussi l ABSENCE de JVM. Une ligne qui n apparait que parfois ne permet pas de conclure
+    de son silence ; celle-ci est toujours la, et se lit dans les deux sens.
+    """
+    if tir is None:
+        return "  JVM : aucune n a ete lancee par cette porte."
+    commande, ou, mis, issue = tir
+    suite = {
+        "produit": "le controle des dependances n a rien refuse",
+        "dependances": "le controle des dependances a REFUSE",
+        "echec": "le tir a ECHOUE avant son terme, sans doute a la compilation",
+    }[issue]
+    return (
+        f"  JVM : une, lancee par cette porte, {mis:.0f} s dans {ou} ; {suite}.\n"
+        f"      {' '.join(commande)}"
+    )
+
+
 def modules_attendus(racine: pathlib.Path | None = None) -> dict[str, str]:
     """Ce que les gardes IMPORTENT, et la distribution qui le fournit.
 
@@ -797,7 +946,10 @@ def reste_a_lancer(
 
 
 def rendre(
-    contre: str = "origin/main", lance: bool = False, racine: pathlib.Path | None = None
+    contre: str = "origin/main",
+    lance: bool = False,
+    racine: pathlib.Path | None = None,
+    lanceur=None,
 ) -> int:
     diff = fichiers_du_diff(contre, racine)
     if not diff:
@@ -858,33 +1010,63 @@ def rendre(
     )
     print("     Le defaut penche du cote couteux, jamais du cote muet.")
 
+    # ⟨la JVM s annonce DES LE RELEVE⟩ C est le seul moment ou l appelant peut encore prevenir : au
+    # `--lance`, la porte ecrit sa ligne et lance dans la meme seconde (#5994).
+    part = engage_pmd(diff)
+    ou = racine or RACINE
     if not lance:
+        if part:
+            print()
+            for ligne in annonce_du_tir(
+                tir_maven(racine), ou, durees_connues().get(CLE_DU_TIR), imminent=False
+            ):
+                print(ligne)
         return 0
 
     # ⟨la porte POSE ce qui est cher et conditionnel⟩ Le crochet `post-checkout` pose ce qui est bon
     # marche - six secondes - a la creation d un worktree (#5406). PMD, lui, depend de ce que le diff
     # touche, et la porte est le seul endroit qui le sache.
     pmd_a_echoue = False
-    if engage_pmd(diff):
+    # Ce que la JVM a fait, pour le RESUME, et le refus du controle des dependances s il y en a un.
+    tir = None
+    refus_des_dependances = None
+    if part:
+        commande = tir_maven(racine)
         print()
+        # ⟨AVANT, et vide du tampon⟩ Sans `flush`, la ligne attendrait la fin du tir dans un tube :
+        # elle serait ecrite avant et lue apres, ce qui est le defaut qu on ferme.
+        for ligne in annonce_du_tir(commande, ou, durees_connues().get(CLE_DU_TIR), imminent=True):
+            print(ligne, flush=True)
         print("  Rapport PMD : `4617` REFUSE sans lui, et se classerait « environnemental ».")
         depart_pmd = __import__("time").time()
-        rendu = subprocess.run(
-            ["./mvnw", "-B", "-o", "-q", "test-compile", "pmd:pmd"],
-            cwd=racine or RACINE,
+        rendu = (lanceur or subprocess.run)(
+            commande,
+            cwd=ou,
             capture_output=True,
             text=True,
             check=False,
         )
         mis = __import__("time").time() - depart_pmd
-        if rendu.returncode == 0:
-            print(f"    produit en {mis:.0f} s")
+        issue, des_dependances = lit_le_tir(rendu.returncode, rendu.stdout + rendu.stderr)
+        tir = (commande, ou, mis, issue)
+        if issue == "produit":
+            print(f"    produit en {mis:.0f} s, et le controle des dependances n a rien refuse")
+        elif issue == "dependances":
+            # ⟨un REFUS de la porte, et non un echec de preparation⟩ Le rapport PMD existe : `4617`
+            # jugera. Ce qui refuse ici est le diff, par le controle que seule la CI jouait (#6000).
+            print(f"    produit en {mis:.0f} s, mais le controle des dependances REFUSE :")
+            for ligne in des_dependances:
+                print(f"      {ligne}")
+            refus_des_dependances = (
+                f"./mvnw {EXECUTION_DES_DEPENDANCES}  (controle des dependances de la phase `verify`)",
+                "\n".join(des_dependances[:2]),
+            )
         else:
             # Dire, et poursuivre. Une preparation muette qui echoue rendrait la porte MOINS sure
             # qu avant : le lecteur croirait l environnement complet, et `4617` refuserait sans qu on
             # sache si c est le rapport ou le code.
             pmd_a_echoue = True
-            print(f"    ECHEC apres {mis:.0f} s : `./mvnw -o test-compile pmd:pmd`.")
+            print(f"    ECHEC apres {mis:.0f} s : `{' '.join(commande)}`.")
             # ⟨l ORDRE de ces deux lignes est le remede, et il vient d un pair⟩ L ecriture d avant
             # disait « `4617` refusera donc, et son refus ne dira RIEN de ce diff ». Elle repondait a
             # « que vaut le refus de 4617 » alors que le lecteur, a cet instant, se demande « qu est-ce
@@ -927,6 +1109,13 @@ def rendre(
         print(f"  interprete : {python}", flush=True)
 
     joues, rouges, muets, mesures = 0, [], [], durees_connues()
+    if refus_des_dependances:
+        rouges.append(refus_des_dependances)
+    if tir and tir[3] != "echec" and lanceur is None:
+        # Un tir qui echoue a la compilation s arrete tot : sa duree annoncerait un passage plus
+        # court que celui qui suivra, donc elle ne s ecrit pas. Celle d un lanceur INJECTE non plus :
+        # c est la duree d un cas d auto-test, et le releve est celui du vrai depot.
+        mesures[CLE_DU_TIR] = round(tir[2], 1)
     for g in engages:
         depart = time.time()
         arguments = des_ateliers.get(g, [])
@@ -1032,6 +1221,8 @@ def rendre(
         f"\n  {joues} garde(s), {autotests} auto-test(s) d atelier et {outils} outil(s) joue(s),"
         f" {len(rouges)} refus, {len(muets)} muet(s)."
     )
+    # ⟨la JVM se REDIT a cote du verdict⟩ Voir `resume_du_tir` : le resume est ce qu on lit.
+    print(resume_du_tir(tir))
     # ⟨les muets se NOMMENT, et dans la QUEUE⟩ Une session pair a lu « 0 refus » dans un code 1 en
     # filtrant la sortie sur `✘` : un verdict qui ne se voit que dans le corps du texte se perd.
     for g, ligne in muets:
@@ -2470,6 +2661,305 @@ def _auto_test() -> int:
             == "la cause\nelle evite un Traceback (most recent call last):"
         ),
     )
+
+    # ⟨LE TIR MAVEN DE LA PORTE, SANS JVM (#5994, #6000)⟩ Rien de ce qui suit ne lance Maven : la
+    # commande se compose, l annonce et le resume s ecrivent, le rendu se lit, et le lancement passe
+    # par un lanceur injecte. Ce que ces cas ne peuvent pas dire, c est que Maven ACCEPTE la
+    # commande : cela se voit une fois, par un tir reel.
+    echecs += juge(
+        "le tir garde ses deux buts d origine, et dans leur ordre",
+        lambda: tir_maven()[:6] == ["./mvnw", "-B", "-o", "-q", "test-compile", "pmd:pmd"],
+    )
+    echecs += juge(
+        "il joue en plus le controle des dependances, et en DERNIER",
+        lambda: tir_maven()[-1].endswith(f":{EXECUTION_DES_DEPENDANCES}") and len(tir_maven()) == 7,
+    )
+    # ⟨confronte au `pom.xml` par un AUTRE instrument⟩ La version se lit par motif dans `tir_maven` ;
+    # ici par l analyseur XML, sur la propriete que la declaration du greffon reference. Deux
+    # lectures qui s accordent, et non la meme relue.
+    import xml.etree.ElementTree as _ET
+
+    _M = "{http://maven.apache.org/POM/4.0.0}"
+    _pom = _ET.parse(RACINE / "pom.xml").getroot()
+    _greffon = next(
+        (
+            g
+            for g in _pom.iter(f"{_M}plugin")
+            if g.findtext(f"{_M}artifactId") == "maven-dependency-plugin"
+        ),
+        None,
+    )
+    echecs += juge(
+        "sa version est celle que le pom donne au greffon, et non une copie",
+        lambda: (
+            _greffon.findtext(f"{_M}version") == "${maven.dependency.plugin.version}"
+            and tir_maven()[-1]
+            == "org.apache.maven.plugins:maven-dependency-plugin:"
+            + _pom.findtext(f"{_M}properties/{_M}maven.dependency.plugin.version")
+            + f":{EXECUTION_DES_DEPENDANCES}"
+        ),
+    )
+    # L execution NOMMEE existe, et porte le but attendu : le jour ou le pom la renomme, la porte
+    # jouerait un identifiant que Maven ne connait pas, et ce cas le dit avant le premier tir.
+    echecs += juge(
+        "l execution nommee existe dans le pom, liee a `verify`, avec son but",
+        lambda: any(
+            e.findtext(f"{_M}id") == EXECUTION_DES_DEPENDANCES.split("@")[1]
+            and e.findtext(f"{_M}phase") == "verify"
+            and [b.text for b in e.iter(f"{_M}goal")] == [EXECUTION_DES_DEPENDANCES.split("@")[0]]
+            for e in _greffon.iter(f"{_M}execution")
+        ),
+    )
+    with tempfile.TemporaryDirectory(prefix="vc-tir-") as bac_du_tir:
+        faux_depot = pathlib.Path(bac_du_tir)
+        (faux_depot / "pom.xml").write_text(
+            "<project><properties><maven.dependency.plugin.version>9.9.9"
+            "</maven.dependency.plugin.version></properties></project>",
+            encoding="utf-8",
+        )
+        echecs += juge(
+            "une autre version dans le pom donne une autre commande",
+            lambda: (
+                tir_maven(faux_depot)[-1]
+                == f"org.apache.maven.plugins:maven-dependency-plugin:9.9.9:{EXECUTION_DES_DEPENDANCES}"
+            ),
+        )
+        (faux_depot / "pom.xml").write_text("<project/>", encoding="utf-8")
+        echecs += juge(
+            "sans la propriete, le but retombe sur le prefixe que Maven resout",
+            lambda: tir_maven(faux_depot)[-1] == f"dependency:{EXECUTION_DES_DEPENDANCES}",
+        )
+
+    commande_temoin = ["./mvnw", "-q", "un-but"]
+    avant = annonce_du_tir(commande_temoin, pathlib.Path("/un/arbre"), 58.4, imminent=True)
+    au_releve = annonce_du_tir(commande_temoin, pathlib.Path("/un/arbre"), None, imminent=False)
+    echecs += juge(
+        "l annonce dit qu une JVM part, par quelle commande et dans quel arbre",
+        lambda: (
+            "UNE JVM PART MAINTENANT" in avant[0]
+            and avant[1].strip() == "./mvnw -q un-but"
+            and avant[2].strip() == "dans /un/arbre"
+        ),
+    )
+    echecs += juge(
+        "elle dit la duree du passage precedent quand elle est connue",
+        lambda: "environ 58 s" in avant[3] and "inconnue" not in avant[3],
+    )
+    echecs += juge(
+        "et sinon elle le dit, avec les deux mesures datees",
+        lambda: "duree inconnue" in au_releve[3] and "58 s et 63 s" in au_releve[3],
+    )
+    echecs += juge(
+        "au releve, elle dit que la JVM PARTIRA et demande de prevenir les pairs",
+        lambda: (
+            "UNE JVM PARTIRA avec `--lance`" in au_releve[0]
+            and "annoncez-la AVANT" in au_releve[-1]
+        ),
+    )
+    echecs += juge(
+        "au lancement, elle ne demande plus de prevenir : il est trop tard",
+        lambda: not any("annoncez-la" in ligne for ligne in avant),
+    )
+    echecs += juge(
+        "et elle nomme le controle des dependances parmi ce que la JVM joue",
+        lambda: any("controle des dependances" in ligne for ligne in avant),
+    )
+
+    # Le journal de la demande #5993, a la lettre : c est lui qui a rougi `build` apres une porte
+    # a zero refus.
+    JOURNAL_5993 = (
+        "[ERROR] Used undeclared dependencies found:\n"
+        "[ERROR]    org.junit.platform:junit-platform-commons:jar:6.1.3:test\n"
+        "[ERROR] Failed to execute goal org.apache.maven.plugins:maven-dependency-plugin:3.11.0:"
+        "analyze-only (verdict-dependances) on project vigiechiro: Dependency problems found\n"
+    )
+    COMPILATION = (
+        "[ERROR] COMPILATION ERROR : \n"
+        "[ERROR] /x/src/main/java/A.java:[3,8] cannot find symbol\n"
+        "[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.14.0:"
+        "compile (default-compile) on project vigiechiro: Compilation failure\n"
+    )
+    echecs += juge(
+        "un tir qui sort en 0 a produit, quoi qu il ait ecrit",
+        lambda: lit_le_tir(0, JOURNAL_5993) == ("produit", []),
+    )
+    echecs += juge(
+        "le refus du controle des dependances se lit, et NOMME la dependance",
+        lambda: (
+            lit_le_tir(1, JOURNAL_5993)
+            == (
+                "dependances",
+                [
+                    "Used undeclared dependencies found:",
+                    "  org.junit.platform:junit-platform-commons:jar:6.1.3:test",
+                ],
+            )
+        ),
+    )
+    # Le CONTRASTE : un arbre qui ne compile pas n est pas un refus de dependances. Sans ce cas,
+    # une lecture qui dirait « dependances » a tout code non nul passerait le precedent.
+    echecs += juge(
+        "une compilation qui echoue n est PAS un refus de dependances",
+        lambda: lit_le_tir(1, COMPILATION) == ("echec", []),
+    )
+    echecs += juge(
+        "une dependance declaree et inutile se lit de la meme facon",
+        lambda: (
+            lit_le_tir(
+                1, "[ERROR] Unused declared dependencies found:\n[ERROR]    a.b:c:jar:1.0:compile\n"
+            )
+            == ("dependances", ["Unused declared dependencies found:", "  a.b:c:jar:1.0:compile"])
+        ),
+    )
+    echecs += juge(
+        "des coordonnees hors de tout titre ne sont pas retenues",
+        lambda: lit_le_tir(1, "[ERROR] a.b:c:jar:1.0:compile\n" + COMPILATION) == ("echec", []),
+    )
+
+    arbre = pathlib.Path("/un/arbre")
+    echecs += juge(
+        "sans tir, le resume dit qu AUCUNE JVM n a ete lancee",
+        lambda: "aucune" in resume_du_tir(None) and resume_du_tir(None).startswith("  JVM :"),
+    )
+    echecs += juge(
+        "avec un tir, il dit la duree, l arbre, la commande et que rien n a refuse",
+        lambda: all(
+            morceau in resume_du_tir((commande_temoin, arbre, 61.6, "produit"))
+            for morceau in ("JVM : une", "62 s", "/un/arbre", "./mvnw -q un-but", "n a rien refuse")
+        ),
+    )
+    echecs += juge(
+        "il dit le refus des dependances, et l echec, chacun par son nom",
+        lambda: (
+            "a REFUSE" in resume_du_tir((commande_temoin, arbre, 5.0, "dependances"))
+            and "ECHOUE" in resume_du_tir((commande_temoin, arbre, 5.0, "echec"))
+            and "REFUSE" not in resume_du_tir((commande_temoin, arbre, 5.0, "produit"))
+        ),
+    )
+
+    # ⟨DE BOUT EN BOUT, par un lanceur INJECTE⟩ Les cas du dessus tiennent les morceaux ; ceux-ci
+    # tiennent ce que la PORTE en fait : l annonce AVANT le lancement, le refus compte, la ligne du
+    # resume sous le verdict. Le depot temoin porte un `.java` modifie, ce qui engage le rapport.
+    with tempfile.TemporaryDirectory(prefix="vc-tir-") as bac_du_tir:
+        temoin = pathlib.Path(bac_du_tir)
+        (temoin / "scripts" / "methode").mkdir(parents=True)
+        (temoin / "scripts" / "adr").mkdir(parents=True)
+        (temoin / ".github" / "workflows").mkdir(parents=True)
+        (temoin / "src" / "main" / "java").mkdir(parents=True)
+        (temoin / "scripts" / "methode" / "tenu.py").write_text(
+            'CONTRAT = {"geste": "x", "population": "y", "dispositif": "invariant",\n'
+            '           "seuil": "(sans objet)", "temoin": "t", "decision": "d"}\n'
+            'print("tenu")\n',
+            encoding="utf-8",
+        )
+        (temoin / ".github" / "workflows" / "x.yml").write_text(
+            "jobs:\n  a:\n    steps: []\n", encoding="utf-8"
+        )
+        (temoin / "pom.xml").write_text("<project/>", encoding="utf-8")
+        (temoin / "lu.md").write_text("socle\n", encoding="utf-8")
+        (temoin / "src" / "main" / "java" / "A.java").write_text("class A {}\n", encoding="utf-8")
+        for commande in (
+            ["init", "-q"],
+            ["add", "."],
+            ["-c", "user.name=T", "-c", "user.email=t@example.invalid", "commit", "-qm", "socle"],
+        ):
+            subprocess.run(["git", "-C", str(temoin), *commande], check=True)
+
+        def joue_la_porte(lance: bool, code: int, sortie: str):
+            """Le rendu de la porte, son code, et ce que le lanceur a VU au moment d etre appele."""
+            appels: list[tuple[list[str], str, str]] = []
+            tampon = _io.StringIO()
+
+            def lanceur(commande, cwd=None, **_):
+                appels.append((list(commande), str(cwd), tampon.getvalue()))
+                return subprocess.CompletedProcess(commande, code, sortie, "")
+
+            with _ctx.redirect_stdout(tampon):
+                rendu_code = rendre(contre="HEAD", lance=lance, racine=temoin, lanceur=lanceur)
+            return rendu_code, tampon.getvalue(), appels
+
+        # 1. Sans Java dans le diff : aucune JVM, et le resume le DIT.
+        (temoin / "lu.md").write_text("socle\nune ligne\n", encoding="utf-8")
+        code, rendu, appels = joue_la_porte(True, 0, "")
+        echecs += juge(
+            "sans Java dans le diff, la porte ne lance aucune JVM et son resume le dit",
+            lambda: (
+                appels == []
+                and "JVM : aucune" in rendu
+                and "UNE JVM PART" not in rendu
+                and rendu.find("JVM : aucune") > rendu.find(" joue(s), ") > -1
+            ),
+        )
+
+        # 2. Avec du Java, au RELEVE : elle annonce, et ne lance pas.
+        (temoin / "src" / "main" / "java" / "A.java").write_text(
+            "class A { int x; }\n", encoding="utf-8"
+        )
+        code, rendu, appels = joue_la_porte(False, 0, "")
+        echecs += juge(
+            "au releve, un diff Java fait ANNONCER la JVM sans la lancer",
+            lambda: (
+                appels == []
+                and "UNE JVM PARTIRA avec `--lance`" in rendu
+                and " ".join(tir_maven(temoin)) in rendu
+                and str(temoin) in rendu
+            ),
+        )
+
+        # 3. Au lancement : l annonce est ecrite AVANT que le lanceur soit appele.
+        code, rendu, appels = joue_la_porte(True, 0, "")
+        echecs += juge(
+            "au lancement, la JVM part UNE fois, par la commande composee, dans l arbre",
+            lambda: [(a[0], a[1]) for a in appels] == [(tir_maven(temoin), str(temoin))],
+        )
+        echecs += juge(
+            "et l annonce etait deja ECRITE quand elle est partie",
+            lambda: (
+                len(appels) == 1
+                and "UNE JVM PART MAINTENANT" in appels[0][2]
+                and " ".join(tir_maven(temoin)) in appels[0][2]
+                and str(temoin) in appels[0][2]
+            ),
+        )
+        echecs += juge(
+            "le resume redit la JVM SOUS la ligne de verdict, et avant ce qui reste a lancer",
+            lambda: (
+                rendu.find("RESTE A LANCER")
+                > rendu.find("JVM : une")
+                > rendu.find(" joue(s), ")
+                > -1
+                and "n a rien refuse" in rendu
+                and code == 0
+            ),
+        )
+
+        # 4. Le controle des dependances refuse : la porte REFUSE, et nomme la dependance.
+        code, rendu, appels = joue_la_porte(True, 1, JOURNAL_5993)
+        queue = rendu[rendu.find(" joue(s), ") :]
+        echecs += juge(
+            "un refus du controle des dependances fait REFUSER la porte, code 1",
+            lambda: code == 1 and " 1 refus, " in rendu,
+        )
+        echecs += juge(
+            "et la dependance est NOMMEE dans la queue, sous le verdict",
+            lambda: (
+                "org.junit.platform:junit-platform-commons:jar:6.1.3:test" in queue
+                and "a REFUSE" in queue
+                and "La compilation a echoue" not in rendu
+            ),
+        )
+
+        # 5. La compilation echoue : ce n est PAS un refus de dependances, et le resume le separe.
+        code, rendu, appels = joue_la_porte(True, 1, COMPILATION)
+        echecs += juge(
+            "une compilation qui echoue n est pas comptee comme un refus de dependances",
+            lambda: (
+                " 0 refus, " in rendu
+                and "La compilation a echoue" in rendu
+                and "ECHOUE avant son terme" in rendu
+                and " ".join(tir_maven(temoin)) in rendu
+            ),
+        )
 
     joues = sum(1 for ligne in dits if ligne.startswith(("  ✔", "  ✘")))
     print(
