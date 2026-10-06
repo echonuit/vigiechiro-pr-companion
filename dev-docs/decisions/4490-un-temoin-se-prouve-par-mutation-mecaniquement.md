@@ -10,7 +10,8 @@ enforced_by:
   - "scripts/adr/verifie_temoins_non_decoratifs.py"
 ratchet: 0
 relations:
-  completee_par: ["5572-un-verdict-se-remesure-la-ou-il-retire-une-question"]
+  completee_par: ["5572-un-verdict-se-remesure-la-ou-il-retire-une-question", "5265-trois-bancs-partagent-ce-qu-ils-rendent-pas-leur-mecanique"]
+  amendee_par: ["5257-un-rouge-par-plantage-ne-prouve-rien"]
 verified:
   - by: machine:suspects
     at: 2026-08-26
@@ -23,6 +24,10 @@ generated:
 
 !!! warning "Ce qui fait foi aujourd'hui"
     **Complétée le 2026-09-29** par [ADR 5572](5572-un-verdict-se-remesure-la-ou-il-retire-une-question.md) : sa mutation reste le dispositif de l'article A2 ; la 5572 la relie aux six autres décisions du même défaut, et dit où un verdict se remesure quand aucune mutation ne le couvre.
+
+    **Amendée le 2026-09-05** par [ADR 5257](5257-un-rouge-par-plantage-ne-prouve-rien.md), et l'amendement n'était écrit que de son côté jusqu'à la clôture de #5265. Deux phrases de cette page ne font plus foi. « Exige qu'elle rougisse. Tolérance zéro » : un rouge par plantage ne prouve rien, donc le banc rend trois comptes, tient, non concluant, décoratif, et la tolérance zéro ne porte que sur le dernier. « Un faux positif est bruyant » : mesuré à l'inverse en #5254, un verdict « décoratif » rendu à tort se lit comme une trouvaille et non comme une panne d'outil.
+
+    **Complétée le 2026-10-06** par [ADR 5265](5265-trois-bancs-partagent-ce-qu-ils-rendent-pas-leur-mecanique.md) : ce banc n'est plus seul, et ce que les trois ont en commun est ce qu'ils rendent. Sa neutralisation par insertion lit le point d'entrée dans l'arbre depuis #5263, et les gardes qui plantent sous mutation sont nommés dans une table depuis #5743.
 
 ## Contexte
 

@@ -119,12 +119,43 @@ tenait ce qu'il annonce, la mutation posait une autre question.
 Un garde ne s'élargit pas « pour qu'il voie ce cas » : ce serait lui faire promettre ce que personne
 n'a décidé. Si la propriété non promise compte, c'est une trouvaille, et elle se consigne.
 
+### Quand un banc répond « non concluant »
+
+Trois bancs refont cette mutation sur les gardes de leur corpus, dans le job `temoins` de
+`lint.yml` : `scripts/adr/verifie_temoins_non_decoratifs.py`,
+`scripts/methode/temoins-de-methode-non-decoratifs.py` et
+`.github/scripts/temoins_de_ci_non_decoratifs.py`. Ils neutralisent les fonctions du garde, relancent
+son auto-test et rendent trois comptes : il **tient**, il est **décoratif**, ou il est **non
+concluant**. Le troisième veut dire que l'auto-test a planté avant d'assertir, et un rouge par
+plantage ne prouve rien
+([ADR 5257](../../../dev-docs/decisions/5257-un-rouge-par-plantage-ne-prouve-rien.md)).
+
+Chaque banc nomme ses non concluants dans une table, `PLANTENT_SOUS_MUTATION`, qu'il confronte dans
+les deux sens ([ADR 5743](../../../dev-docs/decisions/5743-un-invariant-se-borne-par-une-liste-nommee.md)).
+Un garde neuf dont le témoin plante sous mutation fait donc sortir le banc en 1, et une entrée qui ne
+plante plus aussi. Deux gestes lèvent ce rouge : réparer le témoin, ou nommer le garde dans la table
+avec sa raison. Le second ne répare rien : il écrit la dette, et la table la garde lisible.
+
+Le remède a été démontré sur `scripts/adr/5087-versions-hors-des-checks.py` (#5637), en deux pas, et
+le second n'apparaît qu'après le premier :
+
+1. **Le cas échoue au lieu de lever.** Un `assert` nu laisse une trace de pile, et le banc lit « non
+   concluant » dès qu'il en voit une. Le cas passe par l'aide du harnais, qui compte l'échec.
+2. **Il compare la valeur entière, jamais un index dedans.** La neutralisation fait rendre `[]` à
+   toute fonction : `actives["nocturne"]` lève alors `TypeError`, là où comparer le dictionnaire
+   complet échoue proprement. Le témoin y gagne, il épingle toute la dérivation au lieu de quelques
+   entrées.
+
+Les trois bancs ne font pas tout pareil, et c'est décidé : ce qu'ils ont en commun est ce qu'ils
+rendent ([ADR 5265](../../../dev-docs/decisions/5265-trois-bancs-partagent-ce-qu-ils-rendent-pas-leur-mecanique.md)).
+
 ## Signaux d'alerte : on s'arrête
 
 | Pensée | Réalité |
 |---|---|
 | « Le test est vert, donc le garde marche » | Ce vert existerait-il si le dépôt était cassé ? |
 | « La mutation est restée verte, donc le garde est décoratif » | Le promettait-il ? Relire ce qu'il annonce, puis le voir rouge sur ce qu'il annonce |
+| « Le banc est sorti en 1, je nomme mon garde dans la table » | Nommer ne répare rien. Le témoin peut-il échouer au lieu de lever, et comparer la valeur entière ? |
 | « J'ai relu le garde, il est correct » | Trois dispositifs ont passé la relecture et échoué à la mutation |
 | « La mutation est évidente, je la saute » | Trois formes du défaut ne se voient qu'en la montant |
 | « Le pourcentage est bon » | Le pourcentage ne dit rien. Lisez les survivants |

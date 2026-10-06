@@ -437,6 +437,13 @@ information, pas un échec : elle dit que le garde promet plus qu'il ne tient, e
 son en-tête plutôt que d'emprunter la solidité du voisin
 ([ADR 3540](decisions/3540-un-cliquet-qui-compte-n-est-pas-la-preuve-de-la-regle.md)).
 
+Quand la mutation reste verte, c'est le cas miroir, et il se lit pareil. Avant d'écrire « garde
+décoratif », relire ce que le garde **annonce** : son en-tête, son `CONTRAT` quand il en déclare un,
+son message de refus. Si la propriété mutée y est, le garde promet plus qu'il ne tient. Si elle n'y est
+pas, la mutation demandait plus que le garde ne promet, et cette lecture-là ne se conclut pas en
+relisant : elle doit une seconde mutation, montée contre la phrase annoncée et **vue rouge**. Le cas
+mesuré et le détail sont dans la compétence [`mutation`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.agents/skills/mutation/SKILL.md) (#5418).
+
 ## À la clôture d'une issue : ce qu'on laisse derrière soi
 
 Une issue se ferme sur deux textes qu'on relira dans six mois **sans le fil** : son **corps**, et celui

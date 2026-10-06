@@ -8,6 +8,7 @@ decided_at: 2026-08-29
 verification: certaine
 relations:
   amendee_par: ["4788-l-absence-de-preuve-refuse-elle-ne-se-signale-pas"]
+  completee_par: ["5265-trois-bancs-partagent-ce-qu-ils-rendent-pas-leur-mecanique"]
 enforced_by:
   - "scripts/methode/temoins-de-methode-non-decoratifs.py"
 verified:
@@ -25,6 +26,15 @@ generated:
     les six gardes sans point d'entrée en ont reçu un, et le garde REFUSE désormais au lieu de les
     nommer. La phrase « le refus, non le saut » décrivait une sortie en 0, donc un signalement sans
     coût. Le corpus compte quinze gardes éprouvés et zéro non éprouvé.
+
+    **Complétée le 2026-10-06** par [ADR 5265](5265-trois-bancs-partagent-ce-qu-ils-rendent-pas-leur-mecanique.md),
+    à la clôture de #5265. Quatre phrases de cette page se lisent avec elle. « Le marqueur est
+    `if __name__ == "__main__":` » : le point d'entrée se lit dans l'arbre depuis #5263, une chaîne
+    qui porte ce texte ne trompe plus le banc. « Dérivée du nom » : ce qui est épargné se dérive du
+    graphe d'appel depuis #5524 (ADR 5452). « Rouge ne distingue pas » : le banc rend trois comptes
+    depuis #5264, et un plantage ne compte plus pour une preuve (ADR 5257). « Le garde est dans son
+    propre corpus » : la décision tient, et le banc la déclare depuis #5550 par une constante et un
+    cas. Son corpus est ce que `lint.yml` lance sous `scripts/`, hors `scripts/adr`, depuis #5397.
 
 ## Contexte
 

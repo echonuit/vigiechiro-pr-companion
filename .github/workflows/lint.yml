@@ -1420,13 +1420,20 @@ jobs:
         #
         # Il REFUSE plutot que de sauter : six gardes sans `if __name__` sont nommes a chaque
         # passage, leur sort etant decide par #4788.
+        #
+        # CE QUE LE CHANTIER #5265 Y A CHANGÉ. Son corpus n'est plus le seul `scripts/methode` :
+        # c'est tout ce que cet atelier lance sous `scripts/`, hors `scripts/adr`, et qui déclare
+        # un `CONTRAT`, la porte `scripts/batterie.py` comprise (#5397). Le point d'entrée se lit
+        # dans l'arbre et non par un motif, qu'une chaîne portant le même texte trompait (#5263).
+        # Et son verdict a trois valeurs, comme celui du banc de CI plus bas : un auto-test qui
+        # plante sous mutation est « non concluant », il n'est plus compté comme éprouvé (#5264).
         run: |
           python3 scripts/methode/temoins-de-methode-non-decoratifs.py --auto-test
           python3 scripts/methode/temoins-de-methode-non-decoratifs.py
       - name: "Les auto-tests des gardes de CI ne sont pas décoratifs (bloquant, #5254)"
         if: steps.portee.outputs.concerne == 'oui'
-        # Le troisième banc, et il manquait. Les deux autres couvrent `scripts/adr` et
-        # `scripts/methode` ; #5215 avait clos #4865 en affirmant que « converti, un garde entre
+        # Le troisième banc, et il manquait. Les deux autres couvrent `scripts/adr` et le reste de
+        # `scripts/` ; #5215 avait clos #4865 en affirmant que « converti, un garde entre
         # gratuitement dans un banc qui existe ». Mesuré à la clôture de #5218 : il n'y entrait pas,
         # et 43 gardes de CI portaient 178 cas que rien ne mutait.
         #

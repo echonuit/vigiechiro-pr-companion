@@ -92,7 +92,7 @@ Ce qui juge, selon ce qu'on a touché :
 **C'est `methode` qui juge presque tout**, y compris les compétences : il porte les gardes de prose,
 les inventaires et les concordances. Le job s'appelait `lint` jusqu'à #5365, où il a été séparé en
 trois : `lint` ne porte plus que les formateurs et les analyseurs, `methode` les gardes, et
-`temoins` les deux bancs de mutation.
+`temoins` les trois bancs de mutation.
 
 **`temoins` porte une portée** : il ne s'exerce que si le diff touche un garde. Sur une demande de
 prose il conclut « sans objet », et c'est un silence explicite, pas une absence.
