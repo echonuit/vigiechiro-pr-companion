@@ -92,6 +92,11 @@ LOCAUX = {
     # de l elision sans apostrophe. Les deux gardes en tenaient chacun une ecriture, et elles
     # jugeaient differemment une ligne a espace insecable, auto-tests verts des deux cotes.
     "verifie_titre_pr",
+    # L outil de comparaison des tournages, ajoute en #5979 : le garde des decisions du tournage lui
+    # demande `signal_a_relire`, la ligne que l atelier de mesure filtre pour son resume. Recopiee
+    # dans le garde, elle aurait continue de passer le filtre apres que l outil aurait change la
+    # sienne, et le resume n aurait plus rien montre sans que rien ne rougisse.
+    "compare_tournages",
 }
 
 

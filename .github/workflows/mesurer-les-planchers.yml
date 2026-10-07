@@ -142,12 +142,24 @@ jobs:
             # UN artefact de clips, et un seul. Une exécution relancée en porte un par tentative, et
             # reprendre « les clips » en mêlerait deux tournages sous le même numéro (#5797).
             liste=$(gh api "repos/${GH_REPO}/actions/runs/${n}/artifacts" --paginate \
-              --jq '.artifacts[] | select(.name | startswith("clips-")) | .name')
+              --jq '.artifacts[] | select(.name | startswith("clips-")) | "\(.name) \(.expired)"')
             if [ -z "$liste" ] || [ "$(printf '%s\n' "$liste" | wc -l)" -ne 1 ]; then
               echo "::error::L'exécution $n ne porte pas UN artefact de clips, mais : « ${liste//$'\n'/, } »."
+              # Passé son délai, un artefact disparaît de la liste : le vide a donc deux lectures, et
+              # une exécution réussie qui ne liste plus rien se refusait sans dire pourquoi (#5979).
+              echo "::error::Un artefact de clips est gardé quatorze jours : passé ce délai, l'exécution n'en liste plus."
               exit 1
             fi
-            gh run download "$n" --name "$liste" --dir "repris/$n"
+            # Les phrases de `comparer-tournages.yml`, que le garde des décisions exige des deux
+            # ateliers : sans ce refus, le téléchargement échouait sans raison lisible.
+            read -r nom perime <<< "$liste"
+            if [ "$perime" = "true" ]; then
+              commit=$(gh run view "$n" --json headSha --jq '.headSha' || true)
+              echo "::error::L'artefact de clips de l'exécution $n a expiré : il est gardé quatorze jours."
+              echo "::error::Relancer un tournage du commit ${commit:0:9}, et mesurer avec celui-là."
+              exit 1
+            fi
+            gh run download "$n" --name "$nom" --dir "repris/$n"
             # Les clips à plat, sous le numéro : l'outil nomme chaque paire par ses deux dossiers.
             mkdir -p "tournages/$n"
             find "repris/$n" -name '*.mp4' -exec mv -t "tournages/$n" {} +
@@ -193,6 +205,14 @@ jobs:
           python3 .github/assets/compare_tournages.py --planchers "$fichier" "${dossiers[@]}" | tee mesure.log
           mkdir -p rendu
           cp "$fichier" mesure.log rendu/
+
+      # Un pas à lui, qui ne lit que le journal : le garde des décisions le lance face à un journal
+      # qui porte un plancher à relire, et face à un journal qui n'en porte pas (#5979).
+      - name: Résumer la mesure
+        env:
+          EXECUTIONS: ${{ inputs.executions }}
+        run: |
+          set -euo pipefail
           {
             echo "### Planchers mesurés"
             echo

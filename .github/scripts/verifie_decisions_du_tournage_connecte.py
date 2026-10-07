@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Dix decisions des ateliers de tournage tiennent dans le YAML (#5221, porte du bash).
+"""Onze decisions des ateliers de tournage tiennent dans le YAML (#5221, porte du bash).
 
 Elles ne se tiennent pas par un test : elles vivent dans la forme de trois ateliers, et rien ne les
 relisait. Chacune a un cout connu si elle lache. Les cinq premieres sont celles du tournage connecte,
 qui a donne son nom au fichier ; les quatre suivantes sont celles de la mesure des planchers (#5885) ;
-la dixieme est celle de la comparaison d une execution (#5930).
+la dixieme est celle de la comparaison d une execution (#5930) ; la onzieme est celle du resume de
+la mesure (#5979).
 
 1. **`comparer-tournages.yml` REFUSE la source `clips-connectes`.** Comparer un tournage connecte a
    un autre mesure la plateforme au lieu du produit, et rend un chiffre qui a l air juste (#4306).
@@ -37,7 +38,10 @@ la dixieme est celle de la comparaison d une execution (#5930).
 9. **Une execution ne rend ses clips que si elle porte UN artefact de clips, et un seul.** Une
    execution relancee en porte un par tentative (#5797). Les reprendre tous rangerait deux tournages
    sous le meme numero : la mesure comparerait alors un melange, et rien ne le dirait. Ajoutee a la
-   cloture de #5644, dont la passe 6 a trouve ce refus ecrit et jamais eprouve.
+   cloture de #5644, dont la passe 6 a trouve ce refus ecrit et jamais eprouve. Et un artefact
+   EXPIRE se dit : par son nom quand la forge le liste encore, par le rappel du delai quand elle ne
+   liste plus rien (#5979). Sans cela une execution reussie de plus de quatorze jours etait refusee
+   sans raison lisible, ou echouait au telechargement.
 10. **`comparer-tournages.yml` reprend une EXECUTION avec les refus de la mesure, moins un.** Une
    source purement numerique est un numero d execution : une branche se compare ainsi a `main` avant
    fusion (#5930). L ADR 5854 avait ecarte cette entree parce qu elle ouvre une seconde voie de
@@ -45,7 +49,14 @@ la dixieme est celle de la comparaison d une execution (#5930).
    de la neuvieme decision sont exiges de la comparaison par les memes phrases, face au meme leurre.
    Un seul ne se reprend pas, celui du meme commit : il est juste pour un plancher, et il rendrait
    la comparaison inutile, dont l objet est de mettre deux commits cote a cote. Et un artefact
-   EXPIRE se dit par son nom, au lieu d echouer au telechargement sans raison lisible.
+   EXPIRE se dit par son nom, au lieu d echouer au telechargement sans raison lisible : la mesure le
+   dit aussi depuis #5979, par les memes phrases, et la parite ne souffre plus cette exception.
+11. **Le resume de la mesure montre les planchers a relire, ou dit qu il n y en a aucun.** La mesure
+   nomme un plancher que dix-huit paires n ont pas approche (#4309), et l atelier le recopie dans son
+   resume, seul endroit ou on le lit sans ouvrir un artefact. Ce bloc avait ete joue une fois, sans
+   signal a montrer : le premier signal reel aurait ete son premier essai. Il se LANCE donc ici face
+   a deux journaux, et la ligne du signal vient de l OUTIL, pas d une copie : si l outil change sa
+   phrase, le filtre de l atelier ne trouve plus rien et ce garde rougit.
 
 ## Le leurre pour `gh`, et pourquoi le verdict se prend sur le MESSAGE
 
@@ -73,6 +84,11 @@ import sys
 import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
+
+# La ligne du signal se demande a l outil qui l ecrit (onzieme decision).
+sys.path.insert(0, str(RACINE / ".github" / "assets"))
+from compare_tournages import signal_a_relire
+
 ETAT = re.compile(r"\b(always|success|failure|cancelled)\s*\(\s*\)")
 
 
@@ -528,11 +544,22 @@ def un_seul_artefact_de_clips(flux: pathlib.Path) -> bool:
     if PLUSIEURS_ARTEFACTS not in lance("3"):
         print(f"❌ {MESURE} ne dit rien d une exécution sans artefact de clips.")
         tiennent = False
+    if DELAI not in lance("3"):
+        print(f"❌ {MESURE} ne rappelle pas le délai de garde d un artefact de clips.")
+        print("   Une exécution réussie qui ne liste plus rien serait refusée sans raison lisible.")
+        tiennent = False
+    if EXPIRE not in lance("4"):
+        print(f"❌ {MESURE} ne dit pas qu un artefact de clips a expiré.")
+        print(
+            "   Le téléchargement échouerait sans raison lisible, quatorze jours après le tournage."
+        )
+        tiennent = False
     return tiennent
 
 
 COMPARAISON = "comparer-tournages.yml"
 EXPIRE = "a expiré"
+DELAI = "gardé quatorze jours : passé ce délai"
 
 
 def une_execution_se_compare(flux: pathlib.Path) -> bool:
@@ -594,6 +621,10 @@ def une_execution_se_compare(flux: pathlib.Path) -> bool:
         print(f"❌ {COMPARAISON} ne dit rien d une exécution sans artefact de clips.")
         print(f"   {MESURE} le refuse : les deux reprises ne sont plus en parité.")
         tiennent = False
+    if DELAI not in lance("1", "3"):
+        print(f"❌ {COMPARAISON} ne rappelle pas le délai de garde d un artefact de clips.")
+        print(f"   {MESURE} le rappelle : les deux reprises ne sont plus en parité.")
+        tiennent = False
     if EXPIRE not in lance("1", "4"):
         print(f"❌ {COMPARAISON} ne dit pas qu un artefact de clips a expiré.")
         print(
@@ -610,8 +641,57 @@ def une_execution_se_compare(flux: pathlib.Path) -> bool:
     return tiennent
 
 
+RESUME = "### Planchers mesurés"
+AUCUN_SIGNAL = "Aucun plancher à relire"
+
+
+def le_resume_montre_les_planchers_a_relire(flux: pathlib.Path) -> bool:
+    """La onzieme : le resume de la mesure recopie les signaux du journal, ou dit qu il n y en a pas."""
+    if not (flux / MESURE).is_file():
+        # La neuvieme le dit deja, avec sa raison.
+        return False
+    blocs = [
+        e["run"]
+        for j in (_charge(flux / MESURE)["jobs"]).values()
+        for e in j.get("steps", [])
+        if RESUME in e.get("run", "")
+    ]
+    if len(blocs) != 1:
+        print(f"❌ {len(blocs)} pas écrivent le résumé de la mesure dans {MESURE}, attendu 1.")
+        print("   La forme a changé : ce garde ne sait plus quoi lancer, et il le dit.")
+        return False
+    if "compare_tournages.py" in blocs[0]:
+        print(f"❌ Le pas qui écrit le résumé de {MESURE} lance aussi la mesure.")
+        print("   Il ne se lance pas seul face à un journal : son résumé n est éprouvé par rien.")
+        return False
+
+    signal = signal_a_relire("Classe.cas", "0.807", 18)
+
+    def lance(journal: list[str]) -> str:
+        pose = "cat > mesure.log <<'JOURNAL'\n" + "\n".join(journal) + "\nJOURNAL\n"
+        return _lance_un_bloc(
+            pose + blocs[0],
+            LEURRE_MUET,
+            {"EXECUTIONS": "1 2", "GITHUB_STEP_SUMMARY": "/dev/stdout"},
+        )
+
+    ecrits = "Planchers écrits dans « f.tsv » : 2 cas, pris par « un instrument »."
+    tiennent = True
+    rendu = lance([ecrits, signal])
+    if f"- {signal}" not in rendu or AUCUN_SIGNAL in rendu:
+        print(f"❌ Le résumé de {MESURE} ne montre pas un plancher que la mesure dit de relire.")
+        print("   Le signal resterait dans un artefact que personne n ouvre.")
+        tiennent = False
+    rendu = lance([ecrits])
+    if AUCUN_SIGNAL not in rendu or "- " in rendu:
+        print(f"❌ Le résumé de {MESURE} ne dit pas qu aucun plancher n est à relire.")
+        print("   Un résumé muet se lirait « vu », et c est l inverse qu il faut pouvoir lire.")
+        tiennent = False
+    return tiennent
+
+
 def verdict(flux: pathlib.Path) -> bool:
-    """Les dix, et le verdict d ensemble. Chacune s exprime, meme si une precedente a lache."""
+    """Les onze, et le verdict d ensemble. Chacune s exprime, meme si une precedente a lache."""
     tiennent = [
         refus_de_la_source_connectee(flux),
         versement_conditionne(flux),
@@ -623,6 +703,7 @@ def verdict(flux: pathlib.Path) -> bool:
         mesure_sans_ecriture(flux),
         un_seul_artefact_de_clips(flux),
         une_execution_se_compare(flux),
+        le_resume_montre_les_planchers_a_relire(flux),
     ]
     return all(tiennent)
 
@@ -891,6 +972,32 @@ def _la_comparaison_ne_lit_plus_les_artefacts(dossier: pathlib.Path) -> None:
     )
 
 
+LIGNE_DU_DELAI = (
+    """              echo "::error::Un artefact de clips est gardé quatorze jours : passé ce délai,"""
+    """ l'exécution n'en liste plus."\n"""
+)
+
+
+def _la_mesure_reprend_un_artefact_expire(dossier: pathlib.Path) -> None:
+    _remplace_dans_la_mesure(dossier, 'if [ "$perime" = "true" ]; then', "if false; then")
+
+
+def _la_mesure_tait_le_delai(dossier: pathlib.Path) -> None:
+    _remplace_dans_la_mesure(dossier, LIGNE_DU_DELAI, "")
+
+
+def _la_comparaison_tait_le_delai(dossier: pathlib.Path) -> None:
+    _remplace_dans(dossier, COMPARAISON, LIGNE_DU_DELAI, "")
+
+
+def _le_resume_ne_recopie_plus_les_signaux(dossier: pathlib.Path) -> None:
+    _remplace_dans_la_mesure(dossier, "grep '^Plancher à relire' mesure.log | sed 's/^/- /'", ":")
+
+
+def _le_resume_tait_l_absence_de_signal(dossier: pathlib.Path) -> None:
+    _remplace_dans_la_mesure(dossier, 'echo "Aucun plancher à relire à cette mesure."', ":")
+
+
 CASSURES = (
     (_casse_le_refus, "le refus de clips-connectes neutralisé"),
     (_casse_la_fonction_d_etat, "publier-connecte privé de sa fonction d état"),
@@ -918,6 +1025,11 @@ CASSURES = (
     (_la_comparaison_reprend_sans_artefact, "comparaison d une exécution sans artefact"),
     (_la_comparaison_reprend_un_artefact_expire, "comparaison d un artefact de clips expiré"),
     (_la_comparaison_ne_lit_plus_les_artefacts, "comparaison privée de sa lecture des artefacts"),
+    (_la_mesure_reprend_un_artefact_expire, "mesure d un artefact de clips expiré"),
+    (_la_mesure_tait_le_delai, "mesure qui tait le délai de garde des artefacts"),
+    (_la_comparaison_tait_le_delai, "comparaison qui tait le délai de garde des artefacts"),
+    (_le_resume_ne_recopie_plus_les_signaux, "résumé qui ne recopie plus les planchers à relire"),
+    (_le_resume_tait_l_absence_de_signal, "résumé muet quand aucun plancher n est à relire"),
 )
 
 
@@ -973,13 +1085,14 @@ if __name__ == "__main__":
     flux = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else RACINE / ".github" / "workflows"
     if verdict(flux):
         print(
-            "✓ Les dix décisions des ateliers de tournage tiennent : refus de clips-connectes,"
+            "✓ Les onze décisions des ateliers de tournage tiennent : refus de clips-connectes,"
             " versement"
         )
         print("  conditionné, contrôle du jeton avant le tournage, artefact nommé par le tournage,")
         print("  tournage précédent gardé avant l'écrasement, planchers d'un seul commit, témoins")
         print("  hors de la mesure, mesure sans écriture, un seul artefact de clips par exécution,")
-        print("  une exécution comparée avec les refus de la mesure.")
+        print("  une exécution comparée avec les refus de la mesure, un résumé de la mesure qui")
+        print("  montre les planchers à relire.")
         sys.exit(0)
     print(
         "::error::Une décision des ateliers de tournage n est plus tenue par le YAML, cf. ci-dessus."

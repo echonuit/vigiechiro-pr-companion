@@ -92,9 +92,8 @@ contre la 37343768383 (3ef05487f, branche de #5929). Le clip
 `ScenarioMenuDeLigneImportTest.le_menu_de_ligne_s_ouvre_pendant_l_import` y sort à 24,230 %, le chiffre
 relevé la veille en conteneur, sur 95 cas comparés (exécution 37448502869).
 
-`mesurer-les-planchers.yml` ne dit pas, lui, qu'un artefact a expiré : il échouerait au
-téléchargement. C'est le seul point où les deux reprises ne sont pas en parité, et il est du côté de
-la mesure : #5979 le porte.
+`mesurer-les-planchers.yml` ne disait pas qu'un artefact a expiré : c'était le seul point hors
+parité. Depuis #5979 il le dit par les mêmes phrases, exigées des deux ateliers, délai compris.
 
 Deux exécutions de populations différentes, l'une ordinaire et l'autre de la plateforme de test, n'ont
 aucun cas commun. La comparaison annonce alors tout apparu et tout disparu. Elle sortait en 0 ;
@@ -104,4 +103,4 @@ depuis #5934 elle sort en 1, son index écrit et versé au résumé, parce que r
 
 Si la forge liste un artefact expiré avec `expired: true`, ou le retire aussitôt. Une exécution du
 4 septembre 2026 n'en listait plus aucun le 6 octobre. Aucune exécution n'a été trouvée dans
-l'intervalle, et le refus nommé repose donc sur le contrat de l'API.
+l'intervalle, et le refus nommé repose donc sur le contrat de l'API. Cela vaut pour les deux ateliers.
