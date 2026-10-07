@@ -3,7 +3,11 @@ package fr.univ_amu.iut.commun.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.recette.Attente;
+import java.util.ArrayList;
 import java.util.List;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.control.Labeled;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -77,12 +81,47 @@ public final class PastillesEntieres {
         return pastilles.stream().map(Pastille::recu).toList();
     }
 
-    private static Pastille mesurer(TableCell<?, ?> cellule) {
-        Text rendu = (Text) cellule.lookup(".text");
-        double disponible = cellule.getWidth()
-                - cellule.getInsets().getLeft()
-                - cellule.getInsets().getRight();
+    /// Lit ce que dessinent les libellés visibles de `conteneur`, hors de toute table (#4834).
+    ///
+    /// La lecture est celle des pastilles : un libellé d'action à l'étroit finit lui aussi par une
+    /// ellipse pendant que `getText()` rend le texte entier. Un libellé enroulable s'y lit de même, son
+    /// nœud de texte gardant le texte entier tant que la hauteur ne lui manque pas.
+    ///
+    /// Les libellés sans texte sont écartés : un bouton qui ne porte qu'un graphique n'a rien à couper.
+    public static List<Pastille> lireLesLibelles(Node conteneur) {
+        return Attente.surLeFil(
+                () -> {
+                    conteneur.applyCss();
+                    conteneur.getScene().getRoot().layout();
+                    List<Pastille> lues = new ArrayList<>();
+                    collecter(conteneur, lues);
+                    return lues;
+                },
+                "lire les libellés que le conteneur dessine",
+                DELAI_MS);
+    }
+
+    /// Descend dans `noeud` sans entrer dans ce qui est masqué : un libellé retiré de l'écran n'est pas lu.
+    private static void collecter(Node noeud, List<Pastille> lues) {
+        if (!noeud.isVisible()) {
+            return;
+        }
+        if (noeud instanceof Labeled libelle
+                && libelle.getText() != null
+                && !libelle.getText().isBlank()) {
+            lues.add(mesurer(libelle));
+        }
+        if (noeud instanceof Parent parent) {
+            parent.getChildrenUnmodifiable().forEach(enfant -> collecter(enfant, lues));
+        }
+    }
+
+    private static Pastille mesurer(Labeled libelle) {
+        Text rendu = (Text) libelle.lookup(".text");
+        double disponible = libelle.getWidth()
+                - libelle.getInsets().getLeft()
+                - libelle.getInsets().getRight();
         return new Pastille(
-                cellule.getText(), rendu.getText(), rendu.getLayoutBounds().getWidth(), disponible);
+                libelle.getText(), rendu.getText(), rendu.getLayoutBounds().getWidth(), disponible);
     }
 }
