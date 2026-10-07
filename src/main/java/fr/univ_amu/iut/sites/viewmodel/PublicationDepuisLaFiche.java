@@ -23,10 +23,6 @@ import java.util.Set;
 /// verrouillé ou non ; et les liens de site venant de `GET /moi/participations` plutôt que de
 /// `/moi/sites` (#718), rien ici ne dit dans quel cas on se trouve. Le refus est **rendu compte avec son
 /// geste** par [PublicationPoint], jamais deviné.
-///
-/// **Ce qui y est, et qui n'est pas un garde** : la mention du carré d'un tiers (#6132). Publier sur le
-/// carré d'un autre observateur est l'usage majoritaire ; l'écran le dit avant le geste, et ne le
-/// retient pas. Elle ne figure donc pas parmi les empêchements, et n'en devient jamais un.
 public class PublicationDepuisLaFiche {
 
     /// Ce que l'écran dit, près du geste, quand le carré est celui d'un autre observateur (#6132).
@@ -72,9 +68,11 @@ public class PublicationDepuisLaFiche {
 
     /// La mention à poser près du geste quand ce carré est **celui d'un tiers**, ou vide (#6132).
     ///
-    /// Vide ne veut pas dire « le vôtre ». La marque ne présume jamais un tiers : un carré jamais relié,
-    /// un profil illisible ou un propriétaire absent de la réponse rendent tous l'absence de ligne.
-    /// L'écran se tait alors, il n'affirme rien.
+    /// Ce n'est pas un empêchement et elle n'en devient jamais un : publier sur le carré d'un autre
+    /// observateur est l'usage majoritaire. L'écran le dit avant le geste, il ne le retient pas.
+    ///
+    /// Vide ne veut pas dire « le vôtre ». La marque ne présume jamais un tiers : carré jamais relié,
+    /// profil illisible ou propriétaire absent de la réponse, l'écran se tait sans rien affirmer.
     public Optional<String> mentionDuTiers(long idSite) {
         return tiers.estTiers(idSite) ? Optional.of(MENTION_CARRE_D_UN_TIERS) : Optional.empty();
     }

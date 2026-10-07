@@ -49,11 +49,11 @@ public class PublicationPoint {
     ///
     /// Ne pas chercher à en déduire davantage. Le refus d'écriture (403) dépend du propriétaire du
     /// carré et de la validation de l'observateur sur son protocole. La seconde, Companion ne la
-    /// connaît pas. Le premier, `ImportSiteDistant` le relève à l'import du site (#2525), et la
-    /// publication d'un point ne l'emploie pas, par choix. Les liens de site viennent de
-    /// `GET /moi/participations` et non de `/moi/sites` (#718, cf. [ClientVigieChiro#mesSites()]),
-    /// donc un carré relié peut appartenir à quelqu'un d'autre. Prédire le refus à partir du
-    /// verrouillage bloquerait le participant validé, à qui la plateforme dit oui.
+    /// connaît pas. Le premier, `ImportSiteDistant` le relève à l'import du site (#2525) : la fiche
+    /// s'en sert pour dire qu'on publie sur le carré d'un tiers (#6132), jamais pour prédire un refus.
+    /// Les liens de site viennent de `GET /moi/participations` et non de `/moi/sites` (#718, cf.
+    /// [ClientVigieChiro#mesSites()]), donc un carré relié peut appartenir à quelqu'un d'autre. Prédire
+    /// le refus à partir du verrouillage bloquerait le participant validé, à qui la plateforme dit oui.
     public boolean connecte() {
         return token.token().isPresent();
     }
