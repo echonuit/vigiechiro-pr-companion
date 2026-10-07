@@ -29,8 +29,9 @@ De haut en bas :
   de la plateforme. Son bandeau porte simplement « Récupéré ».
 - **Résumé de la nuit** : volumes (bruts et transformés), durée enregistrée, nombre de séquences.
 - **Cartes d'actions** : Vérifier l'enregistrement, Diagnostic matériel, Préparer le dépôt,
-  Sons & validation et [Activité de la nuit](activite.md). Une seule carte est mise en avant :
-  la **prochaine action recommandée**.
+  Sons & validation, [Synthèse de la nuit](synthese.md) et [Activité de la nuit](activite.md). Une
+  seule carte est mise en avant : la **prochaine action recommandée**. L'image ci-dessus ne montre
+  pas la carte « Synthèse de la nuit ».
 
 ## Le déverrouillage de la validation
 

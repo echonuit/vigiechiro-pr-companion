@@ -227,7 +227,7 @@ le message d'erreur distingue.
 
 | Dans le message | Ce qui se passe | Remèdes |
 |---|---|---|
-| `manque N px` | La scène est trop **courte** : un libellé `wrapText` se rabat sur une ligne et s'ellipse | Augmenter la hauteur de cette scène |
+| `manque N px` | La scène est trop **courte** : un libellé `wrapText` se rabat sur une ligne et s'ellipse. Ou bien son **conteneur** a une hauteur fixe : les cartes d'action du passage, figées à 132 px, coupaient deux libellés repliés dans une scène qui avait toute la place (#4834) | Augmenter la hauteur de cette scène, ou celle du conteneur quand c'est lui qui borne |
 | `tronque, manque N px` | Le contrôle est trop **étroit** pour son texte | Figer par `minWidth="-Infinity"`, élargir la colonne, ou assumer par `abregeable` |
 | `cellule de table coupee` | Une **colonne** est trop étroite pour le texte d'une de ses cellules. Le message donne ce que la cellule dessine, le titre de la colonne et sa largeur. Il les fait précéder de l'identifiant de la colonne quand elle en porte un (`#colDetail`), et à défaut des quarante premiers caractères du texte reçu | Élargir la colonne, ou, si le texte ne peut tenir dans aucune largeur, l'assumer par `ColonneAbregeable.assumer(colonne)` |
 

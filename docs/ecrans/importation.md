@@ -418,7 +418,8 @@ la barre « écrit » se réduit d'autant : c'est là que se voit ce que ce rég
 ### Ce que le compte rendu signale en plus
 
 - les **motifs de rejet**, résumés en pied (« 6 fichiers déjà expansés, 2 en-têtes WAV illisibles ») et
-  **dépliables d'un clic** : chaque motif ouvre la liste des fichiers concernés ;
+  **dépliables d'un clic** : chaque motif ouvre la liste des fichiers concernés. Quand la raison d'un
+  rejet est trop longue pour la ligne, le résumé s'abrège et se lit en entier **au survol** ;
 - les **avertissements encore vrais** : si le dossier mélangeait plusieurs enregistreurs, ou si le
   journal du capteur ne correspondait pas aux fichiers, le compte rendu vous le **rappelle**. Importer ne
   résout pas ces réserves : cela les inscrit dans le passage créé ;
