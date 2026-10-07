@@ -80,9 +80,17 @@ public final class GesteVisible {
     /// qui grandit après avoir été amenée laisse la page en deçà de son bas. Mesuré sur `S4-47` : 20 %
     /// d'écart entre deux tournages du même commit (#5870).
     ///
-    /// Elle s'appelle **une fois le verdict affiché**, et refuse une cible qui n'est pas au bas :
-    /// employée ailleurs, elle mettrait le verdict hors du cadre en ayant l'air de l'y amener.
+    /// Elle s'appelle **une fois le verdict affiché**. Elle refuse une cible qui n'est pas au bas, qu'elle
+    /// mettrait hors du cadre, et une cible qu'aucun panneau ne porte, qu'elle ne peut pas caler (#5982).
     public static void allerAuBasDeLaPage(FxRobot robot, String selecteur) {
+        // Sans panneau, « tous les panneaux sont au bas » se disait d'une liste vide, et le geste
+        // concluait dès que la cible était dans le cadre. Le refus se lit sur le premier réglage, sans
+        // contrôle posé avant lui, comme dans [#poserDansLeCadre].
+        if (descendreLesPanneaux(robot, selecteur) == 0) {
+            throw new IllegalStateException("« " + selecteur + " » ne descend d'aucun panneau de défilement :"
+                    + " il n'y a aucune page à caler sur son bas. Ce geste ne vaut que pour une page qui"
+                    + " défile.");
+        }
         // Par [Attente], et non par un `waitFor` en propre : une attente qui expire dit ce qu'elle
         // attendait (ADR 4974). La passe ouvre elle-même ses `interact`, d'où `que` et non `queSurLeFil`.
         Attente.que(
@@ -92,17 +100,25 @@ public final class GesteVisible {
                 SECONDES_CADRE * 1000L);
     }
 
+    /// Met à leur maximum tous les panneaux dont la cible descend, et rend leur **nombre**.
+    private static int descendreLesPanneaux(FxRobot robot, String selecteur) {
+        AtomicInteger descendus = new AtomicInteger();
+        robot.interact(() -> {
+            for (ScrollPane panneau : panneauxDont(robot.lookup(selecteur).query())) {
+                panneau.setVvalue(panneau.getVmax());
+                descendus.incrementAndGet();
+            }
+        });
+        return descendus.get();
+    }
+
     /// Une passe : tous les panneaux dont la cible descend vont à leur maximum, puis le verdict.
     ///
     /// Rejouée comme [#unePasse], et pour la même raison : sur un écran qui vient de changer, le
     /// maximum posé peut ne pas porter du premier coup.
     private static boolean unePasseVersLeBas(FxRobot robot, String selecteur) {
         AtomicBoolean tenu = new AtomicBoolean();
-        robot.interact(() -> {
-            for (ScrollPane panneau : panneauxDont(robot.lookup(selecteur).query())) {
-                panneau.setVvalue(panneau.getVmax());
-            }
-        });
+        descendreLesPanneaux(robot, selecteur);
         WaitForAsyncUtils.waitForFxEvents();
         robot.interact(() -> {
             boolean auBas = panneauxDont(robot.lookup(selecteur).query()).stream()
