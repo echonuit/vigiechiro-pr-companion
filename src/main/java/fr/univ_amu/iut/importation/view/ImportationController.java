@@ -534,6 +534,9 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     /// Pour un `.zip`, l'état passe à `EXTRACTION` **avant** de démarrer (la barre de progression apparaît
     /// aussitôt), puis chaque fichier décompressé fait avancer la barre « X / N » (#146).
     private void chargerSource(Path chemin) {
+        // Le champ du dossier est lié à la source désignée : elle se pose ici, sur le fil JavaFX, et
+        // non dans la tâche (#6138).
+        viewModel.designerSource(chemin);
         JetonAnnulation jeton = JetonAnnulation.neutre();
         if (ExtracteurZip.estZip(chemin)) {
             jetonCourant = jeton; // permet d'annuler la décompression (#146)

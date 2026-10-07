@@ -809,7 +809,7 @@ af9890a9cd3e  src/main/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduDIn
 e228832ae4ee  src/main/java/fr/univ_amu/iut/importation/viewmodel/EtatImport.java
 ef0a4852afcd  src/main/java/fr/univ_amu/iut/importation/viewmodel/ExecutionImport.java
 6596a0f4b04a  src/main/java/fr/univ_amu/iut/importation/viewmodel/IdentiteNuit.java
-02c16404d4ff  src/main/java/fr/univ_amu/iut/importation/viewmodel/ImportationViewModel.java
+f139d3be6b0f  src/main/java/fr/univ_amu/iut/importation/viewmodel/ImportationViewModel.java
 cd5c6242ab04  src/main/java/fr/univ_amu/iut/importation/viewmodel/InspectionImportViewModel.java
 abff5608525f  src/main/java/fr/univ_amu/iut/importation/viewmodel/LigneFichierImport.java
 2b4c9642c974  src/main/java/fr/univ_amu/iut/importation/viewmodel/MarquageNuitsImportees.java
@@ -1850,6 +1850,7 @@ c9e8e1a12452  src/test/java/fr/univ_amu/iut/importation/view/ScenarioImportNomin
 7e677ede1765  src/test/java/fr/univ_amu/iut/importation/view/ScenarioJournalAbsentTest.java
 50b97d3ba2a4  src/test/java/fr/univ_amu/iut/importation/view/ScenarioMenuDeLigneImportTest.java
 4d71b34e162f  src/test/java/fr/univ_amu/iut/importation/view/ScenarioRejetsEtArchiveTest.java
+63f0b0ba8c00  src/test/java/fr/univ_amu/iut/importation/view/SourceDesigneeSurLeFilTest.java
 b1d6fa384619  src/test/java/fr/univ_amu/iut/importation/view/TableNuitsTest.java
 fd7a84ce2c5e  src/test/java/fr/univ_amu/iut/importation/view/ZoneNuitsTest.java
 140614766d08  src/test/java/fr/univ_amu/iut/importation/viewmodel/ApercuPrefixeTest.java
