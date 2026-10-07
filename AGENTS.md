@@ -58,7 +58,7 @@ décisions se cadrent pour l'**utilisateur final**, pas pour un contexte pédago
 - **Conventional Commits en français**, petits commits par préoccupation ; petites PR séquentielles.
 - **`Closes #N` dans le corps de la PR**, pour que l'issue se ferme à la fusion. Le mot-clé reste anglais : « Ferme #N » ne ferme rien et ne le dit pas. Une PR qui renvoie à une issue sans la clore écrit « Rattaché à #N ».
 - **Pas de tiret cadratin** ; noms de classes en français sans accents ; doc-comments `///` (JEP 467).
-- Jamais `@SuppressWarnings` / `//NOPMD` pour taire un warning qualité : **refactorer** (Extract Class/Method).
+- Jamais `@SuppressWarnings` / `//NOPMD` pour taire un warning qualité : **refactorer** (Extract Class/Method). Un garde le refuse, `scripts/adr/6022-annotation-qui-fait-taire.py` : seules `unchecked` et `rawtypes` sont admises, parce qu'elles s'adressent à javac sur un transtypage générique et que PMD ne les lit pas. `"unused"` et `"all"` font taire PMD comme `"PMD.<règle>"`, et sont refusées avec elles ([ADR 6022](dev-docs/decisions/6022-un-avertissement-ne-se-tait-pas-et-un-garde-le-refuse.md)).
 
 ## Ce qui s'écrit se relit
 

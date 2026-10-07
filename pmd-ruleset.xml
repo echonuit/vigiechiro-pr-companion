@@ -31,6 +31,11 @@
         Une violation se corrige, elle ne se tait pas : ni @SuppressWarnings("PMD...")
         ni //NOPMD. Si un seuil est vraiment inadapté, c'est le seuil qu'on rediscute
         ici, avec sa justification.
+
+        Ce n'est plus seulement une consigne : scripts/adr/6022-annotation-qui-fait-taire.py
+        refuse toute valeur de @SuppressWarnings autre que "unchecked" et "rawtypes",
+        et la marque NOPMD en fin de ligne de code (ADR 6022). PMD honore aussi "unused"
+        et "all", mesuré sous 7.17.0 : le garde les refuse de la même façon.
     </description>
 
     <!-- ============================================================

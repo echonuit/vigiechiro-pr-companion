@@ -1106,6 +1106,46 @@ def test_5437_fixture_suppose_la_plateforme() -> None:
         _verifie("5437 et le garde a bien LU ce fichier", len(m.fichiers(racine)), 1)
 
 
+def test_6022_annotation_qui_fait_taire() -> None:
+    m = _charge("6022-annotation-qui-fait-taire.py")
+
+    def classe(annotation: str, suite: str = "") -> str:
+        return f"class A {{\n    {annotation}\n    private void morte() {{}}{suite}\n}}\n"
+
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        production = "src/main/java/fr/a/A.java"
+        test = "src/test/java/fr/a/ATest.java"
+
+        _ecrire(racine, production, classe('@SuppressWarnings("unused")'))
+        _verifie(
+            "6022 une annotation qui fait taire le portail est vue, avec sa valeur",
+            m.suspects(racine),
+            ['src/main/java/fr/a/A.java:2  @SuppressWarnings porte "unused"'],
+        )
+
+        # LE SECOND FAIT, celui qui distingue ce garde d un compte des annotations : la MEME
+        # annotation, avec une valeur de la liste fermee, sort des suspects et le fichier reste LU.
+        _ecrire(racine, production, classe('@SuppressWarnings("unchecked")'))
+        _verifie("6022 la meme annotation, admise, sort du compte", m.suspects(racine), [])
+        _verifie("6022 et le garde a bien LU ce fichier", m.lus(racine), 1)
+
+        # L ARBRE DE TEST est dans la population : le defaut d origine y vivait (#6020).
+        _ecrire(racine, test, classe("", " // NOPMD"))
+        _verifie(
+            "6022 une marque en fin de ligne de code est vue dans l arbre de test",
+            m.suspects(racine),
+            ["src/test/java/fr/a/ATest.java:3  marque NOPMD en fin de ligne de code"],
+        )
+        _verifie("6022 et les deux arbres sont lus", m.lus(racine), 2)
+
+        # LA MENTION EN PROSE, qui est la raison d etre de la lecture par l arbre.
+        _ecrire(
+            racine, test, classe("/// Le reflexe `//NOPMD` est exclu, comme `@SuppressWarnings`.")
+        )
+        _verifie("6022 une mention en javadoc n est pas une marque", m.suspects(racine), [])
+
+
 def test_5278_attente_hors_du_fil() -> None:
     m = _charge("5278-attente-hors-du-fil.py")
     lecture = '() -> !robot.lookup("#t").queryAll().isEmpty()'
@@ -2958,6 +2998,7 @@ if __name__ == "__main__":
         test_5068_clic_sur_reference_tenue,
         test_4974_attente_reinventee,
         test_5437_fixture_suppose_la_plateforme,
+        test_6022_annotation_qui_fait_taire,
         test_5278_attente_hors_du_fil,
         test_5707_geste_du_pointeur_hors_du_fil,
         test_5307_designation_hors_fabrique,
