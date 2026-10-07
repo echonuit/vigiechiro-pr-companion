@@ -308,6 +308,14 @@ Vigie-Chiro » sur l'écran Mes sites).
     motif, tant que le geste n'est pas possible ; si vous effacez les coordonnées après l'avoir cochée,
     elle se décoche. Le compte rendu s'affiche sur la fiche du carré, une fois la fenêtre refermée.
 
+    !!! note "Sur le carré d'un autre observateur"
+        Quand le carré appartient à quelqu'un d'autre, Companion vous le dit avant le geste, sous le
+        lien de la carte et sous la case de la fenêtre : **« Ce carré est celui d'un tiers : votre
+        point s'ajoutera aux siens. »** C'est une information, pas un obstacle : ajouter un point au
+        carré d'un autre est l'usage courant, et le lien comme la case restent disponibles. Companion
+        tient ce renseignement de la dernière synchronisation avec Vigie-Chiro. Sans cette phrase, le
+        carré est le vôtre, ou Companion ne sait pas encore à qui il est.
+
     !!! warning "Si un point du même code existe déjà, ailleurs"
         Vigie-Chiro n'accepte qu'un seul point par code sur un carré. Si un point porte déjà ce code
         **à une autre position**, Companion ne publie rien et vous dit à quelle distance il se trouve.

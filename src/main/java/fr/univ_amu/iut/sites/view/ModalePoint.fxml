@@ -82,6 +82,9 @@
   <StackPane fx:id="enveloppePublier" StackPane.alignment="CENTER_LEFT">
     <CheckBox fx:id="chkPublier" text="Publier ce point sur Vigie-Chiro après l'enregistrement"/>
   </StackPane>
+  <!-- Carré d'un tiers (#6132) : une information lue avant de cocher, jamais un obstacle. Masquée et non
+       gérée tant qu'elle n'a rien à dire : elle ne réserve aucune place. -->
+  <Label fx:id="mentionTiers" styleClass="field-hint" wrapText="true" managed="false" visible="false"/>
 
   <HBox alignment="CENTER_RIGHT" spacing="8.0">
     <Region HBox.hgrow="ALWAYS"/>

@@ -21,6 +21,7 @@ import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.PointPublieDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
+import fr.univ_amu.iut.sites.model.dao.SiteTiersDao;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -62,7 +63,10 @@ class PointEditPositionTest {
                 new ServiceCommunes(pointDao, communeDao, position -> Optional.empty()),
                 Optional.empty(),
                 new PublicationDepuisLaFiche(
-                        new PointPublieDao(source), new LienVigieChiroDao(source), Optional.empty()));
+                        new PointPublieDao(source),
+                        new LienVigieChiroDao(source),
+                        new SiteTiersDao(source),
+                        Optional.empty()));
         site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
     }
 

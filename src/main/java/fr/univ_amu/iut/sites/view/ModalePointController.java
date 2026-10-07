@@ -117,6 +117,10 @@ public class ModalePointController {
     @FXML
     private CheckBox chkPublier;
 
+    /// Mention du carré d'un tiers (#6132), sous la case.
+    @FXML
+    private Label mentionTiers;
+
     @FXML
     private Button boutonValider;
 
@@ -142,7 +146,8 @@ public class ModalePointController {
                 bandeauRetour.managedProperty(),
                 messageCarre.managedProperty(),
                 messagePosition.managedProperty(),
-                messageVoisin.managedProperty());
+                messageVoisin.managedProperty(),
+                mentionTiers.managedProperty());
         titreModale.textProperty().bind(viewModel.titreProperty());
         champCode.textProperty().bindBidirectional(viewModel.codeProperty());
         champDescription.textProperty().bindBidirectional(viewModel.descriptionProperty());
@@ -173,6 +178,12 @@ public class ModalePointController {
                 Bindings.when(viewModel.publication().empechementProperty().isEmpty())
                         .then("Ajouter ce point aux localités du carré sur Vigie-Chiro dès son enregistrement.")
                         .otherwise(viewModel.publication().empechementProperty()));
+        // Carré d'un tiers (#6132) : dit sous la case, sans rien griser ni décocher.
+        mentionTiers.textProperty().bind(viewModel.publication().mentionDuTiersProperty());
+        mentionTiers
+                .visibleProperty()
+                .bind(viewModel.publication().mentionDuTiersProperty().isNotEmpty());
+        mentionTiers.managedProperty().bind(mentionTiers.visibleProperty());
         // #1917 : bandeau partagé (ADR 0023). Le libellé s'appelait « messageErreur » et ne pouvait
         // donc rien porter d'autre qu'un échec ; la sévérité vit maintenant dans la valeur.
         BandeauRetour.installer(

@@ -213,6 +213,12 @@ public class SiteDetailViewModel {
         return publication.empechement(site.id(), carte);
     }
 
+    /// Cf. [PublicationDepuisLaFiche#mentionDuTiers(long)]. Une lecture pour toute la fiche : les cartes
+    /// la demandent une fois, avant de se reconstruire.
+    public Optional<String> mentionDuTiers() {
+        return publication.mentionDuTiers(site.id());
+    }
+
     /// Cf. [PublicationDepuisLaFiche#publier(long, CartePoint)]. **Bloquant** : hors du fil JavaFX.
     public PublicationPoint.Resultat publier(CartePoint carte) {
         return publication.publier(site.id(), carte);

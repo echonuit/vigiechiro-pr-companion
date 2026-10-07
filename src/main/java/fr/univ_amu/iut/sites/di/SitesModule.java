@@ -312,8 +312,11 @@ public class SitesModule extends ModuleDeFeature {
     @Provides
     @Singleton
     PublicationDepuisLaFiche fournirPublicationDepuisLaFiche(
-            PointPublieDao publies, LienVigieChiroDao liens, Optional<PublicationPoint> publication) {
-        return new PublicationDepuisLaFiche(publies, liens, publication);
+            PointPublieDao publies,
+            LienVigieChiroDao liens,
+            SiteTiersDao tiers,
+            Optional<PublicationPoint> publication) {
+        return new PublicationDepuisLaFiche(publies, liens, tiers, publication);
     }
 
     @Provides

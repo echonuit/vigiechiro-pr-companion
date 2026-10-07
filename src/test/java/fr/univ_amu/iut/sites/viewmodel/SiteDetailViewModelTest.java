@@ -32,6 +32,7 @@ import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.PointPublieDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
+import fr.univ_amu.iut.sites.model.dao.SiteTiersDao;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -83,7 +84,7 @@ class SiteDetailViewModelTest {
                 horloge,
                 new PortailVigieChiro(liens),
                 liens,
-                new PublicationDepuisLaFiche(publies, liens, publication));
+                new PublicationDepuisLaFiche(publies, liens, new SiteTiersDao(source), publication));
     }
 
     /// Publication réelle, branchée sur un fournisseur de jeton contrôlé : `null` simule « pas connecté ».
@@ -415,7 +416,8 @@ class SiteDetailViewModelTest {
                 horloge,
                 new PortailVigieChiro(liens),
                 liens,
-                new PublicationDepuisLaFiche(publies, liens, publicationAvecJeton("jeton-de-test")));
+                new PublicationDepuisLaFiche(
+                        publies, liens, new SiteTiersDao(source), publicationAvecJeton("jeton-de-test")));
         Mockito.clearInvocations(passagesSurveilles);
 
         vm.chargerSite(site);
