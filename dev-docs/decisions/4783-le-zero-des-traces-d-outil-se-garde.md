@@ -8,6 +8,7 @@ decided_at: 2026-08-29
 verification: probable
 enforced_by:
   - "scripts/adr/4783-traces-d-outil.py"
+  - ".github/scripts/verifie_corps_pr.py"
 ratchet: 0
 inv_key: cliquet-traces-outil
 verified:
@@ -64,7 +65,8 @@ mesure le prouve : sans l'exemption, le garde rend 22 marques de citation, toute
 C'est l'[ADR 3645](3645-un-detecteur-textuel-s-exclut-de-son-corpus.md), et pour une fois elle a été
 appliquée avant plutôt qu'après un rouge.
 
-**Le garde lui-même**, qui nomme les mêmes chaînes.
+**Le module qui porte la définition**, `scripts/_commun/traces.py`, qui nomme les mêmes chaînes.
+C'était le garde lui-même jusqu'à #4749.
 
 **Le signe cité plutôt qu'employé**, au grain de la ligne : entre accents graves, ou seul contenu
 d'une chaîne littérale. `private static final char BOM` décrit la marque d'ordre, il ne la pose pas.
@@ -72,8 +74,8 @@ Et le liant `U+200D` qui suit un pictogramme compose une séquence d'emoji au li
 
 ## Alternatives écartées
 
-**Une loupe qui ne bloque pas.** Cinq existent dans le dépôt et elles servent, mais elles servent à
-mesurer une dette qu'on fait descendre. Le zéro n'en est pas une, et une loupe laisserait passer
+**Une loupe qui ne bloque pas.** Le dépôt en comptait cinq le 2026-08-29 et elles servent, mais
+elles servent à mesurer une dette qu'on fait descendre. Le zéro n'en est pas une, et une loupe laisserait passer
 l'occurrence qui le retourne.
 
 **Ne rien écrire.** C'est le précédent des onze occurrences, et il ne s'applique pas : il vise le
@@ -90,3 +92,18 @@ Les trois exemptions se maintiennent : chacune peut devenir fausse, et c'est le 
 des
 deux copies de la compétence disparaîtrait si la grille cessait d'énumérer ses chaînes, ce qui la
 rendrait moins utile.
+
+## Le corps d'une demande, depuis #4749
+
+Le garde lit les fichiers suivis, et le corps d'une demande de fusion n'en est pas un. Mesuré le
+2026-10-07 : `verifie_corps_pr.py` déclarait conforme un corps qui portait trois de ces traces.
+
+Il les refuse depuis #4749, sur la même définition. Elle est sortie du garde pour vivre dans
+`scripts/_commun/traces.py`, que les deux lisent : une seconde liste aurait divergé de la première.
+Ce n'est pas une décision neuve. L'[ADR 4453](4453-la-prose-publiee-sur-la-forge-releve-de-la-meme-grille.md)
+range déjà ce corps dans la prose que la grille couvre, et celle-ci tient le zéro : il manquait de
+lire cette population.
+
+Une exemption s'y ajoute, propre au corps : l'espace sans chasse que Dependabot place derrière une
+arobase, pour ne pas notifier les auteurs des notes de version qu'il recopie. Sur les 300 dernières
+demandes fusionnées, le caractère apparaît 68 fois et toujours à cette place.

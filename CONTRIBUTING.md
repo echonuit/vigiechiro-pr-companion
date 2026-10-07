@@ -290,6 +290,11 @@ python3 .github/scripts/verifie_titre_pr.py "$TITRE" && gh pr create --title "$T
   ré-éditer et une vérification à relancer. Le défaut n'entre pas au commit mais à la frappe du
   titre, et les deux se mesurent : les quatre PR rouges du 2026-08-26 avaient toutes trois commits
   ou plus, donc un titre tapé à la main, quand leurs sujets de commit étaient tous conformes.
+- **Le corps se vérifie de la même façon, puis se relit.**
+  `python3 .github/scripts/verifie_corps_pr.py "$(cat corps.md)"` est le script que lance
+  `corps-pr.yml`. Il refuse cinq formes, dont les traces qu'un outil laisse dans un texte collé. Il
+  ne voit pas les tics qui demandent une lecture : le corps passe la grille de la compétence
+  `humaniser` avant de partir, comme l'article A31 le demande.
 - La PR cible la **branche par défaut** du dépôt (`gh pr create --fill` la sélectionne
   automatiquement). `@nedseb` est ajouté en reviewer automatiquement ([CODEOWNERS](.github/CODEOWNERS)).
 - Privilégier des **PR petites et séquentielles** (par exemple : ViewModel + tests, puis vue
