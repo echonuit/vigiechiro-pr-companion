@@ -231,7 +231,6 @@ class TransformationAudioTest {
 
     /// Écrit un WAV PCM canonique (en-tête 44 octets, little-endian).
     private static void ecrireWav(Path fichier, int canaux, int frequence, int bits, byte[] pcm) throws IOException {
-        int blocAlign = canaux * (bits / 8);
         // Writer de production (#2864) : memes octets, et c'est le format que l'application
         // saura relire.
         FichierWav.ecrire(fichier, canaux, frequence, bits, pcm, 0, pcm.length);

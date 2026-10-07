@@ -19,12 +19,8 @@ import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
-import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
-import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.validation.model.BilanImport;
 import fr.univ_amu.iut.validation.model.ExportVuCsv;
 import fr.univ_amu.iut.validation.model.LigneObservation;
@@ -88,13 +84,9 @@ class ServiceValidationTest {
         new MigrationSchema(source).migrer();
         new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
 
-        SiteDao siteDao = new SiteDao(source);
-        PointDao pointDao = new PointDao(source);
-        PassageDao passageDao = new PassageDao(source);
         SessionDao sessionDao = new SessionDao(source);
         EnregistrementOriginalDao originalDao = new EnregistrementOriginalDao(source);
         SequenceDao sequenceDao = new SequenceDao(source);
-        EnregistreurDao enregistreurDao = new EnregistreurDao(source);
         TaxonDao taxonDao = new TaxonDao(source);
         observationDao = new ObservationDao(source);
         resultatsDao = new ResultatsIdentificationDao(source);

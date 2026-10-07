@@ -394,7 +394,7 @@ public final class CaptureLot {
     /// temps : le service la refuse, et c'est ce refus que l'écran restitue (#5599).
     private static void refuserLaGeneration(Injector injecteur, long idPassage, LotViewModel vm, DepotViewModel depot) {
         depotEnCours(depot, idPassage);
-        try (TeleversementsEnCours.Inscription televersement =
+        try (TeleversementsEnCours.Inscription _ =
                 injecteur.getInstance(TeleversementsEnCours.class).inscrire(idPassage)) {
             vm.marquerGenerationEnCours();
             vm.calculerArchivesDepot(progres -> {}, SuiviArchives.inerte());

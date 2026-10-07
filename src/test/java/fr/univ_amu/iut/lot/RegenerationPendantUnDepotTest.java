@@ -320,7 +320,7 @@ class RegenerationPendantUnDepotTest {
         Long id = passagePrepare();
         Path depotDuPassage = dossier.resolve(PREFIXE.nomDossierSession()).resolve("depot");
 
-        try (TeleversementsEnCours.Inscription ignore = televersements.inscrire(id)) {
+        try (TeleversementsEnCours.Inscription _ = televersements.inscrire(id)) {
             assertThatThrownBy(() -> service.genererArchivesDepot(id))
                     .isInstanceOf(RegleMetierException.class)
                     .hasMessageContaining("téléversement")

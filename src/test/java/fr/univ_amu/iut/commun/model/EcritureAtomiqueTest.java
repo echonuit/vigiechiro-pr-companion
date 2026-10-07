@@ -278,7 +278,7 @@ class EcritureAtomiqueTest {
             Path cible = dossier.resolve("connexion.json");
             Files.writeString(cible, "ancien");
 
-            try (var lecteur = Files.newInputStream(cible)) {
+            try (var _ = Files.newInputStream(cible)) {
                 try {
                     EcritureAtomique.ecrire(cible, "nouveau");
                 } catch (IOException tenu) {

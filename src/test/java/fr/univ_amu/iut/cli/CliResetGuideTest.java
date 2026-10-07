@@ -56,7 +56,6 @@ class CliResetGuideTest {
         injecteur = Cli.injecteurApplicatif();
         cli = new Cli(injecteur);
         injecteur.getInstance(MigrationSchema.class).migrer();
-        SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
         // La topologie naît du premier passage semé, par trouver-ou-créer.
     }
 

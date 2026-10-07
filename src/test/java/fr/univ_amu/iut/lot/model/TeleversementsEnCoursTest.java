@@ -19,7 +19,7 @@ class TeleversementsEnCoursTest {
     @Test
     @DisplayName("un passage inscrit est en cours, puis ne l'est plus après le retrait")
     void inscrit_pendant_puis_retire() {
-        try (TeleversementsEnCours.Inscription ignore = registre.inscrire(42L)) {
+        try (TeleversementsEnCours.Inscription _ = registre.inscrire(42L)) {
             assertThat(registre.enCours(42L)).isTrue();
             assertThat(registre.enCours(43L))
                     .as("un autre passage n'est pas concerné")
@@ -32,7 +32,7 @@ class TeleversementsEnCoursTest {
     @DisplayName("une exception pendant le téléversement retire quand même l'inscription")
     void retire_apres_une_exception() {
         assertThatThrownBy(() -> {
-                    try (TeleversementsEnCours.Inscription ignore = registre.inscrire(42L)) {
+                    try (TeleversementsEnCours.Inscription _ = registre.inscrire(42L)) {
                         throw new IllegalStateException("réseau coupé");
                     }
                 })

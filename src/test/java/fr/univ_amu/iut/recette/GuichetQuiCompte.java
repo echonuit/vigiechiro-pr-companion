@@ -36,7 +36,7 @@ final class GuichetQuiCompte implements AutoCloseable {
         GuichetQuiCompte guichet = new GuichetQuiCompte(new ServerSocket(0, 0, InetAddress.getLoopbackAddress()));
         Thread accueil = new Thread(() -> {
             while (!guichet.prise.isClosed()) {
-                try (Socket entrant = guichet.prise.accept()) {
+                try (Socket _ = guichet.prise.accept()) {
                     guichet.recues.incrementAndGet();
                 } catch (IOException fermeture) {
                     return;

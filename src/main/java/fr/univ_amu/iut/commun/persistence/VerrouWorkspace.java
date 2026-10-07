@@ -257,7 +257,7 @@ public final class VerrouWorkspace implements AutoCloseable {
         if (!aRelacher) {
             return;
         }
-        try (FileChannel aFermer = canal) {
+        try (canal) {
             verrou.release();
             DETENUS.remove(fichier);
         } catch (IOException echec) {

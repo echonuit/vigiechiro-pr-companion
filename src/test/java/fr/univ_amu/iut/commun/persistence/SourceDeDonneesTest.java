@@ -31,7 +31,7 @@ class SourceDeDonneesTest {
         when(connexion.createStatement()).thenReturn(instruction);
         doThrow(new SQLException("PRAGMA refusé")).when(instruction).execute(anyString());
 
-        try (MockedConstruction<SQLiteDataSource> sources = mockConstruction(
+        try (MockedConstruction<SQLiteDataSource> _ = mockConstruction(
                 SQLiteDataSource.class,
                 (source, contexte) -> when(source.getConnection()).thenReturn(connexion))) {
             SourceDeDonnees source = new SourceDeDonnees(new Workspace(racine));

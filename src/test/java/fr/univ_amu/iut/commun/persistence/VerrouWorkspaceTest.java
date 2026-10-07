@@ -153,7 +153,7 @@ class VerrouWorkspaceTest {
     @Test
     @DisplayName("une opération exclusive sur un workspace libre le verrouille, puis le rend")
     void operation_exclusive_prend_et_rend() {
-        try (VerrouWorkspace pendant = VerrouWorkspace.pourOperationExclusive(workspace(), "la migration")) {
+        try (VerrouWorkspace _ = VerrouWorkspace.pourOperationExclusive(workspace(), "la migration")) {
             assertThat(VerrouWorkspace.prendre(workspace()))
                     .as("pendant l'opération, personne d'autre n'entre")
                     .isEmpty();
@@ -176,7 +176,7 @@ class VerrouWorkspaceTest {
                         racine.resolve("ws").resolve(VerrouWorkspace.NOM_FICHIER),
                         StandardOpenOption.CREATE,
                         StandardOpenOption.WRITE);
-                FileLock ignore = canal.lock()) {
+                FileLock _ = canal.lock()) {
 
             assertThatThrownBy(() -> VerrouWorkspace.pourOperationExclusive(workspace(), "la migration"))
                     .isInstanceOf(RefusAvantEcriture.class)
@@ -190,7 +190,7 @@ class VerrouWorkspaceTest {
     @Test
     @DisplayName("un verrou pris par l'application : le refus NOMME l'occupant (#3571)")
     void occupant_connu_est_nomme() {
-        try (VerrouWorkspace tenu = VerrouWorkspace.prendre(workspace()).orElseThrow()) {
+        try (VerrouWorkspace _ = VerrouWorkspace.prendre(workspace()).orElseThrow()) {
             // Depuis un autre « processus » du point de vue du verrou : ici on lit le fichier, ce que
             // fait le message. Sans ce test, le repli de l'occupant inconnu suffirait à tout couvrir,
             // et le nom pourrait disparaître sans que rien ne rougisse.

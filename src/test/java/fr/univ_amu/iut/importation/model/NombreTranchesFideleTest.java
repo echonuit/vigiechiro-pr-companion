@@ -60,7 +60,6 @@ class NombreTranchesFideleTest {
             pcm[2 * i] = (byte) (echantillon & 0xFF);
             pcm[2 * i + 1] = (byte) ((echantillon >> 8) & 0xFF);
         }
-        int blocAlign = CANAUX * (BITS / 8);
         // Writer de production (#2864) : memes octets, et c'est le format que l'application
         // saura relire.
         FichierWav.ecrire(fichier, CANAUX, FREQUENCE_ACQUISITION, BITS, pcm, 0, pcm.length);
