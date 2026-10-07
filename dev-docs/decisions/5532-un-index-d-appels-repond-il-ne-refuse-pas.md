@@ -78,4 +78,5 @@ positif vivant ne se livre pas.
 **Les trois règles `Unused*` que #4656 a laissées** - 33 `UnusedLocalVariable`, 19
 `UnusedPrivateField`, 4 `UnusedFormalParameter`. Écarté parce que PMD les rend déjà : l'index n'y
 ajoute rien. À cette date PMD savait les rendre, mais aucune des trois n'était au jeu de règles
-(mesuré le 7 octobre 2026, #6022) : `UnusedPrivateField` y est entrée ce jour-là, par #6115.
+(mesuré le 7 octobre 2026, #6022) : `UnusedPrivateField` y est entrée ce jour-là, par #6115, et
+`UnusedFormalParameter` par #6116.

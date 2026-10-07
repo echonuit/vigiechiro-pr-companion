@@ -187,4 +187,14 @@
          que cette regle ne voit pas. -->
     <rule ref="category/java/bestpractices.xml/UnusedPrivateField"/>
 
+    <!-- Un parametre qu une methode privee ne lit pas (#6116, chantier #6022). Entree le
+         7 octobre 2026 avec ses huit retraits, deux en production et six en test.
+
+         Par defaut la regle ne juge que les methodes privees : un parametre mort de methode
+         publique ou de constructeur lui echappe. Aucune exclusion, la non plus. Une signature
+         imposee par une bibliotheque ne se regle pas ici : `Cli.gererErreurUsage` etait passee en
+         reference a picocli, qui impose `(ParameterException, String[])`. La sortie est une lambda
+         a l appel, qui ecarte l argument, et une methode a un seul parametre. -->
+    <rule ref="category/java/bestpractices.xml/UnusedFormalParameter"/>
+
 </ruleset>

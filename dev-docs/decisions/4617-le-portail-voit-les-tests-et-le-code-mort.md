@@ -26,7 +26,9 @@ generated:
     [ADR 6022](6022-un-avertissement-ne-se-tait-pas-et-un-garde-le-refuse.md) : le chantier #6022
     fait entrer d'autres règles `Unused*` au jeu, une demande par règle, chacune avec ses retraits.
     `UnusedPrivateField` y est depuis #6115 : 20 champs mesurés sur `76070c320d`, 11 en production
-    et 9 en test, tous retirés dans la demande qui ajoute la règle. Le cliquet est resté à 40.
+    et 9 en test, tous retirés dans la demande qui ajoute la règle. `UnusedFormalParameter` y est
+    depuis #6116 : 8 paramètres mesurés sur `ba33f0a66c`, 2 en production et 6 en test, retirés de
+    même. Le cliquet est resté à 40.
 
 ## Contexte
 

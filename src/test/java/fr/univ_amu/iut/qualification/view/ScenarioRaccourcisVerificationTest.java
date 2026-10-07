@@ -291,19 +291,17 @@ class ScenarioRaccourcisVerificationTest {
     /// Contrôle croisé et non lecture : #1513 a eu à corriger une légende qui avait cessé de suivre
     /// l'écran. Une aide qui nomme autre chose que ce qu'on voit est pire que pas d'aide.
     private static void laLegendeNommeLesLibellesDeLEcran(FxRobot robot) {
-        String legende = texte(
-                robot,
-                robot.lookup(noeud -> noeud instanceof Labeled libelle
-                                && libelle.getText() != null
-                                && libelle.getText().startsWith("Raccourcis clavier"))
-                        .query());
+        String legende = texte(robot.lookup(noeud -> noeud instanceof Labeled libelle
+                        && libelle.getText() != null
+                        && libelle.getText().startsWith("Raccourcis clavier"))
+                .query());
 
         assertThat(legende)
                 .as("la légende est à l'écran : les raccourcis sont câblés mais indécouvrables sans" + " elle (#796)")
                 .isNotBlank();
 
         for (String bouton : BOUTONS_DE_VERDICT) {
-            String libelle = texte(robot, robot.lookup(bouton).query());
+            String libelle = texte(robot.lookup(bouton).query());
             assertThat(legende)
                     .as("la légende nomme « %s », le libellé que %s porte aujourd'hui", libelle, bouton)
                     .contains(libelle);
@@ -324,7 +322,7 @@ class ScenarioRaccourcisVerificationTest {
                 .toList();
     }
 
-    private static String texte(FxRobot robot, Node noeud) {
+    private static String texte(Node noeud) {
         return noeud instanceof Labeled libelle && libelle.getText() != null ? libelle.getText() : "";
     }
 }

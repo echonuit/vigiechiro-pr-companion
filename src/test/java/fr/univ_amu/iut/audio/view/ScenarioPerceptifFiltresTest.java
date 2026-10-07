@@ -254,7 +254,7 @@ class ScenarioPerceptifFiltresTest {
         derouler(robot, especes);
         List<String> premiereOuverture = valeurs(especes);
         Respiration.leTempsDeLire(robot);
-        replier(robot, especes);
+        replier(robot);
 
         // « Statut » filtre DÈS SON AJOUT, et c'est voulu : il s'ouvre présélectionné sur « à revoir »
         // (ADR 3099). C'est justement ce qui resserre le domaine de l'autre critère sans qu'on ait rien
@@ -472,7 +472,7 @@ class ScenarioPerceptifFiltresTest {
 
     /// Replie par la touche d'échappement : c'est le geste, et il évite de cliquer au hasard hors de
     /// la liste, ce qui pourrait atteindre un autre contrôle.
-    private static void replier(FxRobot robot, ComboBox<?> liste) {
+    private static void replier(FxRobot robot) {
         robot.type(javafx.scene.input.KeyCode.ESCAPE);
         WaitForAsyncUtils.waitForFxEvents();
     }
