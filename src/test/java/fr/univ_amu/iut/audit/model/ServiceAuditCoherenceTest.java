@@ -33,8 +33,6 @@ import fr.univ_amu.iut.passage.model.dao.ReleveClimatiqueDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -75,8 +73,6 @@ class ServiceAuditCoherenceTest {
         source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
         // La topologie naît du premier `creerPassage`, par trouver-ou-créer.
-        SiteDao siteDao = new SiteDao(source);
-        PointDao pointDao = new PointDao(source);
 
         passageDao = new PassageDao(source);
         sessionDao = new SessionDao(source);

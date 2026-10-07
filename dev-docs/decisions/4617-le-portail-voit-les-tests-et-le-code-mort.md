@@ -28,7 +28,9 @@ generated:
     `UnusedPrivateField` y est depuis #6115 : 20 champs mesurés sur `76070c320d`, 11 en production
     et 9 en test, tous retirés dans la demande qui ajoute la règle. `UnusedFormalParameter` y est
     depuis #6116 : 8 paramètres mesurés sur `ba33f0a66c`, 2 en production et 6 en test, retirés de
-    même. Le cliquet est resté à 40.
+    même. `UnusedLocalVariable` y est depuis #6117 : 39 variables mesurées sur `0e060d5bbb`, 6 en
+    production et 33 en test, dont 18 mortes, retirées, et 21 ressources de `try` nommées `_` ou
+    ramenées à `try (canal)`. Le cliquet est resté à 40 d'un bout à l'autre.
 
 ## Contexte
 

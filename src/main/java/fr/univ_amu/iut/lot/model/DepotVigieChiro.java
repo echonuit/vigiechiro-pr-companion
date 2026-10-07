@@ -212,7 +212,7 @@ public final class DepotVigieChiro {
         Objects.requireNonNull(suivi, "suivi");
         // Inscrit pendant tout le téléversement, retiré quoi qu'il arrive : succès, refus, annulation
         // ou exception (#5599).
-        try (TeleversementsEnCours.Inscription ignore = televersements.inscrire(idPassage)) {
+        try (TeleversementsEnCours.Inscription _ = televersements.inscrire(idPassage)) {
             return deposerInscrit(idPassage, source, annule, suivi);
         }
     }

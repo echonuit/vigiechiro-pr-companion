@@ -64,7 +64,7 @@ class CliVerrouWorkspaceTest {
         cli.executer(new String[] {"lister-sites"}, sortie, erreur);
         capture.vider();
 
-        try (Occupation ignore = new Occupation(workspace)) {
+        try (Occupation _ = new Occupation(workspace)) {
             int code = cli.executer(
                     new String[] {"creer-site", "--carre", "640380", "--nom", "Aix centre"}, sortie, erreur);
 
@@ -81,7 +81,7 @@ class CliVerrouWorkspaceTest {
     @Test
     @DisplayName("#5506 : une migration sur un dossier occupé reste un refus, code 2")
     void une_migration_est_refusee_sur_un_dossier_occupe() throws IOException {
-        try (Occupation ignore = new Occupation(workspace)) {
+        try (Occupation _ = new Occupation(workspace)) {
             int code = cli.executer(new String[] {"lister-sites"}, sortie, erreur);
 
             assertThat(code).isEqualTo(Cli.CODE_REFUS);
@@ -102,7 +102,7 @@ class CliVerrouWorkspaceTest {
         cli.executer(new String[] {"creer-site", "--carre", "640380", "--nom", "Aix centre"}, sortie, erreur);
         capture.vider();
 
-        try (Occupation ignore = new Occupation(workspace)) {
+        try (Occupation _ = new Occupation(workspace)) {
             int code = cli.executer(new String[] {"lister-sites"}, sortie, erreur);
 
             assertThat(code).isEqualTo(Cli.CODE_SUCCES);
@@ -118,7 +118,7 @@ class CliVerrouWorkspaceTest {
         cli.executer(new String[] {"lister-sites"}, sortie, erreur);
         capture.vider();
 
-        try (Occupation ignore = new Occupation(workspace)) {
+        try (Occupation _ = new Occupation(workspace)) {
             cli.executer(new String[] {"etat-traitement-vigiechiro", "--passage", "1"}, sortie, erreur);
             assertThat(capture.texteErreur())
                     .as("sans l'option, la commande lit : le dossier occupé ne la concerne pas")
@@ -145,7 +145,7 @@ class CliVerrouWorkspaceTest {
         cli.executer(new String[] {"lister-sites"}, sortie, erreur);
         capture.vider();
 
-        try (Occupation ignore = new Occupation(workspace)) {
+        try (Occupation _ = new Occupation(workspace)) {
             int code = cli.executer(new String[] {"emplacements"}, sortie, erreur);
 
             assertThat(code).isEqualTo(Cli.CODE_SUCCES);
@@ -173,7 +173,7 @@ class CliVerrouWorkspaceTest {
 
         @Override
         public void close() throws IOException {
-            try (FileChannel aFermer = canal) {
+            try (canal) {
                 verrou.release();
             }
         }

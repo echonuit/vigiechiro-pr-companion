@@ -117,7 +117,7 @@ public class MigrationSchema {
         // Le verrou ne se prend QUE s'il y a quelque chose à appliquer (#2731). Une commande de
         // lecture lancée pendant que l'IHM tourne ne migre rien : la faire échouer sur un verrou lui
         // coûterait plus que la protection ne lui rapporte.
-        try (VerrouWorkspace verrou =
+        try (VerrouWorkspace _ =
                 VerrouWorkspace.pourOperationExclusive(source.workspace(), "la mise à jour de la base")) {
             poserLeFilet(retenues, enAttente);
             for (String fichier : enAttente) {

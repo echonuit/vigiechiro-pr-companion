@@ -47,7 +47,7 @@ public class BaseNeuve {
     /// @return le chemin de la base mise de côté, ou vide s'il n'y avait pas encore de base
     /// @throws DataAccessException si le fichier ne peut être ni copié ni supprimé
     public Path repartirDeZero() {
-        try (VerrouWorkspace verrou = VerrouWorkspace.pourOperationExclusive(source.workspace(), "la remise à zéro")) {
+        try (VerrouWorkspace _ = VerrouWorkspace.pourOperationExclusive(source.workspace(), "la remise à zéro")) {
             Path filet = effacerEtRecreer();
             // Les quatre compteurs de l'accueil retombent a zero d'un coup : c'est la mutation la plus
             // structurelle qui soit, et elle ne passait par aucun emetteur (constat de la passe 2 du

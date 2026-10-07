@@ -23,7 +23,6 @@ import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
-import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
@@ -93,7 +92,6 @@ class ServiceQualificationTest {
         originalDao = new EnregistrementOriginalDao(source);
         sequenceDao = new SequenceDao(source);
         selectionDao = new SelectionDao(source);
-        EnregistreurDao enregistreurDao = new EnregistreurDao(source);
 
         idPassage = JeuDeDonneesPassage.dans(source)
                 .utilisateur(ID_USER)

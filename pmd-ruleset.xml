@@ -197,4 +197,15 @@
          a l appel, qui ecarte l argument, et une methode a un seul parametre. -->
     <rule ref="category/java/bestpractices.xml/UnusedFormalParameter"/>
 
+    <!-- Une variable locale que rien ne lit (#6117, chantier #6022). Entree le 7 octobre 2026
+         avec ses trente-neuf entrees, six en production et trente-trois en test : dix-huit
+         variables mortes retirees, et vingt et une ressources de `try`.
+
+         Une ressource de `try` tenue pour sa seule portee, un verrou, une inscription, un canal,
+         n est pas du code mort, et la regle la signale quand meme si elle porte un nom. Elle se
+         nomme `_`, la variable anonyme de Java 22 : PMD 7.17 se tait alors, mesure le 7 octobre
+         2026. Quand la ressource est un champ final que le `try` ferme, `try (canal)` suffit.
+         Aucune exclusion : la forme du code dit l intention, le jeu de regles n a rien a taire. -->
+    <rule ref="category/java/bestpractices.xml/UnusedLocalVariable"/>
+
 </ruleset>

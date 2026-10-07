@@ -25,7 +25,6 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.ReleveClimatiqueDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -65,7 +64,6 @@ class ServiceDiagnosticTest {
         new MigrationSchema(source).migrer();
         new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
 
-        SiteDao siteDao = new SiteDao(source);
         PointDao pointDao = new PointDao(source);
 
         passageDao = new PassageDao(source);

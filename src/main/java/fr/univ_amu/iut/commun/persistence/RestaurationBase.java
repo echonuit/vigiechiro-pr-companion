@@ -42,7 +42,7 @@ class RestaurationBase {
         }
         verifierBaseLisible(sauvegarde);
         refuserSiEcriteParUneVersionPlusRecente(sauvegarde);
-        try (VerrouWorkspace verrou = VerrouWorkspace.pourOperationExclusive(source.workspace(), "la restauration")) {
+        try (VerrouWorkspace _ = VerrouWorkspace.pourOperationExclusive(source.workspace(), "la restauration")) {
             remplacerPuisMigrer(sauvegarde);
         }
     }
