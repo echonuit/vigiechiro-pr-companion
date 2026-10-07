@@ -513,7 +513,7 @@ bed2b87ec0d4  src/main/java/fr/univ_amu/iut/commun/view/ActionVigieChiroPassage.
 f5e3b3a4a832  src/main/java/fr/univ_amu/iut/commun/view/ActiviteAccueil.java
 21fb8268dedf  src/main/java/fr/univ_amu/iut/commun/view/AdaptateurColonnes.java
 9c01a3255059  src/main/java/fr/univ_amu/iut/commun/view/AlerteDemarrage.java
-761fee27e817  src/main/java/fr/univ_amu/iut/commun/view/AnnonceChrome.java
+1c9e7eb3341f  src/main/java/fr/univ_amu/iut/commun/view/AnnonceChrome.java
 33bc55bf1d7d  src/main/java/fr/univ_amu/iut/commun/view/AuDepartEcran.java
 14f1078ef3ac  src/main/java/fr/univ_amu/iut/commun/view/AvisRedemarrage.java
 4cdcb75de578  src/main/java/fr/univ_amu/iut/commun/view/AxeHoraire.java
@@ -1159,7 +1159,7 @@ da30c90666bf  src/main/java/fr/univ_amu/iut/sites/model/PointLocalParLocalite.ja
 9c59f209670c  src/main/java/fr/univ_amu/iut/sites/model/PositionCollee.java
 9f76ba4f57b6  src/main/java/fr/univ_amu/iut/sites/model/PresenceDuCarre.java
 08487ece2323  src/main/java/fr/univ_amu/iut/sites/model/PropositionCarre.java
-656bd2d79e66  src/main/java/fr/univ_amu/iut/sites/model/PublicationPoint.java
+e820b69eae49  src/main/java/fr/univ_amu/iut/sites/model/PublicationPoint.java
 78d6cdc5a89a  src/main/java/fr/univ_amu/iut/sites/model/RapatriementCarre.java
 0c989e27531c  src/main/java/fr/univ_amu/iut/sites/model/RapprochementNuitsOpportunistes.java
 c8955f4791ef  src/main/java/fr/univ_amu/iut/sites/model/RapprochementSites.java

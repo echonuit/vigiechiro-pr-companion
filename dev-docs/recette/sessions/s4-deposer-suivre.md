@@ -22,7 +22,7 @@ participation », puis le suivi du traitement. S4 est la première session qui *
 
 - **Données** : enregistreur **PR1997632**, carte SD réelle, **nuit du 05/07 (1623 wav, 11 Go)** non
   encore déposée : c'est une donnée réelle qui va à sa vraie place (le calcul devient l'usage nominal,
-  pas une pollution), et enfin le vrai test de volume (#26/#27).
+  pas une pollution), et enfin le vrai test de volume (#105, qui regroupe #26 et #27).
 - **Carré cible : 130711** (le vrai carré où PR1997632 était posé, déjà relié).
 - **Mode : IHM en ZIP** (c'est l'écran Lot qu'on recette : parallélisme, reprise).
 - **Workspace : le workspace habituel (production)**, pas celui de recette.

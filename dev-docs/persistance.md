@@ -322,7 +322,8 @@ l'ADR 3574 a démêlé (#3632).
 !!! danger "`root_path` n'est pas le seul chemin en base"
     Chaque original, chaque séquence d'écoute, le journal du capteur, le relevé climatique et le CSV
     Tadarida portent leur chemin **absolu** : six tables au total (`ReecritureRacineSession`, dont
-    l'inventaire a été confronté aux colonnes `*_path` des 38 migrations). Ne réécrire que la racine
+    l'inventaire a été confronté le 2026-08-03 aux colonnes `*_path` des 38 migrations d'alors ;
+    depuis #3180, `TablesACheminTest` relit le schéma à chaque demande). Ne réécrire que la racine
     donne une base qui **paraît** corrigée et une application qui ne retrouve plus un seul fichier.
 
     Ce piège n'est pas théorique : c'est l'état dans lequel cette fonctionnalité a d'abord été

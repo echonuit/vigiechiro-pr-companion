@@ -13,6 +13,10 @@ import java.util.Optional;
 /// **Réservé à ce qui est utile et rare.** Une annonce s'impose à l'utilisateur au lancement : c'est
 /// une ressource qui s'épuise vite. Ce qui relève d'un compte rendu d'action va au bandeau de l'écran
 /// concerné (ADR 0023), ce qui décrit un état va à la barre de statut (ADR 0039).
+///
+/// **Au deuxième contributeur de production, la question de portée se rouvre** avant de l'enregistrer :
+/// ce bandeau reste-t-il réservé au démarrage, ou devient-il le canal général des messages non
+/// sollicités ? Elle a été différée tant qu'un seul cas d'usage existait (#2192).
 @FunctionalInterface
 public interface AnnonceChrome {
 
