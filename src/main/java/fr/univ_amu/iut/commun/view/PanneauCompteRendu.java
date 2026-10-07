@@ -336,10 +336,18 @@ public final class PanneauCompteRendu extends VBox {
             Button bouton = new Button(action.libelle());
             bouton.getStyleClass().add(action.principale() ? "bouton-primaire" : "bouton-secondaire");
             bouton.setOnAction(evenement -> action.geste().run());
+            // Figé à sa largeur préférée (#6013) : une `HBox` répartit le manque sur tout ce qui peut
+            // rétrécir, et un résumé de motifs plus large que la bande faisait lire « Ouvrir le pa… ».
+            // Le déficit se porte, il ne se répartit pas (ADR 3760) : il revient au résumé, qui porte
+            // la marque et se relit, pas au libellé d'une action, qui ne se relit nulle part.
+            bouton.setMinWidth(Region.USE_PREF_SIZE);
             actions.getChildren().add(bouton);
         }
         String resume = rendu.resumeDesMotifs();
         resumeMotifs.setText(resume);
+        // Coupé, le résumé se relit au survol comme en l'ouvrant : une raison peut porter un chemin de
+        // fichier, que la bande ne loge pas toujours.
+        resumeMotifs.setTooltip(resume.isEmpty() ? null : ColonneAbregeable.infobulle(resume));
         montrer(resumeMotifs, !resume.isEmpty());
         montrer(pied, !rendu.actions().isEmpty() || !resume.isEmpty());
         remplirMotifs(rendu.motifs());
