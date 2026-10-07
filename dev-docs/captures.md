@@ -229,7 +229,7 @@ le message d'erreur distingue.
 |---|---|---|
 | `manque N px` | La scène est trop **courte** : un libellé `wrapText` se rabat sur une ligne et s'ellipse | Augmenter la hauteur de cette scène |
 | `tronque, manque N px` | Le contrôle est trop **étroit** pour son texte | Figer par `minWidth="-Infinity"`, élargir la colonne, ou assumer par `abregeable` |
-| `cellule de table coupee` | Une **colonne** est trop étroite pour le texte d'une de ses cellules. Le message donne le libellé, ce qui en est dessiné, le titre de la colonne et sa largeur | Élargir la colonne, ou, si le texte ne peut tenir dans aucune largeur, l'assumer par `ColonneAbregeable.assumer(colonne)` |
+| `cellule de table coupee` | Une **colonne** est trop étroite pour le texte d'une de ses cellules. Le message donne ce que la cellule dessine, le titre de la colonne et sa largeur. Il les fait précéder de l'identifiant de la colonne quand elle en porte un (`#colDetail`), et à défaut des quarante premiers caractères du texte reçu | Élargir la colonne, ou, si le texte ne peut tenir dans aucune largeur, l'assumer par `ColonneAbregeable.assumer(colonne)` |
 
 **Une cellule de table se juge sur ce qu'elle dessine, pas sur sa largeur** (#5113). Le critère de la
 deuxième ligne compare la largeur qu'un contrôle demande à celle qu'il a reçue, et une `TableCell`
@@ -243,7 +243,7 @@ de soixante caractères ou le détail d'un constat d'audit ne tiennent dans aucu
 la colonne les coupe, et c'est acceptable si le survol les rend en entier. Les deux gestes se posent
 donc ensemble, par `ColonneAbregeable.assumer(colonne)`, qui donne à chaque cellule une infobulle
 portant son texte puis marque la colonne. Le garde tient le lien : une cellule coupée n'est exemptée
-que si elle porte la marque **et** une infobulle qui contient son texte. La marque posée seule est
+que si elle porte la marque, reçue de sa colonne ou d'un parent comme la table, **et** une infobulle qui contient son texte. La marque posée seule est
 refusée, avec la mention `marquee « abregeable » sans infobulle`, sans quoi elle deviendrait le moyen
 de faire taire le garde. Trois colonnes le font aujourd'hui : « Détail » de l'audit, « Fichier » de la
 table de dépôt, « Fichier » de la sélection d'écoute.
@@ -272,6 +272,8 @@ CSS morte. Elle déclare, *dans la vue*, quel libellé porte le déficit : le fi
 rentrer le contenu d'une barre, cela le fait déborder. La règle est de désigner un sélecteur ou une
 métadonnée (qui se relisent ailleurs) plutôt qu'un libellé d'action (qui ne se relit nulle part). La
 tolérance s'hérite jusqu'aux libellés internes des contrôles composés (`ComboBox`, `MenuButton`).
+Pour un libellé, la marque suffit. Pour une cellule de table elle ne vaut qu'avec son infobulle, comme dit plus haut,
+et elle n'exempte ni la compression verticale ni une invite coupée.
 
 **Le contrôle ne connaît pas d'exception par composant.** Le sous-arbre d'`AudioView` a été exclu un
 temps, parce que sa barre de transport tronquait et qu'aucun FXML d'ici n'y pouvait rien. Le défaut a
