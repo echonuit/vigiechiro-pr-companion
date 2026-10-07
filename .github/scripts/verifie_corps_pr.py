@@ -22,6 +22,28 @@ verte, l issue reste ouverte, et on ne s en apercoit qu en balayant les issues. 
 garde parce qu il aurait cherche ce qui MANQUE et rougi sur tout lot d un EPIC ; celui-ci cherche ce
 qui est PRESENT, forme qui n est jamais legitime, et laisse « Refs #N » tranquille.
 
+## Le cinquieme refus : la trace d outil (#4749)
+
+Les cinq traces d outil qui se comptent - marque de citation d assistant, lien marque du nom de
+l outil, caractere invisible, lettre sosie, gabarit non rempli - etaient tenues a zero dans les
+fichiers suivis, par `scripts/adr/4783-traces-d-outil.py`, et nulle part ailleurs. Un corps de
+demande n est pas un fichier suivi. Mesure du 2026-10-07 : ce garde rendait « Corps conforme. » sur
+un corps qui en portait trois.
+
+**La definition n est PAS ecrite ici.** Elle vit dans `scripts/_commun/traces.py`, que les deux
+gardes lisent, pour la raison que ce fichier donne plus bas a propos de l elision : deux ecritures
+divergent, chacune gardant son auto-test vert.
+
+Ce qui est CITE se reconnait comme dans le garde des fichiers, entre accents graves, et un bloc
+cloture reste epargne en entier. Un corps doit pouvoir PARLER d une trace sans en porter une.
+
+**Une exemption propre au corps : la mention neutralisee.** Dependabot recopie des notes de version
+et y glisse une espace sans chasse derriere chaque arobase, pour que la forge ne notifie pas les
+auteurs cites. Ce caractere fait son travail, comme le liant d un pictogramme. Mesure du 2026-10-07
+sur les 300 dernieres demandes fusionnees : 68 espaces sans chasse, les 68 derriere une arobase,
+dans 4 des 13 corps de Dependabot. Sans l exemption, ces quatre demandes auraient rougi sur un
+texte que personne ici n a ecrit. Partout ailleurs le caractere reste refuse.
+
 ## Ce qu elle ne voit PAS, et c est assume
 
 **Les quatre tics rhetoriques** de `CONTRIBUTING.md`. Aucun motif ne les distingue d une phrase
@@ -44,7 +66,11 @@ import sys
 import unicodedata
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+# La direction de l import est celle de `_forge.py` et de `verifie_butoirs.py`, tous deux ici.
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "scripts"))
 
+from _commun import cas_d_auto_test
+from _commun.traces import traces
 from verifie_titre_pr import ELISION
 
 # Construits, jamais ecrits : sans cela le garde des cadratins compterait la prose de son propre
@@ -64,6 +90,10 @@ CITE = re.compile(
         ]
     )
 )
+# Ce que Dependabot ecrit devant un nom d utilisateur pour ne pas le notifier : l arobase, puis une
+# espace sans chasse. Voir la docstring pour la mesure. Construit, pour la raison dite plus haut.
+MENTION_NEUTRALISEE = "@" + chr(0x200B)
+
 # L elision sans apostrophe n a PAS de motif ici : `ELISION` vient de `verifie_titre_pr.py`, qui
 # porte la regle et la mesure dont elle sort (#4837). Ce fichier en tenait une copie, et les deux
 # ont diverge deux fois sans bruit, chacun gardant son auto-test vert : #4786 a corrige celle-ci
@@ -114,11 +144,20 @@ REMEDES = {
         "  clôturé par trois accents graves, que ce garde épargne entièrement. Indenter ne suffit\n"
         "  pas, une indentation portant aussi bien de la prose."
     ),
+    "trace d'outil": (
+        "Une chaîne que seul un outil écrit, ou le résidu d'un collage : marque de citation\n"
+        "  d'assistant (T1), lien marqué du nom de l'outil (T2), caractère invisible (T3), lettre\n"
+        "  cyrillique ou grecque dans un mot latin (T4), gabarit non rempli (T5). Retirez-la, ou\n"
+        "  remplissez le gabarit : sa présence dit que le texte est parti sans être relu.\n"
+        "  Si le corps PARLE d'une trace, citez-la entre accents graves ou dans un bloc clôturé par\n"
+        "  trois accents graves, que ce garde épargne.\n"
+        "  La définition est dans scripts/_commun/traces.py, et l'ADR 4783 dit pourquoi ce zéro se garde."
+    ),
 }
 
 
 def juger(corps: str) -> int:
-    """Les quatre refus, ligne par ligne, et le code de sortie qui va avec."""
+    """Les cinq refus, ligne par ligne, et le code de sortie qui va avec."""
     fautes = []
     dans_un_bloc = False
     for numero, ligne in enumerate(corps.splitlines(), 1):
@@ -136,12 +175,18 @@ def juger(corps: str) -> int:
             fautes.append((numero, "élision sans apostrophe", ligne.strip()))
         if FERMETURE_FR.search(sans_accents(prose)):
             fautes.append((numero, "fermeture en français", ligne.strip()))
+        # La ligne ENTIERE et non `prose` : `traces` porte sa propre regle de citation, la meme que
+        # dans le garde des fichiers, et lui donner un texte deja ampute en ferait deux.
+        fautes.extend(
+            (numero, "trace d'outil", f"{trace} : {ligne.strip()}")
+            for trace in traces(ligne.replace(MENTION_NEUTRALISEE, "@"))
+        )
 
     if not fautes:
         print("Corps conforme.")
         return 0
 
-    print(f"::error::Le corps de la PR porte {len(fautes)} defaut(s) de typographie.")
+    print(f"::error::Le corps de la PR porte {len(fautes)} defaut(s).")
     print()
     for numero, defaut, ligne in fautes:
         print(f"  ligne {numero} : {defaut}")
@@ -161,6 +206,11 @@ def juger(corps: str) -> int:
 
 
 TROISQUOTES = "`" * 3
+JETON = "cite" + "turn0search0"
+SUIVI = "utm_" + "source=chatgpt.com"
+GABARIT = "[Votre " + "nom]"
+SANS_CHASSE = chr(0x200B)
+E_CYRILLIQUE = chr(0x0435)  # « e » cyrillique, sosie du latin
 
 # (attendu, corps, libelle)
 CAS = (
@@ -259,33 +309,128 @@ CAS = (
         f"Le garde tient, l amendement{INSECABLE}: il le dit.",
         "une élision devant une espace insécable est refusée",
     ),
+    # #4749. Les cinq traces d outil qui se comptent, une par famille. Les chaines sont ASSEMBLEES
+    # et non ecrites : ce fichier est suivi, donc lu par `4783-traces-d-outil.py`, et une chaine
+    # litterale y ferait rougir le depot entier. C est le detour de `verifie_scripts.py`.
+    (
+        1,
+        f"La source le confirme {JETON} dans son rapport.",
+        "T1, une marque de citation, est refusée",
+    ),
+    (
+        1,
+        f"Voir [la page](https://exemple.org/guide?{SUIVI}) pour le detail.",
+        "T2, un lien marqué du nom de l'outil, est refusé",
+    ),
+    (
+        1,
+        f"Le mot coupe par un inv{SANS_CHASSE}isible se recopie sans se voir.",
+        "T3, un caractère invisible, est refusé",
+    ),
+    (
+        1,
+        f"La relectur{E_CYRILLIQUE} porte une lettre qui n'est pas latine.",
+        "T4, une lettre sosie dans un mot latin, est refusée",
+    ),
+    (1, f"Redige par {GABARIT} un jour de relecture.", "T5, un gabarit non rempli, est refusé"),
+    # Les controles NEGATIFS. La demande qui a livre ce refus devait elle-meme CITER des traces
+    # pour en parler : un garde qui l en empecherait serait inutilisable des son premier jour.
+    (
+        0,
+        f"Le garde refuse ceci :\n{TROISQUOTES}\n{JETON}\n{TROISQUOTES}\nEt rien d'autre.",
+        "une trace citée dans un bloc clôturé passe",
+    ),
+    (0, f"Le garde cherche `{JETON}` dans le corps.", "une trace citée entre accents graves passe"),
+    (
+        0,
+        f"Releve par {chr(0x1F468)}{chr(0x200D)}{chr(0x1F52C)} hier.",
+        "le liant d'un pictogramme composé passe",
+    ),
+    # `traces` lit la LIGNE, pas la prose amputee de son code en ligne : retirer le code d abord
+    # recollerait les deux moities qu il separe, et le garde inventerait une trace.
+    (
+        0,
+        f"Les deux moities {JETON[:4]}`x`{JETON[4:]} ne se recollent pas.",
+        "un code en ligne ne recolle pas deux moitiés de marque",
+    ),
+    # La mention neutralisee de Dependabot : le caractere du cas T3, a la seule place ou il sert.
+    (
+        0,
+        f"<li>Fix the Temurin job by <code>{MENTION_NEUTRALISEE}brunoborges</code> upstream</li>",
+        "l'espace sans chasse derrière une arobase passe",
+    ),
+    (
+        1,
+        f"<li>Fix the Temurin job by <code>@brunoborges{SANS_CHASSE}</code> upstream</li>",
+        "la même, ailleurs que derrière l'arobase, reste refusée",
+    ),
     # Epingle une DECISION, pas un comportement : un corps vide PASSE.
     (0, "", "un corps vide passe, faute de décision qui l'interdise"),
 )
 
 
-def _auto_test() -> int:
-    """Les corps CONNUS, chacun avec son code attendu ; la derniere ligne les recompte."""
+def _code_de(corps: str) -> int:
+    """Le code que `juger` rend sur ce corps, sa sortie retenue."""
     import contextlib
     import io
 
-    echecs = cas = rouges = 0
+    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+        return juger(corps)
+
+
+def _refus_de(corps: str) -> str:
+    """Ce que `juger` ECRIT sur ce corps : le chemin de refus se lit, il ne se devine pas."""
+    import contextlib
+    import io
+
+    sortie = io.StringIO()
+    with contextlib.redirect_stdout(sortie), contextlib.redirect_stderr(io.StringIO()):
+        juger(corps)
+    return sortie.getvalue()
+
+
+def _auto_test() -> int:
+    """Les corps CONNUS, chacun avec son code attendu ; la derniere ligne les recompte.
+
+    Chaque cas passe par un APPELABLE : un cas dont l expression leve se nomme alors lui-meme, au
+    lieu d arreter le temoin sur une trace de pile (#5444).
+    """
+    verifie, echecs = cas_d_auto_test()
+    rouges = 0
     for attendu, corps, libelle in CAS:
-        cas += 1
         if attendu != 0:
             rouges += 1
-        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-            code = juger(corps)
-        if code == attendu:
-            print(f"  ✔ {libelle}")
-        else:
-            print(f"  ✘ {libelle} : attendu {attendu}, obtenu {code}")
-            echecs = 1
+        verifie(libelle, lambda corps=corps: _code_de(corps), attendu)
+
+    # Le chemin de REFUS, et pas seulement le code : un refus qui ne nommerait ni la famille ni le
+    # remede sortirait en 1 sans dire quoi retirer, et les cas ci-dessus ne le verraient pas.
+    trace_t2 = f"Voir https://exemple.org/guide?{SUIVI} pour le detail."
+    verifie("le refus nomme la FAMILLE de la trace", lambda: "T2 utm_" in _refus_de(trace_t2), True)
+    verifie(
+        "il nomme la LIGNE qui la porte",
+        lambda: "ligne 3 : trace d'outil" in _refus_de(f"Un corps.\n\n{trace_t2}"),
+        True,
+    )
+    verifie(
+        "il donne le remède des traces, et où vit leur définition",
+        lambda: "scripts/_commun/traces.py" in _refus_de(trace_t2),
+        True,
+    )
+    verifie(
+        "une ligne à deux traces rend deux refus",
+        lambda: _refus_de(f"{JETON} et {GABARIT}").count("trace d'outil\n"),
+        2,
+    )
+    verifie(
+        "un corps sain ne parle d aucune trace",
+        lambda: "trace" in _refus_de("Ce corps dit ce qui a ete fait."),
+        False,
+    )
 
     print()
     verbe = "DOIT" if rouges == 1 else "DOIVENT"
-    print(f"{cas} cas, dont {rouges} qui {verbe} rougir.")
-    return echecs
+    print(f"{echecs.joues()} cas, dont {rouges} qui {verbe} rougir.")
+    return echecs()
 
 
 if __name__ == "__main__":

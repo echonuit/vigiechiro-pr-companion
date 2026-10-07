@@ -31,7 +31,11 @@ Ce n'est pas un défaut rare : les sessions **disent** attendre la CI et ne le f
 2. LANCER   la batterie locale, selon ce qui a ete touche.
 3. REBASER  sur `origin/main`, puis RELANCER ce que le rebase peut avoir perime.
 4. EPROUVER le titre AVANT `gh pr create`.
-5. ECRIRE   le corps en evitant ses quatre refus, et l EPROUVER en local avant de l ouvrir.
+5. ECRIRE   le corps en evitant ses cinq refus, et l EPROUVER en local avant de l ouvrir.
+5b. RELIRE  a la grille de la competence humaniser ce qui part sur la forge : le titre et le
+            corps. Ils sont de la prose publiee, et l article A31 les couvre depuis qu il ne
+            declenche plus sur le commit. Les gardes de l etape 5 ne tiennent que ce qu un motif
+            peut voir.
 6. POUSSER, ouvrir, puis LANCER LE MONITEUR dans le meme geste.
 ```
 
@@ -215,7 +219,7 @@ Le 2026-08-28 a ajouté une cinquième forme, du même geste : une **élision sa
 `d accuser` pour `d'accuser`. La main qui évite l'espace avant le deux-points peut encore buter sur
 l'apostrophe, et le script les refuse toutes les deux.
 
-## Les quatre refus du corps, qui s'éprouvent en local
+## Les cinq refus du corps, qui s'éprouvent en local
 
 Le corps et le titre ne sont dans aucun fichier du dépôt, donc aucune boucle ne les balaie. **Mais
 les trois gardes qui les jugent s'exécutent en local, avec le texte en argument**, et ce sont ceux-là
@@ -245,12 +249,32 @@ jour.
 | tiret cadratin | un trait d'union, jamais `-` |
 | apostrophe courbe | l'apostrophe droite |
 | élision sans apostrophe | `d'accuser`, jamais `d accuser` |
+| trace d'outil | rien de ce qu'un collage non relu laisse : marque de citation d'assistant, lien marqué du nom de l'outil, caractère invisible, lettre sosie dans un mot latin, gabarit non rempli. Pour en **parler**, la citer entre accents graves ou dans un bloc clôturé |
 
 **Le premier est le plus coûteux, et il ne se voit pas.** Une fermeture écrite en français ne ferme
 rien et ne signale rien : la PR fusionne **verte** et l'issue reste **ouverte**. Vécu sur #4660.
 
 Pour renvoyer sans clore - un lot dans un EPIC - `Refs #N` ou « Rattaché à #N », qui ne prétendent
 rien.
+
+**Le cinquième date de #4749.** Les cinq traces d'outil qui se comptent étaient tenues à zéro dans
+les fichiers suivis, par `scripts/adr/4783-traces-d-outil.py`, et un corps de demande n'est pas un
+fichier suivi : le 2026-10-07, ce garde déclarait conforme un corps qui en portait trois. Les deux
+gardes lisent depuis la même définition, `scripts/_commun/traces.py`.
+
+## Ce que ces gardes ne voient pas se relit à la grille
+
+L'étape 5b a manqué à cette page jusqu'à #4749. `ouvrir-une-issue`, `clore-une-issue` et
+`ecrire-une-adr` portaient la leur depuis le 2026-08-26, et c'est sur des corps de demande que le
+défaut avait été mesuré : le 2026-08-29, sept corps sur huit tirés au hasard portaient un tic,
+presque toujours l'aphorisme final (#4749).
+
+Les gardes de l'étape 5 ne remplacent pas cette lecture. Ils refusent cinq formes qu'un motif
+reconnaît, et l'en-tête de `verifie_corps_pr.py` déclare ce qu'il laisse passer : les tics
+rhétoriques de `CONTRIBUTING.md`, qu'aucun motif ne distingue d'une phrase légitime.
+
+La compétence [`humaniser`](../humaniser/SKILL.md) dit comment rendre le résultat quand elle est
+appelée depuis une autre tâche : le texte final seul.
 
 ## Si le chantier porte un changement OpenSpec, le corps nomme sa tâche
 
@@ -337,6 +361,7 @@ vraiment ce changement, ce qu'un rouge vaut, et l'issue mère qui ne se ferme pa
 | « Le garde est sorti en 0, tout va bien » | Les loupes signalent en rendant `0` : elles observent sans juger |
 | « Le titre me semble bon » | Il devient la ligne du CHANGELOG. Le script rend un verdict, la relecture rend un avis |
 | « Je relis le titre, ça suffit » | Quatre titres relus ont rougi le même jour |
-| « La typographie du corps, ça n'engage rien » | `corps-pr.yml` refuse quatre formes, et ce corps est publié dès qu'il part |
+| « La typographie du corps, ça n'engage rien » | `corps-pr.yml` refuse cinq formes, et ce corps est publié dès qu'il part |
+| « Le garde dit corps conforme, il est relu » | Le garde tient ce qu'un motif voit. Les tics qui demandent une lecture passent, et c'est la grille qui les trouve |
 | « J'ai rebasé, la batterie de tout à l'heure vaut encore » | Le rebase périme les mesures qui dépendent du dépôt entier |
 | « `Ferme #N` ferme l'issue » | Elle reste ouverte, et la PR fusionne verte |

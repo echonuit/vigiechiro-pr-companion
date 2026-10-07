@@ -97,7 +97,7 @@ comptage.
 | commentaire long en corps de méthode | `scripts/adr/4472-commentaire-en-corps.py`, article A30 | **deux** cliquets depuis #5582, la production à <!--inv:cliquet-commentaire-corps-->24<!--/inv--> (ADR 4472) et la zone de test à 19 (ADR 5582), le garde sortant sur le pire des deux ; plus une loupe de densité qui ne bloque pas |
 | javadoc qui raconte son extraction | `scripts/adr/4476-javadoc-raconte-son-extraction.py`, article A30 | cliquet à <!--inv:cliquet-javadoc-extraction-->0<!--/inv--> |
 | ADR qui raconte plus que sa décision | `scripts/adr/4477-longueur-des-adr.py`, article A30 | cliquet à <!--inv:cliquet-longueur-adr-->58<!--/inv--> |
-| traces d'outil, cinq familles comptables | `scripts/adr/4783-traces-d-outil.py`, article A31 | tolérance zéro, cliquet à <!--inv:cliquet-traces-outil-->0<!--/inv-->, trois exemptions déclarées |
+| traces d'outil, cinq familles comptables | `scripts/adr/4783-traces-d-outil.py` pour les fichiers suivis, `.github/scripts/verifie_corps_pr.py` pour le corps d'une demande, article A31 | tolérance zéro, cliquet à <!--inv:cliquet-traces-outil-->0<!--/inv-->, trois exemptions déclarées, et une quatrième propre au corps |
 | source vague, conjecture présentée en fait | article A5 | la mesure fait foi et dit d'où elle vient |
 | section « défis et perspectives » | le gabarit d'ADR | contexte, décision, conséquences, alternatives |
 
@@ -136,6 +136,11 @@ ci-dessus : leur compte vit dans le garde qui les tient, et un inventaire se cit
 duplique (ADR 3535). Mesure du 2026-08-29, sur 2 726 fichiers et 372 370 lignes : **zéro** pour les
 cinq. Sans l'exemption de la compétence qui les énumère, le même compteur rend 22 marques de
 citation, toutes aux lignes qui les définissent.
+
+Le corps d'une demande de fusion est tenu au même zéro depuis #4749, par `verifie_corps_pr.py`, qui
+lit la même définition. Mesure du 2026-10-07 sur les 300 dernières demandes fusionnées : aucun corps
+refusé, une fois épargnée l'espace sans chasse que Dependabot place derrière une arobase pour ne pas
+notifier les auteurs qu'il cite. Le caractère apparaît 68 fois, toujours à cette place, dans 4 corps.
 
 Cette page rend compte des motifs **comptables**. Ceux qui ne le sont pas, l'importance gonflée,
 l'analyse creuse en participe présent, la langue de la brochure, le tricolon forcé, l'aphorisme de

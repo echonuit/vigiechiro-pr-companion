@@ -17,7 +17,10 @@ ecarte : onze occurrences se corrigent une par une, un zero se perd d un seul co
 - Les deux exemplaires de `humaniser/SKILL.md`. La grille ENUMERE les chaines qu elle cherche : sans
   cette exemption le garde refuse la page qui le definit. Mesure : 22 marques de citation, toutes
   aux lignes de `T1`. C est l ADR 3645, connue avant d ecrire plutot qu apres un rouge.
-- Ce fichier, qui nomme les memes chaines pour la meme raison.
+- `scripts/_commun/traces.py`, qui porte la definition des cinq familles et nomme donc les memes
+  chaines. C etait ce fichier-ci jusqu a #4749 : la definition en est sortie pour que le garde du
+  corps des demandes, `.github/scripts/verifie_corps_pr.py`, lise la meme au lieu d en ecrire une
+  seconde.
 - Le signe CITE plutot qu employe, au grain de la ligne : entre accents graves, ou seul contenu d
 une
   chaine litterale. `private static final char BOM = '﻿'` DECRIT la marque d ordre, il ne la
@@ -27,16 +30,17 @@ une
   travail.
 
 **La cecite declaree.** Le garde lit les fichiers SUIVIS et decodables en UTF-8. Un binaire n est
-pas lu. Et il ne prononce rien sur `T6`, qui n a pas de forme.
+pas lu. Le corps d une demande de fusion n est pas un fichier : c est le garde du corps qui le
+tient, sur la meme definition. Et il ne prononce rien sur `T6`, qui n a pas de forme.
 """
 
 import pathlib
-import re
 import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import rapporte, sort_si_contrat_demande
+from _commun.traces import traces
 
 ADR = "4783"
 # Ancre sur le SCRIPT et non sur le repertoire courant : un chemin relatif ferait mesurer le depot
@@ -72,45 +76,8 @@ BINAIRES = {
 HORS_CHAMP = {
     ".agents/skills/humaniser/SKILL.md": "la grille enumere les chaines qu'elle cherche (ADR 3645)",
     ".claude/skills/humaniser/SKILL.md": "copie de la precedente, meme raison",
-    "scripts/adr/4783-traces-d-outil.py": "le garde nomme les chaines qu'il cherche",
+    "scripts/_commun/traces.py": "la definition nomme les chaines que le garde cherche",
 }
-
-# T1. Jetons de citation qu une interface d assistant rend invisibles et que le collage emporte.
-MARQUES = (
-    "citeturn",
-    "contentReference[oaicite",
-    "oai_citation",
-    "grok_card",
-    "grok_render_citation_card_json",
-    "attributableIndex",
-    "ppl-ai-file-upload",
-)
-MARQUES_RE = re.compile(r"\[cite:\s*\d|\[span_\d+\]\(start_span\)")
-
-# T2. Parametres de suivi que plusieurs assistants accrochent aux liens qu ils rendent.
-UTM = re.compile(r"utm_source=(chatgpt|openai|copilot|perplexity|claude)|referrer=grok")
-
-# T3. Caracteres qui ne s affichent pas et se recopient sans qu on les voie.
-INVISIBLES = {
-    "\u200b": "U+200B",
-    "‌": "U+200C",
-    "‍": "U+200D",
-    "﻿": "U+FEFF",
-    "­": "U+00AD",
-    "⁠": "U+2060",
-}
-
-# T4. Lettres cyrilliques et grecques employees a la place de leurs sosies latines.
-SOSIES = "аеорсхуіАЕОСХоΑ"
-LATINE = re.compile(r"[A-Za-z]")
-
-# T5. Gabarits qu on a oublie de remplir. Les motifs sont etroits : `[texte](lien)` du Markdown ne
-# doit pas les declencher.
-GABARIT = re.compile(
-    r"\[Votre nom\]|\[Your Name\]|\[INS[EÉ]RER\b|\[INSERT \b|\[[ÀA] COMPL[EÉ]TER\]"
-    r"|\b\d{4}-XX-XX\b|\b20XX\b|\bXXXX-XX-XX\b",
-    re.I,
-)
 
 
 def fichiers(racine: pathlib.Path | None = None) -> list[str]:
@@ -133,25 +100,6 @@ def fichiers(racine: pathlib.Path | None = None) -> list[str]:
     )
 
 
-def citee(ligne: str, position: int) -> bool:
-    """Le signe est-il MENTIONNE plutot qu employe ? Voir la troisieme exemption en tete."""
-    if ligne.count("`", 0, position) % 2 == 1:
-        return True
-    fenetre = ligne[max(0, position - 2) : position + 3]
-    return bool(re.search(r"""(["'])(\\u[0-9a-fA-F]{4}|.)\1""", fenetre))
-
-
-def liant_d_emoji(ligne: str, position: int) -> bool:
-    """Un U+200D qui compose un pictogramme, et non un residu de collage.
-
-    La sequence d emoji encadre le liant de deux symboles hors du plan latin. Le test porte sur le
-    VOISIN de gauche : un liant en tete de ligne n a rien a composer.
-    """
-    if position == 0:
-        return False
-    return ord(ligne[position - 1]) > 0x2100
-
-
 def suspects(racine: pathlib.Path | None = None) -> list[str]:
     """Une trace d outil par occurrence, avec sa famille."""
     base = racine or RACINE
@@ -163,32 +111,7 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
             continue
         for n, ligne in enumerate(texte.split("\n"), 1):
             extrait = ligne.strip()[:60]
-            for marque in MARQUES:
-                pos = ligne.find(marque)
-                if pos >= 0 and not citee(ligne, pos):
-                    trouves.append(f"{chemin}:{n}  T1 {marque}  {extrait}")
-            for m in MARQUES_RE.finditer(ligne):
-                if not citee(ligne, m.start()):
-                    trouves.append(f"{chemin}:{n}  T1 {m.group(0)}  {extrait}")
-            for m in UTM.finditer(ligne):
-                if not citee(ligne, m.start()):
-                    trouves.append(f"{chemin}:{n}  T2 {m.group(0)}  {extrait}")
-            for i, car in enumerate(ligne):
-                nom = INVISIBLES.get(car)
-                if nom and not citee(ligne, i) and not liant_d_emoji(ligne, i):
-                    trouves.append(f"{chemin}:{n}  T3 {nom}  {extrait}")
-                elif (
-                    car in SOSIES
-                    and not citee(ligne, i)
-                    and (
-                        (i and LATINE.match(ligne[i - 1]))
-                        or (i + 1 < len(ligne) and LATINE.match(ligne[i + 1]))
-                    )
-                ):
-                    trouves.append(f"{chemin}:{n}  T4 sosie {car!r}  {extrait}")
-            for m in GABARIT.finditer(ligne):
-                if not citee(ligne, m.start()):
-                    trouves.append(f"{chemin}:{n}  T5 {m.group(0)}  {extrait}")
+            trouves.extend(f"{chemin}:{n}  {trace}  {extrait}" for trace in traces(ligne))
     return trouves
 
 
