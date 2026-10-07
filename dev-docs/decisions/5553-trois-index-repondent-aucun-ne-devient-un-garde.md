@@ -57,7 +57,8 @@ corpus, donc rien.
 ## Ce que cela n'interdit pas
 
 Un garde sur un **sous-ensemble motivé** reste possible : PMD juge déjà `UnusedPrivateField` dans la
-classe qui déclare le champ, et rien ici ne l'en empêche. Ce que la décision refuse est le garde bâti
+classe qui déclare le champ, et rien ici ne l'en empêche. La phrase devançait le jeu de règles : la
+règle n'y est entrée que le 7 octobre 2026, par #6115. Ce que la décision refuse est le garde bâti
 sur la liste **entière** que l'index rend.
 
 ## Les alternatives écartées

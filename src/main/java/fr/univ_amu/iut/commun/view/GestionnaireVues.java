@@ -27,8 +27,6 @@ import javafx.scene.layout.Pane;
 /// @param <T> type des lignes filtrées (ex. `LignePassage`)
 public final class GestionnaireVues<T> {
 
-    private final Pane onglets;
-
     /// Rendu de la barre (#3056, extraction) : ce gestionnaire tient le cycle de vie des vues, pas leur
     /// apparence.
     private final OngletsVues barre;
@@ -102,7 +100,7 @@ public final class GestionnaireVues<T> {
             List<VueSauvegardee> vuesParDefaut,
             AdaptateurColonnes adaptateurColonnes,
             Function<String, Optional<String>> saisieNom) {
-        this.onglets = Objects.requireNonNull(onglets, "onglets");
+        Objects.requireNonNull(onglets, "onglets");
         this.barre = new OngletsVues(
                 onglets,
                 new OngletsVues.Gestes(

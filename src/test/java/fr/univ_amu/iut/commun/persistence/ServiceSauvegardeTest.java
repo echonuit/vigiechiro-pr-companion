@@ -29,9 +29,6 @@ class ServiceSauvegardeTest {
     @TempDir
     Path workspaceDir;
 
-    /// Le nom que porte une sauvegarde EN COURS de constitution, avant son renommage final.
-    private static final String NOM_EN_CHANTIER = "vigiechiro-sauvegarde-complete-20260707-143015";
-
     private SourceDeDonnees source;
     private UtilisateurDao utilisateurDao;
     private ServiceSauvegarde service;

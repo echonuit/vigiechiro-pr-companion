@@ -22,7 +22,6 @@ import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.JournalDuCapteurDao;
-import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.ReleveClimatiqueDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
@@ -53,7 +52,6 @@ class VerificationCoherenceTest {
     Path dossier;
 
     private VerificationCoherence verification;
-    private PassageDao passageDao;
     private SessionDao sessionDao;
     private EnregistrementOriginalDao originalDao;
     private SequenceDao sequenceDao;
@@ -69,7 +67,6 @@ class VerificationCoherenceTest {
         SiteDao siteDao = new SiteDao(source);
         PointDao pointDao = new PointDao(source);
 
-        passageDao = new PassageDao(source);
         sessionDao = new SessionDao(source);
         originalDao = new EnregistrementOriginalDao(source);
         sequenceDao = new SequenceDao(source);

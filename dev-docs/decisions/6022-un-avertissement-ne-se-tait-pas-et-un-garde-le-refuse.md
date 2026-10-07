@@ -12,6 +12,8 @@ ratchet: 0
 verified:
   - by: machine:ci
     at: 2026-10-07
+relations:
+  complete: ["4617-le-portail-voit-les-tests-et-le-code-mort"]
 generated:
   by: "process:assistance-par-agents"
   at: 2026-10-07

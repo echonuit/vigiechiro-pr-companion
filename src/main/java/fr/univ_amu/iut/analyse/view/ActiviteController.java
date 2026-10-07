@@ -31,8 +31,6 @@ import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
@@ -62,12 +60,6 @@ public class ActiviteController implements EmplacementNavigation, RafraichirAuRe
 
     /// Largeur de la fenêtre nocturne affichée, en minutes : de 18 h à 8 h le lendemain, soit 14 heures.
     private static final int MINUTES_FENETRE = 14 * 60;
-
-    /// Origine de l'axe : 18 h. Chaque contact est placé à sa distance en minutes de ce repère, et les
-    /// étiquettes de graduation reconstruisent l'heure du jour à partir de lui.
-    private static final LocalTime DEBUT_FENETRE = LocalTime.of(18, 0);
-
-    private static final DateTimeFormatter HEURE = DateTimeFormatter.ofPattern("HH");
 
     /// Format de l'heure d'un point au survol : heure et minute (`22:30`), plus précis que l'étiquette
     /// d'axe (`HH`), puisqu'on donne la valeur exacte d'une tranche.

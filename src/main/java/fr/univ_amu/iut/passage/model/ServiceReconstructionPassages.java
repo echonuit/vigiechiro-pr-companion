@@ -8,7 +8,6 @@ import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro.Phase;
 import fr.univ_amu.iut.commun.model.Besoin;
 import fr.univ_amu.iut.commun.model.FuseauDuPoint;
-import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.JournalMutations;
@@ -104,7 +103,6 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
             PointParLocalite pointParLocalite,
             Optional<ImportObservations> importObservations,
             Workspace workspace,
-            Horloge horloge,
             HydratationSquelette hydratation,
             FuseauDuPoint fuseaux,
             JournalMutations journal) {
@@ -118,7 +116,7 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         this.pointParLocalite = Objects.requireNonNull(pointParLocalite, "pointParLocalite");
         this.horaires = new HorairesDistants(fuseaux);
         this.importObservations = Objects.requireNonNull(importObservations, "importObservations");
-        this.creationStructure = new CreationPassageArchive(source, workspace, horloge, journal);
+        this.creationStructure = new CreationPassageArchive(source, workspace, journal);
         this.hydratation = Objects.requireNonNull(hydratation, "hydratation");
     }
 

@@ -1,11 +1,9 @@
 package fr.univ_amu.iut.passage.model;
 
 import com.google.inject.Inject;
-import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
-import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,9 +15,9 @@ import java.util.Objects;
 ///
 /// Un passage reconstruit ne portait qu'un placeholder `reconstruit.wav`. Après hydratation on connaît
 /// ses vrais originaux : chaque brut du dossier a un nom R6, une fréquence d'acquisition et une taille.
-/// On les inscrit, on y rattache leurs séquences, on supprime le placeholder orphelin, et on **déclare
-/// les originaux purgés**, prouvés par régénération mais non stockés localement. Sans ce marqueur,
-/// l'audit signalerait les originaux absents du disque une fois l'archivage levé.
+/// On les inscrit, on y rattache leurs séquences et on supprime le placeholder orphelin. Rien n'est
+/// déclaré de leur présence sur le disque : la disponibilité de l'audio s'observe (ADR 0048), et le
+/// marqueur de purge que cette classe posait a été retiré avec lui (#2301).
 ///
 /// **En une seule transaction** pour les écritures de masse : une nuit reconstruite compte des milliers
 /// de séquences, et chaque ordre auto-commité coûte un `fsync`, soit plus de deux minutes d'attente
@@ -39,22 +37,14 @@ public class AdoptionOriginauxReconstruits {
 
     private final EnregistrementOriginalDao originalDao;
     private final SequenceDao sequenceDao;
-    private final SessionDao sessionDao;
     private final UniteDeTravail uniteDeTravail;
-    private final Horloge horloge;
 
     @Inject
     public AdoptionOriginauxReconstruits(
-            EnregistrementOriginalDao originalDao,
-            SequenceDao sequenceDao,
-            SessionDao sessionDao,
-            UniteDeTravail uniteDeTravail,
-            Horloge horloge) {
+            EnregistrementOriginalDao originalDao, SequenceDao sequenceDao, UniteDeTravail uniteDeTravail) {
         this.originalDao = Objects.requireNonNull(originalDao, "originalDao");
         this.sequenceDao = Objects.requireNonNull(sequenceDao, "sequenceDao");
-        this.sessionDao = Objects.requireNonNull(sessionDao, "sessionDao");
         this.uniteDeTravail = Objects.requireNonNull(uniteDeTravail, "uniteDeTravail");
-        this.horloge = Objects.requireNonNull(horloge, "horloge");
     }
 
     /// Adopte les originaux régénérés dans la session. Sans objet s'il n'y a rien à adopter.

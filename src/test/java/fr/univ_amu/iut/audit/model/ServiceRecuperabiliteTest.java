@@ -18,7 +18,6 @@ import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
-import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import java.io.IOException;
@@ -46,7 +45,6 @@ class ServiceRecuperabiliteTest {
 
     private SourceDeDonnees source;
     private Workspace workspace;
-    private PassageDao passageDao;
     private SessionDao sessionDao;
     private SequenceDao sequenceDao;
     private EnregistrementOriginalDao originalDao;
@@ -60,7 +58,6 @@ class ServiceRecuperabiliteTest {
         source = new SourceDeDonnees(workspace);
         new MigrationSchema(source).migrer();
         // La topologie naît du premier `creerNuit`, par trouver-ou-créer.
-        passageDao = new PassageDao(source);
         sessionDao = new SessionDao(source);
         sequenceDao = new SequenceDao(source);
         originalDao = new EnregistrementOriginalDao(source);

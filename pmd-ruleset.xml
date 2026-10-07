@@ -176,4 +176,15 @@
         </properties>
     </rule>
 
+    <!-- Un champ prive que rien ne lit dans sa classe (#6115, chantier #6022). Entree le
+         7 octobre 2026 avec ses vingt retraits, onze en production et neuf en test : la production
+         est refusee a zero (ADR 4682), donc la regle et son nettoyage vont ensemble.
+
+         Aucune exclusion : PMD ecarte de lui-meme les champs annotes, donc ceux de `@FXML` et de
+         `@Inject`. Un collaborateur injecte, range dans un champ et jamais employe se lit avant de
+         se retirer : c est soit le residu d un retrait decide, soit un branchement oublie, et le
+         second est un defaut de produit. Le retrait complet emporte le parametre du constructeur,
+         que cette regle ne voit pas. -->
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateField"/>
+
 </ruleset>

@@ -13,7 +13,6 @@ import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
-import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import java.io.IOException;
@@ -35,7 +34,6 @@ class BackfillEmpreintesTest {
     @TempDir
     Path dossier;
 
-    private PassageDao passageDao;
     private SessionDao sessionDao;
     private EnregistrementOriginalDao originalDao;
     private SequenceDao sequenceDao;
@@ -46,7 +44,6 @@ class BackfillEmpreintesTest {
     void preparer() {
         source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
-        passageDao = new PassageDao(source);
         sessionDao = new SessionDao(source);
         originalDao = new EnregistrementOriginalDao(source);
         sequenceDao = new SequenceDao(source);

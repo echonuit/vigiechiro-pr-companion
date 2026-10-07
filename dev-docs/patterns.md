@@ -165,8 +165,8 @@ transformation copie le PCM sans rééchantillonnage, prouvé octet à octet) : 
 #1650/#1682) l'accepte donc sur preuve **structurelle** (nom + durée, `FORTE`), et la concordance
 acoustique y devient un **indice non bloquant** (`IndiceAcoustique`), jamais un veto. La chaîne :
 `InventaireBrutsSource` (#1649, lit la Fe du **log** et énumère les bruts) → régénération → rebranchement
-structurel → `AdoptionOriginauxReconstruits` (#1651, remplace le placeholder par les vrais originaux,
-déclarés « purgés » puisque connus mais non stockés localement). Détail : `AnalyseAcoustique` mesure
+structurel → `AdoptionOriginauxReconstruits` (#1651, remplace le placeholder par les vrais originaux ;
+rien n'est déclaré de leur présence sur le disque, qui s'observe depuis l'ADR 0048). Détail : `AnalyseAcoustique` mesure
 désormais l'énergie **de pointe** sur une courte fenêtre glissée dans celle de l'observation (#1687) - la
 moyenne sur **toute** la fenêtre diluait un cri de quelques ms noyé dans plusieurs secondes, d'où des faux
 négatifs qui rendaient l'hydratation d'un vrai passage inopérante avant correction. Le *pourquoi* de ces

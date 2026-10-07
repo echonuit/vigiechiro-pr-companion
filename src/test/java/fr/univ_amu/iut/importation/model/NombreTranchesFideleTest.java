@@ -28,7 +28,6 @@ class NombreTranchesFideleTest {
     private static final int CANAUX = 1;
     private static final int BITS = 16;
     private static final int OCTETS_PAR_TRAME = 2;
-    private static final int ENTETE_WAV = 44;
 
     private final Prefixe prefixe = new Prefixe("640380", 2026, 2, "Z1");
 

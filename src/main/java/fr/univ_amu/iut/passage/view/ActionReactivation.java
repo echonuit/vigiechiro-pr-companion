@@ -1,6 +1,5 @@
 package fr.univ_amu.iut.passage.view;
 
-import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import java.nio.file.Path;
@@ -25,7 +24,6 @@ final class ActionReactivation {
     private final NavigationPassage navigation;
     private final Supplier<Window> proprietaire;
     private final SelecteurFichier selecteur;
-    private final ConfirmateurModifiable confirmateur;
     private final Runnable recharger;
 
     /// @param viewModel ViewModel de M-Passage (porte la réactivation et connaît l'idPassage courant)
@@ -40,13 +38,11 @@ final class ActionReactivation {
             NavigationPassage navigation,
             Supplier<Window> proprietaire,
             SelecteurFichier selecteur,
-            ConfirmateurModifiable confirmateur,
             Runnable recharger) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.proprietaire = Objects.requireNonNull(proprietaire, "proprietaire");
         this.selecteur = Objects.requireNonNull(selecteur, "selecteur");
-        this.confirmateur = Objects.requireNonNull(confirmateur, "confirmateur");
         this.recharger = Objects.requireNonNull(recharger, "recharger");
     }
 

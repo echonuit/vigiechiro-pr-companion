@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 import fr.univ_amu.iut.commun.api.SuiviPagination;
 import fr.univ_amu.iut.commun.model.Empreintes;
 import fr.univ_amu.iut.commun.model.FichierWav;
-import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
@@ -51,7 +50,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -129,12 +127,7 @@ class ServiceReactivationPassageTest {
         // Régénération branchée (port #1406) : c'est la VRAIE transformation de l'import, seule capable de
         // reproduire les tranches à l'identique - la faire jouer ici prouve la chaîne de bout en bout.
         regeneration = new RegenerationParTransformationAudio(new TransformationAudio());
-        adoption = new AdoptionOriginauxReconstruits(
-                originalDao,
-                sequenceDao,
-                sessionDao,
-                new UniteDeTravail(source),
-                new HorlogeFigee(LocalDateTime.of(2026, 7, 16, 20, 0)));
+        adoption = new AdoptionOriginauxReconstruits(originalDao, sequenceDao, new UniteDeTravail(source));
         service = new ServiceReactivationPassage(
                 new Workspace(dossier),
                 sessionDao,

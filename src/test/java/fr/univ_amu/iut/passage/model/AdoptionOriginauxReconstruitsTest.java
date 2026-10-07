@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.within;
 
-import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
@@ -19,7 +18,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -149,12 +147,7 @@ class AdoptionOriginauxReconstruitsTest {
     // --- Fixture ---------------------------------------------------------------------------------
 
     private AdoptionOriginauxReconstruits adoptionAvec(SequenceDao dao) {
-        return new AdoptionOriginauxReconstruits(
-                originalDao,
-                dao,
-                sessionDao,
-                new UniteDeTravail(source),
-                new HorlogeFigee(LocalDateTime.of(2026, 7, 19, 12, 0)));
+        return new AdoptionOriginauxReconstruits(originalDao, dao, new UniteDeTravail(source));
     }
 
     /// Le placeholder de la nuit : l'unique original que porte un passage reconstruit, et que l'adoption

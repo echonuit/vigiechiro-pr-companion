@@ -33,7 +33,7 @@ ni arbre.py, ni attache.py, ni PMD ne savent dire
 
 Ses trois lots ont livré **la première**. Sa passe 0 de clôture a constaté que rien ne répond aux deux
 autres : aucun lecteur de `scripts/_commun/`, et `UnusedPrivateField` est hors du jeu de règles de
-l'ADR 4617. Le pluriel de la promesse les attendait pourtant, puisqu'elle écrivait que le lecteur
+l'ADR 4617 (vrai à cette date ; la règle y est entrée le 7 octobre 2026, par #6115). Le pluriel de la promesse les attendait pourtant, puisqu'elle écrivait que le lecteur
 « lit `target/index-*.json` ». Il n'y en avait qu'un.
 
 **La cause n'est pas un renoncement, c'est un découpage.** Les trois lots, tels qu'ils ont été coupés,

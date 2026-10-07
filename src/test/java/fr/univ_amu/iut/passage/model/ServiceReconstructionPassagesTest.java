@@ -26,7 +26,6 @@ import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SuiviPagination;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.model.FuseauDuPoint;
-import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.JournalMutations;
@@ -80,7 +79,6 @@ class ServiceReconstructionPassagesTest {
     private static final String SEQ_2 = "Car130711-2026-Pass1-Z41-PaRec_20260703_220534_000";
     private static final String SEQ_VOISINE_1 = "Car130711-2026-Pass2-Z41-PaRec_20260704_221030_000";
     private static final String SEQ_VOISINE_2 = "Car130711-2026-Pass2-Z41-PaRec_20260704_221035_000";
-    private static final LocalDateTime MAINTENANT = LocalDateTime.of(2026, 7, 14, 2, 0);
 
     /// CSV Tadarida BRUT réel en miniature (séparateur `;`, entête quotée) : 3 observations sur 2 fichiers.
     private static final String CSV_OBSERVATIONS =
@@ -132,7 +130,6 @@ class ServiceReconstructionPassagesTest {
                 pointParLocalite,
                 Optional.of(importObservations),
                 new Workspace(dossier),
-                new HorlogeFigee(MAINTENANT),
                 hydratation(Optional.of(importObservations)),
                 new FuseauDuPoint(idPointDemande -> Optional.empty()),
                 journal);
@@ -141,8 +138,7 @@ class ServiceReconstructionPassagesTest {
     /// Le noyau de **contenu** de la synchro (#2557), branché sur la même plateforme bouchonnée : c'est lui
     /// qui hydrate les nuits sans séquences, celles qui viennent d'être créées comme les squelettes déjà là.
     private HydratationSquelette hydratation(Optional<ImportObservations> importateur) {
-        return new HydratationSquelette(
-                source, client, new Workspace(dossier), new HorlogeFigee(MAINTENANT), importateur, journal);
+        return new HydratationSquelette(source, client, new Workspace(dossier), importateur, journal);
     }
 
     @Test
@@ -330,7 +326,6 @@ class ServiceReconstructionPassagesTest {
                 (carre, point) -> Optional.of(idPoint),
                 Optional.empty(),
                 new Workspace(dossier),
-                new HorlogeFigee(MAINTENANT),
                 hydratation(Optional.empty()),
                 new FuseauDuPoint(idPointDemande -> Optional.empty()),
                 journal);

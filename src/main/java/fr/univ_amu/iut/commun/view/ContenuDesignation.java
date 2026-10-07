@@ -64,7 +64,6 @@ public final class ContenuDesignation {
     private final TextField champNom = new TextField();
     private final Label message = new Label();
     private final Mode mode;
-    private final FiltreFichier filtre;
 
     private final EntreesDuDossier lecture;
 
@@ -84,7 +83,6 @@ public final class ContenuDesignation {
             Consumer<Path> surValider,
             Runnable surAnnuler) {
         this.mode = mode;
-        this.filtre = filtre;
         this.lecture = new EntreesDuDossier(mode, filtre);
         this.dossierCourant = lisible(depart) ? depart : Path.of(System.getProperty("user.home"));
 

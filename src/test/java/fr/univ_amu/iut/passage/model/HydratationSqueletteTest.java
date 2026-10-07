@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
-import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
@@ -28,7 +27,6 @@ import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -99,12 +97,7 @@ class HydratationSqueletteTest {
         client = mock(ClientVigieChiro.class);
         importObservations = mock(ImportObservations.class);
         hydratation = new HydratationSquelette(
-                source,
-                client,
-                new Workspace(dossier),
-                new HorlogeFigee(LocalDateTime.of(2026, 7, 26, 2, 0)),
-                Optional.of(importObservations),
-                () -> {});
+                source, client, new Workspace(dossier), Optional.of(importObservations), () -> {});
     }
 
     /// Une nuit **rapatriée par la synchro** : passage + session archivée, aucune séquence, aucun original,
@@ -408,13 +401,8 @@ class HydratationSqueletteTest {
     @DisplayName("Fonctionnalité « Import Vigie-Chiro » éteinte : refus qui dit où la rallumer")
     void import_desactive_refuse_en_mode_complet() {
         idPassage = semerSquelette();
-        HydratationSquelette sansImport = new HydratationSquelette(
-                source,
-                client,
-                new Workspace(dossier),
-                new HorlogeFigee(LocalDateTime.of(2026, 7, 26, 2, 0)),
-                Optional.empty(),
-                () -> {});
+        HydratationSquelette sansImport =
+                new HydratationSquelette(source, client, new Workspace(dossier), Optional.empty(), () -> {});
 
         assertThatThrownBy(() -> sansImport.hydraterSiSquelette(
                         idPassage, HydratationSquelette.Source.COMPLETE, progres -> {}, JetonAnnulation.neutre()))
