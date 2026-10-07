@@ -22,6 +22,7 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.VerdictFichier;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.IconesSeverite;
+import fr.univ_amu.iut.commun.view.InfobullesDeColonne;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
@@ -257,6 +258,21 @@ class QualificationVueIntegrationTest {
         assertThat(controleur.zonesStatutProperty().get().droite())
                 .isEqualTo("Anomalie au pré-check")
                 .doesNotContain("⚠");
+    }
+
+    @Test
+    @DisplayName("#5113 : le nom d'une séquence, coupé par sa colonne, se relit en entier au survol")
+    void le_fichier_d_une_sequence_se_relit_au_survol(FxRobot robot) {
+        String nom = "Car640380-2026-Pass2-A1-PaRecPR1925492_20260622_202500_000.wav";
+        List<SequenceEnSelection> selection = new ArrayList<>(lignes(3));
+        selection.add(new SequenceEnSelection(
+                new SequenceDEcoute(99L, nom, null, 3, 0.0, 5.0, "/ws/longue.wav", true, 1L), 3, false));
+        when(service.detaillerSelection(anyLong())).thenReturn(new DetailSelection(selection, List.of()));
+        robot.interact(() -> controleur.ouvrirSur(
+                new ContextePassage(ID_PASSAGE, 2, new ContexteSite("640380", "A1", "Étang de la Tuilière"))));
+        TableView<?> table = robot.lookup("#tableSequences").queryAs(TableView.class);
+
+        InfobullesDeColonne.seRelisentAuSurvol(table, "Fichier", "PaRec_0.wav", nom);
     }
 
     @Test

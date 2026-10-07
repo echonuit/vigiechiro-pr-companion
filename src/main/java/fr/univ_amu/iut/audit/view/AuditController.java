@@ -6,6 +6,7 @@ import fr.univ_amu.iut.audit.viewmodel.AuditViewModel;
 import fr.univ_amu.iut.audit.viewmodel.RetraitOrphelins;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
+import fr.univ_amu.iut.commun.view.ColonneAbregeable;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.DoubleClicLigne;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
@@ -154,6 +155,9 @@ public class AuditController implements RafraichirAuRetour {
                         : String.valueOf(c.getValue().idPassage())));
         colCible.setCellValueFactory(c -> texte(c.getValue().cible()));
         colDetail.setCellValueFactory(c -> texte(c.getValue().detail()));
+        // Le détail d'un constat est une phrase entière, parfois trois : aucune largeur ne la tient.
+        // La colonne la coupe, et le survol la rend (#5113).
+        ColonneAbregeable.assumer(colDetail);
         // La table montre les constats **que la barre laisse passer** (#3100) ; le résumé et le verdict
         // restent calculés sur l'audit entier. Filtrer masque des lignes, cela ne rend pas l'écran sain.
         //

@@ -222,13 +222,36 @@ pas**. Il vit dans `ApercuFx`, au moment du rendu, et **interrompt** la chaîne 
 n'est pas écrit.
 
 L'application monte ses vues dans un `ScrollPane` permanent : ce qui déborde **défile**. La capture
-rend une scène de taille fixe et n'a pas ce recours : ce qui déborde se **déforme**, de deux façons
-que le message d'erreur distingue.
+rend une scène de taille fixe et n'a pas ce recours : ce qui déborde se **déforme**, de façons que
+le message d'erreur distingue.
 
 | Dans le message | Ce qui se passe | Remèdes |
 |---|---|---|
 | `manque N px` | La scène est trop **courte** : un libellé `wrapText` se rabat sur une ligne et s'ellipse | Augmenter la hauteur de cette scène |
 | `tronque, manque N px` | Le contrôle est trop **étroit** pour son texte | Figer par `minWidth="-Infinity"`, élargir la colonne, ou assumer par `abregeable` |
+| `cellule de table coupee` | Une **colonne** est trop étroite pour le texte d'une de ses cellules. Le message donne le libellé, ce qui en est dessiné, le titre de la colonne et sa largeur | Élargir la colonne, ou, si le texte ne peut tenir dans aucune largeur, l'assumer par `ColonneAbregeable.assumer(colonne)` |
+
+**Une cellule de table se juge sur ce qu'elle dessine, pas sur sa largeur** (#5113). Le critère de la
+deuxième ligne compare la largeur qu'un contrôle demande à celle qu'il a reçue, et une `TableCell`
+demande la largeur de sa **colonne**, jamais celle de son texte : l'écart y vaut zéro quel que soit le
+contenu. Le garde est resté aveugle à toute cellule coupée jusqu'à ce qu'une capture parte avec
+« complétude inconnue » amputé (#5111). Il compare donc, pour une cellule, le texte que son habillage
+a posé à l'écran à celui qu'elle a reçu : l'ellipse les rend différents dès qu'un caractère manque.
+
+**Une colonne n'est marquée `abregeable` que parce que son texte se relit ailleurs.** Un nom de fichier
+de soixante caractères ou le détail d'un constat d'audit ne tiennent dans aucune largeur raisonnable :
+la colonne les coupe, et c'est acceptable si le survol les rend en entier. Les deux gestes se posent
+donc ensemble, par `ColonneAbregeable.assumer(colonne)`, qui donne à chaque cellule une infobulle
+portant son texte puis marque la colonne. Le garde tient le lien : une cellule coupée n'est exemptée
+que si elle porte la marque **et** une infobulle qui contient son texte. La marque posée seule est
+refusée, avec la mention `marquee « abregeable » sans infobulle`, sans quoi elle deviendrait le moyen
+de faire taire le garde. Trois colonnes le font aujourd'hui : « Détail » de l'audit, « Fichier » de la
+table de dépôt, « Fichier » de la sélection d'écoute.
+
+Ne sont pas jugées : une cellule vide, une ligne sortie du champ (la table la retire du graphe) et une
+table masquée. Une cellule qui porte un **graphique** au lieu d'un texte n'est pas jugée comme cellule ; les libellés que ce
+graphique contient le sont par les deux premières lignes du tableau. Le banc est
+`LisibiliteCaptureCelluleDeTableTest`.
 
 **`minWidth="-Infinity"`** est le remède le plus fréquent. La largeur *minimale* d'un `Labeled`
 autorise la troncature : une `HBox` en déficit rogne donc les libellés d'action plutôt que les

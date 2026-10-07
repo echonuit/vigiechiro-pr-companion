@@ -460,7 +460,7 @@ b9be86b7d16d  src/main/java/fr/univ_amu/iut/commun/outils/CaptureBandeauAnnonce.
 dfa344d2a534  src/main/java/fr/univ_amu/iut/commun/outils/CaptureEcranReglages.java
 1a0edda6df26  src/main/java/fr/univ_amu/iut/commun/outils/CaptureFicheEspece.java
 8b189f077b63  src/main/java/fr/univ_amu/iut/commun/outils/CaptureMenuOutils.java
-87031277b43e  src/main/java/fr/univ_amu/iut/commun/outils/LisibiliteCapture.java
+99255c8af7d1  src/main/java/fr/univ_amu/iut/commun/outils/LisibiliteCapture.java
 a64311dc0d63  src/main/java/fr/univ_amu/iut/commun/outils/MesureBandeauRetour.java
 c78158882263  src/main/java/fr/univ_amu/iut/commun/outils/ModuleCaptureCommun.java
 efbbc0569604  src/main/java/fr/univ_amu/iut/commun/outils/ModuleCaptureNavigationAudio.java
@@ -530,6 +530,7 @@ f6af655a269a  src/main/java/fr/univ_amu/iut/commun/view/ChoixParBoutons.java
 23fa461a79d8  src/main/java/fr/univ_amu/iut/commun/view/ChoixSauvegardeJavaFx.java
 ec175ad4e9cc  src/main/java/fr/univ_amu/iut/commun/view/ChoixSauvegardeModifiable.java
 2c5573129543  src/main/java/fr/univ_amu/iut/commun/view/ClesCriteres.java
+1606c0653cc1  src/main/java/fr/univ_amu/iut/commun/view/ColonneAbregeable.java
 e71bfad2c20d  src/main/java/fr/univ_amu/iut/commun/view/ColonneBadge.java
 37e5c3601f71  src/main/java/fr/univ_amu/iut/commun/view/ColonneDate.java
 60f03d8455fe  src/main/java/fr/univ_amu/iut/commun/view/ConfigurationAudioView.java
@@ -1578,6 +1579,7 @@ e5deda0b5314  src/test/java/fr/univ_amu/iut/commun/outils/ApercuFxTest.java
 a25ef3528c39  src/test/java/fr/univ_amu/iut/commun/outils/IndexDesAppels.java
 faa28982eefc  src/test/java/fr/univ_amu/iut/commun/outils/IndexDesChamps.java
 e387febb4bc2  src/test/java/fr/univ_amu/iut/commun/outils/IndexDesImplementations.java
+9f62572d3a2b  src/test/java/fr/univ_amu/iut/commun/outils/LisibiliteCaptureCelluleDeTableTest.java
 32d617bbeea1  src/test/java/fr/univ_amu/iut/commun/outils/LisibiliteCaptureUnPixelTest.java
 9f83a27c5b4f  src/test/java/fr/univ_amu/iut/commun/outils/TypesDuModele.java
 140aa0ee17fc  src/test/java/fr/univ_amu/iut/commun/outils/ZoneCarteApercuTest.java
@@ -1626,6 +1628,7 @@ fc292fd79695  src/test/java/fr/univ_amu/iut/commun/view/CelluleProgressionUniteT
 6f9b28ec8117  src/test/java/fr/univ_amu/iut/commun/view/ChargeurFxmlTest.java
 5c498c74d07a  src/test/java/fr/univ_amu/iut/commun/view/ClesCriteresTest.java
 0f46336de5f3  src/test/java/fr/univ_amu/iut/commun/view/CoherenceFxmlControllerTest.java
+1ea9d8ba310e  src/test/java/fr/univ_amu/iut/commun/view/ColonneAbregeableTest.java
 ec72219f5edb  src/test/java/fr/univ_amu/iut/commun/view/ColonneBadgeTest.java
 eb6056fc0c6f  src/test/java/fr/univ_amu/iut/commun/view/ColonneDateTest.java
 fc74dffd0f51  src/test/java/fr/univ_amu/iut/commun/view/ConfirmateurModifiableTest.java
@@ -1665,6 +1668,7 @@ b6db9ee90de4  src/test/java/fr/univ_amu/iut/commun/view/GluonMapSpikeTest.java
 3aa5e88dd68e  src/test/java/fr/univ_amu/iut/commun/view/IndicateurBlocageTest.java
 e4268661fc45  src/test/java/fr/univ_amu/iut/commun/view/IndicateurOccupationTest.java
 5327426558a7  src/test/java/fr/univ_amu/iut/commun/view/InfobulleDeBlocage.java
+c6d5bac3fea2  src/test/java/fr/univ_amu/iut/commun/view/InfobullesDeColonne.java
 1a4efc12d33f  src/test/java/fr/univ_amu/iut/commun/view/JetonsDeCouleurResolusTest.java
 a0d6fad39afd  src/test/java/fr/univ_amu/iut/commun/view/JournalisationTacheTest.java
 b05b0ab0572b  src/test/java/fr/univ_amu/iut/commun/view/LibelleRetourTest.java

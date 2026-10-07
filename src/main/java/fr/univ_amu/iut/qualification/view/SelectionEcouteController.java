@@ -2,6 +2,7 @@ package fr.univ_amu.iut.qualification.view;
 
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.VerdictFichier;
+import fr.univ_amu.iut.commun.view.ColonneAbregeable;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
@@ -136,6 +137,9 @@ public class SelectionEcouteController {
                 c -> new ReadOnlyStringWrapper(Integer.toString(c.getValue().position() + 1)));
         colFichier.setCellValueFactory(
                 c -> new ReadOnlyStringWrapper(c.getValue().sequence().nomFichier()));
+        // Un nom au préfixe Vigie-Chiro fait une soixantaine de caractères : la colonne le coupe, et le
+        // survol le rend (#5113).
+        ColonneAbregeable.assumer(colFichier);
         colDuree.setCellValueFactory(c -> new ReadOnlyStringWrapper(
                 Formats.dureeSecondes(c.getValue().sequence().dureeSecondes())));
         // État d'écoute posé en icône, pas écrit en glyphe (#2237) : un pictogramme d'état binaire se

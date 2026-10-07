@@ -20,7 +20,7 @@ Chaque ligne est un **écart**, et se lit de gauche à droite :
 | **Catégorie** | la nature de l'écart (fichier manquant, préfixe non conforme, dépôt divergent…) |
 | **Passage** | la nuit concernée : **double-cliquez** pour l'ouvrir |
 | **Cible** | le fichier ou l'élément en cause |
-| **Détail** | ce qui ne va pas, en clair |
+| **Détail** | ce qui ne va pas, en clair. La phrase est souvent plus longue que la colonne : **survolez-la** pour la lire en entier |
 
 Le bandeau du haut résume : *« 5 écarts : 1 erreur, 0 avertissement, 4 infos »*.
 

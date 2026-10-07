@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.lot.view;
 
+import fr.univ_amu.iut.commun.view.ColonneAbregeable;
 import fr.univ_amu.iut.commun.view.TableSuivi;
 import fr.univ_amu.iut.lot.model.TypeDepotUnite;
 import fr.univ_amu.iut.lot.viewmodel.LigneDepot;
@@ -25,6 +26,9 @@ final class TableSuiviDepot {
         col.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().identifiant()));
         col.setPrefWidth(280);
         col.setSortable(false);
+        // Un nom au préfixe Vigie-Chiro fait une soixantaine de caractères : la colonne le coupe, et le
+        // survol le rend (#5113).
+        ColonneAbregeable.assumer(col);
         return col;
     }
 
