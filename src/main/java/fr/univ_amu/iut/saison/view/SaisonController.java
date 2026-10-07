@@ -17,7 +17,6 @@ import fr.univ_amu.iut.saison.viewmodel.SaisonViewModel;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -135,8 +134,12 @@ public class SaisonController implements RafraichirAuRetour, SuitLaRevision {
 
         // Hors protocole (#2525) : les nuits opportunistes du point, hors du décompte des deux passages
         // attendus. Cellule vide dans le cas courant : la colonne ne parle que quand il y a de quoi.
-        colHorsProtocole.setCellValueFactory(c -> new ReadOnlyStringWrapper(texteHorsProtocole(c.getValue())));
-        colHorsProtocole.setCellFactory(col -> ColonneBadge.cellule(ligne -> "badge-opportuniste"));
+        // Une nuit se nomme avec sa date ; à partir de deux la pastille compte, et l'infobulle de la
+        // cellule les détaille (#6106).
+        colHorsProtocole.setCellValueFactory(
+                c -> new ReadOnlyStringWrapper(PastilleHorsProtocole.libelle(c.getValue())));
+        colHorsProtocole.setCellFactory(
+                col -> ColonneBadge.cellule(ligne -> "badge-opportuniste", PastilleHorsProtocole::infobulle));
 
         colResteAFaire.setCellValueFactory(c -> new ReadOnlyStringWrapper(
                 c.getValue().aJour() ? "rien" : c.getValue().resteAFaire()));
@@ -259,21 +262,6 @@ public class SaisonController implements RafraichirAuRetour, SuitLaRevision {
             etat = cas.inexploitable() ? "Inexploitable" : cas.statut().libelle();
         }
         return cas.date() == null ? etat : etat + " · " + cas.date().format(JOUR_MOIS);
-    }
-
-    /// Colonne « Hors protocole » (#2525) : les nuits opportunistes du point, séparées par un point
-    /// médian quand il y en a plusieurs. **`null`** dans le cas courant : c'est ce que la cellule badge
-    /// interprète comme « rien à afficher » ([ColonneBadge]). Rendre `""` lui ferait poser une pastille
-    /// vide, et surtout une classe CSS nulle qui casse le recyclage des cellules au défilement.
-    private static String texteHorsProtocole(LigneSaison ligne) {
-        if (ligne.horsProtocole().isEmpty()) {
-            return null;
-        }
-        return ligne.horsProtocole().stream()
-                .map(cas -> cas.date() == null
-                        ? "Opportuniste"
-                        : "Opportuniste · " + cas.date().format(JOUR_MOIS))
-                .collect(Collectors.joining(" · "));
     }
 
     /// Classe CSS de la pastille : couleurs **reprises du modèle** (statut, ou verdict pour un passage

@@ -129,6 +129,11 @@ d'un passage attendu : la voir en « Passage 1 » se lirait « le passage 1 est 
 même ligne réclame encore de poser l'enregistreur. Les colonnes Passage 1 et Passage 2 restent donc
 sur « Non planifié » tant que le passage du protocole manque réellement.
 
+Quand un point compte **plusieurs** nuits opportunistes, la pastille ne les aligne pas : elle dit
+leur nombre, « 2 nuits ». Laissez le pointeur sur la pastille pour en lire le détail, une nuit par
+ligne avec sa date. Une pastille qui les écrirait toutes ne tiendrait pas dans la colonne, et la
+table couperait la fin sans le dire.
+
 Un carré **entièrement** possédé par un tiers sort quant à lui du solde : y participer est une
 occasion, pas une obligation de protocole.
 
