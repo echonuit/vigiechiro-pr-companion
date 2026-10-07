@@ -77,6 +77,22 @@ from mesure_pixels import INCONNUE, part_changee
 TOLERANCE_PAR_DEFAUT = 5
 OUTILS = ("ffmpeg", "ffprobe", "compare", "convert", "identify")
 
+# Le SOL d un plancher : aucun rapport ne se calcule contre moins que cela (#4309).
+#
+# La moitie de ce que rend UN chiffre change, 0,021 % a l etalonnage. Contre un plancher mesure plus
+# bas, un ecart de 0,003 % se lisait ×3 : neuf planchers sur cent etaient dans ce cas, dont cinq a
+# zero. Avec ce sol, rien de plus petit qu un chiffre change ne depasse ×2, et un chiffre change se
+# lit ×2 comme la page l annonce. Un plancher mesure AU-DESSUS du sol n est pas touche.
+SOL_DU_PLANCHER = 0.0105
+
+# Au bout de combien de paires SANS que son plancher soit approche un cas est signale (#4309).
+#
+# Dix-huit, soit trois mesures de quatre tournages. Une mesure seule ne suffit pas : le bruit de
+# beaucoup de clips sort par a-coups, et comparer un plancher au pire de six paires nommait de 8 a 16
+# clips a chaque mesure, jamais les memes. Ce qui distingue un plancher perime est qu il n est plus
+# approche, mesure apres mesure, et c est ce que la cinquieme colonne du fichier compte.
+PAIRES_SANS_APPROCHE = 18
+
 # La ligne d en-tete qui dit par quel instrument les planchers du fichier ont ete pris.
 MARQUE_INSTRUMENT = "# Instrument : "
 
@@ -223,13 +239,13 @@ def duree(clip: pathlib.Path) -> str:
 def rapport_de(ecart: str, plancher: str) -> str:
     """Le rapport d un ecart au plancher de son cas, ou « ? » si ce plancher n est pas connu.
 
-    Le plancher est borne par le bas : un plancher nul diviserait par zero, et le borner a 0,001
-    revient a dire « au moins un millieme de pourcent », deja sous le plus petit ecart mesurable.
+    Le plancher est borne par le bas, a `SOL_DU_PLANCHER`. La borne valait 0,001 % jusqu a #4309 :
+    elle evitait la division par zero, et laissait un plancher presque nul changer du bruit en alerte.
     """
     if not plancher:
         return INCONNUE
     sol = float(plancher)
-    return f"{float(ecart) / (max(0.001, sol)):.1f}"
+    return f"{float(ecart) / (max(SOL_DU_PLANCHER, sol)):.1f}"
 
 
 def cas_du_dossier(dossier: pathlib.Path) -> list[str]:
@@ -259,6 +275,44 @@ def _lit_les_planchers(fichier: pathlib.Path) -> tuple[dict, dict, dict]:
             sol_fin[nom] = champs[1] if len(champs) > 1 else ""
             nbp[nom] = champs[2] if len(champs) > 2 and champs[2] else "1"
     return sol_deb, sol_fin, nbp
+
+
+def _lit_le_calme(fichier: pathlib.Path) -> dict[str, int]:
+    """Par cas, le nombre de paires ecoulees depuis que son plancher a ete approche (#4309).
+
+    C est la cinquieme colonne. Un fichier qui ne la porte pas rend zero partout : on ne sait pas
+    depuis quand ses planchers n ont pas ete approches, et supposer « depuis toujours » les
+    signalerait tous a la premiere mesure.
+    """
+    calme: dict[str, int] = {}
+    if not fichier.is_file():
+        return calme
+    for ligne in fichier.read_text(encoding="utf-8").splitlines():
+        if not ligne or ligne.startswith("#"):
+            continue
+        champs = ligne.split("\t")
+        calme[champs[0]] = int(champs[4]) if len(champs) >= 5 and champs[4].isdigit() else 0
+    return calme
+
+
+def _calme_apres(calme: int, ecart: str, plancher: str) -> int:
+    """Le compte de paires sans approche, une paire plus tard.
+
+    Une paire qui atteint la MOITIE du plancher l approche, et le compte repart de zero. A moitie
+    pres, et non a egalite : le plancher est le pire de dizaines de paires, et exiger qu on le
+    retrouve signalerait presque tous les cas. Un cas sans plancher encore part de zero.
+    """
+    if not plancher or float(ecart) * 2 >= float(plancher):
+        return 0
+    return calme + 1
+
+
+def _plancher_a_revoir(plancher: str, calme: int) -> bool:
+    """Ce plancher n a-t-il plus ete approche depuis assez de paires pour qu on le relise ?
+
+    Un plancher sous le sol ne se signale pas : aucun rapport ne se calcule contre lui (#4309).
+    """
+    return calme >= PAIRES_SANS_APPROCHE and float(plancher) > SOL_DU_PLANCHER
 
 
 def _positif(valeur: str) -> bool:
@@ -550,6 +604,7 @@ def planchers(dossiers: list[str | pathlib.Path], fichier: str = "") -> int:
     sol_deb: dict[str, str] = {}
     sol_fin: dict[str, str] = {}
     nbp: dict[str, str] = {}
+    calme: dict[str, int] = {}
     if fichier:
         if INCONNUE in ici:
             print(
@@ -558,6 +613,7 @@ def planchers(dossiers: list[str | pathlib.Path], fichier: str = "") -> int:
             print("::error::dit pas par quoi il a été pris ne s'écrit pas.")
             return 1
         sol_deb, sol_fin, nbp = _lit_les_planchers(pathlib.Path(fichier))
+        calme = _lit_le_calme(pathlib.Path(fichier))
         du_fichier = _instrument_du_fichier(pathlib.Path(fichier))
         if sol_fin and du_fichier != ici:
             _refuse_l_instrument(du_fichier, ici, "mesure jouée")
@@ -612,6 +668,8 @@ def planchers(dossiers: list[str | pathlib.Path], fichier: str = "") -> int:
                 if fichier:
                     # Le PIRE observe, et non la derniere valeur vue : un plancher ne redescend jamais.
                     vu_f, vu_d = sol_fin.get(nom, ""), sol_deb.get(nom, "")
+                    # Contre le plancher d AVANT cette paire : une paire qui le releve l approche.
+                    calme[nom] = _calme_apres(calme.get(nom, 0), f_fin, vu_f)
                     sol_fin[nom] = f_fin if not vu_f or float(f_fin) > float(vu_f) else vu_f
                     sol_deb[nom] = f_deb if not vu_d or float(f_deb) > float(vu_d) else vu_d
                     nbp[nom] = str(int(nbp.get(nom, "0")) + 1)
@@ -633,18 +691,30 @@ def planchers(dossiers: list[str | pathlib.Path], fichier: str = "") -> int:
             f"{MARQUE_INSTRUMENT}{ici}",
             "# Un plancher ne vaut que pour l'instrument qui l'a pris : l'outil refuse de comparer",
             "# contre ce fichier, ou de le compléter, depuis un autre (#5885).",
-            "# Colonnes : cas, plancher de la PREMIÈRE image, plancher de la DERNIÈRE, nombre de paires.",
+            "# Colonnes : cas, plancher de la PREMIÈRE image, plancher de la DERNIÈRE, nombre de paires,",
+            "# puis nombre de paires écoulées depuis que ce plancher a été approché, à moitié près.",
             "# Le PIRE plancher observé est gardé : sous-estimer le bruit fabrique des faux positifs.",
             "# Un plancher tiré d'UNE seule paire ne prouve rien. Lire la quatrième colonne.",
+            f"# Un plancher que {PAIRES_SANS_APPROCHE} paires n'ont pas approché est peut-être périmé : la mesure le signale.",
         ]
         corps = sorted(
-            f"{nom}\t{sol_deb.get(nom) or '0.000'}\t{sol_fin[nom]}\t{nbp[nom]}" for nom in sol_fin
+            f"{nom}\t{sol_deb.get(nom) or '0.000'}\t{sol_fin[nom]}\t{nbp[nom]}\t{calme.get(nom, 0)}"
+            for nom in sol_fin
         )
         pathlib.Path(fichier).write_text("\n".join(entete + corps) + "\n", encoding="utf-8")
         print(f"Planchers écrits dans « {fichier} » : {len(sol_fin)} cas, pris par « {ici} ».")
 
     for nom, vu in sorted(refuses.items()):
         print(f"Sans plancher, {SANS_PLANCHER[nom]} : {nom} (jusqu'à {vu} % ici).")
+
+    # Un SIGNAL, pas un verdict : la mesure ne sait pas si le clip a ete corrige ou s il a eu un
+    # mauvais jour, et elle ne fait redescendre aucun plancher d elle-meme (ADR 4309).
+    for nom in sorted(sol_fin):
+        if _plancher_a_revoir(sol_fin[nom], calme.get(nom, 0)):
+            print(
+                f"Plancher à relire : {nom} porte {sol_fin[nom]} %, que {calme[nom]} paires de suite"
+                " n'ont pas approché à moitié près. S'il est périmé, retirer sa ligne et remesurer."
+            )
 
     print()
     print(f"Plancher le plus haut à {TOLERANCE_PAR_DEFAUT} % de tolérance : {pire} %.")
@@ -1225,6 +1295,145 @@ def _auto_test() -> int:
             "sans panne",
             "avec panne" if "Aucun cas commun" in sortie else "sans panne",
         )
+
+        # 28. Le fichier compte les paires ecoulees depuis que chaque plancher a ete approche (#4309).
+        #
+        # Deux cas dans les memes tournages. « perime » rend 100 % une fois puis plus rien : son
+        # plancher n est plus approche. « vif » rend 100 % a chaque mesure, dans le DERNIER tournage,
+        # donc dans les dernieres paires jouees : c est le temoin, qui ne doit pas etre signale.
+        for nom in ("h0", "h1", "h2", "h3", "h4", "h5", "h6", "h7"):
+            (bac / nom).mkdir()
+        clip(bac / "h0/perime.mp4", "black")
+        clip(bac / "h1/perime.mp4", "white")
+        clip(bac / "h1/vif.mp4", "white")
+        for nom in ("h2", "h3", "h4", "h5", "h6"):
+            shutil.copy(bac / "h1/perime.mp4", bac / nom / "perime.mp4")
+            shutil.copy(bac / "h1/vif.mp4", bac / nom / "vif.mp4")
+        shutil.copy(bac / "h1/perime.mp4", bac / "h7/perime.mp4")
+        clip(bac / "h7/vif.mp4", "black")
+        suivi = bac / "suivi.tsv"
+        lignes_de = lambda: texte_de(suivi, lambda ligne: not commentaire(ligne))
+
+        joue(lambda: planchers([bac / "h0", bac / "h1"], str(suivi)))
+        verifie(
+            "la paire qui pose un plancher part de zéro",
+            "perime\t100.000\t100.000\t1\t0",
+            lignes_de(),
+        )
+        sortie, _ = joue(lambda: planchers([bac / "h1", bac / "h2"], str(suivi)))
+        verifie(
+            "une paire muette sous un plancher haut compte pour une",
+            "perime\t100.000\t100.000\t2\t1",
+            lignes_de(),
+        )
+        verifie(
+            "un plancher nul est toujours approché : son compte reste à zéro",
+            "vif\t0.000\t0.000\t1\t0",
+            lignes_de(),
+        )
+        verifie(
+            "sous le seuil, la mesure ne signale rien",
+            "aucun signal",
+            "un signal" if "Plancher à relire" in sortie else "aucun signal",
+        )
+
+        # Sept tournages font vingt et une paires. Pour « perime », toutes muettes : 1 + 21 = 22.
+        sortie, _ = joue(lambda: planchers([bac / f"h{rang}" for rang in range(1, 8)], str(suivi)))
+        verifie(
+            "le compte se CUMULE d'une mesure à l'autre",
+            "perime\t100.000\t100.000\t23\t22",
+            lignes_de(),
+        )
+        verifie(
+            "passé le seuil, le cas est signalé avec son plancher et son compte",
+            "Plancher à relire : perime porte 100.000 %, que 22 paires",
+            sortie,
+        )
+        verifie(
+            "le cas que les dernières paires ont approché a un compte nul",
+            "vif\t100.000\t100.000\t22\t0",
+            lignes_de(),
+        )
+        verifie(
+            "et n'est pas signalé",
+            "pas signalé",
+            "signalé" if "Plancher à relire : vif" in sortie else "pas signalé",
+        )
+
+        joue(lambda: planchers([bac / "h0", bac / "h1"], str(suivi)))
+        verifie(
+            "une paire qui retrouve le plancher remet le compte à zéro",
+            "perime\t100.000\t100.000\t24\t0",
+            lignes_de(),
+        )
+
+        # Un fichier d AVANT la cinquieme colonne : son compte se lit zero, pas « depuis toujours ».
+        ancien = bac / "ancien.tsv"
+        ancien.write_text(
+            f"{MARQUE_INSTRUMENT}{ici}\nperime\t0.000\t100.000\t40\n", encoding="utf-8"
+        )
+        sortie, _ = joue(lambda: planchers([bac / "h1", bac / "h2"], str(ancien)))
+        verifie(
+            "un fichier à quatre colonnes part de zéro et gagne la cinquième",
+            "perime\t0.000\t100.000\t41\t1\n",
+            lambda: texte_de(ancien)() + "\n",
+        )
+        verifie(
+            "sans être signalé à sa première mesure",
+            "aucun signal",
+            "un signal" if "Plancher à relire" in sortie else "aucun signal",
+        )
+
+    # 27. Un plancher presque nul ne fait pas crier un ecart infime (#4309).
+    #
+    # Neuf planchers du fichier etaient sous 0,0105 %, dont cinq a zero : contre eux, 0,003 % se
+    # lisait ×3. Le dernier cas est le temoin de l autre sens : un plancher AU-DESSUS du sol n est
+    # pas touche, sans quoi le sol aurait rendu sourds les cas qui ont un vrai bruit.
+    verifie(
+        "un écart infime contre un plancher nul reste sous ×1",
+        "×0.3",
+        f"×{rapport_de('0.003', '0.000')}",
+    )
+    verifie("et contre un plancher d'un millième aussi", "×0.3", f"×{rapport_de('0.003', '0.001')}")
+    verifie(
+        "un chiffre changé se lit ×2, pas davantage", "×2.0", f"×{rapport_de('0.021', '0.000')}"
+    )
+    verifie(
+        "juste sous un chiffre changé, on reste sous ×2", "×1.9", f"×{rapport_de('0.020', '0.000')}"
+    )
+    verifie(
+        "un plancher au-dessus du sol n'est pas touché", "×3.0", f"×{rapport_de('0.300', '0.100')}"
+    )
+
+    # 29. « Approche » veut dire a MOITIE pres, et un plancher sous le sol ne se signale pas (#4309).
+    verifie(
+        "la moitié du plancher l'approche",
+        "compte 0",
+        f"compte {_calme_apres(5, '0.050', '0.100')}",
+    )
+    verifie(
+        "juste dessous, la paire compte", "compte 6", f"compte {_calme_apres(5, '0.049', '0.100')}"
+    )
+    verifie(
+        "un cas sans plancher encore part de zéro",
+        "compte 0",
+        f"compte {_calme_apres(5, '0.049', '')}",
+    )
+    verifie(
+        "au seuil de paires, un plancher au-dessus du sol se signale",
+        "True",
+        str(_plancher_a_revoir("0.100", PAIRES_SANS_APPROCHE)),
+    )
+    verifie(
+        "une paire avant le seuil, non",
+        "False",
+        str(_plancher_a_revoir("0.100", PAIRES_SANS_APPROCHE - 1)),
+    )
+    verifie(
+        "un plancher sous le sol ne se signale jamais",
+        "False",
+        str(_plancher_a_revoir("0.005", 10 * PAIRES_SANS_APPROCHE)),
+    )
 
     if echecs == 0:
         print(
