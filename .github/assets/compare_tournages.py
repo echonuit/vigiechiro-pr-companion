@@ -315,6 +315,19 @@ def _plancher_a_revoir(plancher: str, calme: int) -> bool:
     return calme >= PAIRES_SANS_APPROCHE and float(plancher) > SOL_DU_PLANCHER
 
 
+def signal_a_relire(nom: str, plancher: str, calme: int) -> str:
+    """La ligne par laquelle la mesure nomme un plancher a relire.
+
+    `mesurer-les-planchers.yml` la recopie dans son resume en filtrant sur son debut, et le garde des
+    decisions du tournage la demande ICI pour fabriquer son journal : une phrase recopiee dans le
+    garde continuerait de passer le filtre apres que l outil aurait change la sienne (#5979).
+    """
+    return (
+        f"Plancher à relire : {nom} porte {plancher} %, que {calme} paires de suite"
+        " n'ont pas approché à moitié près. S'il est périmé, retirer sa ligne et remesurer."
+    )
+
+
 def _positif(valeur: str) -> bool:
     try:
         return float(valeur) > 0
@@ -711,10 +724,7 @@ def planchers(dossiers: list[str | pathlib.Path], fichier: str = "") -> int:
     # mauvais jour, et elle ne fait redescendre aucun plancher d elle-meme (ADR 4309).
     for nom in sorted(sol_fin):
         if _plancher_a_revoir(sol_fin[nom], calme.get(nom, 0)):
-            print(
-                f"Plancher à relire : {nom} porte {sol_fin[nom]} %, que {calme[nom]} paires de suite"
-                " n'ont pas approché à moitié près. S'il est périmé, retirer sa ligne et remesurer."
-            )
+            print(signal_a_relire(nom, sol_fin[nom], calme[nom]))
 
     print()
     print(f"Plancher le plus haut à {TOLERANCE_PAR_DEFAUT} % de tolérance : {pire} %.")
