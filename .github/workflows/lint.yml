@@ -760,7 +760,7 @@ jobs:
         #
         # `pmd:pmd` et non `pmd:check` : ce pas PRODUIT le rapport, il ne juge pas. Le verdict
         # revient au cliquet de l'ADR 4617, lancé par le pas suivant, parce que `failOnViolation`
-        # est binaire là où il faut une marge - et parce qu'une seule des sept règles, les littéraux
+        # est binaire là où il faut une marge - et parce qu'une seule règle du jeu, les littéraux
         # dupliqués, n'a pas de sens dans la zone de test et doit y être écartée. PMD ne sait pas
         # exprimer cette différence : les quatre formes essayées sont dans l'ADR.
         run: ./mvnw -B test-compile pmd:pmd

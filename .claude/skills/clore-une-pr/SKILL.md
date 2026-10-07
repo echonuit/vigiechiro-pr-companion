@@ -74,8 +74,8 @@ dispositif vers la conduite.
 python3 .github/scripts/verifie_verdict_avant_fusion.py --pr <N>
 ```
 
-Ce qu'il rend : `0` quand le verdict est complet, en nommant le commit de tête qu'il a jugé ; `2`
-quand il refuse. Lire le commit qu'il nomme, car un verdict complet sur le **mauvais** commit ne dit
+Ce qu'il rend : `0` quand le verdict est complet, en nommant le commit de tête qu'il a jugé ; `1`
+quand il refuse ; `2` quand il n'a pas su lire l'état de la forge. Lire le commit qu'il nomme, car un verdict complet sur le **mauvais** commit ne dit
 rien de celui qu'on fusionne.
 
 ## Toutes les vérifications ne jugent pas tout
