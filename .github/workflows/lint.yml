@@ -1233,6 +1233,15 @@ jobs:
         # Le verdict lui-meme sort de la boucle des cliquets, que rapport.py balaie. Seul l'auto-test
         # se branche ici, comme pour ses voisins numerotes.
         run: python3 scripts/adr/5278-attente-hors-du-fil.py --auto-test
+      - name: "L'annotation et la marque qui font taire le portail sont refusées (autotest, #6022)"
+        # Deux méthodes mortes ont vécu cinq semaines sous `@SuppressWarnings("unused")`, que PMD
+        # honore : le cliquet 4617 ne les comptait pas. Le garde admet une liste fermée, `unchecked`
+        # et `rawtypes`, et refuse `NOPMD` là où PMD le lit. Ses cas portent les quatre formes que
+        # PMD honore, mesurées sous 7.17.0, et les deux mentions en prose du dépôt, qui restent
+        # vertes.
+        #
+        # Le verdict lui-même sort de la boucle des cliquets. Seul l'auto-test se branche ici.
+        run: python3 scripts/adr/6022-annotation-qui-fait-taire.py --auto-test
       - name: "La page qu'on lit avant de pousser nomme les gardes qui jugent (bloquant, #5258)"
         # La section « batterie locale » d'`ouvrir-une-pr` annoncait QUATRE gardes rougissant en CI
         # hors de ce que rapport.py balaie. Mesure du 2026-09-05 : ils sont trente, et la page en

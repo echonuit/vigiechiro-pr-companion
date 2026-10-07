@@ -14,11 +14,12 @@ d'où vient cette constitution : il interdit un renvoi qui ne résout que dans u
 n'a pas d'objet ici, où les renvois résolvent. Le numéro n'est pas réattribué : une ADR cite un
 article par son numéro, et un numéro qui change de sens est pire qu'un numéro absent.
 
-**Ce que la jurisprudence a révélé.** Deux articles n'ont produit aucune décision : la mutation qui
-mesure dès qu'un comportement est complet (A8), et l'interdiction de supprimer un avertissement
-(A10). Tous deux disent comment on *travaille* plutôt que ce que le produit *fait*, et tous deux
-vivaient dans un fichier exclu du dépôt jusqu'à #4335. La mesure est rappelée ici plutôt que tue :
-un article que rien ne tient est une dette, pas une règle.
+**Ce que la jurisprudence a révélé.** Un article n'a produit aucune décision : la mutation qui
+mesure dès qu'un comportement est complet (A8). Il dit comment on *travaille* plutôt que ce que le
+produit *fait*, et il vivait dans un fichier exclu du dépôt jusqu'à #4335. L'interdiction de
+supprimer un avertissement était dans le même cas jusqu'à l'ADR 6022, qui lui a donné un garde après
+que deux méthodes mortes ont vécu cinq semaines sous une annotation. La mesure est rappelée ici
+plutôt que tue : un article que rien ne tient est une dette, pas une règle.
 
 **A1 en est sorti, et aucun compte n'est plus cité ici.** La preuve qui précède l'affirmation
 figurait dans cette liste ; quatre décisions la tiennent désormais. Ce paragraphe annonçait aussi
@@ -93,6 +94,10 @@ l'appliquant.
 ### A10 : Jamais de suppression d'avertissement
 
 Ni `@SuppressWarnings`, ni `//NOPMD`. Un avertissement se traite en refactorant.
+
+Un garde le refuse, `scripts/adr/6022-annotation-qui-fait-taire.py`. Il n'admet que `unchecked` et
+`rawtypes`, qui s'adressent à javac sur un transtypage générique et ne font taire aucun outil de
+qualité.
 
 ### A11 : L'assumé se déclare, il ne se contourne pas
 
@@ -254,7 +259,7 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A7 · Le test précède le code | 1 | 1 | `BancDesClipsTest#une_classe_filmee_neuve_declare_son_banc` |
 | A8 · La mutation mesure dès qu'un comportement est complet | 0 | 0 | **relecture seule** |
 | A9 · La dette se tient par un cliquet, pas par un nettoyage | 25 | 13 | `scripts/adr/2843-tiret-cadratin.py`, `PatronDuCliquetTest#tout_cliquet_passe_par_le_patron`, `scripts/adr/verifie_scripts.py`, et 21 autres |
-| A10 · Jamais de suppression d'avertissement | 0 | 0 | **relecture seule** |
+| A10 · Jamais de suppression d'avertissement | 1 | 1 | `scripts/adr/6022-annotation-qui-fait-taire.py` |
 | A11 · L'assumé se déclare, il ne se contourne pas | 18 | 1 | `scripts/adr/verifie_verdicts_declares.py`, `.github/assets/compare_tournages.py` |
 | A12 · Rendre compte avant de conclure, et aucun échec silencieux | 11 | 7 | `scripts/adr/0008-echec-silencieux.py`, `.github/scripts/verifie_secret_winget.py`, `RetourOperationTest#les_deux_causes_ne_se_melangent_pas`, et 9 autres |
 | A13 · Un refus dit ce qui manque, et ne conseille que le vérifié | 10 | 9 | `scripts/adr/2635-refus-sans-surface.py`, `AuditDepartementDuPointTest#legitime_et_suspecte_indiscernables`, `FiltresLieuTest#le_point_est_filtrable`, et 8 autres |
@@ -276,9 +281,8 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A30 · Le code dit ce qu'il fait, la javadoc dit son contrat, l'ADR dit pourquoi | 6 | 2 | `scripts/adr/4359-javadoc-narratif.py`, `scripts/adr/4359-blocs-relus.py`, `scripts/adr/4395-renvois-en-javadoc.py`, et 3 autres |
 | A31 · La prose visible se relit à l'humaniseur | 4 | 1 | `.github/scripts/verifie_corps_pr.py`, `scripts/adr/4783-traces-d-outil.py` |
 
-**2 article(s) sur 30 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.
+**1 article(s) sur 30 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.
 
 - A8 · La mutation mesure dès qu'un comportement est complet
-- A10 · Jamais de suppression d'avertissement
 
 <!-- fin de la matrice engendree -->

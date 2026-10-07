@@ -17,6 +17,8 @@ ligne et se rattrapent en une PR.
   finissant vert à chaque fois. Voir l'ADR 0040.
 - **Pas de tiret cadratin**, nulle part. Un garde le refuse.
 - **Jamais `@SuppressWarnings` ni `//NOPMD`** pour taire un avertissement de qualité : refactorer.
+  Un garde le refuse (`scripts/adr/6022-annotation-qui-fait-taire.py`) : seules les valeurs
+  `unchecked` et `rawtypes` sont admises.
 - **Doc-comments `///`** (JEP 467), noms de classes en français sans accents.
 - **Le test avant le code.** Sur un défaut, le premier test reproduit le défaut.
 
