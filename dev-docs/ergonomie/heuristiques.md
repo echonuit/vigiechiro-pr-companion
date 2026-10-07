@@ -100,7 +100,7 @@ voisines de sujet sans être des doublons. Toute fusion se décide par paire, et
 
 Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-ergonomie.py`, et gardée par lui.
 
-**31 rattachement(s), portés par 20 décision(s).** Les deux nombres diffèrent dès qu'une décision sert plusieurs heuristiques : c'est le cas ordinaire, et les confondre ferait croire à une couverture qui n'existe pas.
+**32 rattachement(s), portés par 21 décision(s).** Les deux nombres diffèrent dès qu'une décision sert plusieurs heuristiques : c'est le cas ordinaire, et les confondre ferait croire à une couverture qui n'existe pas.
 
 | Clé | Heuristique | ADR | Lesquelles |
 |---|---|---:|---|
@@ -126,9 +126,9 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-ergonomie.p
 | `wcag-couleur-seule` | 1.4.1 | 0 | **aucune** |
 | `wcag-nom-accessible` | 1.1.1 et 4.1.2 | 0 | **aucune** |
 | `wcag-focus-visible` | 2.4.7 | 0 | **aucune** |
-| `wcag-cible` | 2.5.8 | 0 | **aucune** |
+| `wcag-cible` | 2.5.8 | 1 | [4462-une-cible-cliquable-tient-vingt-quatre-pixels](../decisions/4462-une-cible-cliquable-tient-vingt-quatre-pixels.md) |
 
-**14 heuristique(s) sur 23 que rien ne sert.** Ce n'est pas une faute : c'est ce dont personne n'a eu à décider, et il faut le voir pour savoir si c'est un choix ou un angle mort.
+**13 heuristique(s) sur 23 que rien ne sert.** Ce n'est pas une faute : c'est ce dont personne n'a eu à décider, et il faut le voir pour savoir si c'est un choix ou un angle mort.
 
 - `nielsen-6` · Reconnaissance plutôt que rappel
 - `nielsen-10` · Aide et documentation
@@ -143,6 +143,5 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-ergonomie.p
 - `wcag-couleur-seule` · 1.4.1
 - `wcag-nom-accessible` · 1.1.1 et 4.1.2
 - `wcag-focus-visible` · 2.4.7
-- `wcag-cible` · 2.5.8
 
 <!-- fin de la matrice engendree -->

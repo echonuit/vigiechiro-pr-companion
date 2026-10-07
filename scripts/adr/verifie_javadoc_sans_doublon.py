@@ -382,7 +382,7 @@ CONTRAT = {
     "dispositif": "invariant",
     "seuil": "(sans objet)",
     "temoin": "scripts/adr/verifie_javadoc_sans_doublon.py --auto-test",
-    "decision": "hygiene, sans decision",
+    "decision": "ADR 4359",
 }
 
 

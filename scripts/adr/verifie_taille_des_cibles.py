@@ -148,7 +148,7 @@ CONTRAT = {
     "dispositif": "invariant",
     "seuil": "(sans objet)",
     "temoin": "scripts/adr/verifie_taille_des_cibles.py --auto-test",
-    "decision": "WCAG 2.5.8 niveau AA, sans ADR",
+    "decision": "ADR 4462",
 }
 
 
