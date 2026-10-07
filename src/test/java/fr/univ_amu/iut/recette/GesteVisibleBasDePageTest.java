@@ -107,6 +107,24 @@ class GesteVisibleBasDePageTest {
                 .hasMessageContaining("dernier élément");
     }
 
+    @Test
+    @DisplayName("#5982 : une cible qui ne descend d'aucun panneau de défilement est refusée, pas déclarée calée")
+    void une_cible_sans_panneau_est_refusee(FxRobot robot) {
+        robot.interact(() -> {
+            Label seule = new Label("Hors de tout panneau de défilement");
+            seule.setId("seule");
+            pane.getScene().setRoot(new VBox(seule));
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThatThrownBy(() -> GesteVisible.allerAuBasDeLaPage(robot, "#seule"))
+                .as("la cible est dans le cadre et aucune page ne la porte : il n'y a rien à caler. Rendre"
+                        + " un succès ici, c'était « tous les panneaux sont au bas » dit d'une liste vide")
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("#seule")
+                .hasMessageContaining("aucun panneau de défilement");
+    }
+
     private void faireGrandirLaCarte(FxRobot robot) {
         robot.interact(() -> carte.getChildren().add(remplissage(CROISSANCE)));
         WaitForAsyncUtils.waitForFxEvents();

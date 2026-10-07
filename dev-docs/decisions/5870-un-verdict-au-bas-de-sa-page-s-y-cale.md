@@ -53,6 +53,10 @@ est dans le cadre. Le bas d'une page ne dépend pas de l'instant où un nœud a 
 cadre en ayant l'air de l'y amener, et le clip finirait sur autre chose. Le refus dit que le geste ne
 vaut que pour le dernier élément d'une page.
 
+**Elle refuse aussi une cible qui ne descend d'aucun panneau de défilement** (#5982). Sans page à
+caler, « tous les panneaux sont au bas » se disait d'une liste vide, et l'aide concluait dès que la
+cible était dans le cadre. Ses huit appels ont été relus à cette occasion : aucun n'était dans ce cas.
+
 `amenerDansLeCadre` n'est pas modifié : vingt-cinq scénarios l'emploient, et il reste le bon geste pour
 une cible au milieu d'une page, ou pour garder une carte à l'image pendant qu'elle change.
 
