@@ -40,6 +40,7 @@ import fr.univ_amu.iut.sites.model.SouhaitDeclaration;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
@@ -82,6 +83,10 @@ class ScenarioPerceptifRecuperationCarreTest {
 
     private static final String ID_USER = "u-scenario";
     private static final String CARRE = "640380";
+
+    /// La ligne qui porte « Récupérer ce carré ». C'est **elle** qui s'attend, non son bouton : le
+    /// FXML déclare le bouton dès l'ouverture de la modale, dans cette ligne encore cachée (#6105).
+    private static final String LIGNE_RECUPERER = "#ligneRecupererCarre";
 
     /// L'identité connectée, telle que `NavigationConnexion.libelleMenu()` la rend.
     private static final String PSEUDO = "chiro";
@@ -197,7 +202,10 @@ class ScenarioPerceptifRecuperationCarreTest {
         GesteVisible.cliquer(robot, "#btnVerifierCarre");
         // L'exécuteur est asynchrone : le verdict n'est PAS là au retour du clic (ADR 3668).
         Attente.queSurLeFil(
-                () -> robot.lookup("#btnRecupererCarre").tryQuery().isPresent(),
+                () -> robot.lookup(LIGNE_RECUPERER)
+                        .tryQuery()
+                        .map(Node::isVisible)
+                        .orElse(false),
                 "le bouton « Récupérer ce carré » paraît",
                 10 * 1000L);
         Respiration.entreDeuxGestes(robot);

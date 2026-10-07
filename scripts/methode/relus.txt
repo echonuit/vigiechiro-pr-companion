@@ -2184,8 +2184,8 @@ ee56ade82e69  src/test/java/fr/univ_amu/iut/sites/view/ModaleSiteViewTest.java
 48e071b03411  src/test/java/fr/univ_amu/iut/sites/view/PastillesDeLaFicheSiteTest.java
 ee14b0a35c3c  src/test/java/fr/univ_amu/iut/sites/view/ScenarioCarreAbsentTest.java
 c4fd0c174a99  src/test/java/fr/univ_amu/iut/sites/view/ScenarioFicheSiteTest.java
-b450728d5f05  src/test/java/fr/univ_amu/iut/sites/view/ScenarioModaleCarreTest.java
-37b56139befb  src/test/java/fr/univ_amu/iut/sites/view/ScenarioPerceptifRecuperationCarreTest.java
+cf1149717245  src/test/java/fr/univ_amu/iut/sites/view/ScenarioModaleCarreTest.java
+536e7c3e61c8  src/test/java/fr/univ_amu/iut/sites/view/ScenarioPerceptifRecuperationCarreTest.java
 97956d5222da  src/test/java/fr/univ_amu/iut/sites/view/SiteDetailBadgePlateformeViewTest.java
 a31e1e09096e  src/test/java/fr/univ_amu/iut/sites/view/SiteDetailPublierPointViewTest.java
 9873d46aab3d  src/test/java/fr/univ_amu/iut/sites/view/SiteDetailRenommageViewTest.java
