@@ -2096,7 +2096,7 @@ e2160d2b8a89  src/test/java/fr/univ_amu/iut/recette/GesteVisibleCadreImbriqueTes
 c5ea5b2b360d  src/test/java/fr/univ_amu/iut/recette/GesteVisibleCibleReconstruiteTest.java
 2634bceecc02  src/test/java/fr/univ_amu/iut/recette/GesteVisibleDoubleEtDroitTest.java
 e51fc6abd4b8  src/test/java/fr/univ_amu/iut/recette/GesteVisibleMessageDeRefusTest.java
-978983eee831  src/test/java/fr/univ_amu/iut/recette/GesteVisiblePositionPoseeTest.java
+954dab2d434e  src/test/java/fr/univ_amu/iut/recette/GesteVisiblePositionPoseeTest.java
 e20d6b203e0e  src/test/java/fr/univ_amu/iut/recette/GesteVisibleRemplacementTest.java
 dafa1a11a4e7  src/test/java/fr/univ_amu/iut/recette/GesteVisibleSuiteTest.java
 14c1819af275  src/test/java/fr/univ_amu/iut/recette/GuichetQuiCompte.java

@@ -26,8 +26,9 @@ import org.testfx.util.WaitForAsyncUtils;
 /// ## Ce que ce banc reproduit, et ce qu'il ne reproduit pas
 ///
 /// Il reproduit le **geste** dans l'ordre fautif : la section paraît, et le geste part avant la mise
-/// en page qui la place. Le premier cas en est le témoin, et il est sûr : la section paraît dans un
-/// `Platform.runLater` que rien ne sépare du premier `interact` du geste.
+/// en page qui la place. Le premier cas en est le témoin. Il gagne une course, il ne l'évite pas : une
+/// pulsation peut passer entre le `Platform.runLater` et le premier `interact` du geste, 14 fois sur
+/// 1 500 sur un poste (#6143). Il rejoue donc sa fabrication, et exige une reproduction sur cinq.
 ///
 /// Il ne reproduit pas la **course** du cas réel, dont la fenêtre est d'une pulsation : dix passes
 /// filmées sur un poste ne l'ont pas montrée une fois. Que cet ordre soit bien celui des deux
@@ -46,6 +47,10 @@ class GesteVisiblePositionPoseeTest {
     private static final double SECTION = 120;
 
     private static final double AU_DESSOUS = 200;
+
+    /// Combien de fois le témoin rejoue sa fabrication avant de conclure que le défaut ne se
+    /// reproduit plus. Une course se perd moins d'une fois sur cent ; cinq de suite ne se sont pas vues.
+    private static final int ESSAIS = 5;
 
     /// De quoi le contenu grandit après le geste, dans le cas qui éprouve le prédicat.
     private static final double CROISSANCE = 60;
@@ -77,19 +82,29 @@ class GesteVisiblePositionPoseeTest {
     @Test
     @DisplayName("#6069 : amenée avant la mise en page qui la fait paraître, la section laisse la page en haut")
     void le_defaut_d_origine_se_reproduit(FxRobot robot) {
-        faireParaitreLaSectionSansAttendre();
-        GesteVisible.amenerDansLeCadre(robot, "#section");
-        WaitForAsyncUtils.waitForFxEvents();
-
-        assertThat(ecartALaPlaceVoulue())
+        assertThat(leDefautSeReproduit(robot))
                 .as("c'est le défaut : le geste a réglé la page sur les bornes d'avant, puis a conclu"
-                        + " parce que la section est dans le cadre. Si cette attente tombe, le banc ne"
-                        + " reproduit plus rien et le cas suivant ne prouve plus que le geste neuf est"
-                        + " nécessaire")
-                .isGreaterThan(1.0);
+                        + " parce que la section est dans le cadre. Aucun de " + ESSAIS + " essais ne l'a"
+                        + " montré : le banc ne reproduit plus rien, et le cas suivant ne prouve plus que"
+                        + " le geste neuf est nécessaire")
+                .isTrue();
         assertThat(GesteVisible.estPoseDansLeCadre(robot, "#section"))
                 .as("et le prédicat le voit : la section est dans le cadre, la page n'est pas posée")
                 .isFalse();
+    }
+
+    @Test
+    @DisplayName("#6143 : après un ordre sain, le témoin sait encore reproduire le défaut")
+    void apres_un_ordre_sain_le_defaut_se_reproduit_encore(FxRobot robot) {
+        faireParaitreLaSection(robot);
+        GesteVisible.amenerDansLeCadre(robot, "#section");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(leDefautSeReproduit(robot))
+                .as("la section est mise en page et la page est à sa place : c'est l'état que laisse"
+                        + " une course perdue. Si un essai ne remettait pas le banc à son départ, plus"
+                        + " aucun ne reproduirait le défaut, et rejouer ne servirait à rien")
+                .isTrue();
     }
 
     @Test
@@ -144,7 +159,8 @@ class GesteVisiblePositionPoseeTest {
         faireParaitreLaSection(robot);
         GesteVisible.poserDansLeCadre(robot, "#section");
 
-        // Le contenu grandit, et RIEN ne sépare ce changement de la lecture : ni attente, ni pulsation.
+        // Le contenu grandit sans que le banc attende avant la lecture. Une pulsation peut s'y glisser
+        // (#6143) : le cas reste vert dans les deux ordres, il prouve seulement moins ce passage-là.
         Platform.runLater(() -> ((VBox) pane.getContent()).getChildren().add(remplissage(CROISSANCE)));
 
         assertThat(GesteVisible.estPoseDansLeCadre(robot, "#section"))
@@ -175,8 +191,34 @@ class GesteVisiblePositionPoseeTest {
                 .hasMessageContaining("aucun panneau de défilement");
     }
 
-    /// La section paraît, et RIEN ne sépare ce changement du geste qui suit : ni attente, ni
-    /// pulsation. `robot.interact` en laisserait passer une, et le défaut ne se verrait plus.
+    /// Le défaut d'origine s'est-il reproduit en [#ESSAIS] essais au plus (#6143) ?
+    ///
+    /// Un essai remet le banc à son départ, fabrique l'ordre fautif et lit où la page est restée. Il
+    /// s'arrête au premier qui reproduit : le banc est alors dans l'état fautif, que l'appelant relit.
+    private boolean leDefautSeReproduit(FxRobot robot) {
+        for (int essai = 0; essai < ESSAIS; essai++) {
+            remettreAuDepart(robot);
+            faireParaitreLaSectionSansAttendre();
+            GesteVisible.amenerDansLeCadre(robot, "#section");
+            WaitForAsyncUtils.waitForFxEvents();
+            if (ecartALaPlaceVoulue() > 1.0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void remettreAuDepart(FxRobot robot) {
+        robot.interact(() -> {
+            section.setVisible(false);
+            section.setManaged(false);
+            pane.setVvalue(pane.getVmin());
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+    }
+
+    /// La section paraît sans que le banc attende quoi que ce soit avant le geste qui suit.
+    /// `robot.interact` laisserait passer une pulsation à coup sûr, et le défaut ne se verrait plus.
     private void faireParaitreLaSectionSansAttendre() {
         Platform.runLater(this::rendreLaSectionVisible);
     }
