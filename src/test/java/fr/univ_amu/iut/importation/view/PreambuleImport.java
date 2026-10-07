@@ -11,7 +11,6 @@ import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.Labeled;
 import org.testfx.api.FxRobot;
 import org.testfx.util.WaitForAsyncUtils;
 
@@ -61,8 +60,8 @@ public final class PreambuleImport {
         GesteVisible.cliquer(robot, "#boutonParcourir");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.queSurLeFil(
-                () -> !texte(robot, "#labelOriginaux").isBlank(),
+        InspectionConclue.attendre(
+                robot,
                 "l'inspection n'a jamais rendu son compte d'originaux : le rattachement ne propose rien"
                         + " tant qu'elle n'a pas lu la carte",
                 APPARITION_SECONDES * 1000L);
@@ -142,10 +141,5 @@ public final class PreambuleImport {
     private static boolean estVisible(FxRobot robot, String id) {
         Node noeud = robot.lookup(id).tryQuery().orElse(null);
         return noeud != null && noeud.isVisible() && noeud.getParent() != null;
-    }
-
-    private static String texte(FxRobot robot, String id) {
-        Node noeud = robot.lookup(id).tryQuery().orElse(null);
-        return noeud instanceof Labeled libelle && libelle.getText() != null ? libelle.getText() : "";
     }
 }

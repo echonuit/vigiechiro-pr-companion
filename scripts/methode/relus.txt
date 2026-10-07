@@ -1832,6 +1832,8 @@ d49c5a1ab907  src/test/java/fr/univ_amu/iut/importation/view/ConfirmationsImport
 0767238fef45  src/test/java/fr/univ_amu/iut/importation/view/ImportationControllerGardeTest.java
 9874f12088db  src/test/java/fr/univ_amu/iut/importation/view/ImportationViewTest.java
 837d09ad81c0  src/test/java/fr/univ_amu/iut/importation/view/ImportationVueIntegrationTest.java
+3904af2cba8e  src/test/java/fr/univ_amu/iut/importation/view/InspectionConclue.java
+2d229d53947c  src/test/java/fr/univ_amu/iut/importation/view/InspectionConclueTest.java
 f7da17f4e1d8  src/test/java/fr/univ_amu/iut/importation/view/ParcoursImporterUneNuitTest.java
 8ffdac54cb48  src/test/java/fr/univ_amu/iut/importation/view/PreambuleImport.java
 389ba9914a3a  src/test/java/fr/univ_amu/iut/importation/view/ScenarioAnnonceConnexionTest.java

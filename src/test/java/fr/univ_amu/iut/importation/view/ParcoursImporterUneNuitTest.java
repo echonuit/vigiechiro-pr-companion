@@ -32,7 +32,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.stream.Stream;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
@@ -209,10 +208,8 @@ class ParcoursImporterUneNuitTest {
         // SUR LE FIL (ADR 5278) : `texte` fait un `lookup` puis un `getText`, donc lit le graphe. Le
         // garde ne le voit pas - la lecture est cachée dans l'aide - et 36 autres sites du dépôt sont
         // dans ce cas, consignés en #5353.
-        Attente.queSurLeFil(
-                () -> !texte(robot, "#labelOriginaux").isBlank(),
-                "l'inspection n'a jamais rendu son compte d'originaux",
-                APPARITION_SECONDES * 1000L);
+        InspectionConclue.attendre(
+                robot, "l'inspection n'a jamais rendu son compte d'originaux", APPARITION_SECONDES * 1000L);
 
         assertThat(robot.lookup("#champDossier").queryAs(TextField.class).getText())
                 .as("le dossier désigné dans le dialogue doit être celui que l'écran affiche")
@@ -226,10 +223,5 @@ class ParcoursImporterUneNuitTest {
         return Window.getWindows().stream()
                 .filter(Window::isShowing)
                 .anyMatch(f -> f.getScene() != null && f.getScene().lookup("#" + ContenuDesignation.ID_CHEMIN) != null);
-    }
-
-    private static String texte(FxRobot robot, String selecteur) {
-        Label label = robot.lookup(selecteur).queryAs(Label.class);
-        return label == null || label.getText() == null ? "" : label.getText();
     }
 }

@@ -41,7 +41,6 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Labeled;
-import javafx.scene.control.TextInputControl;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
@@ -167,10 +166,7 @@ class ScenarioConnecteAnnonceImportTest {
         GesteVisible.cliquer(robot, "#boutonParcourir");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.queSurLeFil(
-                () -> !texte(robot, "#labelOriginaux").isBlank(),
-                "l'inspection n'a jamais conclu",
-                APPARITION_SECONDES * 1000L);
+        InspectionConclue.attendre(robot, "l'inspection n'a jamais conclu", APPARITION_SECONDES * 1000L);
 
         ComboBox<?> points = robot.lookup("#comboPoints").queryAs(ComboBox.class);
         robot.interact(() -> points.getSelectionModel().select(0));
@@ -246,17 +242,6 @@ class ScenarioConnecteAnnonceImportTest {
                 return Optional.empty();
             }
         };
-    }
-
-    private static String texte(FxRobot robot, String id) {
-        Node noeud = robot.lookup(id).tryQuery().orElse(null);
-        if (noeud instanceof Labeled libelle) {
-            return libelle.getText() == null ? "" : libelle.getText();
-        }
-        if (noeud instanceof TextInputControl champ) {
-            return champ.getText() == null ? "" : champ.getText();
-        }
-        return "";
     }
 
     private static String texteDe(FxRobot robot, String identifiant) {

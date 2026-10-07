@@ -39,11 +39,9 @@ import java.util.concurrent.TimeoutException;
 import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Labeled;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TextInputControl;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
@@ -333,10 +331,7 @@ class ScenarioMenuDeLigneImportTest {
         controleur().selecteur().definir(repondant(carte));
         GesteVisible.cliquer(robot, "#boutonParcourir");
         WaitForAsyncUtils.waitForFxEvents();
-        Attente.queSurLeFil(
-                () -> !texte(robot, "#labelOriginaux").isBlank(),
-                "l'inspection n'a jamais conclu",
-                APPARITION_SECONDES * 1000L);
+        InspectionConclue.attendre(robot, "l'inspection n'a jamais conclu", APPARITION_SECONDES * 1000L);
 
         ComboBox<?> points = robot.lookup("#comboPoints").queryAs(ComboBox.class);
         robot.interact(() -> points.getSelectionModel().select(0));
@@ -371,16 +366,5 @@ class ScenarioMenuDeLigneImportTest {
                 return Optional.empty();
             }
         };
-    }
-
-    private static String texte(FxRobot robot, String id) {
-        Node noeud = robot.lookup(id).tryQuery().orElse(null);
-        if (noeud instanceof Labeled libelle) {
-            return libelle.getText() == null ? "" : libelle.getText();
-        }
-        if (noeud instanceof TextInputControl champ) {
-            return champ.getText() == null ? "" : champ.getText();
-        }
-        return "";
     }
 }

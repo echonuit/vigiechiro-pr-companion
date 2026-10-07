@@ -226,10 +226,8 @@ class ScenarioRejetsEtArchiveTest {
         GesteVisible.cliquer(robot, "#boutonParcourir");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.queSurLeFil(
-                () -> !texte(robot, LABEL_ORIGINAUX).isBlank(),
-                "l'inspection n'a jamais conclu sur la seconde désignation",
-                APPARITION_SECONDES * 1000L);
+        InspectionConclue.attendre(
+                robot, "l'inspection n'a jamais conclu sur la seconde désignation", APPARITION_SECONDES * 1000L);
 
         // ─── S2-49 · « nuit déjà importée », et c'est INFORMATIF ─────────────────────────────────
         assertThat(bandeaux(robot))
@@ -311,8 +309,8 @@ class ScenarioRejetsEtArchiveTest {
         // On attend que l'INSPECTION ait conclu, et non qu'un bandeau paraisse : toutes les cartes
         // n'en lèvent pas au même endroit. `sd-prefixee` ne dit rien ici - sa discordance se voit au
         // RATTACHEMENT - et attendre un bandeau d'inspection y expirerait pour rien.
-        Attente.queSurLeFil(
-                () -> !texte(robot, LABEL_ORIGINAUX).isBlank(),
+        InspectionConclue.attendre(
+                robot,
                 "l'inspection n'a jamais rendu son compte d'originaux sur « " + fixture + " » : elle"
                         + " balaie le dossier hors du fil JavaFX, et rien n'a paru dans le temps imparti",
                 APPARITION_SECONDES * 1000L);
