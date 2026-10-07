@@ -43,7 +43,8 @@ par l'arbre syntaxique, et son cliquet est à zéro : il se lit comme un refus, 
 **La liste des valeurs admises est fermée : `unchecked` et `rawtypes`.** Elles s'adressent à javac,
 sur un transtypage générique qu'il ne peut pas prouver. PMD ne les lit pas, et les 55 annotations du
 dépôt sont de celles-là. Toute autre valeur est refusée, y compris celles que PMD n'honore pas
-aujourd'hui. Une valeur qui n'est pas un littéral, constante ou concaténation, est refusée sans être
+aujourd'hui, `fallthrough`, `deprecation` ou `serial` : le dépôt n'en porte aucune, et la première
+qui se présentera se discutera. Une valeur qui n'est pas un littéral, constante ou concaténation, est refusée sans être
 résolue.
 
 **La marque `NOPMD` se refuse là où PMD la lit, et pas ailleurs** : dans un commentaire de ligne qui
@@ -56,14 +57,8 @@ Le garde doit refuser ce que l'outil honore, et la documentation de l'outil n'es
 7 octobre 2026, sur `80ae6d71db`, une classe jetable de dix-huit méthodes privées mortes a été jouée
 contre `UnusedPrivateMethod` sous PMD 7.17.0.
 
-| Forme | PMD se tait |
-|---|---|
-| `"unused"`, `"all"`, `"PMD"`, `"PMD.UnusedPrivateMethod"` | oui |
-| un tableau qui contient l'une d'elles | oui |
-| `"unchecked"`, `"rawtypes"`, `"fallthrough"`, le nom d'une autre règle | non |
-| `// NOPMD` en fin de ligne, collé ou non, seul ou dans une phrase | oui |
-| un `///` de fin de ligne qui cite `NOPMD` | oui |
-| `/* NOPMD */`, `// nopmd`, un `///` posé sur la ligne d'au-dessus | non |
+Le relevé forme par forme, ce qui le fait taire et ce qui ne le fait pas, est dans l'en-tête du
+garde `scripts/adr/6022-annotation-qui-fait-taire.py`.
 
 ## Pourquoi une liste fermée, et pourquoi l'arbre
 
@@ -83,10 +78,13 @@ même raison.
   relecture, A8.
 - **Une annotation réintroduite fait rougir `methode` à chaque demande**, et la porte locale en
   quelques secondes, sans JVM.
-- **`fallthrough`, `deprecation` ou `serial` sont refusées** bien qu'elles ne fassent pas taire PMD.
-  Le dépôt n'en porte aucune. La première qui se présentera se discutera, et c'est voulu.
-- **Les trois règles `Unused*` que le chantier #6022 fait entrer au portail** arrivent derrière une
-  porte fermée : une règle neuve qui mord est le moment où l'annotation tente.
+- **Les trois règles `Unused*` sont entrées derrière cette porte fermée (#6123, #6125, #6128), et
+  laissent trois conventions**, que `pmd-ruleset.xml` motive. Une ressource de `try` tenue pour sa
+  seule portée se nomme `_`, ou s'écrit `try (canal)` quand la variable est finale. Une signature
+  imposée par une bibliothèque se règle par une lambda à l'appel, sans exclusion ni annotation :
+  `Cli.java` devant picocli. Un collaborateur injecté jamais lu s'ouvre avant d'être retiré : résidu
+  d'un retrait décidé ou branchement oublié, et le second est un défaut à remonter, pas un champ à
+  retirer. La règle PMD tient les deux premières, rien ne tient la troisième.
 
 ## Ce que le garde ne voit pas
 
