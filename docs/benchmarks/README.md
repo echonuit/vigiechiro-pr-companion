@@ -198,7 +198,7 @@ Pour la **stabilité dans la durée** (O3), mesurer **dans un seul processus** :
 
 ## Bilan du cluster perf
 
-- **O5 (#26)** : cibles tenues largement (sélection ~25 ms < 100 ms ; tri/filtre ~18 ms < 200 ms),
+- **O5 (#105, qui regroupe #26)** : cibles tenues largement (sélection ~25 ms < 100 ms ; tri/filtre ~18 ms < 200 ms),
   index `#28` en place et verrouillé par un test CI.
-- **O3 (#27)** : import linéaire et borné en mémoire ; nuit réelle ~6-8 s, crête ~600-700 Mo.
+- **O3 (#105, qui regroupe #27)** : import linéaire et borné en mémoire ; nuit réelle ~6-8 s, crête ~600-700 Mo.
 - Outillage réutilisable en **non-régression** : `GenerateurJeuDeDonnees`, `BancMesure`, `BancImport`.

@@ -779,9 +779,11 @@ régénère le CSV côté serveur ; inutile ici, le pipeline le produit déjà a
 
     On serait tenté d'en faire un garde. **Il ne faut pas** : les liens de site viennent de
     `GET /moi/participations` et non de `/moi/sites` (#718, cf. `ClientVigieChiro.mesSites`), donc un
-    carré relié peut appartenir à quelqu'un d'autre, et Companion ne connaît ni le propriétaire, ni la
-    validation sur le protocole. Griser sur « verrouillé » bloquerait le participant validé, à qui la
-    plateforme dit oui. Le refus est **rendu compte avec son geste**, pas deviné.
+    carré relié peut appartenir à quelqu'un d'autre. Companion le sait : `ImportSiteDistant` relève, à
+    chaque import du site, s'il appartient à un tiers (#2525). La publication d'un point n'emploie pas
+    ce savoir, par choix, et Companion ne connaît pas la validation de l'observateur sur le protocole.
+    Griser sur « verrouillé » bloquerait le participant validé, à qui la plateforme dit oui. Le refus
+    est **rendu compte avec son geste**, pas deviné.
 - **Aller-retour d'écriture (#1862)** : **quatre verdicts confirmés en réel** (exécutée le 2026-07-18 sur
   la participation de rebut `6a50f790…`, quatre probes vertes).
 
