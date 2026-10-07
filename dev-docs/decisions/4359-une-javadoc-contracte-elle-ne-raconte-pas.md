@@ -9,6 +9,7 @@ verification: probable
 enforced_by:
   - "scripts/adr/4359-javadoc-narratif.py"
   - "scripts/adr/4359-blocs-relus.py"
+  - "scripts/adr/verifie_javadoc_sans_doublon.py"
 loupe:
   - "scripts/adr/loupe-4359-javadoc-vieillie.py"
 ratchet: 739

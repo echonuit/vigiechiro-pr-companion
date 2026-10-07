@@ -272,13 +272,13 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A20 · Le produit ne dépend pas de son outillage | 6 | 6 | `DecisionsRespecteesTest#l_installeur_windows_porte_ses_constantes_d_identite`, `DoublonsFeuillesDeStyleTest#chaque_classe_a_une_seule_feuille`, `ArchitectureTest#produit_sans_outillage`, et 3 autres |
 | A21 · La nuit, du crépuscule à l'aube, est l'unité de traitement | 8 | 5 | `AgregationActiviteTest#l_export_date_ses_lignes_par_la_nuit_biologique`, `NatureNuitTest#un_passage_marque_est_une_participation_opportuniste`, `CorrespondanceParticipationTest#le_depot_ne_depend_pas_du_poste`, et 4 autres |
 | A22 · Une feature est un plugin désactivable, et rien ne cycle entre elles | 5 | 3 | `DecisionsRespecteesTest#aucun_cycle_entre_les_features`, `scripts/adr/0010-dialogue-hors-port.py`, `NavigateurTest#relibeller_ne_reabonne_pas`, et 4 autres |
-| A23 · Ce qui s'affiche est embarqué et montré en entier, et rien ne s'offre qui ne se montre | 23 | 17 | `scripts/adr/0035-pictogramme-caractere.py`, `scripts/adr/0037-slot-actions-hbox.py`, `scripts/adr/2493-modale-suit-croissance.py`, et 29 autres |
+| A23 · Ce qui s'affiche est embarqué et montré en entier, et rien ne s'offre qui ne se montre | 24 | 18 | `scripts/adr/0035-pictogramme-caractere.py`, `scripts/adr/0037-slot-actions-hbox.py`, `scripts/adr/2493-modale-suit-croissance.py`, et 30 autres |
 | A24 · La langue du dépôt est le français | 2 | 2 | `.github/scripts/verifie_titre_pr.py`, `scripts/methode/verifie-controle-du-titre.py` |
 | A25 · Le travail de branche est isolé | 3 | 1 | `.github/scripts/verifie_epinglage.py` |
 | A26 · La provenance se déclare | 4 | 2 | `DecisionsRespecteesTest#l_installeur_porte_l_identite_echonuit`, `DocumentationAJourTest#une_adr_recente_porte_le_numero_de_son_chantier` |
 | A28 · Un avertissement se dit en mots | 1 | 0 | `scripts/adr/4366-avertissement-en-pictogramme.py` |
 | A29 · L'ergonomie se rattache à une heuristique nommée | 1 | 0 | `scripts/adr/verifie_okf.py` |
-| A30 · Le code dit ce qu'il fait, la javadoc dit son contrat, l'ADR dit pourquoi | 6 | 2 | `scripts/adr/4359-javadoc-narratif.py`, `scripts/adr/4359-blocs-relus.py`, `scripts/adr/4395-renvois-en-javadoc.py`, et 3 autres |
+| A30 · Le code dit ce qu'il fait, la javadoc dit son contrat, l'ADR dit pourquoi | 6 | 2 | `scripts/adr/4359-javadoc-narratif.py`, `scripts/adr/4359-blocs-relus.py`, `scripts/adr/verifie_javadoc_sans_doublon.py`, et 4 autres |
 | A31 · La prose visible se relit à l'humaniseur | 4 | 1 | `.github/scripts/verifie_corps_pr.py`, `scripts/adr/4783-traces-d-outil.py` |
 
 **1 article(s) sur 30 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.
