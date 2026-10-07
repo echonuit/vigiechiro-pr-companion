@@ -107,12 +107,14 @@ contenant le chemin, et la découverte casse en silence.
 fait (`dev-docs/`) et ce qu'on a décidé (`dev-docs/decisions/`). Un changement porte ses delta
 specs, et l'archivage les fusionne dans les specs principales.
 
-**Ce que le cadre porte aujourd'hui.** Un changement en cours, `add-carre-par-coord`, avec son
-`proposal.md`, son `design.md`, ses `tasks.md` et sa delta spec sous
-`changes/add-carre-par-coord/specs/`. `openspec/specs/` reste vide, et c'est normal : les specs
-principales ne se remplissent qu'à l'**archivage**, qui y fusionne les delta specs des changements
-clos. Un `openspec/specs/` vide à côté d'un changement en cours est donc l'état attendu, pas un
-oubli.
+**Où lire ce que le cadre porte.** Cet état bouge à chaque changement proposé ou archivé, et cette
+page ne le recopie pas. `openspec/changes/` porte un dossier par changement en cours, avec ses
+artefacts de planification et ses delta specs sous `specs/`. `openspec/changes/archive/` porte les
+changements clos, chacun préfixé de sa date d'archivage. `openspec/specs/` porte les specs
+principales : un dossier par domaine, puis un par capacité, qui tient dans son `spec.md`. Une delta
+spec n'y entre que par `/fusionner` ou `/archiver` : une capacité proposée et pas encore fusionnée se
+lit sous `changes/`, et son absence de `specs/` est l'état attendu, pas un oubli. Les compétences du
+cycle listent les changements en cours par `openspec list --json`.
 
 Le cycle se tape par six gestes, qui ouvrent chacun leur compétence : `/instruire` pour instruire
 avant de proposer, `/proposer` pour ouvrir le changement, `/realiser` pour le réaliser, `/reprendre`

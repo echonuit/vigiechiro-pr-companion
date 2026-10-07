@@ -16,11 +16,11 @@ import java.util.Map;
 /// ne trouve plus un seul fichier : c'est exactement ce qu'un E2E a montré, là où un test qui relit
 /// `root_path` concluait au succès.
 ///
-/// L'inventaire des six tables a été confronté au schéma (`grep` des colonnes `*_path` sur les 38
-/// migrations) : aucune autre n'en porte. Une septième qui apparaîtrait devrait être ajoutée **ici**
-/// et dans `RattachementDao.reprefixerChemins`, qui applique la même règle pour un autre besoin
-/// (renommer une session rattachée) sans pouvoir partager ce code, le socle ne pouvant pas dépendre
-/// d'une feature.
+/// L'inventaire des six tables a été confronté le 2026-08-03 aux colonnes `*_path` des 38
+/// migrations d'alors : aucune autre n'en portait. Depuis #3180, `TablesACheminTest` relit le schéma
+/// à chaque demande. Une septième qui apparaîtrait s'ajoute à [TablesAChemin], que lisent cette
+/// classe et `RattachementDao.reprefixerChemins` : celui-ci applique la même règle pour un autre
+/// besoin (renommer une session rattachée), et le socle ne peut pas dépendre d'une feature.
 final class ReecritureRacineSession {
 
     private ReecritureRacineSession() {}

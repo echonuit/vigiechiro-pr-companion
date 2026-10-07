@@ -253,7 +253,7 @@ CONTRAT = {
     "dispositif": "invariant",
     "seuil": "(sans objet)",
     "temoin": "scripts/adr/verifie_encart_de_revision.py --auto-test",
-    "decision": "hygiene, sans decision",
+    "decision": "ADR 5579",
 }
 
 
