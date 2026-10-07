@@ -8,7 +8,7 @@ decided_at: 2026-10-06
 verification: certaine
 enforced_by:
   - "src/test/java/fr/univ_amu/iut/recette/GesteVisiblePositionPoseeTest.java"
-verification_note: "sept cas : le défaut d origine reproduit dans l ordre fautif, le geste qui pose dans ce même ordre, le contrôle hors de cet ordre, la page qui bouge après le geste, le prédicat qui met en page avant de juger, la section qui n a pas paru, le refus d une cible sans panneau. Six mutations du geste et du prédicat, toutes tuées, dont une par un cas de plus que ceux annoncés d avance."
+verification_note: "huit cas : le défaut d origine reproduit dans l ordre fautif en cinq essais au plus, le témoin qui sait encore le reproduire après un ordre sain (#6143), le geste qui pose dans ce même ordre, le contrôle hors de cet ordre, la page qui bouge après le geste, le prédicat qui met en page avant de juger, la section qui n a pas paru, le refus d une cible sans panneau. Six mutations du geste et du prédicat, toutes tuées, dont une par un cas de plus que ceux annoncés d avance."
 relations:
   amende: ["5870-un-verdict-au-bas-de-sa-page-s-y-cale"]
   prolonge: ["5911-un-clip-a-deux-fins-n-a-pas-de-plancher"]
@@ -43,7 +43,8 @@ section est dans le cadre quand même, et le geste conclut.
 **L'assertion de fin lisait la même condition** : « la section est dans le cadre » était vrai aux deux
 fins, et ne tenait donc rien.
 
-Le défaut du geste se reproduit à coup sûr dans un banc. La course du cas réel, dont la fenêtre est
+Le défaut du geste se reproduit dans un banc, qui rejoue une course perdue 14 fois sur 1 500
+(#6143). La course du cas réel, dont la fenêtre est
 d'une pulsation, n'est pas sortie sur un poste en dix passes filmées, dont deux sous une charge
 étrangère. Douze passes plus anciennes ne comptent pas : leur témoin lisait la page avant le geste,
 et laissait passer la mise en page. Que cet ordre soit celui des deux tournages n'est donc pas
