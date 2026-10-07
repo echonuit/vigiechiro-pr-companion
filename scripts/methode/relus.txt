@@ -530,7 +530,7 @@ f6af655a269a  src/main/java/fr/univ_amu/iut/commun/view/ChoixParBoutons.java
 23fa461a79d8  src/main/java/fr/univ_amu/iut/commun/view/ChoixSauvegardeJavaFx.java
 ec175ad4e9cc  src/main/java/fr/univ_amu/iut/commun/view/ChoixSauvegardeModifiable.java
 2c5573129543  src/main/java/fr/univ_amu/iut/commun/view/ClesCriteres.java
-1606c0653cc1  src/main/java/fr/univ_amu/iut/commun/view/ColonneAbregeable.java
+d21069588dae  src/main/java/fr/univ_amu/iut/commun/view/ColonneAbregeable.java
 e71bfad2c20d  src/main/java/fr/univ_amu/iut/commun/view/ColonneBadge.java
 37e5c3601f71  src/main/java/fr/univ_amu/iut/commun/view/ColonneDate.java
 60f03d8455fe  src/main/java/fr/univ_amu/iut/commun/view/ConfigurationAudioView.java
@@ -1691,6 +1691,7 @@ dad6df4d378f  src/test/java/fr/univ_amu/iut/commun/view/PanneauProgressionTest.j
 e2f0637d61e7  src/test/java/fr/univ_amu/iut/commun/view/PastillesEntieres.java
 cd8ac93f8f33  src/test/java/fr/univ_amu/iut/commun/view/PastillesEntieresTest.java
 b834016de168  src/test/java/fr/univ_amu/iut/commun/view/PictogrammesFxmlTest.java
+7646f556620a  src/test/java/fr/univ_amu/iut/commun/view/PiedDuCompteRenduTest.java
 c1388c59cf3b  src/test/java/fr/univ_amu/iut/commun/view/PoliceCouvreLIhmTest.java
 9509ea8ad595  src/test/java/fr/univ_amu/iut/commun/view/PreferenceSourceEspeceReglagesTest.java
 561677914433  src/test/java/fr/univ_amu/iut/commun/view/ResolveurFicheGbifTest.java

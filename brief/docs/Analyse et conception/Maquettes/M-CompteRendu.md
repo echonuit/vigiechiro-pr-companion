@@ -257,6 +257,9 @@ publication).
 modale. La légende **reflue**, les intitulés s'enroulent, et le résumé des motifs **assume** de s'abréger
 puisque son contenu est à un clic. C'est le garde-fou anti-troncature des captures qui l'a imposé, dont
 une fois en intégration continue seulement : ses métriques de police diffèrent de neuf pixels par entrée.
+Il porte **seul** le manque de place du pied : les boutons d'action gardent leur largeur, et le résumé
+coupé se relit en entier au survol comme en l'ouvrant. La raison d'un rejet peut citer le chemin d'un
+fichier, plus large que la bande, et le bouton se lisait alors « Ouvrir le pa… » (#6013).
 
 **Et la donnée que le lot devait ajouter est ajoutée** : le volume **lu sur la carte** n'était mesuré
 nulle part. Il ne l'a pas fallu calculer : le garde-fou d'espace disque parcourait déjà les originaux

@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.Navigateur;
+import fr.univ_amu.iut.commun.view.PastillesEntieres;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
@@ -130,6 +131,17 @@ class ScenarioRejetsEtArchiveTest {
                                 + " carte pour comprendre ce qui s'est passé.%nLe compte rendu dit : %s",
                         compteRendu)
                 .containsIgnoringCase("wav");
+
+        // Le texte lu plus haut est celui de la scène, qui reste entier quand l'écran le coupe. Le
+        // bouton qui mène à la suite se lisait « Ouvrir le pa… » dès que la raison d'un rejet, qui
+        // cite le chemin de la carte, débordait de la bande (#6013).
+        assertThat(PastillesEntieres.lireLesLibelles(
+                                robot.lookup("#compteRenduChiffre").query())
+                        .stream()
+                        .filter(libelle -> libelle.recu().equals("Ouvrir le passage")))
+                .as("le compte rendu d'un import avec rejet dessine son bouton en entier")
+                .singleElement()
+                .matches(PastillesEntieres.Pastille::entiere);
     }
 
     @Test

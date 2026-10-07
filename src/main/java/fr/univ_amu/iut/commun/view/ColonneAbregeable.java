@@ -50,7 +50,9 @@ public final class ColonneAbregeable {
         };
     }
 
-    private static Tooltip infobulle(String texte) {
+    /// L'infobulle qui rend `texte` en entier, repliée au-delà d'une largeur lisible. Elle sert aussi
+    /// au libellé hors table qui assume d'être coupé, comme le résumé des motifs d'un compte rendu.
+    static Tooltip infobulle(String texte) {
         Tooltip infobulle = new Tooltip(texte);
         infobulle.setWrapText(true);
         infobulle.setMaxWidth(LARGEUR_MAX_INFOBULLE);
