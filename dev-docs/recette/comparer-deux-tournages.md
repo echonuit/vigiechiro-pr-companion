@@ -177,9 +177,20 @@ et se relève quand l'argument qu'elle sert en a besoin.
     | six paires (quatre tournages) | 66 | 14 | 8 |
     | quinze paires (six tournages) | 81 | 4 | 3 |
 
-    Les trois qui restent valent 0,015 %, 0,195 % et 0,300 % d'écart. Le premier s'affiche « ×15 »
-    parce que son plancher vaut 0,001 % : un rapport élevé sur un plancher proche de zéro se lit
-    avec son écart absolu, et la carte des différences tranche.
+    Les trois qui restaient valaient 0,015 %, 0,195 % et 0,300 % d'écart. Le premier s'affichait
+    « ×15 » parce que son plancher valait 0,001 % : c'était du bruit lu comme une alerte.
+
+    **Un plancher a depuis un sol** (#4309). Aucun rapport ne se calcule contre moins de 0,0105 %,
+    la moitié de ce que rend un chiffre changé. Neuf planchers sur cent étaient sous ce sol, dont
+    cinq à zéro. Rien de plus petit qu'un chiffre changé ne dépasse donc ×2, et un chiffre changé se
+    lit ×2, comme le tableau de « Comment lire le chiffre » l'annonce. Ce même écart de 0,015 % se
+    lit aujourd'hui ×1,4.
+
+    Au contrôle du 7 octobre 2026, deux témoins contre des planchers de 12 à 54 paires : sur 95
+    clips, dix-huit écarts non nuls sous 0,021 %, dont le pire se lit ×0,6. Un seul clip dépasse le
+    double, `emporter_une_nuit_et_ses_deux_refus`, à 0,857 % contre un plancher de 0,009 % pris sur
+    douze paires : un écart de cette taille n'est pas du bruit lu de trop près, et le sol n'y
+    change rien.
 
     Ce reste n'est pas un défaut de ces clips. Un maximum pris sur quinze valeurs est dépassé par
     une seizième de temps en temps, et chaque passage de l'atelier ajoute des paires.
@@ -272,11 +283,12 @@ instrument ils ont été pris, puis vient une ligne par cas :
 
 ```
 # Instrument : ffmpeg 6.1.1 · ImageMagick 6.9.12-98
-ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce	0.000	0.412	6
+ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce	0.000	0.412	6	0
 ```
 
-Le cas, le plancher de sa **première** image, celui de sa **dernière**, et **le nombre de paires de
-tournages qui les ont produits**.
+Le cas, le plancher de sa **première** image, celui de sa **dernière**, **le nombre de paires de
+tournages qui les ont produits**, et le nombre de paires écoulées **depuis que ce plancher a été
+approché** (voir « Un plancher ne redescend qu'à la main »).
 
 Le flux de comparaison le passe automatiquement, et chaque cas est alors classé par son **rapport à
 son propre bruit** plutôt que par son écart absolu. Le résumé compte les cas « au-dessus de leur
@@ -342,11 +354,45 @@ Trois usages, et le geste de chacun :
 Les clips ordinaires et ceux de la plateforme de test ne sortent pas des mêmes tournages : ce sont
 deux lancements, le second complétant le fichier rendu par le premier.
 
-!!! warning "Le pire, et non la moyenne"
+!!! warning "Le pire, et non la moyenne ni un centile"
 
     Un plancher qui sous-estime le bruit fabrique des faux positifs, c'est-à-dire exactement ce qu'on
     cherche à éviter. Mieux vaut rater un petit changement sur un cas instable que crier au changement
     à chaque tournage.
+
+    Un centile a été envisagé puis écarté
+    ([ADR 4309](../decisions/4309-le-pire-observe-reste-la-regle-et-un-plancher-a-un-sol.md)). Les
+    maximums les plus isolés du fichier n'étaient pas de mauvais tirages mais des clips à deux fins,
+    qu'un centile aurait rangés parmi les cas stables. Et les paires d'une mesure ne sont pas
+    indépendantes : un tournage atypique sur quatre occupe trois paires sur six.
+
+### Un plancher ne redescend qu'à la main
+
+Le prix du pire observé est qu'un plancher pris avant la correction d'un clip, ou un mauvais jour,
+reste. La mesure ne le fait jamais redescendre d'elle-même. Elle **signale** en revanche le cas dont
+le plancher n'a plus été approché :
+
+```
+Plancher à relire : <cas> porte 0.807 %, que 18 paires de suite n'ont pas approché à moitié près.
+```
+
+La cinquième colonne du fichier tient ce compte. Une paire qui atteint la moitié du plancher le
+remet à zéro ; au bout de dix-huit paires sans cela, soit trois mesures de quatre tournages, le cas
+est nommé dans le journal de la mesure et dans le résumé de l'atelier. Un plancher sous le sol n'est
+jamais signalé.
+
+C'est un signal, pas un verdict : il ne dit pas si le clip a été corrigé ou s'il a eu un mauvais
+jour. Le geste reste celui du tableau plus haut, retirer sa ligne sur une branche et remesurer.
+
+!!! note "Pourquoi un compte tenu dans le fichier, et non une comparaison à chaque mesure"
+
+    Comparer chaque plancher au pire des paires d'**une** mesure nommait de 8 à 16 clips à chaque
+    fois, et jamais les mêmes : le bruit de beaucoup de clips sort par à-coups, et le pire de 48
+    paires dépasse naturellement le pire de 6. Ce qui distingue un plancher périmé est qu'il n'est
+    plus approché, mesure après mesure.
+
+    Les lignes écrites avant #4309 sont parties de zéro : le signal ne dit rien d'elles avant trois
+    mesures.
 
 !!! note "Mesurer ailleurs que dans l'atelier"
 
@@ -412,8 +458,9 @@ n'est pas pour autant aveugle - les premières images de deux cas différents di
     propriété du cas, mais un mauvais tirage.
 
     La règle du **pire observé** le gardait pourtant, et c'est son prix assumé : un plancher ne
-    redescend jamais, donc **un seul mauvais tirage aveugle un cas pour de bon**. Avec assez de
-    paires, un centile vaudrait mieux qu'un maximum (#4309).
+    redescend pas de lui-même, donc **un seul mauvais tirage aveugle un cas** tant que personne ne
+    retire sa ligne. On a cru qu'un centile vaudrait mieux qu'un maximum ; les données ont dit que
+    non, et la mesure signale désormais le plancher que rien n'approche plus (#4309).
 
     Six paires, avec l'instrument du flux, ont dit ce que deux ne pouvaient pas : ce clip a un fond de
     1,6 à 2,2 % et une seconde fin à **26 %**, prise pendant un fondu, un tournage sur quatre (#5911).

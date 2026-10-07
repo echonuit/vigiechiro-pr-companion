@@ -276,6 +276,7 @@ nav:
     - 4274 · On compare la dernière image d'un clip, pas son chemin: decisions/4274-on-compare-la-derniere-image-pas-le-chemin.md
     - 4287 · Un écart se lit contre le plancher de son propre cas: decisions/4287-un-ecart-se-lit-contre-le-plancher-de-son-cas.md
     - 4296 · On compare les deux bouts du clip: decisions/4296-on-compare-les-deux-bouts-du-clip.md
+    - 4309 · Le pire observé reste la règle, et un plancher a un sol: decisions/4309-le-pire-observe-reste-la-regle-et-un-plancher-a-un-sol.md
     - 4334 · Ce que le portage a décidé de ne pas porter: decisions/4334-ce-que-le-portage-a-decide-de-ne-pas-porter.md
     - 4339 · Un arbre repris d'un outil amont se déclare: decisions/4339-un-arbre-repris-d-un-outil-amont-se-declare.md
     - 4515 · Adopter un arbre amont quand il doit parler notre cycle: decisions/4515-adopter-un-arbre-amont-quand-il-doit-parler-notre-cycle.md

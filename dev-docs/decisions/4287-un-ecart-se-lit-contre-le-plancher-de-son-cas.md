@@ -13,7 +13,7 @@ verified:
     at: 2026-08-23
 relations:
   prolonge: ["4274"]
-  amendee_par: ["5885-un-plancher-appartient-a-l-instrument-qui-l-a-pris"]
+  amendee_par: ["5885-un-plancher-appartient-a-l-instrument-qui-l-a-pris", "4309-le-pire-observe-reste-la-regle-et-un-plancher-a-un-sol"]
   completee_par: ["5911-un-clip-a-deux-fins-n-a-pas-de-plancher"]
 ---
 
@@ -21,6 +21,8 @@ relations:
 
 !!! warning "Ce qui fait foi aujourd'hui"
     **Amendée le 2026-10-05** par l'[ADR 5885](5885-un-plancher-appartient-a-l-instrument-qui-l-a-pris.md) : un plancher ne vaut que pour l'instrument qui l'a pris. « Un plancher ne redescend jamais » tient entre des mesures qui se comparent, et le fichier repart de zéro quand l'instrument change. Les chiffres ci-dessous avaient été pris sur un poste : avec l'instrument du flux, la médiane vaut 0,160 % et non 0,008 %. **Complétée** par l'[ADR 5911](5911-un-clip-a-deux-fins-n-a-pas-de-plancher.md) : un clip à deux fins ne reçoit pas de plancher du tout.
+
+    **Amendée le 2026-10-07** par l'[ADR 4309](4309-le-pire-observe-reste-la-regle-et-un-plancher-a-un-sol.md) : le pire observé reste la règle, un centile ayant été écarté sur données. Aucun rapport ne se calcule plus contre moins de 0,0105 %, et le fichier compte, par cas, les paires écoulées depuis que son plancher a été approché : la mesure nomme celui qu'il faut relire, et ne le fait pas redescendre d'elle-même.
 
 ## Contexte
 

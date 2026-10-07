@@ -198,6 +198,14 @@ jobs:
             echo
             echo "Sur les exécutions \`${EXECUTIONS}\`. $(grep '^Planchers écrits' mesure.log)"
             echo
+            # Un plancher que dix-huit paires n'ont pas approché : un signal à relire, pas un refus
+            # (#4309). Sans ligne à montrer, on le DIT, pour qu'un résumé muet ne se lise pas « vu ».
+            if grep -q '^Plancher à relire' mesure.log; then
+              grep '^Plancher à relire' mesure.log | sed 's/^/- /'
+            else
+              echo "Aucun plancher à relire à cette mesure."
+            fi
+            echo
             echo "Le fichier est dans l'artefact de cette exécution : il se committe par une demande."
           } >> "${GITHUB_STEP_SUMMARY}"
 
