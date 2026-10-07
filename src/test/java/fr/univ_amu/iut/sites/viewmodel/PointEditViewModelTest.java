@@ -31,6 +31,7 @@ import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.PointPublieDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
+import fr.univ_amu.iut.sites.model.dao.SiteTiersDao;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -56,6 +57,7 @@ class PointEditViewModelTest {
     private Site site;
     private LienVigieChiroDao liens;
     private PointPublieDao publies;
+    private SiteTiersDao tiers;
 
     @BeforeEach
     void preparer() {
@@ -70,6 +72,7 @@ class PointEditViewModelTest {
                 siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.now()), communeDao, () -> {});
         liens = new LienVigieChiroDao(source);
         publies = new PointPublieDao(source);
+        tiers = new SiteTiersDao(source);
         // Contrôle du carré STOC absent (#733) : le cas hors connexion, où la saisie doit rester entière.
         viewModel = new PointEditViewModel(
                 service,
@@ -82,14 +85,14 @@ class PointEditViewModelTest {
     /// Publication **non installée** : le cas par défaut de ces tests, qui parlent de saisie et non de
     /// plateforme. La case « publier » n'est alors pas offerte.
     private PublicationDepuisLaFiche sansPublication() {
-        return new PublicationDepuisLaFiche(publies, liens, Optional.empty());
+        return new PublicationDepuisLaFiche(publies, liens, tiers, Optional.empty());
     }
 
     /// Publication installée et **connectée** : le montage des tests de la case à cocher.
     private PublicationDepuisLaFiche avecPublicationConnectee() {
         FournisseurToken token = () -> Optional.of("jeton-de-test");
         return new PublicationDepuisLaFiche(
-                publies, liens, Optional.of(new PublicationPoint(new ClientVigieChiro(token), publies, token)));
+                publies, liens, tiers, Optional.of(new PublicationPoint(new ClientVigieChiro(token), publies, token)));
     }
 
     /// Trouvé par PIT à la clôture de #5596 : le contrôle n'était joué qu'absent. Présent, rien ne tenait

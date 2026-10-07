@@ -33,6 +33,10 @@ public class IntentionPublication {
     /// La case a-t-elle lieu d'être sur cet écran ?
     private final ReadOnlyBooleanWrapper offerte = new ReadOnlyBooleanWrapper(this, "offerte", false);
 
+    /// La mention du carré d'un tiers (#6132), vide quand il n'y a rien à dire. Elle n'entre pas dans
+    /// le motif du gris : elle informe, elle ne retient pas.
+    private final ReadOnlyStringWrapper mentionDuTiers = new ReadOnlyStringWrapper(this, "mentionDuTiers", "");
+
     private Long idSite;
 
     public IntentionPublication(PublicationDepuisLaFiche publication, BooleanSupplier gpsRenseigne) {
@@ -45,6 +49,8 @@ public class IntentionPublication {
         this.idSite = idSite;
         offerte.set(publication.installee());
         demandee.set(false);
+        // Sans case, pas de mention : elle accompagne un geste, elle ne décrit pas le carré.
+        mentionDuTiers.set(offerte.get() ? publication.mentionDuTiers(idSite).orElse("") : "");
         recalculer();
     }
 
@@ -55,6 +61,7 @@ public class IntentionPublication {
         offerte.set(false);
         demandee.set(false);
         empechement.set("");
+        mentionDuTiers.set("");
     }
 
     /// Recalcule le motif du gris, et **décoche** la case s'il vient d'apparaître.
@@ -91,6 +98,10 @@ public class IntentionPublication {
 
     public ReadOnlyStringProperty empechementProperty() {
         return empechement.getReadOnlyProperty();
+    }
+
+    public ReadOnlyStringProperty mentionDuTiersProperty() {
+        return mentionDuTiers.getReadOnlyProperty();
     }
 
     /// Ce qui empêche de publier **maintenant**, calculé et non relu. Chaîne vide si rien n'empêche.

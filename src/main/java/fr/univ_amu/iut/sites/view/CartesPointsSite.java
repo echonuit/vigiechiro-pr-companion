@@ -99,12 +99,17 @@ final class CartesPointsSite {
 
     private void reconstruire() {
         cartesPoints.getChildren().clear();
+        if (viewModel.points().isEmpty()) {
+            return;
+        }
+        // Une lecture pour toute la fiche (#6132), comme pour les points publiés.
+        Optional<String> mentionDuTiers = viewModel.mentionDuTiers();
         for (CartePoint carte : viewModel.points()) {
-            cartesPoints.getChildren().add(construireCartePoint(carte));
+            cartesPoints.getChildren().add(construireCartePoint(carte, mentionDuTiers));
         }
     }
 
-    private VBox construireCartePoint(CartePoint carte) {
+    private VBox construireCartePoint(CartePoint carte, Optional<String> mentionDuTiers) {
         PointDEcoute point = carte.point();
         Label code = new Label(point.code());
         code.getStyleClass().add("carte-point-code");
@@ -116,8 +121,29 @@ final class CartesPointsSite {
         VBox boite = new VBox(code, description, gps, passages);
         carte.distanceProche().ifPresent(distance -> boite.getChildren().add(etiquetteProximite(distance)));
         boite.getChildren().add(actionsPoint(carte));
+        if (publicationOfferte(carte)) {
+            mentionDuTiers.ifPresent(mention -> boite.getChildren().add(etiquetteDuTiers(mention)));
+        }
         boite.getStyleClass().add("carte-point");
         return boite;
+    }
+
+    /// Mention « carré d'un tiers » (#6132), sous les actions d'une carte qui offre de publier.
+    ///
+    /// Une information, dans le style de la description, sans icône ni couleur d'alerte : publier sur le
+    /// carré d'un autre observateur est l'usage attendu, et un avertissement le reprocherait. Le nœud
+    /// n'existe que s'il a quelque chose à dire : absent, il ne réserve aucune place sur la carte.
+    private static Label etiquetteDuTiers(String mention) {
+        Label etiquette = new Label(mention);
+        etiquette.getStyleClass().addAll(STYLE_DESC, "mention-tiers");
+        etiquette.setWrapText(true);
+        return etiquette;
+    }
+
+    /// La carte offre-t-elle le lien « Publier sur Vigie-Chiro », grisé ou non ? Faux quand la
+    /// publication n'est pas installée, quand le point vient de la plateforme, ou quand il y est déjà.
+    private boolean publicationOfferte(CartePoint carte) {
+        return viewModel.publicationInstallee() && !carte.venuDeLaPlateforme() && !carte.publie();
     }
 
     /// Étiquette « à … du point le plus proche » (#154) : une information, dans le style de la description.

@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.PublicationPoint;
 import fr.univ_amu.iut.sites.model.dao.PointPublieDao;
+import fr.univ_amu.iut.sites.model.dao.SiteTiersDao;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -22,19 +23,37 @@ import java.util.Set;
 /// verrouillé ou non ; et les liens de site venant de `GET /moi/participations` plutôt que de
 /// `/moi/sites` (#718), rien ici ne dit dans quel cas on se trouve. Le refus est **rendu compte avec son
 /// geste** par [PublicationPoint], jamais deviné.
+///
+/// **Ce qui y est, et qui n'est pas un garde** : la mention du carré d'un tiers (#6132). Publier sur le
+/// carré d'un autre observateur est l'usage majoritaire ; l'écran le dit avant le geste, et ne le
+/// retient pas. Elle ne figure donc pas parmi les empêchements, et n'en devient jamais un.
 public class PublicationDepuisLaFiche {
+
+    /// Ce que l'écran dit, près du geste, quand le carré est celui d'un autre observateur (#6132).
+    ///
+    /// Le mot est celui que l'écran emploie déjà pour ce cas, dans la case « Participation
+    /// opportuniste ». La phrase ne nomme personne : la marque porte le fait, pas l'identité.
+    public static final String MENTION_CARRE_D_UN_TIERS =
+            "Ce carré est celui d'un tiers : votre point s'ajoutera aux siens.";
 
     private final PointPublieDao publies;
     private final LienVigieChiroDao liens;
+
+    /// La marque « carré d'un tiers » (#2525), posée à chaque import d'un site distant.
+    private final SiteTiersDao tiers;
 
     /// `Optional` **vide** hors de l'application complète (injecteurs de capture, tests) : la fiche
     /// n'offre alors simplement pas le geste, patron de `ControleCarreStoc`.
     private final Optional<PublicationPoint> publication;
 
     public PublicationDepuisLaFiche(
-            PointPublieDao publies, LienVigieChiroDao liens, Optional<PublicationPoint> publication) {
+            PointPublieDao publies,
+            LienVigieChiroDao liens,
+            SiteTiersDao tiers,
+            Optional<PublicationPoint> publication) {
         this.publies = Objects.requireNonNull(publies, "publies");
         this.liens = Objects.requireNonNull(liens, "liens");
+        this.tiers = Objects.requireNonNull(tiers, "tiers");
         this.publication = Objects.requireNonNull(publication, "publication");
     }
 
@@ -49,6 +68,15 @@ public class PublicationDepuisLaFiche {
     /// une requête par carte en ferait N pour afficher un écran qui n'en demande qu'une.
     public Set<Long> publiesDuSite(long idSite) {
         return Set.copyOf(publies.parSite(idSite));
+    }
+
+    /// La mention à poser près du geste quand ce carré est **celui d'un tiers**, ou vide (#6132).
+    ///
+    /// Vide ne veut pas dire « le vôtre ». La marque ne présume jamais un tiers : un carré jamais relié,
+    /// un profil illisible ou un propriétaire absent de la réponse rendent tous l'absence de ligne.
+    /// L'écran se tait alors, il n'affirme rien.
+    public Optional<String> mentionDuTiers(long idSite) {
+        return tiers.estTiers(idSite) ? Optional.of(MENTION_CARRE_D_UN_TIERS) : Optional.empty();
     }
 
     /// Ce qui **empêche** de publier cette carte, ou vide si le geste est possible. La chaîne rendue est
