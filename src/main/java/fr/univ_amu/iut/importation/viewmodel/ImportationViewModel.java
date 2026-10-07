@@ -339,6 +339,14 @@ public class ImportationViewModel {
         navigation.setOperationCritique("l'import");
     }
 
+    /// Retient ce que l'utilisateur a **désigné** (#1490), avant toute extraction : le dossier de
+    /// travail deviendra peut-être un temporaire, son choix ne change pas. Le champ du dossier y est
+    /// lié : à appeler **sur le fil JavaFX**, avant de confier [#extraireSiZip] à la tâche de fond
+    /// (#6138).
+    public void designerSource(Path chemin) {
+        inspection.source().origineProperty().set(chemin);
+    }
+
     /// Résout la **source d'import** choisie (#139) : si `chemin` est un `.zip`, le décompresse vers un
     /// dossier temporaire (nettoyé après import) et renvoie ce dossier ; sinon renvoie le dossier tel
     /// quel. **Ne touche aucune `Property`** (IO seul) : à appeler **hors du fil JavaFX** (la vue lance
@@ -364,9 +372,6 @@ public class ImportationViewModel {
     /// entrée de plusieurs Go (le temporaire partiel est alors nettoyé par l'extracteur, et
     /// `dossierTemporaireZip` reste `null` puisque l'affectation n'aboutit pas).
     public Path extraireSiZip(Path chemin, Consumer<Progression> surProgression, JetonAnnulation jeton) {
-        // #1490 : ce que l'utilisateur a DÉSIGNÉ, avant toute extraction. Le dossier de travail
-        // deviendra peut-être un temporaire ; son choix, lui, ne change pas.
-        inspection.source().origineProperty().set(chemin);
         nettoyerTemporaireZip(); // une nouvelle source remplace l'éventuel zip précédent
         if (ExtracteurZip.estZip(chemin)) {
             Path base = serviceImport.racineWorkspace();

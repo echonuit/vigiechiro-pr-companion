@@ -876,6 +876,7 @@ class ImportationViewModelTest {
             zos.closeEntry();
         }
 
+        viewModel.designerSource(zip);
         Path extrait = viewModel.extraireSiZip(zip);
 
         // Le dossier de travail reste le temporaire : c'est là que l'import lit.
@@ -893,10 +894,39 @@ class ImportationViewModelTest {
     void origine_designee_dossier_reste_nue() throws IOException {
         Path dossier = Files.createDirectories(racine.resolve("carte-sd"));
 
+        viewModel.designerSource(dossier);
         Path rendu = viewModel.extraireSiZip(dossier);
 
         assertThat(rendu).isEqualTo(dossier);
         assertThat(viewModel.inspection().source().libelleProperty().get()).isEqualTo(dossier.toString());
+    }
+
+    @Test
+    @DisplayName("#6138 : résoudre la source ne la désigne pas, la tâche de fond n'écrit pas le libellé")
+    void resoudre_la_source_ne_touche_pas_le_libelle() throws IOException {
+        Path dossier = Files.createDirectories(racine.resolve("carte-sd"));
+
+        viewModel.extraireSiZip(dossier);
+
+        assertThat(viewModel.inspection().source().origineProperty().get())
+                .as("la désignation se pose sur le fil JavaFX, par designerSource")
+                .isNull();
+        assertThat(viewModel.inspection().source().libelleProperty().get()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#6138 : une archive illisible ou une décompression annulée laisse le libellé désigné")
+    void une_source_refusee_garde_son_libelle() {
+        Path zip = racine.resolve("illisible.zip");
+        viewModel.designerSource(zip);
+
+        viewModel.signalerSourceIllisible("Décompression du zip impossible");
+        assertThat(viewModel.inspection().source().libelleProperty().get())
+                .as("le champ nomme l'archive que le message refuse, comme avant #6138")
+                .contains("illisible.zip");
+
+        viewModel.marquerAnnule();
+        assertThat(viewModel.inspection().source().libelleProperty().get()).contains("illisible.zip");
     }
 
     @Test
