@@ -38,7 +38,6 @@ class ReliquatPlaceholderTest {
     private static final int CANAUX = 1;
     private static final int BITS = 16;
     private static final int OCTETS_PAR_TRAME = 2;
-    private static final int ENTETE_WAV = 44;
 
     private static final long ID_ANCIEN = 1L;
     private static final long ID_RECENT = 2L;

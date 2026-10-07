@@ -33,7 +33,6 @@ public final class GenerateurCartesSD {
 
     private static final String SOUS_DOSSIER_BRUTS = "bruts";
 
-    private static final DateTimeFormatter FORMAT_JOURNAL = DateTimeFormatter.ofPattern("dd/MM/yy", Locale.ROOT);
     private static final DateTimeFormatter FORMAT_THLOG = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.ROOT);
     private static final DateTimeFormatter FORMAT_HEURE_THLOG = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.ROOT);
     private static final DateTimeFormatter FORMAT_HORODATAGE = DateTimeFormatter.ofPattern("yyyyMMdd", Locale.ROOT);

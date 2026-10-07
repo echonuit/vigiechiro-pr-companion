@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import fr.univ_amu.iut.commun.api.MeteoDepot;
 import fr.univ_amu.iut.commun.api.ParticipationDetail;
 import fr.univ_amu.iut.commun.api.Traitement;
-import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
@@ -18,7 +17,6 @@ import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import java.nio.file.Path;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,8 +57,7 @@ class CreationPassageArchiveTest {
                 .position(43.5, 5.4)
                 .semerSiteEtPoint()
                 .idPoint();
-        creation = new CreationPassageArchive(
-                source, new Workspace(dossier), new HorlogeFigee(LocalDate.of(2026, 7, 17)), journal);
+        creation = new CreationPassageArchive(source, new Workspace(dossier), journal);
     }
 
     private static ParticipationDetail detailComplet() {

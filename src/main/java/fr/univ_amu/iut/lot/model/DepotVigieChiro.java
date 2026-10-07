@@ -59,7 +59,6 @@ public final class DepotVigieChiro {
     private static final String PARAM_ID_PASSAGE = "idPassage";
 
     private final SynchronisationParticipation participations;
-    private final ClientVigieChiro client;
 
     /// Téléverse une archive (single-part ou multipart), extrait ici (#2354, Extract Class).
     private final TeleverseurArchive televerseur;
@@ -112,7 +111,7 @@ public final class DepotVigieChiro {
             TeleversementsEnCours televersements) {
         this.televersements = Objects.requireNonNull(televersements, "televersements");
         this.participations = Objects.requireNonNull(participations, "participations");
-        this.client = Objects.requireNonNull(client, "client");
+        Objects.requireNonNull(client, "client");
         this.televerseur = new TeleverseurArchive(client);
         this.traitement = Objects.requireNonNull(traitement, "traitement");
         this.depotUnites = Objects.requireNonNull(depotUnites, "depotUnites");

@@ -14,7 +14,6 @@ import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.AcquisitionAncrage;
 import fr.univ_amu.iut.commun.model.FuseauDuPoint;
-import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.HorlogeSysteme;
 import fr.univ_amu.iut.commun.model.ImportApresReleve;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
@@ -267,7 +266,6 @@ public final class CapturePassage {
                         // lève « The binder can only be used inside configure() ».
                         Provider<SourceDeDonnees> source = getProvider(SourceDeDonnees.class);
                         Provider<Workspace> workspace = getProvider(Workspace.class);
-                        Provider<Horloge> horloge = getProvider(Horloge.class);
                         OptionalBinder.newOptionalBinder(binder(), SynchronisationParticipation.class)
                                 .setBinding()
                                 // Classe anonyme et non lambda : `com.google.inject.Provider` n'a qu'une
@@ -295,7 +293,6 @@ public final class CapturePassage {
                                                 source.get(),
                                                 new ClientVigieChiro(URL_SANS_PLATEFORME, Optional::empty),
                                                 workspace.get(),
-                                                horloge.get(),
                                                 Optional.empty(),
                                                 () -> {});
                                     }

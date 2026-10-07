@@ -12,12 +12,21 @@ ratchet: 40
 verified:
   - by: machine:ci
     at: 2026-08-27
+relations:
+  completee_par: ["6022-un-avertissement-ne-se-tait-pas-et-un-garde-le-refuse"]
 generated:
   by: "process:assistance-par-agents"
   at: 2026-08-27
 ---
 
 # Le portail regarde les deux zones, et le code mort compte
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Complétée le 2026-10-07** par
+    [ADR 6022](6022-un-avertissement-ne-se-tait-pas-et-un-garde-le-refuse.md) : le chantier #6022
+    fait entrer d'autres règles `Unused*` au jeu, une demande par règle, chacune avec ses retraits.
+    `UnusedPrivateField` y est depuis #6115 : 20 champs mesurés sur `76070c320d`, 11 en production
+    et 9 en test, tous retirés dans la demande qui ajoute la règle. Le cliquet est resté à 40.
 
 ## Contexte
 

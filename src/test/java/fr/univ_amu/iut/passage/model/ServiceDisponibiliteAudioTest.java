@@ -11,7 +11,6 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
-import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import java.io.IOException;
@@ -43,7 +42,6 @@ class ServiceDisponibiliteAudioTest {
     private Path transformes;
     private SessionDao sessionDao;
     private SequenceDao sequenceDao;
-    private PassageDao passageDao;
     private EnregistrementOriginalDao originalDao;
     private ServiceDisponibiliteAudio service;
     private SourceDeDonnees source;
@@ -54,7 +52,6 @@ class ServiceDisponibiliteAudioTest {
         new MigrationSchema(source).migrer();
         // La topologie naît du premier `creerPassage`, par trouver-ou-créer.
 
-        passageDao = new PassageDao(source);
         sessionDao = new SessionDao(source);
         originalDao = new EnregistrementOriginalDao(source);
         sequenceDao = new SequenceDao(source);

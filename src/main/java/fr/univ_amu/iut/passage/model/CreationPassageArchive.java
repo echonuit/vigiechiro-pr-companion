@@ -1,7 +1,6 @@
 package fr.univ_amu.iut.passage.model;
 
 import fr.univ_amu.iut.commun.api.ParticipationDetail;
-import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
@@ -49,14 +48,12 @@ public final class CreationPassageArchive {
     private final EnregistreurDao enregistreurDao;
     private final MaterielMicroDao materielDao;
     private final Workspace workspace;
-    private final Horloge horloge;
 
     /// Pour grouper la création des séquences (des milliers) en **une seule transaction** au lieu d'un
     /// commit par ligne (#1522). Construit depuis la même [SourceDeDonnees] que les DAO.
     private final UniteDeTravail uniteDeTravail;
 
-    public CreationPassageArchive(
-            SourceDeDonnees source, Workspace workspace, Horloge horloge, JournalMutations journal) {
+    public CreationPassageArchive(SourceDeDonnees source, Workspace workspace, JournalMutations journal) {
         Objects.requireNonNull(source, "source");
         this.passageDao = new PassageDao(source);
         this.sessionDao = new SessionDao(source);
@@ -66,7 +63,6 @@ public final class CreationPassageArchive {
         this.materielDao = new MaterielMicroDao(source);
         this.uniteDeTravail = new UniteDeTravail(source);
         this.workspace = Objects.requireNonNull(workspace, "workspace");
-        this.horloge = Objects.requireNonNull(horloge, "horloge");
         this.journal = Objects.requireNonNull(journal, "journal");
     }
 

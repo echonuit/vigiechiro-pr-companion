@@ -25,13 +25,6 @@ import javafx.scene.chart.NumberAxis;
 /// l'application.
 public final class ExportImageActivite {
 
-    /// Dimensions de la scène d'export : assez large pour que les étiquettes d'heures, la légende des
-    /// espèces et les lignes de contexte tiennent sans être comprimées (`ApercuFx` refuse une image aux
-    /// libellés tronqués).
-    private static final int LARGEUR = 1100;
-
-    private static final int HAUTEUR = 640;
-
     private ExportImageActivite() {}
 
     /// Redessine `courbes` sur un axe nocturne neuf, estampille les `lignesLegende` sous le graphe et écrit
