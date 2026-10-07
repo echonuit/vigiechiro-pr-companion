@@ -41,7 +41,6 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Labeled;
-import javafx.scene.control.TextInputControl;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
@@ -243,17 +242,6 @@ class ScenarioConnecteAnnonceImportTest {
                 return Optional.empty();
             }
         };
-    }
-
-    private static String texte(FxRobot robot, String id) {
-        Node noeud = robot.lookup(id).tryQuery().orElse(null);
-        if (noeud instanceof Labeled libelle) {
-            return libelle.getText() == null ? "" : libelle.getText();
-        }
-        if (noeud instanceof TextInputControl champ) {
-            return champ.getText() == null ? "" : champ.getText();
-        }
-        return "";
     }
 
     private static String texteDe(FxRobot robot, String identifiant) {
