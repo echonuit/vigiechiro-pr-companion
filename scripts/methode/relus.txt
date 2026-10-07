@@ -1131,7 +1131,8 @@ a52632904a5e  src/main/java/fr/univ_amu/iut/saison/outils/CaptureSaison.java
 d6e5c03bb109  src/main/java/fr/univ_amu/iut/saison/view/ActiviteMaSaison.java
 603e127f774b  src/main/java/fr/univ_amu/iut/saison/view/CriteresSaison.java
 a7ccece5dd8e  src/main/java/fr/univ_amu/iut/saison/view/NavigationSaison.java
-ed1508364982  src/main/java/fr/univ_amu/iut/saison/view/SaisonController.java
+2b663d6ec42d  src/main/java/fr/univ_amu/iut/saison/view/PastilleHorsProtocole.java
+7a36d818a533  src/main/java/fr/univ_amu/iut/saison/view/SaisonController.java
 6e02154927a3  src/main/java/fr/univ_amu/iut/saison/viewmodel/SaisonViewModel.java
 ede310e6a3f3  src/main/java/fr/univ_amu/iut/sites/di/CommunePointSites.java
 38d57d1d7e34  src/main/java/fr/univ_amu/iut/sites/di/ControleCarreStocModule.java
@@ -2142,7 +2143,8 @@ f07e72456d7d  src/test/java/fr/univ_amu/iut/saison/FiltresSaisonTest.java
 8af8ff2f5519  src/test/java/fr/univ_amu/iut/saison/SaisonViewModelTest.java
 46a3594e358d  src/test/java/fr/univ_amu/iut/saison/ServiceSoldeSaisonTest.java
 2868d8e5cc20  src/test/java/fr/univ_amu/iut/saison/view/ActiviteMaSaisonTest.java
-d21ddbec330c  src/test/java/fr/univ_amu/iut/saison/view/PastillesDeLaSaisonTest.java
+9bbfcbef417f  src/test/java/fr/univ_amu/iut/saison/view/PastilleHorsProtocoleTest.java
+fde65509bac2  src/test/java/fr/univ_amu/iut/saison/view/PastillesDeLaSaisonTest.java
 10f2d63c14a5  src/test/java/fr/univ_amu/iut/saison/view/SaisonViewTest.java
 489c012ff439  src/test/java/fr/univ_amu/iut/sites/PointCommuneDaoTest.java
 85059c293ec3  src/test/java/fr/univ_amu/iut/sites/PointDaoTest.java
