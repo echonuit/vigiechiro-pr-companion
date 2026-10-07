@@ -92,7 +92,7 @@ Deux chemins s'offrent à vous :
   réutilisée si elle l'a été à l'import), puis les **archives ZIP**, ou les séquences WAV, sont
   téléversées **plusieurs à la fois** (5 en parallèle), ce qui raccourcit nettement le dépôt d'une grosse
   nuit. Une **table de dépôt** suit chaque fichier (en attente → en cours → déposé, ou échec avec la
-  raison au survol) avec une **barre de progression par fichier** qui reflète les octets réellement envoyés, et la **barre de
+  raison au survol ; un nom de fichier plus long que sa colonne se lit lui aussi en entier au survol) avec une **barre de progression par fichier** qui reflète les octets réellement envoyés, et la **barre de
   statut** en bas de la fenêtre affiche l'avancement d'ensemble en continu, même quand vous faites
   défiler l'écran.
 

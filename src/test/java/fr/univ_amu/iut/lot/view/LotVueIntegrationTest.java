@@ -18,6 +18,7 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.IconesSeverite;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
+import fr.univ_amu.iut.commun.view.InfobullesDeColonne;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
@@ -433,6 +434,25 @@ class LotVueIntegrationTest {
         assertThat(zones.gauche()).isEqualTo("Carré 640380 · A1 · N° 2");
         assertThat(zones.centre()).startsWith("Prêt à déposer").contains("5 séquences");
         assertThat(zones.droite()).contains("2 archive(s)").contains("dans depot/");
+    }
+
+    @Test
+    @DisplayName("#5113 : le nom d'un fichier déposé, coupé par sa colonne, se relit en entier au survol")
+    void le_fichier_depose_se_relit_au_survol(FxRobot robot) {
+        String nom = "Car040962-2026-Pass1-A1-PaRecPR1925492_20260620_213000_000.wav";
+        when(service.unitesDepot(ID_PASSAGE))
+                .thenReturn(List.of(new DepotUnite(
+                        1L,
+                        ID_PASSAGE,
+                        nom,
+                        TypeDepotUnite.WAV,
+                        StatutDepotUnite.DEPOSE,
+                        "obj-1",
+                        null,
+                        "2026-07-11T14:00:00")));
+        reouvrirAvec(robot, new EtatLot(StatutWorkflow.DEPOT_EN_COURS, "/ws/session-42", 2, 8192L, List.of(), null));
+
+        InfobullesDeColonne.seRelisentAuSurvol(robot.lookup("#tableDepot").queryAs(TableView.class), "Fichier", nom);
     }
 
     @Test

@@ -18,6 +18,7 @@ import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
+import fr.univ_amu.iut.commun.view.InfobullesDeColonne;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.recette.GesteVisible;
 import java.util.List;
@@ -108,6 +109,21 @@ class AuditVueIntegrationTest {
         assertThat(robot.lookup("#tableConstats").queryAs(TableView.class).getItems())
                 .as("l'écran a gardé l'inventaire d'avant : il ne rejoue pas son audit")
                 .hasSize(1);
+    }
+
+    @Test
+    @DisplayName("#5113 : le détail d'un constat, coupé par sa colonne, se relit en entier au survol")
+    void le_detail_d_un_constat_se_relit_au_survol(FxRobot robot) {
+        String detail = "Départements 40 (commune) et 64 (carré) : le point A1 est en Saint-Martin-de-Seignanx,"
+                + " son carré 640380 dit autre chose. Un carré posé sur une limite de département peut en"
+                + " chevaucher deux : l'écart est peut-être normal.";
+        when(service.auditerTout())
+                .thenReturn(new RapportAudit(List.of(new ConstatAudit(
+                        Severite.INFO, CategorieConstat.DEPOT_DIVERGENT, null, "640380 / A1", detail))));
+        robot.interact(() -> controleur.rafraichirAuRetour());
+
+        InfobullesDeColonne.seRelisentAuSurvol(
+                robot.lookup("#tableConstats").queryAs(TableView.class), "Détail", detail);
     }
 
     @Test

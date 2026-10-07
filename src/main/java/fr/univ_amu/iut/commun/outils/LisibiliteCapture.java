@@ -1,11 +1,15 @@
 package fr.univ_amu.iut.commun.outils;
 
+import fr.univ_amu.iut.commun.view.ColonneAbregeable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Labeled;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumnBase;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.text.Text;
 
@@ -15,10 +19,12 @@ import javafx.scene.text.Text;
 /// scene en PNG et juger sa lisibilite sont deux preoccupations, et la seconde a maintenant sa propre
 /// taille. `ApercuFx` rend, cette classe refuse.
 ///
-/// Trois modes de troncature, decouverts dans cet ordre et par une revue **a l'oeil**, jamais par un
+/// Quatre modes de troncature, decouverts dans cet ordre et par une revue **a l'oeil**, jamais par un
 /// test : le libelle enroulable **comprime** en hauteur (#2049), le libelle **ellipse** en largeur
-/// (#1641, #1701, #1873, #1579, #2012), et l'**invite** d'un champ de saisie coupee **sans ellipse**
-/// (#3170) - le plus trompeur des trois, puisque l'ellipse est justement l'aveu qu'on cherche.
+/// (#1641, #1701, #1873, #1579, #2012), l'**invite** d'un champ de saisie coupee **sans ellipse**
+/// (#3170) - le plus trompeur, puisque l'ellipse est justement l'aveu qu'on cherche - et la **cellule
+/// de table** coupee (#5113), que le critere de largeur ne pouvait pas voir : une cellule demande la
+/// largeur de sa colonne, jamais celle de son texte.
 public final class LisibiliteCapture {
 
     private LisibiliteCapture() {}
@@ -78,6 +84,12 @@ public final class LisibiliteCapture {
         if (noeud instanceof Labeled large && estTronqueEnLargeur(large)) {
             comprimes.add(resumer(large) + " (tronque, manque " + Math.round(largeurManquante(large)) + SUFFIXE_PX);
         }
+        if (noeud instanceof TableCell<?, ?> cellule && estCelluleCoupee(cellule)) {
+            comprimes.add(resumer(cellule) + " (cellule de table coupee : « "
+                    + texteDessine(cellule).orElse("")
+                    + " » dessine" + motifDuRefus(cellule) + ", colonne « " + titreDeLaColonne(cellule) + " » de "
+                    + Math.round(cellule.getWidth()) + SUFFIXE_PX);
+        }
         if (noeud instanceof TextInputControl champ && estInviteTronquee(champ)) {
             comprimes.add("invite « " + champ.getPromptText() + " » (tronquee, manque "
                     + Math.round(largeurInviteManquante(champ)) + SUFFIXE_PX);
@@ -113,15 +125,15 @@ public final class LisibiliteCapture {
         return mesure.getLayoutBounds().getWidth() - disponible;
     }
 
-    /// Classe CSS par laquelle un FXML **assume** qu'un libelle se raccourcisse quand la place manque.
+    /// Classe CSS par laquelle une vue **assume** qu'un libelle se raccourcisse quand la place manque.
     ///
-    /// Le deficit d'une barre doit bien tomber quelque part : figer tous ses controles ne le supprime pas,
-    /// il le deplace. Cette classe designe celui qui le porte - typiquement un selecteur, dont la valeur
-    /// se relit au deroule, plutot qu'un libelle d'action, qui ne se relit nulle part.
+    /// Le deficit d'une barre doit tomber quelque part : cette classe designe le controle qui le porte,
+    /// un selecteur dont la valeur se relit au deroule plutot qu'un libelle d'action. Elle vit dans la
+    /// vue, la ou l'exception s'applique, et non dans une liste tenue ici.
     ///
-    /// Elle vit dans le FXML et non dans une liste tenue ici : l'exception se lit a l'endroit ou elle
-    /// s'applique, par celui qui modifie la vue.
-    public static final String ABREGEABLE = "abregeable";
+    /// Pour une **colonne de table**, elle ne vaut qu'avec une infobulle qui rend le texte entier
+    /// (#5113) : les deux se posent ensemble par [ColonneAbregeable#assumer].
+    public static final String ABREGEABLE = ColonneAbregeable.MARQUE;
 
     /// Vrai si le texte de `libelle` ne tient pas dans sa largeur, donc s'affiche avec une ellipse.
     ///
@@ -143,12 +155,69 @@ public final class LisibiliteCapture {
         // code qu'aucun test ne peut voir echouer. La parade est A LA SOURCE - pre-enrouler les textes
         // d'une capture, cf. `CaptureConfirmationsImport#enrouler(CompteRendu)`.
         return !libelle.isWrapText()
-                && libelle.getWidth() > 0
-                && libelle.getText() != null
-                && !libelle.getText().isBlank()
-                && !libelle.getStyleClass().contains(ABREGEABLE)
-                && !dansUnParentAbregeable(libelle)
+                && porteUnTexteMisEnPage(libelle)
+                && !assumeDEtreAbrege(libelle)
                 && largeurManquante(libelle) > TOLERANCE_PX;
+    }
+
+    /// Vrai si `libelle` a ete mis en page et porte un texte : sans cela il n'y a rien a lire.
+    private static boolean porteUnTexteMisEnPage(Labeled libelle) {
+        return libelle.getWidth() > 0
+                && libelle.getText() != null
+                && !libelle.getText().isBlank();
+    }
+
+    /// Vrai si la vue assume que `libelle` se raccourcisse, par sa propre classe ou par celle d'un
+    /// parent. Commun aux deux criteres qui lisent un [Labeled].
+    private static boolean assumeDEtreAbrege(Labeled libelle) {
+        return libelle.getStyleClass().contains(ABREGEABLE) || dansUnParentAbregeable(libelle);
+    }
+
+    /// Vrai si une cellule de table **dessine** autre chose que le texte qu'elle a recu (#5113).
+    ///
+    /// Le critere de largeur y est aveugle : une `TableCell` demande la largeur de sa **colonne**, jamais
+    /// celle de son texte, et `prefWidth(-1) - getWidth()` vaut zero. On compare donc le texte dessine,
+    /// ellipse comprise, a `getText()`, qui reste entier.
+    ///
+    /// Une cellule coupee n'est exemptee que si sa colonne ou sa table porte [#ABREGEABLE] **et** si son
+    /// infobulle rend le texte entier. Ce qui n'est pas juge est dans `dev-docs/captures.md`.
+    private static boolean estCelluleCoupee(TableCell<?, ?> cellule) {
+        return porteUnTexteMisEnPage(cellule)
+                && texteDessine(cellule)
+                        .filter(dessine -> !dessine.equals(cellule.getText()))
+                        .isPresent()
+                && !(assumeDEtreAbrege(cellule) && seRelitAuSurvol(cellule));
+    }
+
+    /// Vrai si l'infobulle de `cellule` contient le texte que la cellule a recu.
+    private static boolean seRelitAuSurvol(TableCell<?, ?> cellule) {
+        return cellule.getTooltip() != null
+                && cellule.getTooltip().getText() != null
+                && cellule.getTooltip().getText().contains(cellule.getText());
+    }
+
+    /// Ce qu'il faut dire d'une cellule coupee qui porte la marque : c'est l'infobulle qui lui manque.
+    private static String motifDuRefus(TableCell<?, ?> cellule) {
+        return assumeDEtreAbrege(cellule)
+                ? ", marquee « " + ABREGEABLE + " » sans infobulle qui rende le texte entier"
+                : "";
+    }
+
+    /// Le texte que l'habillage de `libelle` a pose a l'ecran, ellipse comprise ; vide tant que
+    /// l'habillage n'est pas monte. C'est l'enfant direct de classe `text`, ce qui ecarte le texte
+    /// d'un graphique porte par le meme controle.
+    private static Optional<String> texteDessine(Labeled libelle) {
+        return libelle.getChildrenUnmodifiable().stream()
+                .filter(enfant ->
+                        enfant instanceof Text && enfant.getStyleClass().contains("text"))
+                .map(enfant -> ((Text) enfant).getText())
+                .findFirst();
+    }
+
+    private static String titreDeLaColonne(TableCell<?, ?> cellule) {
+        return Optional.ofNullable(cellule.getTableColumn())
+                .map(TableColumnBase::getText)
+                .orElse("");
     }
 
     /// Un controle compose (`ComboBox`, `MenuButton`) rend son texte dans un libelle **interne**, que le

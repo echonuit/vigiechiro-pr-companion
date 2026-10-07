@@ -10,6 +10,7 @@ sondage.
 
 Le tableau de la **sélection d'écoute** se **trie**, se **réorganise** et laisse **choisir ses colonnes**
 (clic droit ou menu principal (☰) « outils ») : voir [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
+Un nom de fichier plus long que la colonne **Fichier** y est coupé : **survolez-le** pour le lire en entier.
 
 - un **pré-check synthétique** (couverture horaire de la nuit, nombre de fichiers, cohérence du
   renommage) qui repère d'emblée un défaut grossier. La couverture se juge contre la **fenêtre du
