@@ -94,11 +94,11 @@ corrige au passage, quand on touche à un fichier.
 
 - **Laisser le registre à `CONTRIBUTING.md` seul.** C'était l'état d'avant. Sept tics sans
   provenance, qu'un lecteur ne peut ni compléter ni contester.
-- **Faire de la grille entière la règle opposable.** Quarante et un motifs à opposer en revue
-  rendraient la revue impraticable, et la plupart ne se réalisent pas ici. Les sept mesurés suffisent
-  à refuser.
+- **Faire de la grille entière la règle opposable.** Elle comptait quarante et un motifs le
+  2026-08-24. Les opposer tous rendrait la revue impraticable, et la plupart ne se réalisent pas ici.
+  Les sept mesurés suffisent à refuser.
 - **Mécaniser la grille.** Trois motifs ont rendu des dizaines de lignes qu'une lecture a démenties :
   « richesse » est un terme du domaine, « est le nombre de » est du français ordinaire, « honnêtement »
   y est adverbial. Un motif textuel rend des suspects, pas des fautes.
-- **Une passe de clôture dédiée.** Le cycle en compte déjà douze, et une passe de plus arrive trop
-  tard : la prose se corrige quand on l'écrit, pas trois semaines après.
+- **Une passe de clôture dédiée.** Le cycle en comptait déjà douze à cette date, et une passe de
+  plus arrive trop tard : la prose se corrige quand on l'écrit, pas trois semaines après.
