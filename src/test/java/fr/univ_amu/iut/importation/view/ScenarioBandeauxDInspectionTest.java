@@ -218,8 +218,8 @@ class ScenarioBandeauxDInspectionTest {
         // On attend que l'INSPECTION ait conclu, et non qu'un bandeau paraisse : toutes les cartes
         // n'en lèvent pas au même endroit. `sd-prefixee` ne dit rien ici - sa discordance se voit au
         // RATTACHEMENT - et attendre un bandeau d'inspection y expirerait pour rien.
-        Attente.queSurLeFil(
-                () -> !texte(robot, "#labelOriginaux").isBlank(),
+        InspectionConclue.attendre(
+                robot,
                 "l'inspection n'a jamais rendu son compte d'originaux sur « " + fixture + " » : elle"
                         + " balaie le dossier hors du fil JavaFX, et rien n'a paru dans le temps imparti",
                 APPARITION_SECONDES * 1000L);

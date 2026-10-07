@@ -38,7 +38,6 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Labeled;
-import javafx.scene.control.TextInputControl;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -199,8 +198,8 @@ class ScenarioBandeauLectureSeuleTest {
         GesteVisible.cliquer(robot, "#boutonParcourir");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.queSurLeFil(
-                () -> !texte(robot, "#labelOriginaux").isBlank(),
+        InspectionConclue.attendre(
+                robot,
                 "l'inspection n'a jamais rendu son compte d'originaux : sans elle, l'absence de bandeau"
                         + " ne prouverait rien, la carte n'ayant pas été lue",
                 APPARITION_SECONDES * 1000L);
@@ -279,16 +278,5 @@ class ScenarioBandeauLectureSeuleTest {
                 throw new AssertionError("l'import LIT une source : ce geste n'écrit aucun fichier");
             }
         };
-    }
-
-    private static String texte(FxRobot robot, String id) {
-        Node noeud = robot.lookup(id).tryQuery().orElse(null);
-        if (noeud instanceof Labeled libelle) {
-            return libelle.getText() == null ? "" : libelle.getText();
-        }
-        if (noeud instanceof TextInputControl champ) {
-            return champ.getText() == null ? "" : champ.getText();
-        }
-        return "";
     }
 }

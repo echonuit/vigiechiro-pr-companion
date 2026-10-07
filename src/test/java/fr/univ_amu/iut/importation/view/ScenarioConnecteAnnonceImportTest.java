@@ -167,10 +167,7 @@ class ScenarioConnecteAnnonceImportTest {
         GesteVisible.cliquer(robot, "#boutonParcourir");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.queSurLeFil(
-                () -> !texte(robot, "#labelOriginaux").isBlank(),
-                "l'inspection n'a jamais conclu",
-                APPARITION_SECONDES * 1000L);
+        InspectionConclue.attendre(robot, "l'inspection n'a jamais conclu", APPARITION_SECONDES * 1000L);
 
         ComboBox<?> points = robot.lookup("#comboPoints").queryAs(ComboBox.class);
         robot.interact(() -> points.getSelectionModel().select(0));

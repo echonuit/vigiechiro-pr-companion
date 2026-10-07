@@ -167,8 +167,8 @@ class ScenarioImportNominalTest {
         GesteVisible.cliquer(robot, "#boutonParcourir");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.queSurLeFil(
-                () -> !texte(robot, "#labelOriginaux").isBlank(),
+        InspectionConclue.attendre(
+                robot,
                 "l'inspection n'a jamais rendu son compte d'originaux : elle balaie le dossier hors du"
                         + " fil JavaFX, et rien n'a paru dans le temps imparti",
                 APPARITION_SECONDES * 1000L);
@@ -465,8 +465,8 @@ class ScenarioImportNominalTest {
         GesteVisible.cliquer(robot, "#boutonParcourir");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.queSurLeFil(
-                () -> !texte(robot, "#labelOriginaux").isBlank(),
+        InspectionConclue.attendre(
+                robot,
                 "l'inspection n'a jamais rendu son compte d'originaux : le rattachement ne propose"
                         + " rien tant qu'elle n'a pas lu la carte",
                 APPARITION_SECONDES * 1000L);

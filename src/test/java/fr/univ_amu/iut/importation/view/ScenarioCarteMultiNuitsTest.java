@@ -43,7 +43,6 @@ import javafx.scene.Parent;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Labeled;
-import javafx.scene.control.TextInputControl;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -307,8 +306,8 @@ class ScenarioCarteMultiNuitsTest {
         // On attend que l'INSPECTION ait conclu, et non qu'un bandeau paraisse : toutes les cartes
         // n'en lèvent pas au même endroit. `sd-prefixee` ne dit rien ici - sa discordance se voit au
         // RATTACHEMENT - et attendre un bandeau d'inspection y expirerait pour rien.
-        Attente.queSurLeFil(
-                () -> !texte(robot, "#labelOriginaux").isBlank(),
+        InspectionConclue.attendre(
+                robot,
                 "l'inspection n'a jamais rendu son compte d'originaux sur « " + fixture + " » : elle"
                         + " balaie le dossier hors du fil JavaFX, et rien n'a paru dans le temps imparti",
                 APPARITION_SECONDES * 1000L);
@@ -361,16 +360,5 @@ class ScenarioCarteMultiNuitsTest {
                 throw new AssertionError("l'import LIT une source : ce geste n'écrit aucun fichier");
             }
         };
-    }
-
-    private static String texte(FxRobot robot, String id) {
-        Node noeud = robot.lookup(id).tryQuery().orElse(null);
-        if (noeud instanceof Labeled libelle) {
-            return libelle.getText() == null ? "" : libelle.getText();
-        }
-        if (noeud instanceof TextInputControl champ) {
-            return champ.getText() == null ? "" : champ.getText();
-        }
-        return "";
     }
 }
