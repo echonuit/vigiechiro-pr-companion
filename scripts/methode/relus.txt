@@ -1688,7 +1688,7 @@ cd86f012a2f7  src/test/java/fr/univ_amu/iut/commun/view/OngletReglagesWiringTest
 e3b0c44298fc  src/test/java/fr/univ_amu/iut/commun/view/OuvreurDeLienSystemeTest.java
 d6c1b95423fc  src/test/java/fr/univ_amu/iut/commun/view/PanneauCompteRenduTest.java
 dad6df4d378f  src/test/java/fr/univ_amu/iut/commun/view/PanneauProgressionTest.java
-a2703635f260  src/test/java/fr/univ_amu/iut/commun/view/PastillesEntieres.java
+e2f0637d61e7  src/test/java/fr/univ_amu/iut/commun/view/PastillesEntieres.java
 cd8ac93f8f33  src/test/java/fr/univ_amu/iut/commun/view/PastillesEntieresTest.java
 b834016de168  src/test/java/fr/univ_amu/iut/commun/view/PictogrammesFxmlTest.java
 c1388c59cf3b  src/test/java/fr/univ_amu/iut/commun/view/PoliceCouvreLIhmTest.java
@@ -1999,6 +1999,7 @@ acd643d069e5  src/test/java/fr/univ_amu/iut/passage/model/PropositionsEnregistre
 63b238f5b1c7  src/test/java/fr/univ_amu/iut/passage/model/SessionDEnregistrementTest.java
 36b21d2ee473  src/test/java/fr/univ_amu/iut/passage/model/SynchronisationParticipationTest.java
 8a9952c6166d  src/test/java/fr/univ_amu/iut/passage/model/VerificationIdentiteAudioTest.java
+318a7534a300  src/test/java/fr/univ_amu/iut/passage/view/CartesActionEntieresTest.java
 434ae859e67a  src/test/java/fr/univ_amu/iut/passage/view/GestionCampagnesModaleViewTest.java
 f4286d23a74d  src/test/java/fr/univ_amu/iut/passage/view/NavigationPassageViewTest.java
 f492068c695e  src/test/java/fr/univ_amu/iut/passage/view/PassageActionsFicheViewTest.java

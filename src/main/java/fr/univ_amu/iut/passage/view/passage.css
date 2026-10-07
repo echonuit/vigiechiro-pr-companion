@@ -32,6 +32,11 @@
 }
 
 /* ---- Cartes d'actions « avancer » (hub à plat) ---- */
+/* La hauteur loge un titre ET un sous-titre sur deux lignes chacun (#4834) : pictogramme 30, titre 40,
+   sous-titre 32, deux intervalles de 6, soit 114, plus les marges de 16 et le liseré de 2 de la carte
+   recommandée. À 132, une carte dont les deux libellés passaient à la ligne manquait de 16 px, et
+   JavaFX coupait les deux par une ellipse : « Vérifier ... ». Les cartes se partagent la largeur, donc
+   toutes y viennent quand la fenêtre rétrécit. */
 .carte-action {
   -fx-background-color: white;
   -fx-border-color: #d0d7de;
@@ -39,7 +44,7 @@
   -fx-border-radius: 8;
   -fx-background-radius: 8;
   -fx-padding: 16 12 16 12;
-  -fx-pref-height: 132;
+  -fx-pref-height: 150;
   -fx-cursor: hand;
 }
 
