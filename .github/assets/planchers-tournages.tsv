@@ -2,106 +2,108 @@
 # Instrument : ffmpeg 6.1.1 · ImageMagick 6.9.12-98
 # Un plancher ne vaut que pour l'instrument qui l'a pris : l'outil refuse de comparer
 # contre ce fichier, ou de le compléter, depuis un autre (#5885).
-# Colonnes : cas, plancher de la PREMIÈRE image, plancher de la DERNIÈRE, nombre de paires.
+# Colonnes : cas, plancher de la PREMIÈRE image, plancher de la DERNIÈRE, nombre de paires,
+# puis nombre de paires écoulées depuis que ce plancher a été approché, à moitié près.
 # Le PIRE plancher observé est gardé : sous-estimer le bruit fabrique des faux positifs.
 # Un plancher tiré d'UNE seule paire ne prouve rien. Lire la quatrième colonne.
-MainViewTest.accueil_regroupe_en_deux_prismes	0.000	0.000	27
-MainViewTest.bandeau_masque_si_base_vide	0.000	0.000	27
-MainViewTest.bandeau_suit_une_mutation_sans_navigation	0.000	0.000	27
-MainViewTest.bandeau_suit_une_restauration_sans_navigation	0.000	0.139	27
-MainViewTest.ctrl_f_active_la_recherche	0.000	0.014	27
-MainViewTest.fil_ariane_reflete_le_parcours	0.000	0.109	27
-MainViewTest.menu_reglages_ouvre_l_ecran	0.000	0.089	27
-MesSitesEtatVideViewTest.l_etat_vide_explique_le_prerequis	0.000	0.243	27
-MesSitesEtatVideViewTest.l_etat_vide_parait_sur_une_base_vierge	0.000	0.310	27
-MesSitesEtatVideViewTest.l_etat_vide_porte_sa_porte_de_sortie	0.000	0.292	27
-MesSitesViewTest.affiche_les_cartes	0.000	0.082	27
-MesSitesViewTest.entree_ouvre_le_detail	0.000	0.154	27
-MesSitesViewTest.espace_ouvre_le_detail	0.000	0.153	27
-MesSitesViewTest.hors_connexion_la_recuperation_est_fermee	0.000	0.065	27
-MesSitesViewTest.overlay_occupation_masque_apres_chargement	0.000	0.041	27
-MesSitesViewTest.une_carte_est_atteignable_au_clavier	0.000	0.035	27
-MesSitesViewTest.une_fois_connecte_la_recuperation_s_ouvre_et_rend_compte	0.000	0.037	27
-ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce	0.000	0.570	6
-ScenarioAccueilTest.le_menu_ne_porte_plus_la_fiche_espece	0.000	0.014	27
-ScenarioAnnonceConnexionTest.deconnecte_le_compte_rendu_ne_pretend_rien	0.000	0.139	27
-ScenarioBandeauLectureSeuleTest.le_support_en_lecture_seule_s_annonce_et_l_import_aboutit	0.000	0.142	21
-ScenarioBandeauLectureSeuleTest.une_carte_inscriptible_n_annonce_rien	0.000	0.854	48
-ScenarioBandeauxDInspectionTest.le_bandeau_de_l_incoherence	0.000	0.220	48
-ScenarioBandeauxDInspectionTest.le_bandeau_de_la_discordance_de_prefixe	0.000	0.221	48
-ScenarioBandeauxDInspectionTest.le_bandeau_du_melange	0.000	0.189	48
-ScenarioBandeauxDInspectionTest.un_journal_etranger_nomme_les_nuits_racontees	0.000	0.280	48
-ScenarioBandeauxDInspectionTest.une_carte_reutilisee_ne_leve_aucune_incoherence	0.000	0.202	48
-ScenarioCarreAbsentTest.creer_sans_verifier_un_carre_absent_le_dit	0.000	0.124	27
-ScenarioCarreAbsentTest.le_carre_en_routier_dit_le_geste_du_portail	0.000	0.021	27
-ScenarioCarteMultiNuitsTest.deux_nuits_deux_configurations	0.000	0.812	48
-ScenarioCarteMultiNuitsTest.la_table_des_nuits_et_ses_badges	0.000	0.957	48
-ScenarioCarteMultiNuitsTest.les_nuits_deja_importees_sont_celles_de_la_carte	0.000	0.352	48
-ScenarioConnecteActualisationTest.actualiser_importe_les_observations_d_une_analyse_terminee	0.000	0.302	15
-ScenarioConnecteAnnonceImportTest.connecte_l_import_annonce_la_participation	0.000	0.325	15
-ScenarioConnecteConnexionTest.coller_le_jeton_puis_lire_l_identite	0.000	0.134	15
-ScenarioConnecteLancementTest.lancer_la_participation_rend_l_analyse_planifiee	0.000	0.503	15
-ScenarioConnectePublicationTest.publier_une_correction_puis_la_republier	0.000	0.005	15
-ScenarioCourbeActiviteTest.lire_la_courbe_d_activite	0.000	0.299	27
-ScenarioDiagnosticPassageTest.la_fin_manque_et_l_alerte_le_nomme	0.000	0.246	48
-ScenarioDiagnosticPassageTest.les_deux_bords_manquent_et_l_alerte_ne_concede_rien	0.000	0.336	48
-ScenarioDiagnosticPassageTest.lire_le_diagnostic_d_un_passage	0.000	0.473	48
-ScenarioDiagnosticPassageTest.une_nuit_qui_couvre_ne_se_fait_pas_accuser	0.000	0.239	48
-ScenarioDiagnosticSansJournalTest.sans_journal_le_second_encart_se_tait	0.000	0.221	48
-ScenarioEmportExpediteurTest.emporter_une_nuit_et_ses_deux_refus	0.000	0.009	6
-ScenarioEmportExpediteurTest.reprendre_un_avis_et_le_second_qui_se_confirme	0.000	0.000	6
-ScenarioEmportRelecteurTest.relire_une_nuit_confiee	0.000	0.002	6
-ScenarioEmportRelecteurTest.renvoyer_son_avis	0.000	0.025	6
-ScenarioFicheSiteTest.ajouter_un_point_le_fait_paraitre_sur_la_fiche	0.000	0.232	27
-ScenarioFicheSiteTest.le_bandeau_dit_l_identite_du_carre	0.000	0.291	27
-ScenarioFicheSiteTest.le_carre_rattache_porte_son_badge	0.000	0.204	27
-ScenarioFicheSiteTest.le_tableau_des_passages_porte_ses_sept_colonnes	0.000	0.277	27
-ScenarioFicheSiteTest.les_boutons_disent_ce_qui_les_empeche	0.000	0.400	27
-ScenarioFicheSiteTest.les_cartes_de_points_portent_gps_et_distance	0.000	0.237	27
-ScenarioFicheSiteTest.les_coordonnees_en_dms_valent_une_position	0.000	0.001	27
-ScenarioFicheSiteTest.renommer_le_carre_met_a_jour_l_entete	0.000	0.179	27
-ScenarioImportNominalTest.designer_la_source_et_l_inspecter	0.000	0.199	48
-ScenarioImportNominalTest.importer_la_nuit	0.000	0.156	48
-ScenarioImportNominalTest.rattacher_la_nuit_a_son_point	0.000	0.154	48
-ScenarioJournalAbsentTest.l_absence_de_journal_est_signalee	0.000	0.919	48
-ScenarioJournalAbsentTest.sans_journal_la_nuit_est_inconnue	0.000	1.066	48
-ScenarioJournalAbsentTest.un_journal_corrompu_fait_echouer_l_inspection	0.000	0.539	48
-ScenarioMenuDeLigneImportTest.le_menu_de_ligne_s_ouvre_pendant_l_import	0.000	0.807	33
-ScenarioModaleCarreTest.annuler_ne_change_rien_a_la_liste	0.000	0.134	27
-ScenarioModaleCarreTest.corriger_un_chiffre_efface_le_verdict	0.000	0.111	27
-ScenarioModaleCarreTest.creer_reste_ferme_puis_se_rouvre	0.000	0.699	27
-ScenarioModaleCarreTest.creer_s_ouvre_au_sixieme_chiffre_et_ajoute_le_carre	0.000	0.161	27
-ScenarioModaleCarreTest.hors_connexion_verifier_est_ferme_mais_declarer_reste_possible	0.000	0.089	27
-ScenarioModaleCarreTest.le_carre_deja_declare_nomme_le_site	0.000	0.039	27
-ScenarioModaleCarreTest.le_carre_libre_s_annonce_libre	0.000	0.048	27
-ScenarioModaleCarreTest.partir_d_un_lieu_remplit_le_carre	0.000	0.348	27
-ScenarioModaleCarreTest.plateforme_injoignable_l_encart_ne_nie_pas_le_carre	0.000	0.028	27
-ScenarioModaleCarreTest.recuperer_ferme_la_modale_et_rend_compte	0.000	0.127	27
-ScenarioModaleCarreTest.situer_marche_hors_connexion	0.000	0.124	27
-ScenarioModaleCarreTest.sur_une_frontiere_rien_ne_se_remplit	0.000	0.284	27
-ScenarioNuitInterrompueTest.une_nuit_interrompue_le_dit	0.000	0.306	48
-ScenarioPassagePivotTest.lire_le_passage_pivot	0.000	0.303	48
-ScenarioPassagePivotTest.modifier_le_passage	0.000	0.268	21
-ScenarioPassagePivotTest.renommer_le_passage_sur_le_disque	0.000	0.272	48
-ScenarioPerceptifConnexionTest.la_modale_de_connexion_s_ouvre	0.000	0.245	27
-ScenarioPerceptifConnexionTest.la_recuperation_ne_pousse_rien_hors_du_cadre	0.000	0.094	27
-ScenarioPerceptifFiltresTest.rejouer_une_vue_dont_une_valeur_a_disparu_fait_paraitre_le_bandeau	0.000	0.000	27
-ScenarioPerceptifFiltresTest.rouvrir_une_liste_apres_un_autre_filtre_montre_moins_de_valeurs	0.000	0.045	27
-ScenarioPerceptifFiltresTest.tout_effacer_rend_la_table_entiere	0.000	0.067	27
-ScenarioPerceptifFiltresTest.une_puce_fraichement_ajoutee_n_ecarte_rien	0.000	0.037	27
-ScenarioPerceptifFiltresTest.une_valeur_cochee_devenue_impossible_se_distingue	0.000	0.063	27
-ScenarioPerceptifIssuesConnexionTest.injoignable_ne_fait_pas_accuser_le_jeton	0.000	0.546	27
-ScenarioPerceptifIssuesConnexionTest.jeton_refuse_nomme_le_geste	0.000	0.138	27
-ScenarioPerceptifIssuesConnexionTest.jeton_vide_dit_quoi_faire	0.000	0.147	27
-ScenarioPerceptifIssuesConnexionTest.la_deconnexion_demande_confirmation	0.000	0.207	27
-ScenarioPerceptifIssuesConnexionTest.les_trois_etapes_de_la_modale	0.000	0.089	27
-ScenarioPerceptifIssuesConnexionTest.succes_dit_ce_qui_a_ete_rapatrie	0.000	0.167	27
-ScenarioPerceptifRecuperationCarreTest.la_recuperation_ramene_sur_mes_sites	0.000	0.114	27
-ScenarioPerceptifRefusDepotTest.le_compte_rendu_dit_les_refus_et_conseille_la_reconnexion	0.000	0.512	27
-ScenarioPerceptifRefusDepotTest.ouvrir_le_dossier_de_depot_demande_un_dossier	0.000	0.713	27
-ScenarioRaccourcisVerificationTest.les_raccourcis_clavier_de_la_verification	0.000	0.334	33
-ScenarioRejetsEtArchiveTest.l_import_aboutit_malgre_les_rejets	0.000	0.819	27
-ScenarioRejetsEtArchiveTest.la_decompression_se_voit_avant_l_inspection	0.000	0.238	15
-ScenarioRejetsEtArchiveTest.reimporter_une_nuit_deja_connue	0.000	0.938	48
-ScenarioReveilParBoutonTest.un_reveil_par_bouton_n_est_pas_une_anomalie	0.000	0.304	48
-ScenarioSelectionEcouteTest.personnaliser_la_selection_d_ecoute	0.000	0.851	33
+# Un plancher que 18 paires n'ont pas approché est peut-être périmé : la mesure le signale.
+MainViewTest.accueil_regroupe_en_deux_prismes	0.000	0.000	33	0
+MainViewTest.bandeau_masque_si_base_vide	0.000	0.000	33	0
+MainViewTest.bandeau_suit_une_mutation_sans_navigation	0.000	0.000	33	0
+MainViewTest.bandeau_suit_une_restauration_sans_navigation	0.000	0.139	33	6
+MainViewTest.ctrl_f_active_la_recherche	0.000	0.014	33	1
+MainViewTest.fil_ariane_reflete_le_parcours	0.000	0.109	33	6
+MainViewTest.menu_reglages_ouvre_l_ecran	0.000	0.089	33	0
+MesSitesEtatVideViewTest.l_etat_vide_explique_le_prerequis	0.000	0.299	33	0
+MesSitesEtatVideViewTest.l_etat_vide_parait_sur_une_base_vierge	0.000	0.310	33	6
+MesSitesEtatVideViewTest.l_etat_vide_porte_sa_porte_de_sortie	0.000	0.292	33	6
+MesSitesViewTest.affiche_les_cartes	0.000	0.082	33	6
+MesSitesViewTest.entree_ouvre_le_detail	0.000	0.154	33	0
+MesSitesViewTest.espace_ouvre_le_detail	0.000	0.153	33	0
+MesSitesViewTest.hors_connexion_la_recuperation_est_fermee	0.000	0.065	33	5
+MesSitesViewTest.overlay_occupation_masque_apres_chargement	0.000	0.041	33	6
+MesSitesViewTest.une_carte_est_atteignable_au_clavier	0.000	0.035	33	6
+MesSitesViewTest.une_fois_connecte_la_recuperation_s_ouvre_et_rend_compte	0.000	0.037	33	6
+ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce	0.000	0.570	12	0
+ScenarioAccueilTest.le_menu_ne_porte_plus_la_fiche_espece	0.000	0.014	33	6
+ScenarioAnnonceConnexionTest.deconnecte_le_compte_rendu_ne_pretend_rien	0.000	0.167	33	0
+ScenarioBandeauLectureSeuleTest.le_support_en_lecture_seule_s_annonce_et_l_import_aboutit	0.000	0.142	27	0
+ScenarioBandeauLectureSeuleTest.une_carte_inscriptible_n_annonce_rien	0.000	0.854	54	0
+ScenarioBandeauxDInspectionTest.le_bandeau_de_l_incoherence	0.000	0.220	54	0
+ScenarioBandeauxDInspectionTest.le_bandeau_de_la_discordance_de_prefixe	0.000	0.221	54	0
+ScenarioBandeauxDInspectionTest.le_bandeau_du_melange	0.000	0.189	54	0
+ScenarioBandeauxDInspectionTest.un_journal_etranger_nomme_les_nuits_racontees	0.000	0.280	54	0
+ScenarioBandeauxDInspectionTest.une_carte_reutilisee_ne_leve_aucune_incoherence	0.000	0.202	54	0
+ScenarioCarreAbsentTest.creer_sans_verifier_un_carre_absent_le_dit	0.000	0.124	33	3
+ScenarioCarreAbsentTest.le_carre_en_routier_dit_le_geste_du_portail	0.000	0.022	33	0
+ScenarioCarteMultiNuitsTest.deux_nuits_deux_configurations	0.000	0.812	54	1
+ScenarioCarteMultiNuitsTest.la_table_des_nuits_et_ses_badges	0.000	0.957	54	0
+ScenarioCarteMultiNuitsTest.les_nuits_deja_importees_sont_celles_de_la_carte	0.000	0.352	54	0
+ScenarioConnecteActualisationTest.actualiser_importe_les_observations_d_une_analyse_terminee	0.000	0.302	15	0
+ScenarioConnecteAnnonceImportTest.connecte_l_import_annonce_la_participation	0.000	0.325	15	0
+ScenarioConnecteConnexionTest.coller_le_jeton_puis_lire_l_identite	0.000	0.134	15	0
+ScenarioConnecteLancementTest.lancer_la_participation_rend_l_analyse_planifiee	0.000	0.503	15	0
+ScenarioConnectePublicationTest.publier_une_correction_puis_la_republier	0.000	0.005	15	0
+ScenarioCourbeActiviteTest.lire_la_courbe_d_activite	0.000	0.299	33	6
+ScenarioDiagnosticPassageTest.la_fin_manque_et_l_alerte_le_nomme	0.000	0.246	54	6
+ScenarioDiagnosticPassageTest.les_deux_bords_manquent_et_l_alerte_ne_concede_rien	0.000	0.336	54	3
+ScenarioDiagnosticPassageTest.lire_le_diagnostic_d_un_passage	0.000	0.473	54	0
+ScenarioDiagnosticPassageTest.une_nuit_qui_couvre_ne_se_fait_pas_accuser	0.000	0.239	54	1
+ScenarioDiagnosticSansJournalTest.sans_journal_le_second_encart_se_tait	0.000	0.221	54	6
+ScenarioEmportExpediteurTest.emporter_une_nuit_et_ses_deux_refus	0.000	0.009	12	3
+ScenarioEmportExpediteurTest.reprendre_un_avis_et_le_second_qui_se_confirme	0.000	0.150	12	3
+ScenarioEmportRelecteurTest.relire_une_nuit_confiee	0.000	0.125	12	0
+ScenarioEmportRelecteurTest.renvoyer_son_avis	0.000	0.432	12	0
+ScenarioFicheSiteTest.ajouter_un_point_le_fait_paraitre_sur_la_fiche	0.000	0.232	33	1
+ScenarioFicheSiteTest.le_bandeau_dit_l_identite_du_carre	0.000	0.291	33	0
+ScenarioFicheSiteTest.le_carre_rattache_porte_son_badge	0.000	0.218	33	0
+ScenarioFicheSiteTest.le_tableau_des_passages_porte_ses_sept_colonnes	0.000	0.277	33	6
+ScenarioFicheSiteTest.les_boutons_disent_ce_qui_les_empeche	0.000	0.413	33	0
+ScenarioFicheSiteTest.les_cartes_de_points_portent_gps_et_distance	0.000	0.237	33	0
+ScenarioFicheSiteTest.les_coordonnees_en_dms_valent_une_position	0.000	0.001	33	6
+ScenarioFicheSiteTest.renommer_le_carre_met_a_jour_l_entete	0.000	0.179	33	0
+ScenarioImportNominalTest.designer_la_source_et_l_inspecter	0.000	0.199	54	0
+ScenarioImportNominalTest.importer_la_nuit	0.000	0.156	54	1
+ScenarioImportNominalTest.rattacher_la_nuit_a_son_point	0.000	0.154	54	0
+ScenarioJournalAbsentTest.l_absence_de_journal_est_signalee	0.000	0.919	54	1
+ScenarioJournalAbsentTest.sans_journal_la_nuit_est_inconnue	0.000	1.066	54	0
+ScenarioJournalAbsentTest.un_journal_corrompu_fait_echouer_l_inspection	0.000	0.539	54	0
+ScenarioMenuDeLigneImportTest.le_menu_de_ligne_s_ouvre_pendant_l_import	0.000	0.807	39	6
+ScenarioModaleCarreTest.annuler_ne_change_rien_a_la_liste	0.000	0.134	33	3
+ScenarioModaleCarreTest.corriger_un_chiffre_efface_le_verdict	0.000	0.111	33	6
+ScenarioModaleCarreTest.creer_reste_ferme_puis_se_rouvre	0.000	0.716	33	0
+ScenarioModaleCarreTest.creer_s_ouvre_au_sixieme_chiffre_et_ajoute_le_carre	0.000	0.161	33	3
+ScenarioModaleCarreTest.hors_connexion_verifier_est_ferme_mais_declarer_reste_possible	0.000	0.089	33	0
+ScenarioModaleCarreTest.le_carre_deja_declare_nomme_le_site	0.000	0.039	33	1
+ScenarioModaleCarreTest.le_carre_libre_s_annonce_libre	0.000	0.048	33	6
+ScenarioModaleCarreTest.partir_d_un_lieu_remplit_le_carre	0.000	0.356	33	0
+ScenarioModaleCarreTest.plateforme_injoignable_l_encart_ne_nie_pas_le_carre	0.000	0.028	33	0
+ScenarioModaleCarreTest.recuperer_ferme_la_modale_et_rend_compte	0.000	0.127	33	1
+ScenarioModaleCarreTest.situer_marche_hors_connexion	0.000	0.316	33	3
+ScenarioModaleCarreTest.sur_une_frontiere_rien_ne_se_remplit	0.000	0.284	33	6
+ScenarioNuitInterrompueTest.une_nuit_interrompue_le_dit	0.000	0.306	54	0
+ScenarioPassagePivotTest.lire_le_passage_pivot	0.000	0.303	54	1
+ScenarioPassagePivotTest.modifier_le_passage	0.000	0.268	27	6
+ScenarioPassagePivotTest.renommer_le_passage_sur_le_disque	0.000	0.272	54	1
+ScenarioPerceptifConnexionTest.la_modale_de_connexion_s_ouvre	0.000	0.245	33	3
+ScenarioPerceptifConnexionTest.la_recuperation_ne_pousse_rien_hors_du_cadre	0.000	0.102	33	1
+ScenarioPerceptifFiltresTest.rejouer_une_vue_dont_une_valeur_a_disparu_fait_paraitre_le_bandeau	0.000	0.002	33	3
+ScenarioPerceptifFiltresTest.rouvrir_une_liste_apres_un_autre_filtre_montre_moins_de_valeurs	0.000	0.045	33	0
+ScenarioPerceptifFiltresTest.tout_effacer_rend_la_table_entiere	0.000	0.067	33	1
+ScenarioPerceptifFiltresTest.une_puce_fraichement_ajoutee_n_ecarte_rien	0.000	0.037	33	0
+ScenarioPerceptifFiltresTest.une_valeur_cochee_devenue_impossible_se_distingue	0.000	0.063	33	1
+ScenarioPerceptifIssuesConnexionTest.injoignable_ne_fait_pas_accuser_le_jeton	0.000	0.546	33	6
+ScenarioPerceptifIssuesConnexionTest.jeton_refuse_nomme_le_geste	0.000	0.165	33	0
+ScenarioPerceptifIssuesConnexionTest.jeton_vide_dit_quoi_faire	0.000	0.147	33	0
+ScenarioPerceptifIssuesConnexionTest.la_deconnexion_demande_confirmation	0.000	0.207	33	3
+ScenarioPerceptifIssuesConnexionTest.les_trois_etapes_de_la_modale	0.000	0.254	33	0
+ScenarioPerceptifIssuesConnexionTest.succes_dit_ce_qui_a_ete_rapatrie	0.000	0.167	33	0
+ScenarioPerceptifRecuperationCarreTest.la_recuperation_ramene_sur_mes_sites	0.000	0.114	33	6
+ScenarioPerceptifRefusDepotTest.le_compte_rendu_dit_les_refus_et_conseille_la_reconnexion	0.000	0.512	33	0
+ScenarioPerceptifRefusDepotTest.ouvrir_le_dossier_de_depot_demande_un_dossier	0.000	0.748	33	0
+ScenarioRaccourcisVerificationTest.les_raccourcis_clavier_de_la_verification	0.000	0.334	39	6
+ScenarioRejetsEtArchiveTest.l_import_aboutit_malgre_les_rejets	0.000	0.819	33	0
+ScenarioRejetsEtArchiveTest.la_decompression_se_voit_avant_l_inspection	0.000	0.261	21	0
+ScenarioRejetsEtArchiveTest.reimporter_une_nuit_deja_connue	0.000	0.941	54	0
+ScenarioReveilParBoutonTest.un_reveil_par_bouton_n_est_pas_une_anomalie	0.000	0.304	54	6
+ScenarioSelectionEcouteTest.personnaliser_la_selection_d_ecoute	0.000	0.851	39	6

@@ -186,6 +186,12 @@ et se relève quand l'argument qu'elle sert en a besoin.
     lit ×2, comme le tableau de « Comment lire le chiffre » l'annonce. Ce même écart de 0,015 % se
     lit aujourd'hui ×1,4.
 
+    Au contrôle du 7 octobre 2026, deux témoins contre des planchers de 12 à 54 paires : sur 95
+    clips, dix-huit écarts non nuls sous 0,021 %, dont le pire se lit ×0,6. Un seul clip dépasse le
+    double, `emporter_une_nuit_et_ses_deux_refus`, à 0,857 % contre un plancher de 0,009 % pris sur
+    douze paires : un écart de cette taille n'est pas du bruit lu de trop près, et le sol n'y
+    change rien.
+
     Ce reste n'est pas un défaut de ces clips. Un maximum pris sur quinze valeurs est dépassé par
     une seizième de temps en temps, et chaque passage de l'atelier ajoute des paires.
 
