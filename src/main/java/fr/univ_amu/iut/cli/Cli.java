@@ -94,7 +94,7 @@ public final class Cli {
         ligne.setOut(new PrintWriter(sortie, true, StandardCharsets.UTF_8));
         ligne.setErr(new PrintWriter(erreur, true, StandardCharsets.UTF_8));
         ligne.setExecutionStrategy(new StrategieExecutionCli(injecteur)::executer);
-        ligne.setParameterExceptionHandler(Cli::gererErreurUsage);
+        ligne.setParameterExceptionHandler((exception, arguments) -> gererErreurUsage(exception));
         ligne.setExecutionExceptionHandler(Cli::gererErreurExecution);
         int code = ligne.execute(args);
         // Un `PrintWriter` en auto-flush ne se vide QUE sur `println`/`printf`, jamais sur `print`. Une
@@ -108,7 +108,7 @@ public final class Cli {
 
     /// Erreurs de **parsing** (commande inconnue, option requise manquante ou mal typée) → message français
     /// + rappel de l'aide, code [#CODE_ERREUR_ARGUMENTS].
-    private static int gererErreurUsage(ParameterException exception, String[] args) {
+    private static int gererErreurUsage(ParameterException exception) {
         CommandLine ligne = exception.getCommandLine();
         PrintWriter erreur = ligne.getErr();
         erreur.println(messageUsage(exception));

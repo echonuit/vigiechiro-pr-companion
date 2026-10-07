@@ -213,7 +213,7 @@ class ScenarioMenuDeLigneImportTest {
         // ─── S2-52 · « Copier ▸ Nom du fichier » remplit le presse-papier ───────────────────────
         // La sélection d'abord : le menu copie la LIGNE choisie, et sans sélection il n'aurait rien à
         // copier. C'est le geste réel - on clique droit sur une ligne, donc on la désigne.
-        String nomAttendu = premiereLigne(robot, table);
+        String nomAttendu = premiereLigne(table);
         robot.interact(() -> table.getSelectionModel().select(0));
         WaitForAsyncUtils.waitForFxEvents();
         robot.interact(() -> declencher(menu, "Copier", "Nom du fichier"));
@@ -305,7 +305,7 @@ class ScenarioMenuDeLigneImportTest {
     }
 
     /// Le nom de fichier que la première ligne du suivi affiche.
-    private static String premiereLigne(FxRobot robot, TableView<?> table) {
+    private static String premiereLigne(TableView<?> table) {
         Object ligne = table.getItems().getFirst();
         return ligne instanceof LigneFichierImport fichier ? fichier.nomFichier() : String.valueOf(ligne);
     }

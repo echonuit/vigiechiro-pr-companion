@@ -140,7 +140,7 @@ class ScenarioEmportRelecteurTest {
         Path paquet = echanges.resolve("nuit-confiee.zip");
         Long idPassage = passageCourant();
         injecteur.getInstance(ServiceEmport.class).composer(idPassage, paquet);
-        definirSelecteur(robot, selecteur(paquet));
+        definirSelecteur(selecteur(paquet));
 
         SelectionDao selections = injecteur.getInstance(SelectionDao.class);
         GesteVisible.choisir(robot, controleur.menuDeLaSelection(), "Ouvrir un paquet reçu…");
@@ -194,7 +194,7 @@ class ScenarioEmportRelecteurTest {
         controleur.notificateur().definir(dialogues.compteRendu());
 
         Path retour = echanges.resolve("mon-avis.zip");
-        definirSelecteur(robot, selecteur(retour));
+        definirSelecteur(selecteur(retour));
         GesteVisible.choisir(robot, controleur.menuDeLaSelection(), "Renvoyer mon avis…");
 
         // Le compte rendu est à l'image : il nomme qui signe, et combien de verdicts partent.
@@ -254,7 +254,7 @@ class ScenarioEmportRelecteurTest {
         return qualification;
     }
 
-    private void definirSelecteur(FxRobot robot, SelecteurFichier selecteur) {
+    private void definirSelecteur(SelecteurFichier selecteur) {
         controleurDeLEcran().gestesEmport().selecteur().definir(selecteur);
     }
 

@@ -132,7 +132,7 @@ public final class CaptureMultisite {
         Injector injecteur = creerInjecteur();
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
-        seeder(injecteur, source);
+        seeder(source);
         return injecteur;
     }
 
@@ -500,7 +500,7 @@ public final class CaptureMultisite {
 
     /// Seede l'utilisateur courant, deux sites avec un point chacun, et cinq passages aux statuts et
     /// verdicts variés.
-    private static void seeder(Injector injecteur, SourceDeDonnees source) {
+    private static void seeder(SourceDeDonnees source) {
         new UtilisateurDao(source).insert(new Utilisateur(ID_UTILISATEUR, "Capitaine Chiro (demo)"));
         new EnregistreurDao(source).insert(new Enregistreur(ENREGISTREUR, "V1.01", null));
         SiteDao siteDao = new SiteDao(source);

@@ -71,7 +71,7 @@ class GesteVisibleBasDePageTest {
         GesteVisible.amenerDansLeCadre(robot, "#carte");
         faireGrandirLaCarte(robot);
 
-        assertThat(ecartAuBas(robot))
+        assertThat(ecartAuBas())
                 .as("c'est le défaut : JavaFX garde le décalage en pixels quand le contenu grandit. Si"
                         + " cette attente tombe, le banc ne reproduit plus rien et le cas suivant ne"
                         + " prouve plus que l'aide est nécessaire")
@@ -86,7 +86,7 @@ class GesteVisibleBasDePageTest {
 
         GesteVisible.allerAuBasDeLaPage(robot, "#carte");
 
-        assertThat(ecartAuBas(robot))
+        assertThat(ecartAuBas())
                 .as("la page est à son bas, au pixel près : c'est ce qui rend la dernière image d'un"
                         + " clip indépendante de l'instant où la carte a grandi")
                 .isLessThan(0.5);
@@ -113,7 +113,7 @@ class GesteVisibleBasDePageTest {
     }
 
     /// De combien de pixels la page est en deçà de son bas. Zéro quand elle y est.
-    private double ecartAuBas(FxRobot robot) {
+    private double ecartAuBas() {
         return Attente.surLeFil(
                 () -> {
                     double course = pane.getContent().getBoundsInLocal().getHeight()

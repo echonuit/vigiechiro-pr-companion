@@ -144,7 +144,7 @@ class ScenarioEmportExpediteurTest {
         // S3-46 d'abord : annuler la désignation. Le geste doit s'arrêter AVANT de peser, donc avant
         // que la moindre question soit posée - c'est ce que le clip doit montrer, et l'ordre compte :
         // le filmer en dernier laisserait un paquet déjà écrit sur le disque.
-        definirSelecteur(robot, selecteurQuiAnnule());
+        definirSelecteur(selecteurQuiAnnule());
         GesteVisible.choisir(robot, controleur.menuDeLaSelection(), "Emporter cette nuit…");
         Respiration.surLeMomentCle(robot);
 
@@ -154,7 +154,7 @@ class ScenarioEmportExpediteurTest {
         assertThat(Files.exists(destination)).isFalse();
 
         // S3-47 : le volume s'annonce à l'image, et on le refuse.
-        definirSelecteur(robot, selecteurQuiRepond(destination));
+        definirSelecteur(selecteurQuiRepond(destination));
         GesteVisible.choisir(robot, controleur.menuDeLaSelection(), "Emporter cette nuit…");
         dialogues.attendre(ANNONCE_DU_VOLUME);
         Respiration.surLeMomentCle(robot);
@@ -207,7 +207,7 @@ class ScenarioEmportExpediteurTest {
         Path second = avisSignePar("martin");
 
         // S3-48 : le premier avis se range à côté du nôtre, sans question, et le compte rendu le dit.
-        definirSelecteur(robot, selecteurQuiRepond(premier));
+        definirSelecteur(selecteurQuiRepond(premier));
         GesteVisible.choisir(robot, controleur.menuDeLaSelection(), "Reprendre un avis reçu…");
         dialogues.attendre("de « claire »");
         Respiration.surLeMomentCle(robot);
@@ -220,7 +220,7 @@ class ScenarioEmportExpediteurTest {
         Respiration.leTempsDeLire(robot);
 
         // S3-49 : le second nomme le relecteur présent et ce qui serait perdu. On refuse d'abord.
-        definirSelecteur(robot, selecteurQuiRepond(second));
+        definirSelecteur(selecteurQuiRepond(second));
         GesteVisible.choisir(robot, controleur.menuDeLaSelection(), "Reprendre un avis reçu…");
         dialogues.attendre(QUESTION_DU_SECOND_AVIS);
         Respiration.surLeMomentCle(robot);
@@ -344,7 +344,7 @@ class ScenarioEmportExpediteurTest {
 
     /// Le sélecteur est substitué **sur l'action**, pas sur le contrôleur : un sélecteur natif fige un
     /// test headless, et c'est la raison d'être du porteur injectable (#3197).
-    private void definirSelecteur(FxRobot robot, SelecteurFichier selecteur) {
+    private void definirSelecteur(SelecteurFichier selecteur) {
         controleurDeLEcran().gestesEmport().selecteur().definir(selecteur);
     }
 
