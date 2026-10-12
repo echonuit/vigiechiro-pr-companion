@@ -53,7 +53,7 @@ Sortie : taille, temps total décomposé en **copie (R9) / transformation (#12) 
 débit, nb séquences, **mémoire crête**.
 
 > L'import recopie puis transforme : prévoir **3× la taille source** en espace disque (mesuré le
-> 2026-10-12 : 27,0 Gio de workspace pour 9 Gio de source). Pour viser
+> 2026-10-12 : 27,0 Gio de workspace pour 9 Gio de source, 60,0 Gio pour 20 Gio). Pour viser
 > 20 Gio à 384 kHz / 5 s, c'est ~5500 fichiers ; commencer petit (`-Dperf.import.fichiers=100`) pour
 > calibrer le temps, puis monter. Le `vigiechiro.workspace` est un **dossier jetable, réinitialisé à
 > chaque lancement** (n'y pointez pas un vrai workspace).
@@ -72,8 +72,9 @@ débit, nb séquences, **mémoire crête**.
 
 ## Relevés du 2026-10-12
 
-Tous les chiffres de cette section viennent du même poste, le même jour, sur `main` à `ea1415febb`
-(#104 livré : l'import lit chaque WAV par morceaux). En-tête imprimé par `BancImport` :
+Sauf le test de charge à 20 Gio, qui nomme son propre poste dans sa sous-section, tous les chiffres
+de cette section viennent du même poste, le même jour, sur `main` à `ea1415febb` (#104 livré :
+l'import lit chaque WAV par morceaux). En-tête imprimé par `BancImport` :
 
 ```text
 machine         : 11th Gen Intel(R) Core(TM) i5-1145G7 @ 2.60GHz · 8 cœurs · RAM 30.4 Gio
@@ -147,6 +148,7 @@ Place occupée par le workspace en fin d'import : 1,07 Gio pour la nuit de 100 W
   plusieurs nuits dans un même processus, se mesurent dans l'IHM : section suivante.
 - **Les 20 Go du test de charge** : non mesurés sur ce poste, faute de disque. Il en faut environ
   60 Gio, et le poste en avait 40 de libres. La nuit de 9 Gio est la plus grosse qu'il pouvait tenir.
+  Ils sont mesurés sur un second poste : « Le test de charge à 20 Gio », plus bas.
 
 ### O5 et O3 dans l'IHM (`BancIhmO5Test`, `BancIhmO3Test`)
 
@@ -208,7 +210,7 @@ chiffre ci-dessous.
 **Lectures** :
 
 - **Pendant l'import, aucun écart ne dépasse 200 ms** : tenu, sur des nuits de 300 WAV. L'import tourne hors
-  du fil JavaFX. À 20 Go, non mesuré.
+  du fil JavaFX. À 20 Gio, sur un second poste, le seuil ne tient plus : voir plus bas (#6175).
 - **En navigation après l'import, le seuil n'est pas tenu** (#6171) : les écarts tombent à l'ouverture
   des écrans, à chaque nuit, et pas seulement à la première ouverture. Ils ne grandissent pas avec le
   nombre de nuits en base.
@@ -218,8 +220,8 @@ chiffre ci-dessous.
 - La durée d'import n'est pas le chiffre O3 de ce banc : c'est celui de `BancImport`, plus haut.
 
 **Ce que ces chiffres ne mesurent pas** : la latence d'entrée (souris et clavier contournés), le dessin
-de l'image et son affichage par le compositeur, un rendu GPU, une vraie carte SD, une autre machine, et
-les 20 Go.
+de l'image et son affichage par le compositeur, un rendu GPU, une vraie carte SD et une autre machine.
+Les 20 Go ont leur sous-section.
 
 **Le relancer** (jamais en CI : l'étiquette `banc-ihm` est exclue par défaut) :
 
@@ -229,8 +231,91 @@ les 20 Go.
 ```
 
 Volumes : `-Dperf.ihm.observations` (4031), `-Dperf.ihm.passages` (1000), `-Dperf.ihm.nuits` (4),
-`-Dperf.ihm.wav` (300 WAV par nuit, environ 2,3 Gio gardés par nuit importée). Le relevé s'ajoute à
-`releve.tsv` sous `perf.ihm.racine`.
+`-Dperf.ihm.wav` (300 WAV par nuit, environ 1,1 Gio gardé par nuit importée : les séquences seules,
+l'assistant ne recopiant pas les bruts par défaut). Le relevé s'ajoute à `releve.tsv` sous
+`perf.ihm.racine`.
+
+### Le test de charge à 20 Gio, sur un second poste
+
+Le premier poste n'avait pas le disque. Ce relevé vient d'un autre, le 2026-10-12, sur `main` à
+`d1f6c7d5c9` (le banc de l'IHM fusionné, #6173). En-tête imprimé par `BancImport` :
+
+```text
+machine         : Intel(R) Core(TM) Ultra 7 255H · 16 cœurs · RAM 30.3 Gio
+exécution       : 25.0.3+9-LTS · Linux 7.0.0-38-generic · heap max 7768 Mo
+```
+
+Disque : SSD NVMe interne (Samsung MZVLC1T0HFLU, 954 Go), une partition `ext4` qui avait 640 Go
+libres. La source, le workspace et `java.io.tmpdir` étaient sur cette partition : `/tmp` est un `tmpfs`
+sur ce poste. Un tir à la fois, sans autre build ; l'éditeur du poste restait ouvert, et ce n'était pas
+la première utilisation du jour. Seize cœurs contre huit et un autre disque : ces chiffres ne se
+comparent pas à ceux du premier poste.
+
+**`BancImport`** (`-Dperf.import.go=20`, heap par défaut, `-Xlog:gc` dans un fichier). Deux lancements,
+chacun dans une JVM neuve, la nuit supprimée entre les deux. La charge est celle du poste sur 1 minute,
+au départ du tir :
+
+| Nuit | Taille source | Lancement | Temps total | copie | transfo (#12) | persist. (O7) | Débit | Crête | Après GC | Charge |
+|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| 100 WAV (calibrage) | 0,36 Gio | 1 | 0,78 s | 0,27 s | 0,26 s | 0,25 s | 128 f/s · 469 Mo/s | 183 Mo | 89 Mo | 1,32 |
+| 5593 WAV (`-Dperf.import.go=20`) | 20,00 Gio | 1 | 20,75 s | 7,65 s | 12,05 s | 1,04 s | 270 f/s · 987 Mo/s | 1404 Mo | 108 Mo | 1,61 |
+| 5593 WAV | 20,00 Gio | 2 | 19,73 s | 7,39 s | 11,66 s | 0,68 s | 283 f/s · 1038 Mo/s | 2396 Mo | 115 Mo | 0,98 |
+
+Place occupée par le workspace en fin d'import : 1,07 Gio pour 100 WAV, 60,0 Gio (64,4 Go) pour
+20 Gio, aux deux lancements. C'est encore trois fois la source. Charge au plus haut pendant les tirs à
+20 Gio : 7,45 et 5,28, le banc compris.
+
+**Dans l'IHM** (`BancIhmO3Test`, `-Dperf.ihm.nuits=1 -Dperf.ihm.wav=5593`). Un seul tir, sur l'affichage
+réel (XWayland, profil `recette-filmee`, rendu logiciel `prism.order=sw` posé par le pom), fenêtre de
+1280 × 860. Charge du poste sur 1 minute : 1,59 au départ, 7,15 au plus haut, le banc compris.
+
+| O3, une nuit de 5593 WAV de 5 s (20,00 Gio) | Relevé | Seuil | Verdict |
+|---|---|---|---|
+| durée de l'import, du clic au compte rendu | 14,4 s | | |
+| écart max entre deux images pendant l'import | 472 ms sur 343 images ; trois écarts au-delà de 200 ms (253, 472, 225 ms) | 200 ms | **non tenu** (#6175) |
+| écart max en navigation après l'import | 1310 ms ; douze écarts au-delà de 200 ms pour neuf ouvertures | 200 ms | **non tenu** (#6171) |
+| heap après GC complet | 68 Mo avant la nuit, 247 Mo après | palier stable | voir #6170 |
+| journal G1 du processus | 234 Mo au plus haut après une pause jeune, 2323 Mo de crête | | |
+
+Aucune fenêtre ni question ne s'est ouverte pendant le tir. Avant lui, le banc a été vu rouge sur ce
+poste, en Headless : deux nuits de même date l'arrêtent seul, en 13 s, sur la question « nuit déjà
+importée ».
+
+**Lectures** :
+
+- **Temps, débit, crête** : 20 à 21 s pour 20 Gio, de 987 à 1038 Mo/s. La crête va de 1404 à 2396 Mo
+  d'un lancement à l'autre de la même nuit, comme sur le premier poste.
+- **Mémoire** : l'occupation après GC est de 108 à 115 Mo à 20 Gio, contre 89 Mo à 0,36 Gio sur ce
+  poste. Cinquante-cinq fois plus de données, de 19 à 26 Mo de plus.
+- **Le débit ne baisse pas avec la taille sur ce poste** (469 Mo/s à 0,36 Gio), à l'inverse du premier.
+  Cela s'accorde avec l'hypothèse du cache disque sans la prouver : ce poste avait environ 19 Gio de
+  mémoire disponible, presque toute la source.
+- **Dans l'IHM, le seuil de 200 ms n'est pas tenu pendant l'import** (#6175). Ce ne sont pas des pauses
+  du ramasse-miettes : hors GC complet, la plus longue du journal dure 63 ms. Ni la taille ni la machine
+  ne sont isolées, ce poste n'ayant pas été tiré à 300 WAV sur l'affichage réel.
+- **L'import de l'IHM ne fait pas le même travail que `BancImport`** : l'assistant ne recopie pas les
+  bruts par défaut (ADR 0036). Il transforme et persiste, d'où 14,4 s contre 20 s, et il garde 20,0 Gio,
+  les séquences seules. Avec la carte, le tir a occupé 39 Go au plus haut.
+
+**Ce que ces chiffres ne mesurent pas** :
+
+- Le disque seul. La source vient d'être écrite et tient presque entière dans le cache du système, et
+  l'import n'attend pas que ses écritures aient atteint le disque : à la fin du second lancement,
+  1176 Mo de pages restaient à écrire, sur 40 Gio produits.
+- Une vraie carte SD, et un poste à huit cœurs ou à disque plus lent : le premier poste n'a pas tiré
+  20 Gio.
+- Dans l'IHM : la dispersion (un tir), le moment où tombent les écarts, et l'application lancée hors
+  des tests. Le processus porte TestFX, l'agent ByteBuddy et celui de JaCoCo, en rendu logiciel.
+- La réactivation d'une nuit, qu'aucun banc ne mesure (#6174).
+
+**Le relancer.** La JVM de test reçoit sa ligne d'arguments du pom : `-Djava.io.tmpdir` et `-Xlog:gc` y
+entrent par la variable `JAVA_TOOL_OPTIONS`, et le banc écrit sous `perf.ihm.racine`.
+
+```bash
+JAVA_TOOL_OPTIONS="-Djava.io.tmpdir=$HOME/banc-20go/tmp -Xlog:gc:file=$HOME/banc-20go/gc-%p.log" \
+  ./mvnw test -Precette-filmee -Dsurefire.groups=banc-ihm -Dsurefire.excludedGroups=api-live \
+  -Dtest=BancIhmO3Test -Dperf.ihm.racine=$HOME/banc-20go/ihm -Dperf.ihm.nuits=1 -Dperf.ihm.wav=5593
+```
 
 ### La lecture par morceaux (#104) : la mémoire ne suit plus la durée d'un WAV
 
@@ -310,8 +395,9 @@ Pour la **stabilité dans la durée** (O3), mesurer **dans un seul processus** :
 
 ## Bilan du cluster perf
 
-Relevés du 2026-10-12, machine nommée plus haut. La campagne est portée par #105, qui regroupe #26
-(O5) et #27 (O3), et elle n'est pas finie.
+Relevés du 2026-10-12, chacun avec sa machine, nommée plus haut : un premier poste pour tout, un
+second pour les 20 Gio. La campagne est portée par #105, qui regroupe #26 (O5) et #27 (O3). Chaque
+critère a son relevé, et chaque seuil non tenu son issue.
 
 - **O5, couche données** : sélection des 4031 observations de 11 à 19 ms à chaud (seuil 100 ms) ; tri
   et filtre des 1000 passages de 10 à 12 ms à chaud (seuil 200 ms). Index `#28` en place et verrouillé
@@ -320,6 +406,7 @@ Relevés du 2026-10-12, machine nommée plus haut. La campagne est portée par #
 - **O3** : nuit standard de 5,62 Gio en 40 à 49 s ; 9 Gio en 84 à 87 s ; occupation après GC de 81
   à 85 Mo, la nuit standard passant sous `-Xmx128m`. **Dans l'IHM** : pas d'écart de plus de 200 ms pendant l'import ; des écarts de 203 à 758 ms à
   l'ouverture des écrans après import (#6171) ; un heap après GC qui grandit de nuit en nuit dans le
-  banc (#6170). **20 Go : non mesurés**, faute de disque.
+  banc (#6170). **20 Gio, sur le second poste** : import en 20 à 21 s, 108 à 115 Mo après GC ; dans
+  l'IHM, un écart de 472 ms entre deux images pendant l'import (#6175).
 - Outillage réutilisable en **non-régression** : `GenerateurJeuDeDonnees`, `BancMesure`, `BancImport`,
   et le banc de l'IHM (`BancIhmO5Test`, `BancIhmO3Test`), lancé à la main.
