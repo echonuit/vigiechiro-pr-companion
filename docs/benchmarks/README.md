@@ -265,9 +265,13 @@ Place occupée par le workspace en fin d'import : 1,07 Gio pour 100 WAV, 60,0 Gi
 20 Gio, aux deux lancements. C'est encore trois fois la source. Charge au plus haut pendant les tirs à
 20 Gio : 7,45 et 5,28, le banc compris.
 
-**Dans l'IHM** (`BancIhmO3Test`, `-Dperf.ihm.nuits=1 -Dperf.ihm.wav=5593`). Un seul tir, sur l'affichage
-réel (XWayland, profil `recette-filmee`, rendu logiciel `prism.order=sw` posé par le pom), fenêtre de
-1280 × 860. Charge du poste sur 1 minute : 1,59 au départ, 7,15 au plus haut, le banc compris.
+**Dans l'IHM** (`BancIhmO3Test`). Deux tirs, sur l'affichage réel (XWayland, profil `recette-filmee`,
+rendu logiciel `prism.order=sw` posé par le pom), fenêtre de 1280 × 860 sur un écran de 3072 × 1920
+que le serveur X annonce à 192 points par pouce. Le premier importe la nuit de 20 Gio
+(`-Dperf.ihm.nuits=1 -Dperf.ihm.wav=5593`) ; charge du poste sur 1 minute : 1,59 au départ, 7,15 au
+plus haut, le banc compris. Le second reprend les réglages du premier poste
+(`-Dperf.ihm.nuits=4 -Dperf.ihm.wav=300`), pour séparer la taille de la nuit de la machine ; charge de
+0,63 au départ, 3,60 au plus haut.
 
 | O3, une nuit de 5593 WAV de 5 s (20,00 Gio) | Relevé | Seuil | Verdict |
 |---|---|---|---|
@@ -277,9 +281,18 @@ réel (XWayland, profil `recette-filmee`, rendu logiciel `prism.order=sw` posé 
 | heap après GC complet | 68 Mo avant la nuit, 247 Mo après | palier stable | voir #6170 |
 | journal G1 du processus | 234 Mo au plus haut après une pause jeune, 2323 Mo de crête | | |
 
-Aucune fenêtre ni question ne s'est ouverte pendant le tir. Avant lui, le banc a été vu rouge sur ce
-poste, en Headless : deux nuits de même date l'arrêtent seul, en 13 s, sur la question « nuit déjà
-importée ».
+| O3, quatre nuits distinctes de 300 WAV de 5 s, un seul processus | Nuit 1 | Nuit 2 | Nuit 3 | Nuit 4 |
+|---|---|---|---|---|
+| durée de l'import, du clic au compte rendu | 1,2 s | 0,8 s | 0,7 s | 0,8 s |
+| images vues par la sonde pendant l'import | 17 | 18 | 10 | 12 |
+| écart max entre deux images pendant l'import | 338 ms | 235 ms | 224 ms | 301 ms |
+| écart max en navigation après l'import | 1323 ms | 1272 ms | 1276 ms | 1277 ms |
+| écarts de plus de 200 ms en navigation (neuf ouvertures) | 9 | 7 | 6 | 8 |
+| heap après GC (68 Mo avant la nuit 1) | 282 Mo | 380 Mo | 478 Mo | 576 Mo |
+
+Aucune fenêtre ni question ne s'est ouverte pendant ces deux tirs. Avant eux, le banc a été vu rouge
+sur ce poste, en Headless : deux nuits de même date l'arrêtent seul, en 13 s, sur la question « nuit
+déjà importée ».
 
 **Lectures** :
 
@@ -290,9 +303,20 @@ importée ».
 - **Le débit ne baisse pas avec la taille sur ce poste** (469 Mo/s à 0,36 Gio), à l'inverse du premier.
   Cela s'accorde avec l'hypothèse du cache disque sans la prouver : ce poste avait environ 19 Gio de
   mémoire disponible, presque toute la source.
-- **Dans l'IHM, le seuil de 200 ms n'est pas tenu pendant l'import** (#6175). Ce ne sont pas des pauses
-  du ramasse-miettes : hors GC complet, la plus longue du journal dure 63 ms. Ni la taille ni la machine
-  ne sont isolées, ce poste n'ayant pas été tiré à 300 WAV sur l'affichage réel.
+- **Dans l'IHM, le seuil de 200 ms n'est tenu à aucune taille sur ce poste** (#6175) : de 224 à 338 ms
+  pendant l'import à 300 WAV, 472 ms à 20 Gio. Le premier poste relevait de 76 à 151 ms sur les mêmes
+  nuits de 300 WAV. C'est donc le poste ou son affichage qui sépare les deux relevés, avant la taille
+  de la nuit : six écarts pour 57 images sur les quatre petites nuits, trois pour 343 images à 20 Gio.
+- **La sonde voit de 14 à 24 images par seconde sur ce poste** (17 images en 1,2 s, 343 en 14,4 s).
+  Chaque image y coûte donc plusieurs dizaines de ms avant tout gel. Le rendu logiciel d'une fenêtre
+  que l'écran double est l'hypothèse la plus simple, et elle n'est pas vérifiée.
+- **En navigation, la plupart des ouvertures d'écran gèlent le fil de 1,2 à 1,3 s**, à 300 WAV comme
+  à 20 Gio (#6171) : cet écart ne suit pas la taille de la nuit. Le premier poste relevait de 203 à 758 ms.
+- **Le heap après GC ne suit pas la taille de la nuit** (#6170) : une nuit de 300 WAV laisse 282 Mo,
+  une nuit de 20 Gio 247 Mo. Il gagne 98 Mo à chacune des trois nuits suivantes.
+- **Ce ne sont pas des pauses du ramasse-miettes** : hors GC complet, la plus longue dure 63 ms dans
+  le tir à 20 Gio et 22 ms dans le tir à 300 WAV, et les GC complets, que le banc demande lui-même,
+  tombent hors des périodes sondées.
 - **L'import de l'IHM ne fait pas le même travail que `BancImport`** : l'assistant ne recopie pas les
   bruts par défaut (ADR 0036). Il transforme et persiste, d'où 14,4 s contre 20 s, et il garde 20,0 Gio,
   les séquences seules. Avec la carte, le tir a occupé 39 Go au plus haut.
@@ -304,8 +328,9 @@ importée ».
   1176 Mo de pages restaient à écrire, sur 40 Gio produits.
 - Une vraie carte SD, et un poste à huit cœurs ou à disque plus lent : le premier poste n'a pas tiré
   20 Gio.
-- Dans l'IHM : la dispersion (un tir), le moment où tombent les écarts, et l'application lancée hors
-  des tests. Le processus porte TestFX, l'agent ByteBuddy et celui de JaCoCo, en rendu logiciel.
+- Dans l'IHM : la dispersion à 20 Gio (un tir), le moment où tombent les écarts, la part du rendu
+  logiciel et de l'échelle de l'écran, et l'application lancée hors des tests. Le processus porte
+  TestFX, l'agent ByteBuddy et celui de JaCoCo.
 - La réactivation d'une nuit, qu'aucun banc ne mesure (#6174).
 
 **Le relancer.** La JVM de test reçoit sa ligne d'arguments du pom : `-Djava.io.tmpdir` et `-Xlog:gc` y
@@ -407,6 +432,7 @@ critère a son relevé, et chaque seuil non tenu son issue.
   à 85 Mo, la nuit standard passant sous `-Xmx128m`. **Dans l'IHM** : pas d'écart de plus de 200 ms pendant l'import ; des écarts de 203 à 758 ms à
   l'ouverture des écrans après import (#6171) ; un heap après GC qui grandit de nuit en nuit dans le
   banc (#6170). **20 Gio, sur le second poste** : import en 20 à 21 s, 108 à 115 Mo après GC ; dans
-  l'IHM, un écart de 472 ms entre deux images pendant l'import (#6175).
+  l'IHM de ce poste, des écarts de 224 à 472 ms entre deux images pendant l'import, à 300 WAV comme
+  à 20 Gio (#6175).
 - Outillage réutilisable en **non-régression** : `GenerateurJeuDeDonnees`, `BancMesure`, `BancImport`,
   et le banc de l'IHM (`BancIhmO5Test`, `BancIhmO3Test`), lancé à la main.
