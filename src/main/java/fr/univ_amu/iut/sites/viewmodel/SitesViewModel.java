@@ -157,7 +157,9 @@ public class SitesViewModel {
 
     private static String messageDe(List<RapportSynchro> rapports) {
         if (rapports.isEmpty()) {
-            return "Aucun site distant récupéré (non connecté, ou aucun site sur Vigie-Chiro).";
+            // « Non connecté » n'arrive plus ici depuis #6151 : il se dit par son propre rapport, avec le
+            // geste qui répare. Le nommer encore ferait douter d'une connexion qui marche.
+            return "Aucun site distant récupéré (aucun site sur Vigie-Chiro).";
         }
         // Chaque nature dit son issue, à côté des autres (#2655). Une synchronisation empêchée se dit
         // telle quelle (#1284) sans écraser le reste : un message unique faisait disparaître les
