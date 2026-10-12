@@ -713,10 +713,30 @@ jobs:
   # `clips-connectes` les rangerait avec des clips qui, eux, ne se comparent pas.
   #
   # Ni jeton ni révocation à attendre : la plateforme de test n'a aucun secret.
+  #
+  # Il ne verse QUE depuis `main` (#6155). Les deux pré-versions sont la référence qu'une comparaison
+  # lance par défaut ; un tournage de branche qui y écrit la remplace par un réglage absent de `main`,
+  # et la comparaison suivante compare deux tournages de branche sans le dire. C'est arrivé le
+  # 12 octobre 2026, six tournages de branche lancés pour remesurer des planchers. Une branche n'a pas
+  # besoin de ce versement : elle se compare à `main` par numéros d'exécution (ADR 5930), et ses clips
+  # restent dans l'artefact de son tournage. `github.ref` est la branche choisie au lancement manuel ;
+  # appelé par le train, ce workflow reçoit le ref de l'appelant, mais le train ne passe jamais
+  # `plateforme_de_test`.
+  #
+  # Et les versements passent UN par UN, dans un groupe fixe à l'échelle du dépôt. Deux versements
+  # simultanés se disputaient `clips-plateforme-de-test-precedent` : l'un en retirait les pièces que
+  # l'autre venait d'y poser, et le second a échoué sur un HTTP 404 (exécution 38220563458).
+  # `cancel-in-progress` reste faux, parce qu'un versement n'est pas atomique : interrompu entre le
+  # retrait des pièces de la précédente et leur dépôt, il la laisserait vide. Ce que le groupe ne
+  # garantit pas : GitHub n'y garde qu'UN job en attente, et un troisième arrivant annule celui qui
+  # attend. Ce versement-là est annulé, pas échoué, et ses clips restent dans son artefact.
   publier-plateforme-de-test:
     name: Verser les clips de la plateforme de test sur leur pré-version
     needs: filmer
-    if: ${{ success() && inputs.plateforme_de_test }}
+    if: ${{ success() && inputs.plateforme_de_test && github.ref == 'refs/heads/main' }}
+    concurrency:
+      group: versement-clips-plateforme-de-test
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:

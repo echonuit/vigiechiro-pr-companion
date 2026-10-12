@@ -24,9 +24,11 @@ jours.
 
 Les clips de la **plateforme de test** se comparent d'un tournage au suivant : `avant` =
 `clips-plateforme-de-test-precedent`, `apres` = `clips-plateforme-de-test` (#5854). Chaque tournage
-sur cette cible recopie la pré-version sous le premier nom avant de l'écraser, et les notes des deux
-disent l'exécution et le commit qui les ont tournées : c'est là qu'on lit ce qu'on compare. Deux
-tournages du même commit mesurent du bruit ; deux commits différents, ce que le second a changé.
+de `main` sur cette cible recopie la pré-version sous le premier nom avant de l'écraser, et les notes
+des deux disent l'exécution et le commit qui les ont tournées : c'est là qu'on lit ce qu'on compare.
+Deux tournages du même commit mesurent du bruit ; deux commits différents, ce que le second a changé.
+Un tournage de branche ne verse sur aucune des deux (#6155) : la comparaison par défaut ne compare que
+des tournages de `main`, et une branche se compare par numéros d'exécution, comme ci-dessous.
 
 ### Comparer une branche à `main` avant fusion
 
