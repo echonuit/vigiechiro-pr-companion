@@ -1,6 +1,5 @@
 package fr.univ_amu.iut.perf.outils;
 
-import static fr.univ_amu.iut.perf.outils.EcranDuBanc.RACINE;
 import static fr.univ_amu.iut.perf.outils.EcranDuBanc.RELEVES;
 import static fr.univ_amu.iut.perf.outils.InstrumentsDuBanc.surLeFil;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -72,7 +71,7 @@ class BancIhmO5Test {
     @DisplayName("O5 : l'écran des sons à 4031 observations (ouverture, tri, filtre, clic, revue)")
     void o5_observations() throws Exception {
         monterLeJeu("o5-observations");
-        Releve releve = new Releve(RACINE, "O5 observations");
+        Releve releve = ecran.releve("O5 observations");
         ecran.controlerLInstrument(releve);
         ecran.temoinAVide(releve);
         SourceObservations sons = sourceDesObservations();
@@ -142,7 +141,7 @@ class BancIhmO5Test {
     @DisplayName("O5 : la vue multisite à 1000 passages (ouverture, tri par colonne, filtre)")
     void o5_passages() throws Exception {
         monterLeJeu("o5-passages");
-        Releve releve = new Releve(RACINE, "O5 passages");
+        Releve releve = ecran.releve("O5 passages");
         ecran.temoinAVide(releve);
         ecran.mesurerOuverture(
                 releve,
@@ -181,7 +180,7 @@ class BancIhmO5Test {
             System.setProperty("perf.sites", String.valueOf(carres));
             System.setProperty("perf.points", "2");
             monterLeJeu("o5-topologie-" + carres);
-            Releve releve = new Releve(RACINE, "O5 topologie " + carres + " carrés de 2 points");
+            Releve releve = ecran.releve("O5 topologie " + carres + " carrés de 2 points");
             ecran.temoinAVide(releve);
             SourceObservations sons = sourceDesObservations();
             ecran.mesurerOuverture(

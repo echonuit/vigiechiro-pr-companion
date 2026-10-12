@@ -176,14 +176,19 @@ final class InstrumentsDuBanc {
     record Gel(long images, double maxMs, List<Double> gelsMs) {}
 
     /// Les lignes d'un banc, imprimées et ajoutées à `releve.tsv` sous la racine du banc.
+    ///
+    /// Le relevé s'ouvre sur l'échelle à laquelle le banc a dessiné (#6177) : ses chiffres en dépendent,
+    /// et ils ne se comparent d'un poste à l'autre qu'avec elle.
     static final class Releve {
         private final Path racine;
         private final String titre;
+        private final String echelle;
         private final List<String> lignes = new ArrayList<>();
 
-        Releve(Path racine, String titre) {
+        Releve(Path racine, String titre, EchelleDuRendu echelle) {
             this.racine = racine;
             this.titre = titre;
+            this.echelle = echelle.ligne();
         }
 
         void noter(String geste, int rang, double ms) {
@@ -241,11 +246,15 @@ final class InstrumentsDuBanc {
             assertThat(lignes).as("un banc qui n'a rien relevé ne mesure rien").isNotEmpty();
             System.out.println("=== Banc de l'IHM (#105) : " + titre + " ===");
             BancImport.imprimerMachine();
+            System.out.println("  échelle         : " + echelle);
             lignes.forEach(System.out::println);
+            List<String> releve = new ArrayList<>();
+            releve.add(titre + "\téchelle\t" + echelle);
+            releve.addAll(lignes);
             Files.createDirectories(racine);
             Files.write(
                     racine.resolve("releve.tsv"),
-                    lignes,
+                    releve,
                     StandardCharsets.UTF_8,
                     StandardOpenOption.CREATE,
                     StandardOpenOption.APPEND);

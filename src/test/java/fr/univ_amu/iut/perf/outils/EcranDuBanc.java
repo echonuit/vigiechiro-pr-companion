@@ -73,6 +73,7 @@ final class EcranDuBanc {
     private final Questions questions = new Questions();
     private Injector injecteur;
     private SondeImages sonde;
+    private EchelleDuRendu echelle;
 
     EcranDuBanc(Stage stage) {
         this.stage = stage;
@@ -119,7 +120,10 @@ final class EcranDuBanc {
         return espace;
     }
 
-    /// Compose l'application réelle sur `espace`, sème, monte le chrome et pose la sonde.
+    /// Compose l'application réelle sur `espace`, sème, monte le chrome et pose la sonde. La fenêtre
+    /// affichée, il lit l'échelle de son rendu et s'arrête si elle n'est pas 1 sans dérogation
+    /// ([EchelleDuRendu#verifier()]) : avant toute mesure, en quelques secondes, au lieu de rendre des
+    /// chiffres qui ne se comparent à rien.
     void monter(Path espace, Semis semis) throws Exception {
         arreterLaSonde();
         System.setProperty("vigiechiro.workspace", espace.toString());
@@ -146,12 +150,19 @@ final class EcranDuBanc {
             Parent racine = chargeur.load();
             FenetreDuBanc.poser(stage, racine, 1280, 860);
             FenetreDuBanc.afficher(stage);
+            echelle = EchelleDuRendu.lire(stage);
             ConfirmationsDuBanc.poser(inj.getInstance(Navigateur.class), questions);
             sonde = new SondeImages();
             sonde.start();
             return null;
         });
         WaitForAsyncUtils.waitForFxEvents();
+        echelle.verifier();
+    }
+
+    /// Un relevé ouvert sur l'échelle de la fenêtre montée : il ne s'ouvre qu'après [#monter].
+    Releve releve(String titre) {
+        return new Releve(RACINE, titre, echelle);
     }
 
     void arreterLaSonde() throws Exception {

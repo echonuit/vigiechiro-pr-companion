@@ -69,11 +69,16 @@ débit, nb séquences, **mémoire crête**.
   se compare aux seuils ; la valeur à froid se publie à part, sous son nom, comme l'attente du premier
   écran du jour (ADR 0027).
 - **Trois lancements**, dont on publie les trois valeurs : un chiffre seul ne dit pas sa dispersion.
-- **Le banc de l'IHM se tire à une échelle d'écran écrite.** Il dessine en rendu logiciel : sur un
-  écran que le système double, chaque image coûte quatre fois plus de pixels, et l'écart entre deux
-  images va du simple au triple pendant un import, davantage en navigation (mesuré le 2026-10-12,
-  « Le test de charge à 20 Gio »).
-  L'échelle se force à 1 par `-Dglass.gtk.uiScale=1`, ou s'écrit à côté du relevé.
+- **Le banc de l'IHM se tire à l'échelle 1, et il le vérifie lui-même** (#6177). Il dessine en
+  rendu logiciel : sur un écran que le système double, chaque image coûte quatre fois plus de pixels,
+  et l'écart entre deux images va du simple au triple pendant un import, davantage en navigation
+  (mesuré le 2026-10-12, « Le test de charge à 20 Gio »). Le banc lit l'échelle de rendu de sa
+  fenêtre une fois affichée, l'écrit en tête de chaque relevé (sortie et `releve.tsv`) avec celle que
+  l'écran demande et les réglages `glass.platform`, `prism.order` et `glass.gtk.uiScale`, et s'arrête
+  avant toute mesure si elle n'est pas 1. Sur un écran dense, l'échelle se force à 1 par
+  `-Dglass.gtk.uiScale=1`, posé par `JAVA_TOOL_OPTIONS` (voir « Le relancer »). Mesurer à l'échelle de
+  l'écran reste possible par `-Dperf.ihm.echelle=ecran`, et le relevé écrit alors cette dérogation à
+  côté de ses chiffres.
 
 ## Relevés du 2026-10-12
 
@@ -226,8 +231,11 @@ chiffre ci-dessous.
 
 **Ce que ces chiffres ne mesurent pas** : la latence d'entrée (souris et clavier contournés), le dessin
 de l'image et son affichage par le compositeur, un rendu GPU, une vraie carte SD et une autre machine.
-L'échelle de l'écran de ce poste n'a pas été relevée ; le second poste, tiré à l'échelle 1, rend
-presque les mêmes chiffres. Les 20 Go ont leur sous-section.
+L'échelle de ce tir n'a pas été lue dans le processus : le banc ne la relevait pas encore (#6177). Le
+poste était très probablement à l'échelle 1, à 96 points par pouce, ce que l'on déduit de ses réglages
+d'affichage relus le jour même (un écran de 1920 × 1080 annoncé à 96 points par pouce, `Xft.dpi` à 96),
+et le second poste, tiré à l'échelle 1, rend presque les mêmes chiffres. Les 20 Go ont leur
+sous-section.
 
 **Le relancer** (jamais en CI : l'étiquette `banc-ihm` est exclue par défaut) :
 
@@ -239,7 +247,10 @@ presque les mêmes chiffres. Les 20 Go ont leur sous-section.
 Volumes : `-Dperf.ihm.observations` (4031), `-Dperf.ihm.passages` (1000), `-Dperf.ihm.nuits` (4),
 `-Dperf.ihm.wav` (300 WAV par nuit, environ 1,1 Gio gardé par nuit importée : les séquences seules,
 l'assistant ne recopiant pas les bruts par défaut). Le relevé s'ajoute à `releve.tsv` sous
-`perf.ihm.racine`.
+`perf.ihm.racine`, chaque banc ouvrant sa part sur une ligne `échelle`. Sur un écran dont l'échelle
+n'est pas 1, le banc s'arrête dès la fenêtre affichée et dit quoi poser :
+`JAVA_TOOL_OPTIONS="-Dglass.gtk.uiScale=1"` devant la commande, ou `-Dperf.ihm.echelle=ecran` pour
+mesurer à l'échelle de l'écran.
 
 ### Le test de charge à 20 Gio, sur un second poste
 
