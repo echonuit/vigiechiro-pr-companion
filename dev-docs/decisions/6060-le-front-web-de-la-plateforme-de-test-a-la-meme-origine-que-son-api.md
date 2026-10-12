@@ -59,7 +59,8 @@ Le front se construit comme son amont le déploie : Node 22, `bower`, `grunt bui
 
 ## Conséquences
 
-Chaque test de la plateforme de test paie la construction du front, environ une minute.
+Chaque test de la plateforme de test paie la construction du front : le job passe de 100 à 144 s
+sur `main` à 209 à 246 s.
 L'[ADR 5666](5666-la-plateforme-de-test-se-construit-sans-cache.md) dit ce que cela fait à la durée
 du job.
 
