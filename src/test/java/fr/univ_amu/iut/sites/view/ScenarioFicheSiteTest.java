@@ -22,6 +22,7 @@ import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -72,7 +73,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// cette fixture la fiche entière tient dans la zone : retirer les appels à `amener` ne fait rougir
 /// aucun des quatre cas aujourd'hui, et c'est ce qui garde vraie la phrase le jour où la fiche gagne une
 /// section.
-@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
+@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class, SansEcritureHorsDuFil.class})
 class ScenarioFicheSiteTest {
 
     private static final String ID_USER = "u-fiche";

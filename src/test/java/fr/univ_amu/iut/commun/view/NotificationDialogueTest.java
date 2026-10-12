@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.scene.control.Alert;
 import org.junit.jupiter.api.DisplayName;
@@ -21,7 +22,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// Séparer la fabrication de l'ouverture rend ce choix observable, et rend l'aperçu documentaire
 /// possible. L'`Alert` se construit sur le fil JavaFX, d'où le `robot.interact` ; on ne l'affiche
 /// jamais.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class NotificationDialogueTest {
 
     @Test

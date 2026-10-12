@@ -24,6 +24,7 @@ import fr.univ_amu.iut.diagnostic.model.SerieClimatique;
 import fr.univ_amu.iut.diagnostic.model.ServiceDiagnostic;
 import fr.univ_amu.iut.diagnostic.viewmodel.DiagnosticViewModel;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -44,7 +45,7 @@ import org.testfx.framework.junit5.Start;
 /// Test d'intégration TestFX de l'écran **M-Diagnostic** : chargement du FXML via Guice (avec un
 /// [ServiceDiagnostic] mocké), ouverture sur un passage, vérification du câblage (graphe à deux
 /// séries T°/hygrométrie, listes d'anomalies/évènements, enregistreur). Pas de base de données.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class DiagnosticViewTest {
 
     private DiagnosticController controleur;

@@ -47,6 +47,7 @@ import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Jugement;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import java.io.IOException;
@@ -94,7 +95,12 @@ import org.testfx.framework.junit5.Start;
 /// **journal du capteur** - ce dernier bloquant. Le relevé climatique, lui, ne fait qu'avertir.
 ///
 /// Les fichiers posés sur le disque sont minuscules : la source ne lit que leur **taille**.
-@ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class, SansExceptionAvalee.class})
+@ExtendWith({
+    ApplicationExtension.class,
+    EnregistreurDeFilm.class,
+    SansExceptionAvalee.class,
+    SansEcritureHorsDuFil.class
+})
 class ScenarioPerceptifRefusDepotTest {
 
     private static final String ID_USER = "u-scenario";

@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -23,7 +24,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// [CritereListe] pose en premier, et celle sur laquelle tout le chantier #3092 s'appuie : c'est elle
 /// qui fait qu'une valeur non replacée **élargit** le filtre au lieu de le vider (#3056, #3093). Et le
 /// libellé est du **visible** : un geste testé n'est pas un écran regardé.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class CritereListeSemantiqueTest {
 
     private static final String INVITE = "Choisir un lieu";

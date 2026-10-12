@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -37,7 +38,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// Le passage est **absent de la base** : cela suffit à exercer toute la chaîne sans seeding, comme
 /// `NavigationDiagnosticViewTest`.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class NavigationSyntheseViewTest {
 
     private Injector injector;

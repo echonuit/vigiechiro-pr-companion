@@ -19,6 +19,7 @@ import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import fr.univ_amu.iut.passage.model.dao.CampagneDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.viewmodel.GestionCampagnesViewModel;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.concurrent.atomic.AtomicReference;
@@ -47,7 +48,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// La confirmation de suppression passe par le porteur injectable : un `Alert` en dur **figerait**
 /// TestFX headless, et le geste deviendrait intestable (leçon #1405).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class GestionCampagnesModaleViewTest {
 
     private static final String SUIVI_ENS = "Suivi ENS";

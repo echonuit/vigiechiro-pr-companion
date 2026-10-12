@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.outils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javafx.scene.Group;
@@ -30,7 +31,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// Le second masquait **55 % de surface qui n'est pas de la carte** - le tableau de données entier de
 /// l'écran Multisite, colonnes et barre de recherche comprises. Une régression y aurait été invisible.
 /// La liste était en outre incomplète : trois écrans d'import portaient une carte qu'elle ignorait.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ZoneCarteApercuTest {
 
     /// La classe que `CarteSites` se pose, et par laquelle une carte se reconnaît.

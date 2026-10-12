@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.view.ContenuDesignation.Entree;
 import fr.univ_amu.iut.commun.view.ContenuDesignation.Mode;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,7 +27,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// **Un vrai dossier temporaire, et non un double du système de fichiers.** Le contenu lit le disque,
 /// et abstraire cette lecture pour la tester ferait éprouver l'abstraction plutôt que le geste. Un
 /// `@TempDir` coûte moins et dit plus.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ContenuDesignationTest {
 
     @TempDir

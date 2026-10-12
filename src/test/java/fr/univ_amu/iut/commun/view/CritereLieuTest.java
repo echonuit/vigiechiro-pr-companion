@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.LieuQualifie;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
@@ -26,7 +27,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// quatrième dimension, le « site », est le nom convivial du carré, offert dans la même entrée depuis
 /// #3157. Leur composition reste un paramètre : Espèces & observations n'offre pas le point tant que sa
 /// projection ne remonte pas son code.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class CritereLieuTest {
 
     private record Ligne(String commune, String carre, String point) {}

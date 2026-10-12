@@ -41,6 +41,7 @@ import fr.univ_amu.iut.qualification.model.ServiceEmport;
 import fr.univ_amu.iut.qualification.model.ServiceQualification;
 import fr.univ_amu.iut.qualification.viewmodel.QualificationViewModel;
 import fr.univ_amu.iut.qualification.viewmodel.SelectionEcouteViewModel;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.fxml.FXMLLoader;
@@ -79,7 +80,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// [ServiceQualification] mocké, deux ViewModel sur le service mocké, ouverture sur un passage.
 /// Le diagnostic de pré-check seedé porte ici un feu **rouge** (couverture) pour exercer le chemin
 /// « anomalie signalée », et `creerSelection` est stubbé pour que la régénération R12 aboutisse.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class QualificationVueIntegrationTest {
 
     private static final long ID_PASSAGE = 42L;

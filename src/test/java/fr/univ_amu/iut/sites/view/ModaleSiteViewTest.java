@@ -24,6 +24,7 @@ import fr.univ_amu.iut.commun.viewmodel.EtatConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
@@ -54,7 +55,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// Alignés sur le patron **modale** déjà en service ailleurs (`ModalePoint`, `RattachementModale`,
 /// `ReconstructionModale`), ils deviennent une vraie vue : le geste se joue, et la validation - qui
 /// vivait dans la vue - devient un binding observable, vérifiable sans IHM.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ModaleSiteViewTest {
 
     // Cette classe ne cite plus de cas de recette, et ce n'est pas un oubli. Elle monte

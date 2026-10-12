@@ -38,6 +38,7 @@ import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.TraitementViewModel;
 import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.GesteVisible;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import java.util.Optional;
 import javafx.fxml.FXMLLoader;
@@ -60,7 +61,7 @@ import org.testfx.framework.junit5.Start;
 /// Même montage que [LotDepotConnecteViewTest], dont ces cas sont sortis pour ne pas lui faire franchir
 /// le plafond de taille d'une classe de test (ADR 4617) : un [DepotVigieChiro] simulé, une participation
 /// liée, et un passage en « Dépôt en cours » dont le plan est déjà rempli.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class LotFilDEtapesViewTest {
 
     private static final long ID_PASSAGE = 42L;

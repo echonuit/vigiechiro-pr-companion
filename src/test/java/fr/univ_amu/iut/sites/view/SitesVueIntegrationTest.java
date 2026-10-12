@@ -18,6 +18,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Path;
@@ -56,7 +57,7 @@ import org.testfx.framework.junit5.Start;
 /// Les interactions sont déclenchées sur le thread JavaFX (`robot.interact` + handlers / `fire()`)
 /// plutôt qu'avec le robot souris/clavier de l'OS, pour rester déterministe sous xvfb comme sous
 /// Wayland (même raison que `MesSitesViewTest`).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class SitesVueIntegrationTest {
 
     private static final String ID_USER = "u-test";

@@ -13,6 +13,7 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.model.MethodeSelection;
 import fr.univ_amu.iut.qualification.viewmodel.SelectionEcouteViewModel;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXMLLoader;
@@ -39,7 +40,7 @@ import org.testfx.framework.junit5.Start;
 /// traité. Il souffrait des trois mêmes défauts que la modale de site (#1454) - geste injouable,
 /// validation dans la vue, **capture de documentation reconstruite à la main** (donc capable de dériver
 /// du vrai écran sans que rien ne le signale).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ModaleSelectionViewTest {
 
     private SelectionEcouteViewModel viewModel;

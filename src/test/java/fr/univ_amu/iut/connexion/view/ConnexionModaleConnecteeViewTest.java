@@ -19,6 +19,7 @@ import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +44,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// chargement, si bien que la modale s'ouvre déjà connectée. On vérifie que la saisie du token est
 /// verrouillée (champ + bouton « Se connecter » grisés), que « Se déconnecter » est actif, et que le
 /// badge d'identité est au vert (`badge-succes`). Déterministe, sans appel réseau ni asynchronisme.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ConnexionModaleConnecteeViewTest {
 
     // Cette classe ne cite plus `S1-11`, et ce n'est pas un oubli. Elle monte `ConnexionModale.fxml`

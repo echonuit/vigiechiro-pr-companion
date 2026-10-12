@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.model.dao.ReglagesDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.util.List;
 import javafx.scene.control.CheckBox;
@@ -23,7 +24,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// Rendu de l'onglet « Fonctionnalités » (#1057) par le socle : la case d'une feature désactivable
 /// écrit bien le flag persisté `feature.<id>.active`, et le bandeau « effet au prochain démarrage »
 /// (échappatoire [OngletReglagesPersonnalise]) est rendu sous les cases.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class OngletReglagesFonctionnalitesRenduTest {
 
     @TempDir

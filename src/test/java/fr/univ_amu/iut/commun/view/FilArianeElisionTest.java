@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.diagnostic.view.NavigationDiagnostic;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.function.DoubleConsumer;
@@ -48,7 +49,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// Que le choix des segments gardés est le **meilleur**. Il vérifie qu'aucun n'est coupé et qu'aucun
 /// n'est perdu ; lequel mérite la place est un arbitrage, consigné dans l'ADR 3798.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class FilArianeElisionTest {
 
     /// Les **deux** largeurs que le produit livre, éprouvées par chaque test de ce fichier.

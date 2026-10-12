@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.PastillesEntieres;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.sites.viewmodel.LignePassage;
@@ -42,7 +43,7 @@ import org.testfx.framework.junit5.Start;
 /// La fiche est ouverte par le vrai injecteur, donc avec le FXML et les largeurs de l'écran. Les
 /// lignes de la table sont ensuite remplacées par une ligne par statut, les quatre verdicts et
 /// l'absence de verdict : la base n'a pas à porter sept nuits pour que sept libellés se dessinent.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class PastillesDeLaFicheSiteTest {
 
     private static final String FXML = "SiteDetail.fxml";

@@ -19,6 +19,7 @@ import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.recette.Seance;
 import fr.univ_amu.iut.sites.model.PresenceDuCarre;
@@ -41,7 +42,7 @@ import org.testfx.util.WaitForAsyncUtils;
 ///
 /// Les cas de `S1` sur la vérification d'un carré vivent dans [ScenarioModaleCarreTest] ; ceux-ci en
 /// sont sortis parce que la classe atteignait le plafond de taille du portail qualité.
-@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
+@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class, SansEcritureHorsDuFil.class})
 class ScenarioCarreAbsentTest {
 
     private static final String ID_USER = "u-carre-absent";

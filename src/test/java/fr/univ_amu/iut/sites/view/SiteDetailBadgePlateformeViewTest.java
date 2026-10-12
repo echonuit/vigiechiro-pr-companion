@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
@@ -40,7 +41,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// Le badge est celui du socle (`badge` + famille de couleur sémantique), pas un style ad hoc : c'est
 /// explicitement ce que demandait l'issue.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class SiteDetailBadgePlateformeViewTest {
 
     private static final String ID_USER = "u-1";

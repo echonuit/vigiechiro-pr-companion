@@ -31,6 +31,7 @@ import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.validation.model.ImportVigieChiro;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MessageObservation;
@@ -64,7 +65,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// import, et l'application les jetait. Elle présentait donc la correction de l'observateur comme le
 /// dernier mot, alors qu'un expert avait pu la réviser **sans qu'on le voie jamais**. Les tests unitaires
 /// vérifient chaque maillon ; celui-ci vérifie que la chaîne **tient d'un bout à l'autre**.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ParcoursValidationExpertE2ETest {
 
     private static final String ID_USER = "u-e2e-expert";

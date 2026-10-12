@@ -23,6 +23,7 @@ import fr.univ_amu.iut.diagnostic.model.MesureClimatique;
 import fr.univ_amu.iut.diagnostic.model.SerieClimatique;
 import fr.univ_amu.iut.diagnostic.model.ServiceDiagnostic;
 import fr.univ_amu.iut.diagnostic.viewmodel.DiagnosticViewModel;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -52,7 +53,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// Chaque mesure a son **témoin** dans le même dispositif : sans lui, une zone vide pourrait être une
 /// cécité du test plutôt qu'un défaut de l'écran.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class DiagnosticIdentiteStatutViewTest {
 
     private static final ContextePassage CONTEXTE =

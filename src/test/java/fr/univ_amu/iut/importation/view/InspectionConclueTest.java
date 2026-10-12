@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -23,7 +24,7 @@ import org.testfx.framework.junit5.Start;
 /// L'attente qu'elle remplace lisait un libellé qui n'est jamais vide, et ne pouvait pas expirer. Ce
 /// banc pose l'écran dans l'état où cette attente-là réussissait à tort : la section d'inspection
 /// est dans le graphe, **invisible**, et son libellé dit déjà quelque chose.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class InspectionConclueTest {
 
     private static final long COURT_MS = 400;

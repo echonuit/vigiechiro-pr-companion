@@ -1077,6 +1077,11 @@ bloqué. Le patron correct (thread virtuel → travail → `Platform.runLater`) 
   succès, Consumer échec)` exécute le travail **hors du fil JavaFX** puis applique résultat/erreur
   **sur** le fil JavaFX. `ExecuteurTacheAsynchrone` (thread virtuel + `runLater`) en production ;
   `ExecuteurTacheSynchrone` (défaut) rend les tests déterministes. Sœur d'`ExecuteurFiche`.
+  **Le travail ne touche aucune propriété dont dépend un nœud affiché** : il rend une valeur, et c'est
+  `succès` qui l'applique. JavaFX ne vérifie pas le fil d'une écriture de propriété, et #6138 a
+  réécrit un champ de l'écran d'import depuis la tâche, de #1490 à #6139. L'extension de test
+  `SansEcritureHorsDuFil` relève une telle écriture et fait rougir le cas
+  ([ADR 6142](decisions/6142-une-tache-de-fond-rend-une-valeur-et-n-ecrit-pas-la-scene.md)).
 - `IndicateurOccupation` : superpose sur un `StackPane` hôte un voile + roue + libellé « … en
   cours » (`enCoursProperty`, styles `.occupation-*` dans `design.css`), et pilote un `ExecuteurTache`
   via `occuper(libellé, travail, succès, échec)`. Le voile capte les clics le temps du traitement.

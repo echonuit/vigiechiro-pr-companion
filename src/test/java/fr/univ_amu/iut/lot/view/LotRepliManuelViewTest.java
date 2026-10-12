@@ -39,6 +39,7 @@ import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.TraitementViewModel;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -63,7 +64,7 @@ import org.testfx.framework.junit5.Start;
 /// Connecté en séquences WAV, l'écran n'offre ni archives ni dépôt manuel. Quand Vigie-Chiro refuse des
 /// séquences sans recours, la carte des archives reparaît sous le téléversement, sans devenir une étape,
 /// et porte le dernier geste : marquer le passage déposé.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class LotRepliManuelViewTest {
 
     private static final long ID_PASSAGE = 42L;

@@ -30,7 +30,7 @@ import org.testfx.framework.junit5.Start;
 /// Le premier cas **exige que la forme d'avant lève**. Sans lui, le second serait vert pour une
 /// raison inconnue - une cible encore attachée, un prédicat qui ne reconnaît rien, un écouteur qui
 /// n'a pas tourné. Et il rougirait si TestFX cessait de lever, ce qu'il faudrait savoir.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class GesteVisibleCibleReconstruiteTest {
 
     private static final String CHERCHE = "la carte intitulée « B »";

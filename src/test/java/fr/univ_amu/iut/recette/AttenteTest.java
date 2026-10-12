@@ -17,7 +17,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// souvent** fini avant, pas parce que quelque chose le garantit (#4694).
 // Le toolkit JavaFX est amorce parce que deux temoins lisent leur predicat SUR son fil : sans lui,
 // `asyncFx` leve « Toolkit not initialized » avant meme d'evaluer quoi que ce soit.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 @DisplayName("Attente : elle attend, et elle dit ce qu'elle a vu")
 class AttenteTest {
 

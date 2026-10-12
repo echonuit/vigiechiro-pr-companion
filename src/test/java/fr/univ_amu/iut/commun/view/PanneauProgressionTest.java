@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.scene.control.Button;
@@ -20,7 +21,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// L'extension TestFX ne sert qu'à **démarrer le toolkit** - les contrôles JavaFX ne s'instancient pas
 /// sans lui - et l'exécuteur synchrone déroule le travail sur le fil courant, ce qui rend l'enchaînement
 /// observable sans robot ni fenêtre.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class PanneauProgressionTest {
 
     private StackPane zone;

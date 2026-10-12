@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.multisite.view.NavigationMultisite;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.view.NavigationSites;
@@ -40,7 +41,7 @@ import org.testfx.framework.junit5.Start;
 ///  - le **← Retour** remonte d'un cran à l'écran précédent réel (détail → liste → accueil), sans
 ///    jamais forcer un détour par l'accueil,
 ///  - cliquer un **segment** du fil remonte directement à cet ancêtre (état préservé).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ParcoursNavigationE2ETest {
 
     private static final String ID_USER = "u-nav";

@@ -42,6 +42,7 @@ import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.validation.model.BilanImport;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.ExportObservationsEtSons;
@@ -80,7 +81,7 @@ import org.testfx.framework.junit5.Start;
 /// d'un fichier délègue à l'import du ViewModel (alternative au `FileChooser`) et le bandeau de retour
 /// confirme le succès. Services métier mockés ; seule une base `app_setting` jetable sert aux
 /// préférences de lecture (#1006).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class SonsValidationDepotViewTest {
 
     /// La source ouverte par la fixture : le passage 7 du carré 640380, point A1.

@@ -26,6 +26,7 @@ import fr.univ_amu.iut.recette.ExecuteurTacheRalenti;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -57,7 +58,12 @@ import org.testfx.util.WaitForAsyncUtils;
 /// Aucune n'est un cas limite. Un WAV illisible parmi cent arrive ; une nuit rapportée en `.zip`
 /// arrive ; rebrancher la même carte arrive tout le temps. Ce que le produit doit faire, chaque fois,
 /// c'est **continuer** en disant ce qu'il a trouvé.
-@ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class, SansExceptionAvalee.class})
+@ExtendWith({
+    ApplicationExtension.class,
+    EnregistreurDeFilm.class,
+    SansExceptionAvalee.class,
+    SansEcritureHorsDuFil.class
+})
 class ScenarioRejetsEtArchiveTest {
 
     private static final String ID_USER = "u-recette";

@@ -22,6 +22,7 @@ import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -47,7 +48,7 @@ import org.testfx.framework.junit5.Start;
 /// **déverrouillée que sur un passage déposé** (`validationVerrouillee`) : on prépare donc un passage
 /// importé puis **déposé**, et on vérifie que le bouton « Sons & validation » est actif puis qu'il
 /// ouvre l'écran de validation (`passage → validation`, sans dépendance directe).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ParcoursPassageVersValidationE2ETest {
 
     private static final String ID_USER = "u-e2e-val";

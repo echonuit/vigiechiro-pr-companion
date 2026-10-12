@@ -19,6 +19,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.view.Navigateur;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Path;
@@ -53,7 +54,7 @@ import org.testfx.framework.junit5.Start;
 /// `ServiceSites.modifierSite` fait un `update` et **n'annonce rien** - aucun des quatre comptes de
 /// l'accueil ne bouge. Seule la relecture **au retour** peut donc rattraper le nouveau nom, et c'est
 /// exactement ce que ce test vérifie.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class MesSitesFraicheurViewTest {
 
     private static final String ID_USER = "u-fraicheur";

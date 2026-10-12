@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.PastillesEntieres;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.saison.model.CasePassage;
 import fr.univ_amu.iut.saison.model.LigneSaison;
 import fr.univ_amu.iut.saison.model.ServiceSoldeSaison;
@@ -45,7 +46,7 @@ import org.testfx.framework.junit5.Start;
 /// étaient coupées à 145 px, et aucune largeur ne bornait la suite. Ce test tient le cas d'une
 /// nuit, de deux, de cinq, et de deux comptes à trois chiffres, puis l'infobulle qui détaille les
 /// nuits que le compte ne nomme plus.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class PastillesDeLaSaisonTest {
 
     private static final String FXML = "Saison.fxml";

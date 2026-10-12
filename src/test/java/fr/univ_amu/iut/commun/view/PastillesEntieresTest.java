@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.scene.control.TableColumn;
@@ -19,7 +20,7 @@ import org.testfx.framework.junit5.Start;
 
 /// Ce que [PastillesEntieres] doit voir pour que les tests d'écran qui s'y fient jugent quelque
 /// chose (#6101) : une pastille coupée, et une colonne qui n'en dessine aucune.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class PastillesEntieresTest {
 
     private static final String LIBELLE = "complétude inconnue";

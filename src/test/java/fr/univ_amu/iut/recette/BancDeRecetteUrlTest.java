@@ -33,7 +33,7 @@ import org.testfx.framework.junit5.Start;
 /// `ClientVigieChiro` n'expose pas son URL, et l'exposer pour un test serait ouvrir la production pour
 /// la commodité de l'éprouver. Le cas monte une prise TCP sur un port éphémère, la désigne par
 /// `vigiechiro.url`, et compte les connexions : **zéro** est la propriété.
-@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
+@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class, SansEcritureHorsDuFil.class})
 class BancDeRecetteUrlTest {
 
     private GuichetQuiCompte guichet;

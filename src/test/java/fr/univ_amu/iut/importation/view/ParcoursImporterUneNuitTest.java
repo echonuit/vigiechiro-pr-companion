@@ -22,6 +22,7 @@ import fr.univ_amu.iut.recette.CarteDeRecette;
 import fr.univ_amu.iut.recette.ExecuteurTacheRalenti;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -57,7 +58,12 @@ import org.testfx.util.WaitForAsyncUtils;
 ///
 /// Ce que ce clip a tranché pour le chantier #5282, et ce que porter les huit parcours coûte, vivent
 /// dans l'[ADR 5282](../../../../../../../dev-docs/decisions/5282-les-huit-parcours-filmes-passent-au-banc-java.md).
-@ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class, SansExceptionAvalee.class})
+@ExtendWith({
+    ApplicationExtension.class,
+    EnregistreurDeFilm.class,
+    SansExceptionAvalee.class,
+    SansEcritureHorsDuFil.class
+})
 class ParcoursImporterUneNuitTest {
 
     private static final String ID_USER = "u-recette";

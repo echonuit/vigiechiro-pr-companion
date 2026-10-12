@@ -18,7 +18,7 @@ import org.testfx.framework.junit5.Start;
 /// **Le premier cas est celui qui porte tout.** Si `TileRetrieverProvider.load()` ne rendait pas ce
 /// service, les autres passeraient quand même : le repli réseau fonctionne quand le réseau
 /// fonctionne, et le banc ne dirait rien de ce qu'il arrive sans lui.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class TuilesSansReseauTest {
 
     /// Le côté d'une tuile OSM, que `MapView` suppose de ce qu'on lui rend.

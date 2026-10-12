@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -31,7 +32,7 @@ import org.testfx.framework.junit5.Start;
 /// M-Diagnostic se charge via Guice + le `Navigateur` du socle (ressource FXML, controllerFactory,
 /// publication), comme `NavigationQualificationViewTest`. Le passage est absent : le ViewModel
 /// neutralise l'erreur dans son message, ce qui exerce toute la chaîne sans seeding complet.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class NavigationDiagnosticViewTest {
 
     /// JUnit crée ce répertoire et le **supprime** en fin de test (#4924).

@@ -29,6 +29,7 @@ import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.recette.GesteVisible;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.saison.model.CasePassage;
 import fr.univ_amu.iut.saison.model.LigneSaison;
 import fr.univ_amu.iut.saison.model.ServiceSoldeSaison;
@@ -55,7 +56,7 @@ import org.testfx.framework.junit5.Start;
 /// Test TestFX de l'écran **M-Saison** : le FXML est chargé avec un injecteur de test (ViewModel sur un
 /// [ServiceSoldeSaison] simulé, contrats d'ouverture mockés), monté headless. On vérifie l'affichage
 /// d'une ligne par point et le routage du double-clic (passage présent vs carré du point).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class SaisonViewTest {
 
     private OuvrirPassage ouvrirPassage;

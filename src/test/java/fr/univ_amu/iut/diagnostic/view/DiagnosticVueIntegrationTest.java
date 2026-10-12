@@ -24,6 +24,7 @@ import fr.univ_amu.iut.diagnostic.model.MesureClimatique;
 import fr.univ_amu.iut.diagnostic.model.SerieClimatique;
 import fr.univ_amu.iut.diagnostic.model.ServiceDiagnostic;
 import fr.univ_amu.iut.diagnostic.viewmodel.DiagnosticViewModel;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -72,7 +73,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// La phrase précédente disait « ni bouton, ni `ComboBox`, ni `TableView`, donc aucun `onAction` ».
 /// C'était vrai du placeholder d'origine et faux de l'écran depuis « Exporter le graphe… » : une
 /// javadoc qui décrit l'écran qu'on avait prévu se relit comme si elle décrivait celui qu'on a.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class DiagnosticVueIntegrationTest {
 
     private DiagnosticController controleur;

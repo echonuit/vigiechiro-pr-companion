@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import org.junit.jupiter.api.DisplayName;
@@ -32,7 +33,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 ///
 /// Il est donc laissé **sciemment** : la garantie que la police est bien dans le jar tient à
 /// `TypographieTest#les_fichiers_sont_embarques`, qui, lui, ne dépend d'aucune machine.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class HabillageTest {
 
     private static final String BASE = "base.css";

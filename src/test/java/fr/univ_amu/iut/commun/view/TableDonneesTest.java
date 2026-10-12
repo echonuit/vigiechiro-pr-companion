@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import javafx.scene.control.TableView;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,7 +12,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// Tests du configurateur [TableDonnees] (#690) : hauteur de ligne fixe + classe `table-donnees`,
 /// appliquées de façon idempotente. [ApplicationExtension] initialise le toolkit JavaFX (construction de
 /// nœuds) ; aucune scène affichée.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class TableDonneesTest {
 
     @Test

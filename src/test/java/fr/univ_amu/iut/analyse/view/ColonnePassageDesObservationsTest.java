@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.util.List;
@@ -25,7 +26,7 @@ import org.testfx.framework.junit5.Start;
 /// en français les dates seules, pas celles prises dans un libellé composé. La forme ISO avait pourtant
 /// une vertu : triée comme un texte, elle l'est aussi dans le temps. Ce banc tient donc les deux à la
 /// fois, la date lue en français et le tri resté chronologique, sur une table montée et dessinée.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ColonnePassageDesObservationsTest {
 
     private TableView<ObservationEspece> table;

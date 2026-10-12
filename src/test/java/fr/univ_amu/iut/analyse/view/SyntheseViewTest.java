@@ -23,6 +23,7 @@ import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -50,7 +51,7 @@ import org.testfx.util.WaitForAsyncUtils;
 ///
 /// Ces trois là ne sont pas décoratifs : la source est libre d'usage **avec citation obligatoire**, et
 /// une classe d'activité sans sa mise en garde se lit comme un verdict.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class SyntheseViewTest {
 
     private static final String CARRE = "640380";

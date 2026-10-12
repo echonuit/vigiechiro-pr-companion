@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import java.util.stream.IntStream;
 import javafx.scene.control.Label;
@@ -18,7 +19,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 
 /// Le rendu d'un [CompteRendu] (ADR 0031) : ce qui le rend **reconnaissable** et ce que la structure
 /// débloque, par opposition au `Label` unique qu'il remplace.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class VueCompteRenduTest {
 
     private static final CompteRendu REACTIVATION = new CompteRendu(

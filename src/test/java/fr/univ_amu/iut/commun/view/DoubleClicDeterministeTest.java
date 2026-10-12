@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 import javafx.collections.FXCollections;
@@ -21,7 +22,7 @@ import org.testfx.util.WaitForAsyncUtils;
 
 /// Ce que le helper de double-clic doit tenir, et que les trois copies recopiées ne tenaient pas
 /// toutes (#4554).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class DoubleClicDeterministeTest {
 
     private static final int LIGNES = 60;

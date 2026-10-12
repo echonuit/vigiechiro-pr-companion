@@ -21,6 +21,7 @@ import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -44,7 +45,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// Guice (client mocké, ouvreur de lien espionné, stockage sur un dossier temporaire vierge), état
 /// initial « non connecté », ouverture de la plateforme (étape 1) et copie du marque-page (étape 2).
 /// Pas de réseau.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ConnexionModaleViewTest {
 
     // Cette classe ne cite plus `S1-04`, et ce n'est pas un oubli. Elle monte `ConnexionModale.fxml`

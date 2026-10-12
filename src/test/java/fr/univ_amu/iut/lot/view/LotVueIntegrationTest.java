@@ -37,6 +37,7 @@ import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.TraitementViewModel;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -74,7 +75,7 @@ import org.testfx.framework.junit5.Start;
 /// propriétés du ViewModel. L'état affiché provient du [ServiceLot] mocké : pour exercer un autre
 /// état que la fixture de départ, on **re-stube** `consulterLot` puis on rouvre l'écran sur le fil
 /// JavaFX via [#reouvrirAvec]. Aucune base de données.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class LotVueIntegrationTest {
 
     private static final long ID_PASSAGE = 42L;

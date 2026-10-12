@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -27,7 +28,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// resterait pourtant sans effet, la fixture ci-dessous portant **deux** carrés dont le point s'appelle
 /// « Z1 » : une valeur qui en désigne deux ne se replace nulle part, par construction. Ce qui se joue
 /// ici est donc bien le socle nu.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class CritereListeRestaurationTest {
 
     private static final List<CritereListe.GroupeValeurs> POINTS_QUALIFIES =

@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.PastillesEntieres;
 import fr.univ_amu.iut.multisite.model.EtatAnalyse;
 import fr.univ_amu.iut.multisite.model.LignePassage;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,7 +29,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// Le panneau est chargé depuis son FXML, donc avec les largeurs que l'écran déclare, et chaque
 /// énumération est semée en entier : le plus long libellé n'est pas deviné, il est parmi eux.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class PastillesDesPassagesTest {
 
     private static final String FXML = "PanneauPassages.fxml";

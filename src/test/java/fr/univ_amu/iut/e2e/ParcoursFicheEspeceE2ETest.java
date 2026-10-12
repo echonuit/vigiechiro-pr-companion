@@ -21,6 +21,7 @@ import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -51,7 +52,7 @@ import org.testfx.framework.junit5.Start;
 /// Injecteur applicatif réel, avec deux surcharges ciblées : un faux [OuvreurDeLien] (enregistre l'URL,
 /// aucun navigateur) et l'[ExecuteurFicheSynchrone] (résolution + ouverture synchrones → déterministe,
 /// sans réseau : l'URL PNA est directe).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ParcoursFicheEspeceE2ETest {
 
     private Injector injector;

@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.view.DoubleClicDeterministe;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.fxml.FXMLLoader;
@@ -43,7 +44,7 @@ import org.testfx.util.WaitForAsyncUtils;
 ///
 /// La nuit de la fixture est **volontairement incohérente** (un fichier déclaré, aucun sur le disque) :
 /// c'est ce qui produit un constat, et donc une ligne à double-cliquer.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class AuditNavigationViewTest {
 
     private static final String ID_USER = "u-audit";

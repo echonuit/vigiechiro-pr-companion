@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.viewmodel.LigneSuivi;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -27,7 +28,7 @@ import org.testfx.framework.junit5.Start;
 /// **cesse de suivre sa ligne**, ou qui suit **celle d'avant**. `TableView` recycle ses cellules ; sans
 /// le désabonnement de `updateItem`, une cellule réaffectée continue d'écouter la ligne qu'elle
 /// n'affiche plus. Rien à l'écran ne le dit tant que l'ancienne ligne ne bouge pas.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class CelluleProgressionUniteTest {
 
     @Start

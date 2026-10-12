@@ -29,6 +29,7 @@ import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Jugement;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.recette.Seance;
 import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
@@ -78,7 +79,12 @@ import org.testfx.util.WaitForAsyncUtils;
 /// L'exécuteur est **asynchrone**, celui de la production, même raison qu'en
 /// [fr.univ_amu.iut.connexion.view.ScenarioPerceptifConnexionTest] : en synchrone aucune image ne serait
 /// rendue pendant la récupération, et le passage à juger n'existerait sur aucune trame.
-@ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class, SansExceptionAvalee.class})
+@ExtendWith({
+    ApplicationExtension.class,
+    EnregistreurDeFilm.class,
+    SansExceptionAvalee.class,
+    SansEcritureHorsDuFil.class
+})
 class ScenarioPerceptifRecuperationCarreTest {
 
     private static final String ID_USER = "u-scenario";

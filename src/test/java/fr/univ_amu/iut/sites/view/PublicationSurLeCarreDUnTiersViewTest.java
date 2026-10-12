@@ -18,6 +18,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointPublieDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
@@ -59,7 +60,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// | `640382` Bergerie | jamais relié | pas de mention, et le gris qu'il avait déjà |
 ///
 /// Le carré du tiers porte aussi `C3`, déjà publié : sa carte n'offre plus le geste, donc pas la mention.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class PublicationSurLeCarreDUnTiersViewTest {
 
     private static final String ID_USER = "u-1";

@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
@@ -35,7 +36,7 @@ import org.testfx.framework.junit5.Start;
 /// carte » d'un point géolocalisé doit ouvrir LA carte multi-sites **centrée sur ce point** (contrat
 /// socle [OuvrirMultisite#ouvrirSurPoint]), et non un OpenStreetMap externe. On capture l'appel via une
 /// implémentation d'`OuvrirMultisite` substituée dans l'injecteur réel.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class SiteDetailVoirCarteViewTest {
 
     private static final String ID_USER = "u-1";

@@ -35,7 +35,7 @@ import org.testfx.util.NodeQueryUtils;
 /// Le saboteur remet donc `vvalue` à zéro **une seule fois**, ce qui reproduit exactement la
 /// conséquence : la première passe ne porte pas. Ce que le garde vérifie n'est pas la course, c'est la
 /// promesse - après l'appel, la cible EST dans le cadre.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class GesteVisibleCadreTest {
 
     /// La cible est ENCADRÉE de remplissage : dernière, `vvalue` saturerait à 1 et une passe unique

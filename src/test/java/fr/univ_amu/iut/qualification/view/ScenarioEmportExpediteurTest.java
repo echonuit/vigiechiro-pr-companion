@@ -27,6 +27,7 @@ import fr.univ_amu.iut.recette.ExecuteurTacheRalenti;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -61,7 +62,12 @@ import org.testfx.util.WaitForAsyncUtils;
 /// **Deux contrôles négatifs sont filmés**, et c'est ce qui donne son sens au reste : annuler la
 /// désignation, et refuser l'annonce de volume. Un clip qui ne montre que le chemin heureux laisse
 /// croire qu'il n'y a rien à refuser.
-@ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class, SansExceptionAvalee.class})
+@ExtendWith({
+    ApplicationExtension.class,
+    EnregistreurDeFilm.class,
+    SansExceptionAvalee.class,
+    SansEcritureHorsDuFil.class
+})
 class ScenarioEmportExpediteurTest {
 
     private static final String ID_USER = "u-recette";

@@ -33,7 +33,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// Il ne reproduit pas la **course** du cas réel, dont la fenêtre est d'une pulsation : dix passes
 /// filmées sur un poste ne l'ont pas montrée une fois. Que cet ordre soit bien celui des deux
 /// tournages n'est donc pas observé ; c'est ce que leurs images et le code laissent conclure.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class GesteVisiblePositionPoseeTest {
 
     private static final double LARGEUR = 600;

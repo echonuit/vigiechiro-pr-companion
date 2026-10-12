@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -29,7 +30,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// Les dates de la fixture franchissent un **changement de mois**, seul endroit où les deux ordres
 /// divergent. Trois dates du même mois ne prouveraient rien.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ColonneDateTest {
 
     private record Ligne(String iso) {}

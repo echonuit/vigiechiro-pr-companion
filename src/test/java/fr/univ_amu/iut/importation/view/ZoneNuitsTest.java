@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
 import fr.univ_amu.iut.importation.viewmodel.NuitVM;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import java.util.stream.IntStream;
 import javafx.beans.property.SimpleObjectProperty;
@@ -28,7 +29,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// promesses de la zone : le compte rendu **atteint l'écran**, il **se retire** de la mise en page quand
 /// il est vide, et `SANS_PLAFOND` **montre bien tous** les détails - le choix délibéré de cette zone,
 /// puisqu'ils sont bornés par la table juste au-dessus.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ZoneNuitsTest {
 
     /// Le blocage n'a pas à passer par le ViewModel : ce qu'on éprouve, c'est le rendu d'un `CompteRendu`

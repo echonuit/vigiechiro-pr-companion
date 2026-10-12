@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.outils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -17,7 +18,7 @@ import org.testfx.framework.junit5.Start;
 /// Ce cas rejoue la contamination elle-même : une première scène est posée grande, puis une seconde
 /// petite. Sur un stage figé, la seconde est relue à la taille de la première, et c'est ce qui a
 /// coûté quatre venues du même défaut.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class FenetreAjustableTest {
 
     private static final double GRANDE = 900;

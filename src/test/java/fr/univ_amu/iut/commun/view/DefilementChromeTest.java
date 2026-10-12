@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -23,7 +24,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// pas l'atteindre, et ne doit pas. Ce port est le troisième de la famille `*Chrome`, après le voile
 /// d'occupation et le bandeau d'annonce, et il en suit le patron - installé par [MainController],
 /// consommé par injection, **sans effet** quand le chrome est absent (outils, captures).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class DefilementChromeTest {
 
     private ScrollPane defilement;

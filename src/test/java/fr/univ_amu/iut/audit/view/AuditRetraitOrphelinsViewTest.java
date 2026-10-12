@@ -21,6 +21,7 @@ import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,7 +50,7 @@ import org.testfx.util.WaitForAsyncUtils;
 ///
 /// La confirmation passe par le [fr.univ_amu.iut.commun.view.ConfirmateurModifiable] du contrôleur : un
 /// `Alert.showAndWait()` figerait TestFX headless, et le retrait ne serait jamais exercé.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class AuditRetraitOrphelinsViewTest {
 
     private ServiceAuditCoherence service;

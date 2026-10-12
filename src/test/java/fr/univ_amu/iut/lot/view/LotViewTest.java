@@ -28,6 +28,7 @@ import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.TraitementViewModel;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import java.util.Optional;
 import javafx.fxml.FXMLLoader;
@@ -47,7 +48,7 @@ import org.testfx.framework.junit5.Start;
 /// Test d'intégration TestFX de l'écran **M-Lot** : chargement du FXML via Guice (avec un
 /// [ServiceLot] mocké), ouverture sur un passage Vérifié, vérification du câblage (statut, récap,
 /// dossier, activation des actions) et délégation du clic « Préparer ». Pas de base de données.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class LotViewTest {
 
     private ServiceLot service;

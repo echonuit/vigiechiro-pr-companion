@@ -29,7 +29,7 @@ import org.testfx.framework.junit5.Start;
 /// **Et le troisième cas éprouve le REFUS**, qui est la moitié qu'on oublie : un champ désactivé ne
 /// prend pas le clavier, donc la saisie n'atterrit pas, donc la relecture doit refuser. Sans ce cas,
 /// retirer la relecture ne ferait rougir personne et elle serait décorative.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class GesteVisibleSuiteTest {
 
     /// Quatre-vingts caractères pour deux cents pixels : le texte déborde, donc le clic tombe DEDANS.

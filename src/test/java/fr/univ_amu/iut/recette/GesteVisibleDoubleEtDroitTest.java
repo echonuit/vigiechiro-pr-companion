@@ -25,7 +25,7 @@ import org.testfx.framework.junit5.Start;
 /// **Ce banc ne voit PAS sur quel fil la cible est située**, et aucun banc Java ne le peut : le fil
 /// JavaFX rend à chaque trame, donc il recalcule la liaison le premier et sert son cache. C'est le
 /// garde de l'ADR 5707 qui tient cette propriété, en comptant les sites.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class GesteVisibleDoubleEtDroitTest {
 
     /// Assez long pour DÉBORDER deux cents pixels : sur un texte court, le centre du champ tombe

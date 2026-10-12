@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.CarteDeRecette;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -41,7 +42,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// Monté sur le câblage de production, donc sur l'exécuteur asynchrone : un exécuteur synchrone
 /// jouerait la tâche sur le fil du geste et ne pourrait pas voir le défaut. Le fil se relève dans
 /// une liste et s'affirme après : JavaFX avale l'exception qu'un écouteur lèverait.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class SourceDesigneeSurLeFilTest {
 
     private static final long DELAI_MS = 30_000L;

@@ -79,6 +79,8 @@
         <opentest4j.version>1.3.0</opentest4j.version>
         <assertj.version>3.27.7</assertj.version>
         <mockito.version>5.24.0</mockito.version>
+        <!-- Celle que mockito-core 5.24.0 tire : à monter avec lui (ADR 6142). -->
+        <bytebuddy.version>1.17.7</bytebuddy.version>
         <slf4j.version>2.0.20</slf4j.version>
         <approvaltests.version>31.0.0</approvaltests.version>
         <archunit.version>1.5.1</archunit.version>
@@ -272,6 +274,16 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- L'espion des écritures hors du fil JavaFX (ADR 6142) pose sa sonde par ByteBuddy, que
+             Mockito tirait déjà sans qu'on l'importe. Un import direct se déclare, et la version
+             reste celle que `mockito-core` demande : l'agent passé à Surefire vient de lui, et les
+             deux moitiés de ByteBuddy vont ensemble. -->
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+            <version>${bytebuddy.version}</version>
             <scope>test</scope>
         </dependency>
         <!-- Backend SLF4J « no-op » côté test : des libs de test tirent slf4j-api sans binding, d'où le

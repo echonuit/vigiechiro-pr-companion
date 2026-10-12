@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
@@ -46,7 +47,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// l'**anti-rebond** (180 ms) livre les résultats, on choisit une entrée au clavier (↓ puis Entrée) et
 /// on vérifie l'écran atteint. Les chemins non nominaux (aucune correspondance, requête blanche) sont
 /// exercés aussi : ce sont eux qui manquent d'habitude.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ParcoursRechercheGlobaleE2ETest {
 
     private static final String CARRE = "640380";

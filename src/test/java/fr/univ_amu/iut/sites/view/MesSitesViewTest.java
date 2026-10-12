@@ -24,6 +24,7 @@ import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -59,7 +60,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// d'affichage capable de synthétiser des entrées (il se bloque sous Wayland et ne route pas
 /// fiablement les clics sous un xvfb sans gestionnaire de fenêtres). On teste ainsi le câblage
 /// réel (handler de carte → navigation) de façon déterministe dans tous les environnements.
-@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
+@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class, SansEcritureHorsDuFil.class})
 class MesSitesViewTest {
 
     private static final String ID_USER = "u-test";
@@ -412,8 +413,12 @@ class MesSitesViewTest {
     private void seConnecter(FxRobot robot) {
         injector.getInstance(StockageConnexion.class)
                 .enregistrer("jeton-de-recette", new ProfilVigieChiro(ID_USER, "chiro", "observateur"));
-        injector.getInstance(RefletDuJeton.class).relire();
-        robot.interact(() -> injector.getInstance(RevisionDonnees.class).mutationStructurelleValidee());
+        // Le banc monte un exécuteur qui joue sur place : le reflet se relit donc sur le fil
+        // JavaFX, comme le produit le reposte, et non depuis le fil du test (#6142).
+        robot.interact(() -> {
+            injector.getInstance(RefletDuJeton.class).relire();
+            injector.getInstance(RevisionDonnees.class).mutationStructurelleValidee();
+        });
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.surLeMomentCle(robot);
     }

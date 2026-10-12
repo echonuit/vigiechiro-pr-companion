@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.view.IconesSeverite;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.Label;
@@ -22,7 +23,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// personne, elle était collectée et l'écouteur ne se déclenchait plus - un journal **présent**
 /// s'affichait avec le triangle de l'absence. La compilation passait, aucun test ne regardait l'icône,
 /// et c'est une capture ouverte qui l'a montré.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class DetailInspectionTest {
 
     private Label label;

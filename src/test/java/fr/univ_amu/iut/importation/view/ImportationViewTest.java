@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -45,7 +46,7 @@ import org.testfx.util.WaitForAsyncUtils;
 ///
 /// On ne pilote pas le `DirectoryChooser` natif (non testable headless) : la chaîne complète
 /// inspection → rattachement → import est couverte en unitaire par `ImportationViewModelTest`.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ImportationViewTest {
 
     private static final String ID_USER = "u-test";

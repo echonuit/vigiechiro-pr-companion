@@ -21,6 +21,7 @@ import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
 import fr.univ_amu.iut.recette.GesteVisible;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +50,7 @@ import org.testfx.framework.junit5.Start;
 /// Le montage prend un [ExecuteurTacheSynchrone] : le travail se déroule pendant le clic, ce qui rend
 /// observable ce que l'utilisateur voit **pendant** l'opération - un instantané impossible à prendre
 /// après coup, puisque tout est alors déjà retiré.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ConnexionProgressionIntegreeViewTest {
 
     private final List<String> vuPendantLOperation = new ArrayList<>();

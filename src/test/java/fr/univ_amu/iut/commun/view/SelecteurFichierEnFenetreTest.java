@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.GesteVisible;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,7 +41,7 @@ import org.testfx.framework.junit5.Start;
 /// **imbriquée** sur le fil FX : le fil n'est pas figé, il traite les événements suivants. On lance
 /// donc l'appel par `runLater`, on attend que la fenêtre paraisse, et le robot clique. C'est le
 /// contraire d'un contournement : c'est ce que fait un utilisateur.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class SelecteurFichierEnFenetreTest {
 
     @TempDir

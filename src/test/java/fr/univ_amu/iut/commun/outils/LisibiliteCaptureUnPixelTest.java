@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.outils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.view.Habillage;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -24,7 +25,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 ///
 /// Le banc construit l'écart au lieu de viser une taille : il mesure la hauteur que le libellé demande
 /// pour sa largeur, puis lui en retire exactement ce qu'il veut éprouver.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class LisibiliteCaptureUnPixelTest {
 
     private static final String CONSIGNE = "Téléversez la nuit directement sur Vigie-Chiro (les séquences"

@@ -21,6 +21,7 @@ import fr.univ_amu.iut.passage.model.RapportReactivation.AbsenceReactivation;
 import fr.univ_amu.iut.passage.model.VerdictIdentite.NiveauConfiance;
 import fr.univ_amu.iut.passage.model.VoieReactivation;
 import fr.univ_amu.iut.passage.viewmodel.ReactivationModaleViewModel;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -45,7 +46,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// (la barre d'ancrage n'apparaît que si la phase se déclenche), que le **compte rendu** honnête s'affiche
 /// dans la modale, qu'un **échec** devient un message (pas une exception muette) et qu'une **annulation**
 /// est un état neutre. La fermeture rafraîchit l'écran appelant.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ReactivationModaleViewTest {
 
     /// JavaFX cale les enfants d'une `VBox` sur des pixels entiers : la somme des hauteurs calées

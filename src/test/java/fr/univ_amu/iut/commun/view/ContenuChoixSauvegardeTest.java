@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.persistence.InventaireSauvegardes;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +29,7 @@ import org.testfx.util.WaitForAsyncUtils;
 ///
 /// La fenêtre elle-même ([ChoixSauvegardeJavaFx]) n'est pas montée : son `showAndWait()` figerait le
 /// test headless. C'est précisément pourquoi le contenu en est séparé.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ContenuChoixSauvegardeTest {
 
     private static final List<InventaireSauvegardes.Entree> TROIS = List.of(

@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.DescripteurReglage.Enumeration.Option;
 import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.util.List;
 import javafx.scene.Node;
@@ -30,7 +31,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// Fabrique de contrôles [ControleursReglages] : chaque [DescripteurReglage] produit le bon contrôle,
 /// câblé (bidirectionnel) au réglage persistant via [ReglagesReactifs]. [ApplicationExtension]
 /// initialise le toolkit JavaFX (construction des contrôles) ; aucune scène affichée.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ControleursReglagesTest {
 
     @TempDir

@@ -31,6 +31,7 @@ import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import fr.univ_amu.iut.multisite.viewmodel.ReconstructionViewModel;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.ServiceCommunes;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.util.List;
@@ -55,7 +56,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// Fixture distincte de [MultisiteViewTest] (qui teste l'écran **hors** connexion, où l'item se retire) :
 /// ici le [SuiviTraitement] est présent. L'exécuteur de tâches est **synchrone** par défaut
 /// (`@ImplementedBy(ExecuteurTacheSynchrone)`), donc `waitForFxEvents()` suffit à observer le résultat.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class MultisiteReleveViewTest {
 
     private SuiviTraitement suivi;

@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.Event;
@@ -28,7 +29,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// - **Croissance du contenu** (#1931, #1940) : la fenêtre suit ce qui paraît après son ouverture, **sans**
 ///   pour autant se figer - c'est la seconde moitié qui avait manqué, et qui coûtait des échecs dans des
 ///   classes de test sans rapport.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ModalesTest {
 
     private Stage modale;

@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -32,7 +33,7 @@ import org.testfx.framework.junit5.Start;
 /// charge via Guice + le `Navigateur` du socle. Le passage est absent : ni observation ni séquence, le
 /// ViewModel affiche l'état vide (« Aucun son à écouter pour ce passage… »), ce qui exerce toute la chaîne
 /// sans seeding complet.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class NavigationValidationViewTest {
 
     /// JUnit crée ce répertoire et le **supprime** en fin de test (#4914).

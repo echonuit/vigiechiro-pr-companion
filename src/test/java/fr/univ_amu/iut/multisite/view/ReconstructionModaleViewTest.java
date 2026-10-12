@@ -18,6 +18,7 @@ import fr.univ_amu.iut.passage.model.ParticipationOrpheline;
 import fr.univ_amu.iut.passage.model.RapportReconstruction;
 import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages;
 import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages.BilanReconstructionGroupe;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -40,7 +41,7 @@ import org.testfx.framework.junit5.Start;
 /// bouchonné, aucune base. On vérifie que les nuits manquantes s'affichent, que le bouton refuse celle
 /// dont le **point d'écoute est inconnu ici** (en disant pourquoi), et que la reconstruction publie un
 /// compte rendu **qui énonce ses lacunes**.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ReconstructionModaleViewTest {
 
     private static final ParticipationOrpheline CONNUE =

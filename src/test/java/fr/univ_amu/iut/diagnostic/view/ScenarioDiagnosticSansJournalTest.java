@@ -20,6 +20,7 @@ import fr.univ_amu.iut.recette.ExecuteurTacheRalenti;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -52,7 +53,12 @@ import org.testfx.util.WaitForAsyncUtils;
 ///
 /// C'est la troisième face de la même règle : #5093 pour la nuit tronquée qui parle, #5071 pour la
 /// nuit inconnue qui se tait, et ici pour l'écran qui n'invente rien.
-@ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class, SansExceptionAvalee.class})
+@ExtendWith({
+    ApplicationExtension.class,
+    EnregistreurDeFilm.class,
+    SansExceptionAvalee.class,
+    SansEcritureHorsDuFil.class
+})
 class ScenarioDiagnosticSansJournalTest {
 
     private static final String ID_USER = "u-recette";

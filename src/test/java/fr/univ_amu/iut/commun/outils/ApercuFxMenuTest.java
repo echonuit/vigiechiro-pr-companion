@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.outils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.util.List;
 import javafx.scene.Scene;
@@ -28,7 +29,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// La propriété est donc **acquise, pas construite** : le test existe pour qu'elle le reste. Elle
 /// tomberait si quelqu'un remplaçait la copie défensive par `apercu.getItems().setAll(menu.getItems())`
 /// suivi d'un `clear()`, ou déplaçait les items au lieu de les recopier.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ApercuFxMenuTest {
 
     @Test

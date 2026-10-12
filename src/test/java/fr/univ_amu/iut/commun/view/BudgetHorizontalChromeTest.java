@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.diagnostic.view.NavigationDiagnostic;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.util.function.DoubleConsumer;
 import javafx.fxml.FXMLLoader;
@@ -47,7 +48,7 @@ import org.testfx.framework.junit5.Start;
 /// portent délibérément le déficit sous 1100. Ce silence est un **choix déclaré**, pas une victoire : à
 /// 900, le fil rend 188 px et s'abrège. Ce que le garde tient, c'est que **rien d'autre** ne cède, et en
 /// particulier ni le titre de l'application ni le bouton ← Retour.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class BudgetHorizontalChromeTest {
 
     /// Les **deux** largeurs livrées : celle d'ouverture, et la minimale imposée par `TailleOuverture`.

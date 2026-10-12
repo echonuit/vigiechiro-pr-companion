@@ -30,7 +30,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// même côté. Le premier cas en fabrique donc la **conséquence** dans l'ordre fautif, en faisant
 /// grandir la carte après l'avoir amenée. C'est le témoin : sans lui, le second cas passerait aussi
 /// sur un banc où rien ne bouge.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class GesteVisibleBasDePageTest {
 
     private static final double REMPLISSAGE = 1500;

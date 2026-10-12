@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
@@ -22,7 +23,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// toolkit JavaFX (MenuItem/CheckMenuItem) ; aucune scène affichée. On vérifie le tri (groupe puis
 /// ordre), l'insertion d'un séparateur entre groupes, la bascule liée et la réévaluation des libellés
 /// à l'ouverture du menu.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ConstructeurMenuOutilsTest {
 
     @Test

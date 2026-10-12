@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.ServiceEmplacements;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +26,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 ///
 /// `vigiechiro.config` est posé sur un dossier jetable et `vigiechiro.workspace` effacé, pour que la
 /// configuration écrite pilote `Workspace.resolu()` - la couture de production.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class OngletReglagesEmplacementsTest {
 
     private static final String PROP_CONFIG = "vigiechiro.config";

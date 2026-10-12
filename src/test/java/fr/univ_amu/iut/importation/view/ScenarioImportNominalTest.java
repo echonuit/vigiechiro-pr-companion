@@ -24,6 +24,7 @@ import fr.univ_amu.iut.recette.ExecuteurTacheRalenti;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -69,7 +70,12 @@ import org.testfx.util.WaitForAsyncUtils;
 /// Le carré 640380 est local et non relié, et c'est le garde-fou de la séance : l'import crée la
 /// participation Vigie-Chiro au plus tôt dès que l'observateur est connecté et le site relié
 /// (`ServiceImport.creerParticipationSiPossible`). Ici, aucune écriture serveur.
-@ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class, SansExceptionAvalee.class})
+@ExtendWith({
+    ApplicationExtension.class,
+    EnregistreurDeFilm.class,
+    SansExceptionAvalee.class,
+    SansEcritureHorsDuFil.class
+})
 class ScenarioImportNominalTest {
 
     private static final String ID_USER = "u-recette";

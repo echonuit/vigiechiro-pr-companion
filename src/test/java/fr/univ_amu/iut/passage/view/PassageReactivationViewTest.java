@@ -43,6 +43,7 @@ import fr.univ_amu.iut.passage.model.ModeRebranchement;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,7 +71,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// La fixture est un passage dont les **séquences sont importées mais l'audio absent du disque** (archivé,
 /// ou fichiers effacés) : c'est exactement l'état où la réactivation s'ouvre.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class PassageReactivationViewTest {
 
     private static final long ID_PASSAGE = 42L;

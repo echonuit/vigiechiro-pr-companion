@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.TailleOuverture;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.layout.Pane;
@@ -32,7 +33,7 @@ import org.testfx.framework.junit5.Start;
 /// Sans le remède, la fenêtre finissait en `x=50 y=133 1000x900`, débordait l'écran de 1000 x 1000,
 /// et le rétrécissement suivant faisait sortir `clearRect` du tampon de JavaFX : toute la série
 /// rendait alors `BUILD FAILURE` sur `AppTest`.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class AppOuvertureDansLEcranTest {
 
     private Stage stage;

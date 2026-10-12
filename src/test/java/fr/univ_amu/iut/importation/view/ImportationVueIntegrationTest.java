@@ -18,6 +18,7 @@ import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -61,7 +62,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// (un site « Carré 640380 » avec un point « A1 »). On ne pilote pas le `DirectoryChooser` natif (non
 /// testable headless) : les interactions passent par les contrôles de rattachement, qui suffisent à
 /// exercer les liaisons bidirectionnelles et les écouteurs du ViewModel.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ImportationVueIntegrationTest {
 
     private SourceDeDonnees source;

@@ -25,6 +25,7 @@ import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceRattachement;
 import fr.univ_amu.iut.passage.model.Vent;
 import fr.univ_amu.iut.passage.viewmodel.RattachementViewModel;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -52,7 +53,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// Guice (avec un [ServicePassage] mocké), `demarrer` sur un passage, vérification du câblage
 /// (Spinners pré-remplis en bidirectionnel + récapitulatif réactif, et champs des conditions de dépôt
 /// météo/micro dont le type de micro en liste fermée). Pas de base de données.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class RattachementModaleViewTest {
 
     private RattachementModaleController controleur;

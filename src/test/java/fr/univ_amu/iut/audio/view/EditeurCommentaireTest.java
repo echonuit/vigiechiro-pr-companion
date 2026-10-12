@@ -3,6 +3,7 @@ package fr.univ_amu.iut.audio.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
@@ -17,7 +18,7 @@ import org.testfx.framework.junit5.Start;
 
 /// Éditeur de commentaire en popup (#477) : pré-remplissage, enregistrement (transmet le texte saisi) et
 /// annulation (ne transmet rien). Ancré à un bouton témoin dans une scène minimale.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class EditeurCommentaireTest {
 
     private Button ancre;

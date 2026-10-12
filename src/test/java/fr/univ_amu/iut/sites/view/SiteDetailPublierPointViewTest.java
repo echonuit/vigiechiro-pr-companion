@@ -18,6 +18,7 @@ import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.recette.GesteVisible;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointPublieDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
@@ -55,7 +56,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// publication est bien *installée*. Ce qui manque est le **jeton**, et c'est le premier motif de gris -
 /// le seul refus que Companion sache prévoir. Le 403 de la plateforme, lui, ne se devine pas : il se rend
 /// compte (cf. `PublicationPoint`).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class SiteDetailPublierPointViewTest {
 
     private static final String ID_USER = "u-1";

@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Action;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Motif;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Ventilation;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import javafx.scene.Scene;
 import javafx.scene.control.Hyperlink;
@@ -32,7 +33,7 @@ import org.testfx.framework.junit5.Start;
 /// Cette classe lit ce que le pied **dessine**, sur une scène habillée. Le compte rendu y est bâti à la
 /// main : la lecture du vrai compte rendu d'un import, avec le chemin de la carte du banc, est tenue
 /// par `ScenarioRejetsEtArchiveTest`.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class PiedDuCompteRenduTest {
 
     /// La largeur du panneau sur l'écran d'import d'une fenêtre de 1 180, mesurée dans le banc filmé.

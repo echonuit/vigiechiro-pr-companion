@@ -28,7 +28,7 @@ import org.testfx.framework.junit5.Start;
 /// Ces cas sont le symétrique de [BancDeRecetteUrlTest] : là-bas, un banc qui n'a rien déclaré ne doit
 /// recevoir **aucune** connexion ; ici, un banc qui a déclaré doit en recevoir **au moins une**. Même
 /// [GuichetQuiCompte].
-@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
+@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class, SansEcritureHorsDuFil.class})
 class BancDeRecetteSansDepotTest {
 
     /// La forme exacte d'un jeton Vigie-Chiro : trente-deux caractères tirés dans `A-Z0-9`.

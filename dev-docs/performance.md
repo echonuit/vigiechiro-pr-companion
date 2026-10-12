@@ -120,7 +120,9 @@ ramènent la progression. Le README du banc donne une procédure semi-manuelle p
     Cette discipline du fil JavaFX (travail lourd hors fil, retour et progression relayés par le
     socle `ExecuteurTache`, cf. [Patterns](patterns.md)) est la même que celle décrite côté
     [Navigation et chrome](navigation.md) et appliquée à toutes les tâches longues : c'est un
-    **invariant** de l'application, pas une optimisation ponctuelle.
+    **invariant** de l'application, pas une optimisation ponctuelle. Sa moitié « la tâche n'écrit
+    pas la scène » est tenue par un espion de test
+    ([ADR 6142](decisions/6142-une-tache-de-fond-rend-une-valeur-et-n-ecrit-pas-la-scene.md)).
 
 ## Les écritures de masse passent par une unité de travail
 

@@ -1242,6 +1242,15 @@ jobs:
         #
         # Le verdict lui-même sort de la boucle des cliquets. Seul l'auto-test se branche ici.
         run: python3 scripts/adr/6022-annotation-qui-fait-taire.py --auto-test
+      - name: "Une classe de test à toolkit porte l'espion du fil (autotest, #6142)"
+        # Une tâche de fond écrivait un champ de la scène depuis son fil, sous les yeux de tous les
+        # bancs de l'import (#6138). L'extension `SansEcritureHorsDuFil` le relève, mais ne juge que
+        # les classes qui la portent : le garde refuse un `@ExtendWith` qui nomme
+        # `ApplicationExtension` sans elle. Ses cas portent les deux formes du dépôt d'avant, la
+        # forme juste, et la javadoc qui cite l'espion sans l'annoter.
+        #
+        # Le verdict lui-même sort de la boucle des cliquets. Seul l'auto-test se branche ici.
+        run: python3 scripts/adr/6142-banc-a-toolkit-sans-espion.py --auto-test
       - name: "La page qu'on lit avant de pousser nomme les gardes qui jugent (bloquant, #5258)"
         # La section « batterie locale » d'`ouvrir-une-pr` annoncait QUATRE gardes rougissant en CI
         # hors de ce que rapport.py balaie. Mesure du 2026-09-05 : ils sont trente, et la page en

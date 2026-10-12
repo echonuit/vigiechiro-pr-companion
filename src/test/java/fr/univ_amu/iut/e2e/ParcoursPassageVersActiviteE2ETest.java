@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import javafx.fxml.FXMLLoader;
@@ -38,7 +39,7 @@ import org.testfx.framework.junit5.Start;
 /// menti par omission : il ne rendait qu'**une** nuit, si bien que le repliement des nuits sur l'axe
 /// nocturne n'était exercé par rien : le défaut (courbe en dents de scie) n'a été vu que sur une vraie
 /// saison. Ce parcours sème donc **deux nuits**.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ParcoursPassageVersActiviteE2ETest {
 
     /// Deux nuits distinctes, même heure : c'est le cas qui a échappé aux tests d'écran.

@@ -21,6 +21,7 @@ import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -53,7 +54,7 @@ import org.testfx.framework.junit5.Start;
 /// `DirectoryChooser` natif que TestFX ne peut pas piloter ; son IHM est couverte par
 /// `ImportationViewTest`, sa mécanique par `ServiceImportTest`). Tout le reste est piloté **à l'écran**
 /// (boutons réels) et asserté **en base** (le statut du passage).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ParcoursDepotE2ETest {
 
     private static final String ID_USER = "u-e2e";

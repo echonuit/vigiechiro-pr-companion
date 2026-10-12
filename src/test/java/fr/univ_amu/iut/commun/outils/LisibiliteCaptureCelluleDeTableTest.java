@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import fr.univ_amu.iut.commun.view.ColonneAbregeable;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
@@ -32,7 +33,7 @@ import org.testfx.framework.junit5.Start;
 /// Chaque cas lit lui-même ce que la cellule **dessine**, sans passer par le garde, avant de lui
 /// demander son verdict : un cas qui conclurait « le garde se tait » sur une cellule qui n'est pas
 /// coupée, ou qui n'existe pas, n'aurait rien éprouvé.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class LisibiliteCaptureCelluleDeTableTest {
 
     /// Le libellé réel de #5111, dans la largeur réelle où il était coupé.

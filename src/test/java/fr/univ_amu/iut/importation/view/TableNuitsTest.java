@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.importation.model.NuitDetectee;
 import fr.univ_amu.iut.importation.viewmodel.NuitVM;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.time.LocalDate;
 import java.util.List;
 import javafx.collections.FXCollections;
@@ -19,7 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.framework.junit5.ApplicationExtension;
 
 /// Vérifie le texte dessiné dans les cellules : leur valeur peut être entière malgré une ellipse.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class TableNuitsTest {
 
     @Test

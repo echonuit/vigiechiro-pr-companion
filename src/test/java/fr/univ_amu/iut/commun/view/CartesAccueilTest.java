@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
@@ -26,7 +27,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// Le test mesure donc une **hauteur**, pas un type de nœud : un titre qui ne tient pas sur la largeur
 /// d'une carte doit occuper deux lignes. Formulé ainsi, il reste valable si la carte change un jour de
 /// technique d'enroulement, et il échoue pour la bonne raison si l'enroulement disparaît.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class CartesAccueilTest {
 
     private static final String TITRE_LONG = "Espèces & observations";

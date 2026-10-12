@@ -29,6 +29,7 @@ import fr.univ_amu.iut.recette.ExecuteurTacheRalenti;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -59,7 +60,12 @@ import org.testfx.util.WaitForAsyncUtils;
 ///
 /// **Ce que ce clip ne peut pas montrer** : le voyage du fichier. Le paquet arrive, et d'où il vient
 /// est l'affaire de l'autre famille. C'est une limite du dispositif, pas un manque du tournage.
-@ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class, SansExceptionAvalee.class})
+@ExtendWith({
+    ApplicationExtension.class,
+    EnregistreurDeFilm.class,
+    SansExceptionAvalee.class,
+    SansEcritureHorsDuFil.class
+})
 class ScenarioEmportRelecteurTest {
 
     private static final String ID_USER = "u-recette";

@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import fr.univ_amu.iut.commun.view.carte.CarteSites;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import fr.univ_amu.iut.multisite.viewmodel.PositionsEnAttente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -35,7 +36,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 ///
 /// C'est ce qui a permis de porter ce dialogue par le contrat générique `DemandeurDeChoix`, sans inventer
 /// un contrat « à trois issues » qui n'aurait décrit qu'un seul écran.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class SortieEditionPositionsTest {
 
     private PositionsEnAttente enAttente;

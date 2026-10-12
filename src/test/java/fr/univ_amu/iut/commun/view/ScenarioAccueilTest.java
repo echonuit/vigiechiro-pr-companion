@@ -9,6 +9,7 @@ import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// `S1-28` fait juger que « fiche espèce » n'est plus dans le menu (#1375). Une absence se prouve mal
 /// seule, sur un menu vide l'assertion serait verte et le produit cassé : le cas vérifie donc aussi que
 /// les autres entrées sont là.
-@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
+@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class, SansEcritureHorsDuFil.class})
 class ScenarioAccueilTest {
 
     /// L'entrée retirée du menu par #1375 : sa source vit dans **Réglages ▸ Général**.

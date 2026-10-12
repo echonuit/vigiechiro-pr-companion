@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.outils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.time.Duration;
 import java.time.Instant;
 import javafx.scene.layout.StackPane;
@@ -26,7 +27,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// Rien ne l'aurait signalé. Une capture qui ne rend pas la main ne rougit pas, elle **pend** - et en CI
 /// cela se lirait comme un job lent avant de se lire comme une panne.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class AttenteTuilesTest {
 
     @Start

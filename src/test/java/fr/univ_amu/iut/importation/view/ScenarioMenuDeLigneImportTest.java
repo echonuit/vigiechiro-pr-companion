@@ -26,6 +26,7 @@ import fr.univ_amu.iut.recette.ExecuteurTacheRetenu;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -70,7 +71,12 @@ import org.testfx.util.WaitForAsyncUtils;
 /// La table du suivi n'existe que **pendant** l'opération : elle est liée à la non-vacuité des lignes,
 /// et l'import d'une fixture dure des millisecondes. Sans frein, il n'y aurait aucune ligne sur
 /// laquelle cliquer.
-@ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class, SansExceptionAvalee.class})
+@ExtendWith({
+    ApplicationExtension.class,
+    EnregistreurDeFilm.class,
+    SansExceptionAvalee.class,
+    SansEcritureHorsDuFil.class
+})
 class ScenarioMenuDeLigneImportTest {
 
     private static final String ID_USER = "u-recette";

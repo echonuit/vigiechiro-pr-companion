@@ -35,6 +35,7 @@ import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.ExportObservationsEtSons;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
@@ -70,7 +71,7 @@ import org.testfx.framework.junit5.Start;
 /// `observationsFiltrees()` n'y figuraient pas. Sur le chemin d'erreur, `signalerErreur` repose
 /// `ComptageAudio.VIDE`, la **même instance constante** : `ObjectPropertyBase.set` compare par
 /// référence, rien ne s'invalide, et la barre ne revient jamais.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class SonsValidationStatutViewTest {
 
     private static final SourceObservations SOURCE = new SourceObservations.References("u-1");

@@ -23,6 +23,7 @@ import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.validation.model.BilanPublication;
 import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.TriPublication;
@@ -52,7 +53,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// **injectable** (un `Alert.showAndWait` en dur figerait les tests headless), envoi seulement après
 /// accord, restitution. Logique pure (VM mocké, voile synchrone) ; la plateforme JavaFX est initialisée
 /// ([ApplicationExtension]) pour que le voile d'occupation se construise, mais aucun robot n'est piloté.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class PublicationCorrectionsUITest {
 
     private final PublicationCorrectionsViewModel publication = mock(PublicationCorrectionsViewModel.class);

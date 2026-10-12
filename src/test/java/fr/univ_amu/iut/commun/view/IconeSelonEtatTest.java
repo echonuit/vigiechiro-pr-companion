@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import javafx.beans.property.SimpleBooleanProperty;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,7 +24,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// soixantaine de `FontIcon`, et un contrôle affiché avec la mauvaise icône ne fait rougir aucun test
 /// d'intégration : ceux-ci vérifient le libellé et l'action, jamais le glyphe. La couverture des
 /// icônes liées à un état est suivie par #1564.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class IconeSelonEtatTest {
 
     @Test

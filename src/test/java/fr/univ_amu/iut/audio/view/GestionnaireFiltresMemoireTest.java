@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.view.DescripteurCritere;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.util.List;
@@ -24,7 +25,7 @@ import org.testfx.framework.junit5.Start;
 /// Mémoire de session des **filtres** (#484) : l'état capturé (recherche texte + puces actives avec leurs
 /// valeurs) doit être restitué fidèlement. On vérifie le tour complet **restaurer → capturer** : capturer
 /// après restauration doit rendre exactement l'état cible (curseur de proba, plage horaire, puce booléenne).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class GestionnaireFiltresMemoireTest {
 
     /// Une observation localisée sur le carré 640380, point Z1 : de quoi peupler la puce « Lieu »

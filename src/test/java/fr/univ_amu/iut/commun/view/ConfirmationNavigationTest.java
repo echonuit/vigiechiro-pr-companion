@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.scene.control.ButtonBar.ButtonData;
@@ -28,7 +29,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// dialogue - la continuation repart sous la puce suivante (défaut clos en #1987, recréé en #2050). La
 /// parade n'est pas « mieux formater la chaîne » mais **ne plus en avoir** : le dialogue porte alors la
 /// structure de [VueCompteRendu], un `Label` par détail dont le retrait est porté par le CSS.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ConfirmationNavigationTest {
 
     private static final CompteRendu DOUBLON = new CompteRendu(

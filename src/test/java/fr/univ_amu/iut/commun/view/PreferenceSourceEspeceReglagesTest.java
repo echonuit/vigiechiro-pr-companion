@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.OngletReglagesGeneral;
 import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import javafx.scene.control.CheckBox;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +29,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// survivre, c'est l'autre moitié de la promesse : « le réglage est mémorisé d'une session à
 /// l'autre », et elle est ici testée plus franchement qu'avant - en rebâtissant le formulaire, ce que
 /// l'ancien test ne faisait pas.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class PreferenceSourceEspeceReglagesTest {
 
     @TempDir

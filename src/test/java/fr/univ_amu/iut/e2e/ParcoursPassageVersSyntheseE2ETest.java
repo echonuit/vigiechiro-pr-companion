@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import javafx.fxml.FXMLLoader;
@@ -47,7 +48,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// `CodesTaxonFixturesCaptureTest` qui l'y traque (#2715). Ce que ce parcours couvre, c'est la jointure
 /// **entre deux référentiels distincts** : les taxons en base et les déclinaisons du référentiel
 /// d'activité, qui n'ont ni la même source ni la même couverture.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ParcoursPassageVersSyntheseE2ETest {
 
     /// Une nuit d'été : la saison se déduit de la date, et l'été a ses propres quantiles.

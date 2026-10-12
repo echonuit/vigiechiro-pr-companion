@@ -20,6 +20,7 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import java.util.Optional;
 import javafx.fxml.FXMLLoader;
@@ -46,7 +47,7 @@ import org.testfx.util.WaitForAsyncUtils;
 ///
 /// Classe séparée de [SyntheseViewTest] parce que la disponibilité du référentiel se décide **au
 /// chargement** de la vue : c'est un autre montage, pas une autre assertion.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class SyntheseSansReferentielViewTest {
 
     private static final String TABLE = "#tableSynthese";
