@@ -31,9 +31,10 @@ import net.bytebuddy.matcher.ElementMatchers;
 ///
 /// Ce registre pose une sonde à l'entrée des deux méthodes par lesquelles toute propriété JavaFX
 /// annonce un changement : `markInvalid` des `*PropertyBase` et du texte d'un champ de saisie, et
-/// `fireValueChangedEvent` des `ReadOnly*PropertyBase`. Une écriture directe, une liaison qui se propage et un écouteur qui
-/// réécrit un nœud y passent tous, sur le fil de l'écrivain. La sonde ne lève jamais : JavaFX
-/// avale ce que lève un écouteur, donc on relève ici et [SansEcritureHorsDuFil] affirme après.
+/// `fireValueChangedEvent` des `ReadOnly*PropertyBase`. Une écriture directe, une liaison qui se
+/// propage et un écouteur qui réécrit un nœud y passent tous, sur le fil de l'écrivain. La sonde
+/// ne lève jamais : JavaFX avale ce que lève un écouteur, donc on relève ici et
+/// [SansEcritureHorsDuFil] affirme après.
 ///
 /// Ce qu'il retient : une propriété dont le porteur est un nœud attaché à une scène d'une fenêtre
 /// montrée, invalidée depuis un autre fil que celui de JavaFX.
