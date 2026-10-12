@@ -231,7 +231,7 @@ public final class BancImport {
 
     /// Vide complètement le dossier de benchmark (base + `source-sd` + sessions) puis le recrée, pour
     /// une mesure reproductible quel que soit le contenu d'une passe précédente.
-    private static void reinitialiser(Path racine) throws IOException {
+    static void reinitialiser(Path racine) throws IOException {
         if (Files.exists(racine)) {
             try (var chemins = Files.walk(racine)) {
                 chemins.sorted(Comparator.reverseOrder()).forEach(chemin -> {
@@ -321,13 +321,13 @@ public final class BancImport {
         }
     }
 
-    private static Injector creerInjecteur() {
+    static Injector creerInjecteur() {
         // Composition complète : un banc qui mesure un produit amputé mesure le mauvais produit.
         return Guice.createInjector(Modules.override(RacineInjecteur.modules())
                 .with(liaison -> liaison.bind(Horloge.class).toInstance(new HorlogeFigee(LocalDate.of(2026, 9, 20)))));
     }
 
-    private static Long seeder(Injector injecteur) {
+    static Long seeder(Injector injecteur) {
         new UtilisateurDao(injecteur.getInstance(SourceDeDonnees.class))
                 .insert(new Utilisateur(ID_UTILISATEUR, "Banc de mesure (demo)"));
         ServiceSites service = injecteur.getInstance(ServiceSites.class);

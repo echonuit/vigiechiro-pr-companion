@@ -12,6 +12,7 @@
 | [`perf.outils.GenerateurJeuDeDonnees`](../../src/main/java/fr/univ_amu/iut/perf/outils/GenerateurJeuDeDonnees.java) | Peuple une base SQLite : `perf.sites` carrés (déf. 40) de 10 points, `perf.passages` passages (déf. 1000) + `perf.observations` observations (déf. 4031). Déterministe, base réécrite à neuf. |
 | [`perf.outils.BancMesure`](../../src/main/java/fr/univ_amu/iut/perf/outils/BancMesure.java) | Génère le jeu puis chronomètre les opérations O5 **à froid** (1ᵉʳ appel) et **à chaud** (médiane), et imprime l'`EXPLAIN QUERY PLAN` de chaque requête. |
 | [`perf.outils.BancImport`](../../src/main/java/fr/univ_amu/iut/perf/outils/BancImport.java) | Génère une **nuit synthétique** de vrais WAV + journal `LogPR`, lance le **vrai** import (`ServiceImport`) et mesure temps (copie / transformation #12 / persistance), débit (fichiers/s, Mo/s) et **mémoire crête** (O3). |
+| [`perf.outils.BancReactivation`](../../src/main/java/fr/univ_amu/iut/perf/outils/BancReactivation.java) | Banc de la **réactivation** (#6174) : fabrique et importe une nuit, l'archive, puis la réactive depuis ses bruts par le **vrai** `ServiceReactivationPassage`, voie `bruts` ou `hydratation`. Mesure le temps, les temporaires de régénération sous `java.io.tmpdir`, la mémoire du poste et le heap après GC. |
 | [`perf.outils.BancIhmO5Test`](../../src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO5Test.java) et [`BancIhmO3Test`](../../src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO3Test.java) | Banc de l'**IHM** (#105) : monte les vrais écrans sur une vraie base et chronomètre les gestes d'O5 (ouverture, tri, filtre, clic, revue ; topologie), puis importe plusieurs nuits dans le même processus, sonde des images posée, heap après GC (O3). Étiqueté `banc-ihm`, jamais en CI. |
 
 ## Lancer le banc (couche données, O5)
@@ -355,7 +356,7 @@ déjà importée ».
 - Dans l'IHM : le moment où tombent les trois écarts de l'import à 20 Gio, et l'application lancée
   hors des tests, où un rendu GPU peut donner autre chose. Le processus porte TestFX, l'agent
   ByteBuddy et celui de JaCoCo.
-- La réactivation d'une nuit, qu'aucun banc ne mesure (#6174).
+- La réactivation d'une nuit : elle a son banc et son relevé plus bas (« La réactivation d'une nuit », #6174).
 
 **Le relancer.** La JVM de test reçoit sa ligne d'arguments du pom : `-Djava.io.tmpdir`, l'échelle et
 `-Xlog:gc` y entrent par la variable `JAVA_TOOL_OPTIONS`, et le banc écrit sous `perf.ihm.racine`.
@@ -395,6 +396,98 @@ tomber l'import, se transforme comme les autres.
 `Car640380-2026-Pass2-Z1` porte 1572 bruts et 2109 transformés, et notre import les reproduit au bit
 près, ce que #504 a vérifié. Le temps et la mémoire d'une nuit de cette taille sont ceux du tableau
 O3 plus haut, pour la machine qu'il nomme.
+
+### La réactivation d'une nuit (`BancReactivation`, #6174)
+
+La réactivation rend écoutable une nuit archivée en régénérant ses séquences depuis ses bruts, par la
+même transformation que l'import. Elle régénère chaque brut dans un dossier temporaire, rebranche les
+tranches vérifiées, puis efface ce dossier. Le code a deux voies, et elles ne régénèrent pas de la
+même façon :
+
+- **bruts** : la nuit a gardé l'inventaire de ses originaux, et la réactivation en régénère **un à la
+  fois** (`ReactivationDepuisBruts`) ;
+- **hydratation** : la nuit est reconstruite, ou rapatriée de Vigie-Chiro, et ses originaux ne sont
+  que des placeholders. Les bruts sont alors régénérés **en parallèle**, autant que de cœurs
+  (`HydratationDepuisBruts`).
+
+**Le constat** : le 2026-09-15, la réactivation d'une nuit a figé ce poste jusqu'à ce que le processus
+s'arrête faute de mémoire. Cette nuit n'est pas rejouée ici : les nuits sont fabriquées par le banc.
+
+**Le lancer.** Comme `BancImport`, dans une JVM à soi. Le banc écrit sous `vigiechiro.workspace`, qu'il
+réinitialise, et le dossier temporaire est celui de la JVM :
+
+```bash
+./mvnw -q org.codehaus.mojo:exec-maven-plugin:exec \
+  -Dexec.executable="$JAVA_HOME/bin/java" -Dexec.classpathScope=runtime \
+  -Dexec.args="--enable-native-access=ALL-UNNAMED -Xmx4g -Dvigiechiro.workspace=$HOME/vigiechiro-bench-reactivation \
+               -Dperf.reactivation.fichiers=8 -Dperf.reactivation.secondes=1200 \
+               -Dperf.reactivation.voie=hydratation -cp %classpath fr.univ_amu.iut.perf.outils.BancReactivation"
+```
+
+Dimensionnement : `-Dperf.reactivation.fichiers=N` **ou** `-Dperf.reactivation.go=<Gio>`, plus
+`-Dperf.reactivation.secondes` (déf. 5.0) et `-Dperf.reactivation.frequenceHz` (déf. 384000).
+`-Dperf.reactivation.voie=bruts|hydratation` choisit la voie ; le banc obtient l'hydratation en
+réduisant les originaux de la nuit à des placeholders, comme les pose une reconstruction. Prévoir trois
+fois la taille source sur le disque de l'espace de travail, comme pour l'import.
+
+> **Sur un poste dont `/tmp` est un tmpfs, la voie `hydratation` écrit en mémoire vive.** Ce relevé a
+> tiré le banc dans une portée à mémoire bornée, pour que la saturation arrête le tir et non le poste :
+> `systemd-run --user --scope -p MemoryMax=12G -p MemorySwapMax=0 -- java …`. La borne y fixe aussi le
+> heap par défaut, d'où le `-Xmx4g` écrit. Le poste était tenu éveillé par
+> `systemd-inhibit --what=sleep:idle`.
+
+#### Relevé du 2026-10-12
+
+Poste : celui de la section « Relevés du 2026-10-12 » (i5-1145G7, 8 cœurs, 30,4 Gio, SSD NVMe, JDK
+25.0.3, Linux 7.0.0). Code : `main` à `80d09a0cee`, plus le banc. Heap : `-Xmx4g`. Workspace sur la
+partition `ext4` de `/home`. `/tmp` est un tmpfs de 15,2 Gio. Un lancement par ligne, tirés l'un après
+l'autre sans build ni autre banc. La charge du poste sur une minute allait de 0,8 à 8,7 au départ des
+tirs, d'autres sessions travaillant sur le poste : les temps se lisent avec cette réserve, les chiffres
+de mémoire beaucoup moins.
+
+« Temporaires » est l'occupation la plus haute des dossiers de régénération (`vc-regen-*`,
+`vc-hydrate-*`) sous `java.io.tmpdir`. « Poste » est `MemTotal - MemAvailable`, et « Shmem » la
+mémoire partagée, où se compte un tmpfs, au départ puis au plus haut. Tout est échantillonné toutes les
+200 ms. « Après GC » suit un `System.gc()` demandé à la fin.
+
+| Tir | Nuit | Voie | `java.io.tmpdir` | Réactivation | Temporaires | Poste | Shmem | Heap au plus haut | Après GC |
+|---|---|---|---|---:|---:|---:|---:|---:|---:|
+| A | 1572 WAV de 5 s, 5,62 Gio | bruts | tmpfs | 52,0 s | 3 Mo | 12843 → 14895 Mo | 1175 → 1797 Mo | 721 Mo | 15 Mo |
+| B | 1572 WAV de 5 s, 5,62 Gio | hydratation | tmpfs | 42,4 s | 25 Mo | 12999 → 13997 Mo | 1198 → 1229 Mo | 1143 Mo | 15 Mo |
+| C | 8 WAV de 1200 s, 6,87 Gio | hydratation | tmpfs | 29,9 s | **7031 Mo** | 12719 → **20703 Mo** | 1155 → **8190 Mo** | 1303 Mo | 15 Mo |
+| D | 8 WAV de 1200 s, 6,87 Gio | hydratation | `/home` | 66,0 s | 7031 Mo | 12657 → 13662 Mo | 1088 → 1103 Mo | 1210 Mo | 15 Mo |
+| E | 8 WAV de 1200 s, 6,87 Gio | bruts | tmpfs | 38,4 s | 878 Mo | 13772 → 15368 Mo | 1090 → 2044 Mo | 583 Mo | 14 Mo |
+
+Toutes les séquences sont revenues (1572 ou 1920 réactivées, aucune manquante), et aucun dossier de
+régénération n'est resté après un tir. La voie que rend le rapport est `BRUTS` pour les cinq :
+une hydratation réussie se rapporte ainsi.
+
+Un premier lancement de D a été **écarté** : le poste s'est mis en veille de 20:18 à 20:37 pendant le
+tir, et la JVM a été gelée. Le D du tableau est le second lancement, poste tenu éveillé.
+
+**Lectures** :
+
+- **La cause est le dossier temporaire du système.** Les tirs C et D ne diffèrent que par `java.io.tmpdir` :
+  avec un tmpfs, la mémoire du poste monte de 7,8 Gio et la mémoire partagée de 6,9 Gio ; sur
+  `/home`, de 1,0 Gio et de 15 Mo. Le heap, lui, ne garde rien : 15 Mo après GC dans les deux tirs.
+  La JVM ne voit pas cette mémoire, c'est le poste qui la paie.
+- **L'hydratation tient la nuit entière à la fois.** 7031 Mo, c'est les huit bruts de C régénérés en
+  même temps (huit fils, huit bruts de 879 Mo). La voie bruts n'en tient qu'un : 878 Mo dans E.
+- **Avec des bruts de 5 s, rien ne se voit** (A et B : 3 et 25 Mo). Il faut des bruts longs, que
+  produit un enregistreur qui ne découpe pas, pour que la régénération pèse.
+- **Ce que cela dit du 2026-09-15**, sans le prouver : sur une nuit reconstruite ou rapatriée, huit
+  bruts d'un ou deux Gio régénérés à la fois dans un tmpfs, ajoutés au heap par défaut (7788 Mo) et à ce
+  que le poste porte déjà, dépassent les 30 Gio du poste. Sur le second poste, à seize cœurs, il en
+  faut deux fois moins.
+
+**Ce que ces chiffres ne mesurent pas** :
+
+- La nuit du 2026-09-15 elle-même, ni l'état du code de ce jour-là, où la transformation lisait encore
+  chaque brut entier dans le heap (#104).
+- Une vraie nuit reconstruite : le banc en imite l'inventaire, il ne passe pas par la reconstruction
+  depuis la plateforme.
+- La réactivation dans l'application : le banc appelle le service, sans la modale ni ses barres.
+- Une saturation menée à son terme : la borne de 12 Go et `-Xmx4g` la préviennent par construction.
 
 ## Réactivité IHM (freeze > 200 ms) : procédure semi-manuelle
 
@@ -459,5 +552,8 @@ critère a son relevé, et chaque seuil non tenu son issue.
   banc (#6170). **20 Gio, sur le second poste** : import en 20 à 21 s, 108 à 115 Mo après GC ; dans
   l'IHM, un écart de 465 à 472 ms entre deux images pendant l'import, là où les nuits de 300 WAV
   tiennent le seuil à échelle d'écran égale (#6175).
+- **Réactivation** (#6174) : sur une nuit hydratée de bruts de 20 min, les temporaires de
+  régénération occupent 7031 Mo à la fois dans `java.io.tmpdir`, de la mémoire vive quand c'est un
+  tmpfs ; la voie bruts n'en tient qu'un brut, et le heap après GC reste à 15 Mo.
 - Outillage réutilisable en **non-régression** : `GenerateurJeuDeDonnees`, `BancMesure`, `BancImport`,
-  et le banc de l'IHM (`BancIhmO5Test`, `BancIhmO3Test`), lancé à la main.
+  `BancReactivation`, et le banc de l'IHM (`BancIhmO5Test`, `BancIhmO3Test`), lancé à la main.
