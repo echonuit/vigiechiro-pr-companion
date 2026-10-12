@@ -23,8 +23,8 @@ import fr.univ_amu.iut.commun.api.ReponseApi;
 /// Le statut seul ne suffisait pas (#5598) : un `403` de l'API et un `403` du stockage S3 étaient
 /// rangés ensemble, et l'écran conseillait une reconnexion qui ne peut rien pour une URL pré-signée.
 public enum CauseRefus {
-    /// 401 / 403 **de l'API** : jeton mort, droits manquants. **Une reconnexion réussie peut lever cette
-    /// cause** : ces unités se réarment.
+    /// 401 / 403 **de l'API** : jeton mort, droits manquants ; et, depuis #6151, l'appel qui n'est pas
+    /// parti faute de jeton. **Une reconnexion réussie peut lever cette cause** : ces unités se réarment.
     ///
     /// C'est ici, et **seulement** ici, que la règle est écrite. Une méthode `leveeParUneReconnexion()`
     /// la disait aussi, et personne ne l'appelait : `RearmementDepotUnites` passe la constante en dur au
@@ -47,6 +47,13 @@ public enum CauseRefus {
     /// Un `429` ou un `5xx` **n'arrive pas ici** : `ReponseApi.estReessayable()` les juge rejouables,
     /// donc l'unité n'est jamais marquée définitive et n'a pas de cause à porter.
     public static CauseRefus de(ReponseApi<?> reponse, Provenance provenance) {
+        // Sans jeton, l'appel n'est pas parti, et seule une reconnexion le fera partir : c'est la cause
+        // « droits » (#6151). Le cas courant n'est pas un dépôt lancé sans connexion, c'est le reste d'un
+        // dépôt dont le premier `401` vient d'effacer le jeton : ses unités doivent se réarmer à la
+        // reconnexion comme celles qui ont reçu le `401`, et non passer pour un contenu refusé.
+        if (reponse instanceof ReponseApi.NonConnecte<?>) {
+            return AUTHENTIFICATION;
+        }
         if (!(reponse instanceof ReponseApi.Refuse<?> refus) || reponse.estReessayable()) {
             return null;
         }

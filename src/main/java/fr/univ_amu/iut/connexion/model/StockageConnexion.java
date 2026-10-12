@@ -86,6 +86,24 @@ public final class StockageConnexion implements FournisseurToken {
         }
     }
 
+    /// L'API a refusé `jetonRefuse` (#6151) : il est oublié **s'il est celui qui est enregistré**.
+    @Override
+    public void jetonRefuse(String jetonRefuse) {
+        oublierSi(jetonRefuse);
+    }
+
+    /// Efface la connexion locale si elle porte `jetonRefuse`, et seulement dans ce cas.
+    ///
+    /// La condition protège deux situations où le jeton refusé n'est pas celui du fichier : un jeton
+    /// **ponctuel** (option `--token`, `VIGIECHIRO_TOKEN`), qui l'emporte sur le stockage sans le
+    /// remplacer ; et une **reconnexion** survenue pendant que la requête refusée était en vol. Un jeton
+    /// périmé mais encore écrit est oublié aussi : c'est le même, et il est mort.
+    public void oublierSi(String jetonRefuse) {
+        if (lire().map(Session::token).filter(jetonRefuse::equals).isPresent()) {
+            effacer();
+        }
+    }
+
     /// Efface la connexion locale (déconnexion). Idempotent.
     public void effacer() {
         try {

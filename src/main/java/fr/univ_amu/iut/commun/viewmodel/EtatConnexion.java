@@ -21,4 +21,15 @@ public interface EtatConnexion {
 
     /// Un jeton est-il disponible ? **En lecture seule** : un écran observe, il ne décide pas.
     ReadOnlyBooleanProperty connecteProperty();
+
+    /// Relit la source de vérité et publie le résultat (#6151). Appelée **au retour** d'un geste de
+    /// plateforme, sur le fil JavaFX : c'est là qu'un écran découvre qu'un jeton a expiré ou vient
+    /// d'être refusé, et le geste doit alors se fermer sans attendre une reconnexion.
+    ///
+    /// Relire ne décide rien : le port reste en lecture seule sur l'état, il demande seulement qu'on le
+    /// regarde de nouveau. Un état qui ne dépend d'aucune source - les outils de capture - n'a rien à
+    /// relire, d'où ce défaut.
+    default void relire() {
+        // Rien à relire : cet état ne suit aucune source.
+    }
 }

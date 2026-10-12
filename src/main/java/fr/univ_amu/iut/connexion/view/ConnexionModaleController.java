@@ -179,6 +179,11 @@ public class ConnexionModaleController {
                         .then("Se déconnecter de Vigie-Chiro (efface le jeton mémorisé sur ce poste).")
                         .otherwise("Aucune connexion active à interrompre."));
         viewModel.rafraichir();
+        // Et le reflet se relit À L'OUVERTURE (#6151). L'écouteur ci-dessus ne part que sur un CHANGEMENT
+        // de `jetonEnregistre`, qui naît à faux à chaque ouverture : sur un jeton périmé depuis la
+        // dernière, `rafraichir()` repose faux et rien ne bouge. La modale disait « Non connecté »
+        // pendant que les écrans gardaient leurs gestes de plateforme ouverts.
+        etatConnexion.relire();
         majBadgeIdentite(viewModel.connecteProperty().get());
         // #1369 : un jeton conservé hors ligne (jamais vérifié) est revérifié à l'ouverture, sans
         // geste : le badge redevient vert dès que la plateforme répond.

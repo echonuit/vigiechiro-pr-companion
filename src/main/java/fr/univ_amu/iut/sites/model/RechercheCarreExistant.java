@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.sites.model;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.GesteDeReconnexion;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.Severite;
@@ -154,6 +155,24 @@ public class RechercheCarreExistant {
                 return Severite.INFO;
             }
         }
+
+        /// On ne sait pas, et l'on sait pourquoi : le jeton est absent, expiré ou refusé (#6151).
+        ///
+        /// Séparé de [Indisponible] parce que le geste diffère : une panne se réessaie, un jeton mort
+        /// demande de se reconnecter. Les confondre faisait réessayer un clic voué au même refus.
+        record SansConnexion() implements Verdict {
+
+            @Override
+            public String message() {
+                return "Vérification impossible : votre jeton Vigie-Chiro est absent, expiré ou refusé. Ce"
+                        + " carré n'a donc PAS été vérifié. " + GesteDeReconnexion.A_L_ECRAN;
+            }
+
+            @Override
+            public Severite severite() {
+                return Severite.AVERTISSEMENT;
+            }
+        }
     }
 
     /// Cherche `numeroCarre` sur la plateforme.
@@ -165,14 +184,14 @@ public class RechercheCarreExistant {
         Objects.requireNonNull(numeroCarre, "numeroCarre");
         return switch (client.chercherCarre(numeroCarre)) {
             case ReponseApi.Succes<List<SiteVigieChiro>>(List<SiteVigieChiro> trouves) -> verdict(trouves);
-            case ReponseApi.NonConnecte<List<SiteVigieChiro>> nonConnecte -> new Verdict.Indisponible();
+            case ReponseApi.NonConnecte<List<SiteVigieChiro>> nonConnecte -> new Verdict.SansConnexion();
             case ReponseApi.Injoignable<List<SiteVigieChiro>>(String cause) -> {
                 LOG.log(Level.FINE, () -> "Recherche du carré ignorée (Vigie-Chiro injoignable : " + cause + ")");
                 yield new Verdict.Indisponible();
             }
             case ReponseApi.Refuse<List<SiteVigieChiro>>(int statut, String corps) -> {
                 LOG.log(Level.FINE, () -> "Recherche du carré ignorée (refus HTTP " + statut + ")");
-                yield new Verdict.Indisponible();
+                yield statut == 401 ? new Verdict.SansConnexion() : new Verdict.Indisponible();
             }
         };
     }

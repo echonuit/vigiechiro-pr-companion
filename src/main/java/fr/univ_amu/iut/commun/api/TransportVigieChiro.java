@@ -75,19 +75,22 @@ final class TransportVigieChiro {
     /// reprise est un trou où « Annuler » ne fait rien, alors qu'un balayage paginé le relaie
     /// précisément page par page (#1522).
     ReponseApi<String> lire(String chemin, BooleanSupplier renoncer) {
-        Optional<String> entete = enteteAuthorization();
-        if (entete.isEmpty()) {
+        Optional<String> jeton = fournisseurToken.token();
+        if (jeton.isEmpty()) {
             return ReponseApi.nonConnecte();
         }
-        return emettre(
-                Rejeu.AUTORISE,
-                renoncer,
-                () -> HttpRequest.newBuilder(URI.create(baseUrl + chemin))
-                        .timeout(DELAI)
-                        .header("Authorization", entete.get())
-                        .header("Accept", TYPE_JSON)
-                        .GET()
-                        .build());
+        String entete = basic(jeton.get());
+        return signalerUnJetonRefuse(
+                jeton.get(),
+                emettre(
+                        Rejeu.AUTORISE,
+                        renoncer,
+                        () -> HttpRequest.newBuilder(URI.create(baseUrl + chemin))
+                                .timeout(DELAI)
+                                .header("Authorization", entete)
+                                .header("Accept", TYPE_JSON)
+                                .GET()
+                                .build()));
     }
 
     /// Écriture authentifiée (`POST` / `PATCH`) d'un corps JSON sur `chemin`, triée comme [#lire]. Si
@@ -98,14 +101,15 @@ final class TransportVigieChiro {
     /// sur vingt-neuf l'exigent et refusent en `412` sans lui, les autres l'ignorent (socle relu le
     /// 2026-08-27). Pour une route donnée, c'est l'appel qui la porte qui le dit.
     ReponseApi<String> ecrire(String methode, String chemin, String corpsJson, String etag, Rejeu rejeu) {
-        Optional<String> entete = enteteAuthorization();
-        if (entete.isEmpty()) {
+        Optional<String> jeton = fournisseurToken.token();
+        if (jeton.isEmpty()) {
             return ReponseApi.nonConnecte();
         }
-        return emettre(rejeu, () -> {
+        String entete = basic(jeton.get());
+        return signalerUnJetonRefuse(jeton.get(), emettre(rejeu, () -> {
             HttpRequest.Builder requete = HttpRequest.newBuilder(URI.create(baseUrl + chemin))
                     .timeout(DELAI)
-                    .header("Authorization", entete.get())
+                    .header("Authorization", entete)
                     .header("Accept", TYPE_JSON)
                     .header(ENTETE_CONTENT_TYPE, TYPE_JSON)
                     .method(methode, HttpRequest.BodyPublishers.ofString(corpsJson, StandardCharsets.UTF_8));
@@ -113,7 +117,26 @@ final class TransportVigieChiro {
                 requete.header("If-Match", etag);
             }
             return requete.build();
-        });
+        }));
+    }
+
+    /// Statut d'un jeton que l'API ne reconnaît pas : absent, mal formé, expiré ou révoqué.
+    static final int JETON_REFUSE = 401;
+
+    /// Dit à la source du jeton que l'API vient de refuser `jeton`, et rend la réponse telle quelle (#6151).
+    ///
+    /// **Ici et nulle part ailleurs**, parce que ce sont les deux seules émissions qui portent le jeton :
+    /// un `401` du stockage S3 (`deposer`, `telecharger`) refuse une URL signée, pas le jeton, et ne
+    /// passe pas par là. Le placer chez chaque appelant aurait fait autant de copies que de gestes de
+    /// plateforme, et le premier oubli aurait renvoyé le jeton mort à chaque clic.
+    ///
+    /// Le jeton est celui qui est PARTI, pas celui que la source rendrait maintenant : c'est à elle de
+    /// juger si c'est encore le sien.
+    private ReponseApi<String> signalerUnJetonRefuse(String jeton, ReponseApi<String> reponse) {
+        if (reponse instanceof ReponseApi.Refuse<String> refus && refus.statut() == JETON_REFUSE) {
+            fournisseurToken.jetonRefuse(jeton);
+        }
+        return reponse;
     }
 
     /// Télécharge une URL **déjà signée** (S3, #1132) : aucun en-tête `Authorization` (S3 refuse une

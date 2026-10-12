@@ -54,15 +54,19 @@ public class RapprochementSites implements RapprochementVigieChiro {
     public Optional<RapportSynchro> synchroniser(ClientVigieChiro client) {
         try {
             // Toute issue non-succès = ne toucher à rien (ni création, ni purge : garde anti-purge).
-            // Depuis #1284 la cause remonte, au lieu d'être omise en silence : sauf « non connecté ».
+            // Depuis #1284 la cause remonte, au lieu d'être omise en silence.
             return switch (client.mesSites()) {
                 case ReponseApi.Succes<List<SiteVigieChiro>>(List<SiteVigieChiro> distants) ->
                     importer(distants, idProfilConnecte(client));
-                case ReponseApi.NonConnecte<List<SiteVigieChiro>> nonConnecte -> Optional.empty();
+                // Depuis #6151 le « non connecté » se dit aussi : c'est un jeton périmé, ou celui qu'un
+                // `401` vient d'effacer, et l'écran doit pouvoir nommer la reconnexion.
+                case ReponseApi.NonConnecte<List<SiteVigieChiro>> nonConnecte ->
+                    Optional.of(RapportSynchro.empechee(LIBELLE_SITES, RapportSynchro.JETON_ABSENT));
                 case ReponseApi.Injoignable<List<SiteVigieChiro>>(String cause) ->
                     Optional.of(RapportSynchro.empechee(LIBELLE_SITES, "Vigie-Chiro injoignable : " + cause));
                 case ReponseApi.Refuse<List<SiteVigieChiro>>(int statut, String corps) ->
-                    Optional.of(RapportSynchro.empechee(LIBELLE_SITES, "refus HTTP " + statut));
+                    Optional.of(RapportSynchro.empechee(
+                            LIBELLE_SITES, statut == 401 ? RapportSynchro.JETON_REFUSE : "refus HTTP " + statut));
             };
         } catch (RuntimeException echec) {
             LOG.log(Level.FINE, echec, () -> "Import des sites Vigie-Chiro ignoré (best-effort)");

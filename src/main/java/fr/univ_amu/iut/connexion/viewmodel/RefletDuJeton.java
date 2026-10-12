@@ -47,6 +47,7 @@ public final class RefletDuJeton implements EtatConnexion {
 
     /// Relit la source de vérité et publie le résultat, **sur le fil d'affichage**. Appelable depuis
     /// n'importe quel fil. Idempotent : reposer la même valeur ne réveille aucun observateur.
+    @Override
     public void relire() {
         filAffichage.execute(() -> connecte.set(jetons.token().isPresent()));
     }

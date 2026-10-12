@@ -369,7 +369,9 @@ public final class BancDeRecette {
             @Provides
             @Singleton
             FournisseurToken sourceDuBanc(StockageConnexion reserve) {
-                return reserve::token;
+                // La réserve ELLE-MÊME, et non `reserve::token` : un `401` doit lui faire oublier son
+                // jeton comme en production (#6151). Une référence de méthode n'en garde que la lecture.
+                return reserve;
             }
         });
 

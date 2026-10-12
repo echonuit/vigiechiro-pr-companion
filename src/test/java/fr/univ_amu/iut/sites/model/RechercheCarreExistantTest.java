@@ -71,7 +71,9 @@ class RechercheCarreExistantTest {
         // Confondre « je ne sais pas » et « il n'existe pas » ferait déclarer un carré déjà pris à
         // quelqu'un qui croit avoir vérifié : exactement la panne que cette classe évite.
         RechercheCarreExistant.Verdict verdict = recherche.chercher("130711");
-        assertThat(verdict).isInstanceOf(RechercheCarreExistant.Verdict.Indisponible.class);
+        // Sans jeton, on sait POURQUOI on ne sait pas (#6151) : le verdict nomme la reconnexion.
+        assertThat(verdict).isInstanceOf(RechercheCarreExistant.Verdict.SansConnexion.class);
+        assertThat(verdict.message()).contains("Reconnectez-vous depuis le menu principal");
 
         // Le titre de ce test promettait « on ne dit pas il est libre » ; seul le TYPE du verdict
         // était contrôlé. Un message qui aurait ajouté « il n'existe pas encore » serait passé (#3914).
@@ -90,6 +92,10 @@ class RechercheCarreExistantTest {
 
         when(client.chercherCarre("130711")).thenReturn(ReponseApi.refuse(403, ""));
         assertThat(recherche.chercher("130711")).isInstanceOf(RechercheCarreExistant.Verdict.Indisponible.class);
+
+        // Le 401 seul dit le jeton, et donc la reconnexion (#6151) : un 403 n'est pas un jeton mort.
+        when(client.chercherCarre("130711")).thenReturn(ReponseApi.refuse(401, ""));
+        assertThat(recherche.chercher("130711")).isInstanceOf(RechercheCarreExistant.Verdict.SansConnexion.class);
     }
 
     /// Lu dans « Mes sites » après la déclaration, le verdict nomme le carré et ne propose plus de le

@@ -400,7 +400,8 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
                 ouvrirMultisite,
                 confirmateur,
                 notificateur,
-                executeur);
+                executeur,
+                () -> etatConnexion.ifPresent(EtatConnexion::relire));
         // Révélation des points rapatriés non utilisés (#1738) : la synchro ramène tous les points du carré,
         // mais la fiche ne montre par défaut que ceux qui SERVENT (au moins un passage). Ce lien n'apparaît
         // que s'il reste des points à révéler ; son libellé suit l'état (Afficher N… / Masquer…).

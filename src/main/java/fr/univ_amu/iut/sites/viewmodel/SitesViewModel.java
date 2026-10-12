@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.sites.viewmodel;
 
+import fr.univ_amu.iut.commun.api.GesteDeReconnexion;
 import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
@@ -165,6 +166,10 @@ public class SitesViewModel {
         // `RapportSynchro.enClair()` sait déjà dire « nuit(s) non récupérées (cause) » rapport par
         // rapport ; il suffit de ne pas l'écraser.
         String corps = rapports.stream().map(SitesViewModel::segmentSynchro).collect(Collectors.joining(", "));
+        if (rapports.stream().anyMatch(RapportSynchro::demandeUneReconnexion)) {
+            // Le geste qui répare, et où (#6151) : la cause seule laissait chercher quoi faire.
+            return corps + ". " + GesteDeReconnexion.A_L_ECRAN;
+        }
         return rapports.stream().anyMatch(rapport -> rapport.souci() != null)
                 ? corps + "."
                 : corps + " depuis Vigie-Chiro.";

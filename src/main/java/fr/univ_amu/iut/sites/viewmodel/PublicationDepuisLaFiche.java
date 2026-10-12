@@ -96,7 +96,10 @@ public class PublicationDepuisLaFiche {
             return Optional.of("La publication vers Vigie-Chiro n'est pas disponible.");
         }
         if (!publication.get().connecte()) {
-            return Optional.of("Connectez-vous à Vigie-Chiro pour publier ce point.");
+            // L'endroit, et pas seulement le geste (#6151) : ce motif est aussi ce qu'on lit quand le
+            // jeton a expiré entre la construction de la carte et le clic.
+            return Optional.of("Connectez-vous à Vigie-Chiro pour publier ce point : menu principal, entrée"
+                    + " « Se connecter à Vigie-Chiro… ».");
         }
         if (objectidDuSite(idSite).isEmpty()) {
             return Optional.of("Ce carré n'est pas encore enregistré sur Vigie-Chiro."
