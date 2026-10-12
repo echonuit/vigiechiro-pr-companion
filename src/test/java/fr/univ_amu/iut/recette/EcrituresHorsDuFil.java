@@ -26,8 +26,7 @@ import net.bytebuddy.matcher.ElementMatchers;
 ///
 /// JavaFX ne vérifie le fil qu'en quelques points : la liste des enfants d'une scène montrée, une
 /// prise de vue, l'ouverture d'une fenêtre. Écrire le texte d'un champ depuis une tâche de fond ne
-/// lève rien, et le défaut ne se voit qu'au hasard d'une pile du rendu, qui ne nomme pas l'écrivain
-/// (#6138).
+/// lève rien, et le défaut ne se voit qu'au hasard d'une pile du rendu muette sur l'écrivain (#6138).
 ///
 /// Ce registre pose une sonde à l'entrée des deux méthodes par lesquelles toute propriété JavaFX
 /// annonce un changement : `markInvalid` des `*PropertyBase` et du texte d'un champ de saisie, et
