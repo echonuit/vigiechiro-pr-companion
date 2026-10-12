@@ -29,6 +29,10 @@ import org.junit.jupiter.api.io.TempDir;
 /// portée parce que leur enregistrement n'a jamais été adopté.
 class HydratationCollisionTest {
 
+    /// L'espace de travail sous lequel naissent les temporaires de régénération (#6174).
+    @TempDir
+    Path espaceDeTravail;
+
     private static final int FREQUENCE_ACQUISITION = 2000;
     private static final int CANAUX = 1;
     private static final int BITS = 16;
@@ -136,7 +140,8 @@ class HydratationCollisionTest {
                 Optional.of((dossier, prefixeSession) -> Optional.of(inventaire)),
                 Optional.of(new RegenerationParTransformationAudio(new TransformationAudio())),
                 new RebranchementSequences(verification, Optional.empty(), true),
-                new ExecutionParallele(2));
+                new ExecutionParallele(2),
+                espaceDeTravail);
     }
 
     /// Une séquence telle qu'un passage **reconstruit** la porte : un nom, une place attendue, et rien

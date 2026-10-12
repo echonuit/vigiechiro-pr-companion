@@ -120,7 +120,8 @@ public class ServiceReactivationPassage {
         Objects.requireNonNull(appuis, "appuis");
         this.rebranchement =
                 new RebranchementSequences(Objects.requireNonNull(verification, "verification"), appuis.crisAttendus());
-        this.depuisBruts = new ReactivationDepuisBruts(verification, rebranchement, appuis.regeneration());
+        this.depuisBruts =
+                new ReactivationDepuisBruts(verification, rebranchement, appuis.regeneration(), workspace.racine());
         // Voie hydratation (#1682) : les tranches y sont **régénérées** depuis le brut désigné, l'acoustique
         // n'y est donc qu'un indice (pas de veto). Un rebranchement dédié, en mode régénération, porte cette
         // règle - même vérification, même port de cris, mais acceptation structurelle.
@@ -128,7 +129,8 @@ public class ServiceReactivationPassage {
                 appuis.inventaireBruts(),
                 appuis.regeneration(),
                 new RebranchementSequences(verification, appuis.crisAttendus(), true),
-                new ExecutionParallele(PARALLELISME));
+                new ExecutionParallele(PARALLELISME),
+                workspace.racine());
         this.adoption = Objects.requireNonNull(adoption, "adoption");
         this.importObservations = appuis.importObservations();
         this.hydratationSquelette = appuis.hydratationSquelette();

@@ -430,8 +430,9 @@ Dimensionnement : `-Dperf.reactivation.fichiers=N` **ou** `-Dperf.reactivation.g
 réduisant les originaux de la nuit à des placeholders, comme les pose une reconstruction. Prévoir trois
 fois la taille source sur le disque de l'espace de travail, comme pour l'import.
 
-> **Sur un poste dont `/tmp` est un tmpfs, la voie `hydratation` écrit en mémoire vive.** Ce relevé a
-> tiré le banc dans une portée à mémoire bornée, pour que la saturation arrête le tir et non le poste :
+> **Avant le remède de #6174, sur un poste dont `/tmp` est un tmpfs, la voie `hydratation` écrivait en
+> mémoire vive.** Pour rejouer cet état, tirer le banc dans une portée à mémoire bornée, pour que la
+> saturation arrête le tir et non le poste, comme ce relevé l'a fait :
 > `systemd-run --user --scope -p MemoryMax=12G -p MemorySwapMax=0 -- java …`. La borne y fixe aussi le
 > heap par défaut, d'où le `-Xmx4g` écrit. Le poste était tenu éveillé par
 > `systemd-inhibit --what=sleep:idle`.
@@ -488,6 +489,25 @@ tir, et la JVM a été gelée. Le D du tableau est le second lancement, poste te
   depuis la plateforme.
 - La réactivation dans l'application : le banc appelle le service, sans la modale ni ses barres.
 - Une saturation menée à son terme : la borne de 12 Go et `-Xmx4g` la préviennent par construction.
+
+#### Après le remède : la régénération sous l'espace de travail
+
+Depuis #6174, les temporaires de régénération naissent sous la racine de l'espace de travail, comme
+l'extraction d'une archive, et plus dans `java.io.tmpdir`. Le banc relève les deux endroits. Mêmes
+poste, réglages et nuit que C et E, `/tmp` toujours en tmpfs, poste tenu éveillé, le 2026-10-12 sur la
+branche du remède.
+
+| Tir | Voie | Sous `java.io.tmpdir` | Sous l'espace de travail | Réactivation | Poste | Shmem | Après GC |
+|---|---|---:|---:|---:|---:|---:|---:|
+| C, avant | hydratation | 7031 Mo | (non relevé) | 29,9 s | 12719 → 20703 Mo | 1155 → 8190 Mo | 15 Mo |
+| C, après | hydratation | 0 Mo | 7031 Mo | 59,4 s | 12576 → 13635 Mo | 1131 → 1141 Mo | 15 Mo |
+| E, avant | bruts | 878 Mo | (non relevé) | 38,4 s | 13772 → 15368 Mo | 1090 → 2044 Mo | 14 Mo |
+| E, après | bruts | 0 Mo | 878 Mo | 44,2 s | 12792 → 12839 Mo | 1134 → 1135 Mo | 15 Mo |
+
+La régénération occupe toujours autant, mais sur le disque : la mémoire du poste ne monte plus que d'un
+Gio en hydratation, ce que le tir D faisait déjà avec le temporaire sur `/home`. Écrire sur disque
+coûte du temps, d'où une réactivation plus lente, comme D (66,0 s) l'était déjà ; la charge du poste au
+départ des tirs (3,0 et 7,6) n'en permet pas une lecture plus fine.
 
 ## Réactivité IHM (freeze > 200 ms) : procédure semi-manuelle
 
@@ -553,7 +573,8 @@ critère a son relevé, et chaque seuil non tenu son issue.
   l'IHM, un écart de 465 à 472 ms entre deux images pendant l'import, là où les nuits de 300 WAV
   tiennent le seuil à échelle d'écran égale (#6175).
 - **Réactivation** (#6174) : sur une nuit hydratée de bruts de 20 min, les temporaires de
-  régénération occupent 7031 Mo à la fois dans `java.io.tmpdir`, de la mémoire vive quand c'est un
-  tmpfs ; la voie bruts n'en tient qu'un brut, et le heap après GC reste à 15 Mo.
+  régénération occupaient 7031 Mo à la fois dans `java.io.tmpdir`, de la mémoire vive quand c'est un
+  tmpfs. Ils naissent désormais sous l'espace de travail, et la mémoire du poste ne monte plus que d'un
+  Gio ; le heap après GC reste à 15 Mo.
 - Outillage réutilisable en **non-régression** : `GenerateurJeuDeDonnees`, `BancMesure`, `BancImport`,
   `BancReactivation`, et le banc de l'IHM (`BancIhmO5Test`, `BancIhmO3Test`), lancé à la main.

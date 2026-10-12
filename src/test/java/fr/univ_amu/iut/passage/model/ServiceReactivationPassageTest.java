@@ -51,6 +51,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -99,6 +100,9 @@ class ServiceReactivationPassageTest {
     private EnregistrementOriginalDao originalDao;
     private ServiceDisponibiliteAudio disponibilite;
     private RegenerationParTransformationAudio regeneration;
+
+    /// Les dossiers de sortie que la réactivation a remis au port de régénération, dans l'ordre (#6174).
+    private final List<Path> sortiesDeRegeneration = Collections.synchronizedList(new ArrayList<>());
     private AdoptionOriginauxReconstruits adoption;
     private ServiceReactivationPassage service;
     private Long idPoint;
@@ -138,7 +142,7 @@ class ServiceReactivationPassageTest {
                 adoption,
                 new AppuisReactivation(
                         Optional.empty(), // pas de cris : cascade structurelle (injecteur partiel)
-                        Optional.of(regeneration),
+                        Optional.of(regenerationQuiNoteSaSortie()),
                         Optional.of(new InventaireParInspection(new InspecteurDossier(new AnalyseurLogPR()))),
                         Optional.empty(), // pas d'import : pas de phase d'ancrage (comportement historique)
                         Optional.empty()),
@@ -639,6 +643,21 @@ class ServiceReactivationPassageTest {
     }
 
     @Test
+    @DisplayName(
+            "#6174 : la voie bruts régénère sous l'espace de travail, jamais dans le dossier temporaire du système")
+    void voie_bruts_regenere_sous_l_espace_de_travail() throws IOException {
+        archiverAvecBrutSauvegarde(NOM_R6_BRUT, true);
+
+        service.reactiver(idPassage, sauvegarde, progres -> {});
+
+        assertThat(sortiesDeRegeneration)
+                .as("quand `java.io.tmpdir` est un tmpfs, ce qui s'y régénère est de la mémoire vive : un brut"
+                        + " de 20 min y pèse 879 Mo (#6174)")
+                .isNotEmpty()
+                .allSatisfy(sortie -> assertThat(sortie).startsWithRaw(dossier));
+    }
+
+    @Test
     @DisplayName("#1406 : le brut sauvegardé sous son nom de carte SD (non préfixé) est reconnu")
     void brut_sous_nom_de_carte_sd() throws IOException {
         List<String> noms = archiverAvecBrutSauvegarde(NOM_SD_BRUT, true);
@@ -753,6 +772,21 @@ class ServiceReactivationPassageTest {
                             .matches("[0-9a-fA-F]{64}");
                 })
                 .noneMatch(original -> original.nomFichier().endsWith("reconstruit.wav"));
+    }
+
+    @Test
+    @DisplayName(
+            "#6174 : l'hydratation régénère sous l'espace de travail, jamais dans le dossier temporaire du système")
+    void hydratation_regenere_sous_l_espace_de_travail() throws IOException {
+        reconstruireAvecBrutEtLog();
+
+        service.reactiver(idPassage, sauvegarde, progres -> {});
+
+        assertThat(sortiesDeRegeneration)
+                .as("l'hydratation régénère tous les bruts à la fois : dans un tmpfs, une nuit de huit bruts de"
+                        + " 20 min a pris 7031 Mo de mémoire vive au poste (#6174)")
+                .isNotEmpty()
+                .allSatisfy(sortie -> assertThat(sortie).startsWithRaw(dossier));
     }
 
     @Test
@@ -897,6 +931,14 @@ class ServiceReactivationPassageTest {
     ///
     /// @param avecEmpreinte pose taille + empreinte en base (import récent) ou non (import ancien)
     /// @param sauvegardeComplete copie les deux séquences dans la sauvegarde, ou seulement la première
+    /// La vraie régénération, qui note au passage le dossier de sortie qu'on lui remet.
+    private RegenerationSequences regenerationQuiNoteSaSortie() {
+        return (brut, nomOriginal, prefixe, frequence, sortie, nomsArbitres) -> {
+            sortiesDeRegeneration.add(sortie);
+            return regeneration.regenerer(brut, nomOriginal, prefixe, frequence, sortie, nomsArbitres);
+        };
+    }
+
     private void archiverAvecSauvegarde(boolean avecEmpreinte, boolean sauvegardeComplete) throws IOException {
         idPassage = JeuDeDonneesPassage.dans(source)
                 .utilisateur(ID_USER)
