@@ -22,6 +22,9 @@ generated:
 
 # Un clip à deux fins n'a pas de plancher, et la comparaison le dit
 
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Amendée le 2026-10-12** par l'[ADR 6135](6135-la-derniere-image-d-un-clip-ne-depend-plus-d-une-image-cle.md) : les causes nommées ici sont toutes dans le scénario, et une cinquième était dans l'encodeur. La place de la dernière image clé faisait varier de 0,3 à 0,9 % la dernière image de clips qui finissent pourtant au même endroit. Elle ne fait pas deux fins, seulement du bruit, et ne relève donc pas de cette table.
+
 ## Contexte
 
 Un plancher mesure le bruit d'un clip qui finit sur son verdict : deux tournages du même commit
