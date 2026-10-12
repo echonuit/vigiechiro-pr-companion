@@ -30,10 +30,6 @@ import java.util.Objects;
 ///
 /// Déterminisme (R11) : découpage positionnel, copie PCM sans rééchantillonnage donc sans clipping, et
 /// en-tête canonique fixe par [FichierWav#ecrire]. Relancer réécrit des fichiers identiques au bit près.
-///
-/// **Lecture par morceaux (#104).** L'original n'est jamais chargé entier : il se lit tranche par tranche
-/// dans un seul tampon de 5 s ([FichierWav#ouvrirPcm]), si bien que la mémoire tenue par un original ne
-/// dépend plus de sa durée, et qu'un WAV de plus de 2 Gio se transforme comme les autres.
 public class TransformationAudio {
 
     /// Ouvre un original pour la lecture par morceaux. Point de substitution des tests, qui y simulent un
@@ -108,6 +104,9 @@ public class TransformationAudio {
         }
     }
 
+    /// Découpe la source ouverte, **par morceaux** (#104) : l'original n'est jamais chargé entier, il se lit
+    /// tranche par tranche dans un seul tampon de 5 s. La mémoire tenue par un original ne dépend donc plus
+    /// de sa durée, et un WAV de plus de 2 Gio se transforme comme les autres.
     private TransformationOriginal transformer(
             FichierWav.LecturePcm source,
             Path originalWav,

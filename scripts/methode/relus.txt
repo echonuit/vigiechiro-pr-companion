@@ -360,7 +360,7 @@ da8bbd79c5a0  src/main/java/fr/univ_amu/iut/commun/model/EcrivainZip.java
 32b3c3f11097  src/main/java/fr/univ_amu/iut/commun/model/EspaceDisque.java
 fbf8674b7459  src/main/java/fr/univ_amu/iut/commun/model/EspeceIdentifiee.java
 ed7d066b9cef  src/main/java/fr/univ_amu/iut/commun/model/ExecutionParallele.java
-c0c3d884ee51  src/main/java/fr/univ_amu/iut/commun/model/FichierWav.java
+7e8c1ccbba16  src/main/java/fr/univ_amu/iut/commun/model/FichierWav.java
 16f00976d038  src/main/java/fr/univ_amu/iut/commun/model/FuseauDuPoint.java
 2698c31d6a4d  src/main/java/fr/univ_amu/iut/commun/model/FuseauDuSite.java
 495fbc5da8d8  src/main/java/fr/univ_amu/iut/commun/model/Horloge.java
@@ -732,7 +732,7 @@ d525e43a76d0  src/main/java/fr/univ_amu/iut/importation/model/ApercuEcrasement.j
 823d92804f93  src/main/java/fr/univ_amu/iut/importation/model/CopieProtegee.java
 a2cbd2949853  src/main/java/fr/univ_amu/iut/importation/model/CycleAcquisition.java
 10bf0233bbe1  src/main/java/fr/univ_amu/iut/importation/model/CyclesJournal.java
-2441d4f05c70  src/main/java/fr/univ_amu/iut/importation/model/DecoupageParallele.java
+6aaa902bdec0  src/main/java/fr/univ_amu/iut/importation/model/DecoupageParallele.java
 a30713b524a5  src/main/java/fr/univ_amu/iut/importation/model/EtatNommage.java
 5ea2bb553bf6  src/main/java/fr/univ_amu/iut/importation/model/ExtracteurZip.java
 6cbcdd465f08  src/main/java/fr/univ_amu/iut/importation/model/FabriqueEntitesImport.java
@@ -772,7 +772,7 @@ fae582809663  src/main/java/fr/univ_amu/iut/importation/model/ServiceImportRefer
 1bdab3570fc9  src/main/java/fr/univ_amu/iut/importation/model/SourceOriginal.java
 a7127d869bc7  src/main/java/fr/univ_amu/iut/importation/model/StatutImportFichier.java
 3d74e22ec680  src/main/java/fr/univ_amu/iut/importation/model/SuiviFichiers.java
-cd51a3c31b75  src/main/java/fr/univ_amu/iut/importation/model/TransformationAudio.java
+8446d8549ca6  src/main/java/fr/univ_amu/iut/importation/model/TransformationAudio.java
 cb04d6bf7a47  src/main/java/fr/univ_amu/iut/importation/model/TransformationOriginal.java
 0c9b9c704f4c  src/main/java/fr/univ_amu/iut/importation/model/TriParSerie.java
 9fd77773393c  src/main/java/fr/univ_amu/iut/importation/model/VolumesImport.java

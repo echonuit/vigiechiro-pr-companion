@@ -260,10 +260,7 @@ public record FichierWav(int nombreCanaux, int frequenceEchantillonnageHz, int b
     ///     une taille inconnue ou trop grande
     private static Zones analyser(Source source, long tailleLisible, long tailleFichier, Path fichier)
             throws IOException {
-        byte[] riff = new byte[12];
-        if (tailleLisible < 12 || !source.lire(0, riff, 12) || !tag(riff, 0, TAG_RIFF) || !tag(riff, 8, TAG_WAVE)) {
-            throw new IOException("Fichier WAV invalide (en-tête RIFF/WAVE absent) : " + fichier);
-        }
+        verifierRiff(source, tailleLisible, fichier);
         Integer canaux = null;
         Integer frequence = null;
         Integer bits = null;
@@ -285,27 +282,13 @@ public record FichierWav(int nombreCanaux, int frequenceEchantillonnageHz, int b
                 bits = lireUint16(fmt, 14);
             } else if ("data".equals(id)) {
                 dataDebut = corps;
-                long disponible = tailleFichier - corps;
+                dataLongueur = longueurData(taille, tailleFichier - corps, fichier);
                 if (taille == TAILLE_DATA_INCONNUE) {
-                    // Taille inconnue (enregistreur en flux) : les données vont jusqu'à la fin du fichier.
-                    // On arrête ici le balayage des chunks : avancer de (int) 0xFFFFFFFF = -1 (+1 de padding)
-                    // ramènerait `pos` au début du PCM et relirait les données audio comme de faux chunks
-                    // RIFF (corruption de dataDebut/dataLongueur, PCM vide ou « tronqué » à tort).
-                    dataLongueur = disponible;
+                    // Taille inconnue (enregistreur en flux) : les données vont jusqu'à la fin du fichier, et
+                    // le balayage s'arrête ici. Avancer de 0xFFFFFFFF octets ne mènerait à aucun chunk : ce
+                    // qui suit `data` est du signal, qu'il ne faut pas relire comme de faux chunks RIFF.
                     break;
                 }
-                // Intégrité (#156) : un en-tête qui annonce plus d'octets de données que le fichier n'en
-                // contient = fichier **tronqué/corrompu**. On le refuse au lieu de le lire silencieusement
-                // plus court (ce qui « passerait inaperçu » et fausserait l'analyse).
-                if (taille > disponible) {
-                    throw new IOException("Fichier WAV tronqué (données annoncées "
-                            + taille
-                            + " octets, "
-                            + disponible
-                            + " présents) : "
-                            + fichier);
-                }
-                dataLongueur = Math.min(taille, disponible);
             }
             if (canaux != null && dataDebut >= 0) {
                 // Tout ce qu'on cherche est trouvé. S'arrêter là est nécessaire pour la lecture d'en-tête
@@ -324,6 +307,33 @@ public record FichierWav(int nombreCanaux, int frequenceEchantillonnageHz, int b
             throw new IOException("Seul le PCM non compressé est géré (format=" + formatAudio + ") : " + fichier);
         }
         return new Zones(canaux, frequence, bits, dataDebut, dataLongueur);
+    }
+
+    private static void verifierRiff(Source source, long tailleLisible, Path fichier) throws IOException {
+        byte[] riff = new byte[12];
+        if (tailleLisible < 12 || !source.lire(0, riff, 12) || !tag(riff, 0, TAG_RIFF) || !tag(riff, 8, TAG_WAVE)) {
+            throw new IOException("Fichier WAV invalide (en-tête RIFF/WAVE absent) : " + fichier);
+        }
+    }
+
+    /// Longueur du chunk `data` : ce qu'annonce l'en-tête, ou tout ce qui reste du fichier quand la taille
+    /// est inconnue (enregistreur en flux).
+    ///
+    /// @throws IOException si l'en-tête annonce plus d'octets que le fichier n'en contient (#156) : un
+    ///     fichier tronqué se refuse au lieu de se lire silencieusement plus court
+    private static long longueurData(long annoncee, long disponible, Path fichier) throws IOException {
+        if (annoncee == TAILLE_DATA_INCONNUE) {
+            return disponible;
+        }
+        if (annoncee > disponible) {
+            throw new IOException("Fichier WAV tronqué (données annoncées "
+                    + annoncee
+                    + " octets, "
+                    + disponible
+                    + " présents) : "
+                    + fichier);
+        }
+        return annoncee;
     }
 
     /// Écrit un WAV canonique (en-tête 44 octets) avec la fréquence et le format donnés, en copiant
