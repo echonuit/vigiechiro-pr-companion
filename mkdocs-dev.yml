@@ -452,6 +452,7 @@ nav:
     - 5987 · Un tag de version sans publication se signale, et sa borne est la version et non le graphe: decisions/5987-un-tag-de-version-sans-publication-se-signale.md
     - 4775 · Les sujets de main n'ont pas de garde, et fusionner sans --subject en tient lieu: decisions/4775-les-sujets-de-main-n-ont-pas-de-garde.md
     - 6069 · Le dernier geste d'un clip pose une position: decisions/6069-le-dernier-geste-d-un-clip-pose-une-position.md
+    - 6135 · La dernière image d'un clip ne dépend plus d'une image clé: decisions/6135-la-derniere-image-d-un-clip-ne-depend-plus-d-une-image-cle.md
     - 6022 · Un avertissement de qualité ne se tait pas, et un garde le refuse: decisions/6022-un-avertissement-ne-se-tait-pas-et-un-garde-le-refuse.md
     - 4462 · Une cible cliquable tient vingt-quatre pixels: decisions/4462-une-cible-cliquable-tient-vingt-quatre-pixels.md
     - 6142 · Une tâche de fond rend une valeur et n'écrit pas la scène, et un espion de test le relève: decisions/6142-une-tache-de-fond-rend-une-valeur-et-n-ecrit-pas-la-scene.md
