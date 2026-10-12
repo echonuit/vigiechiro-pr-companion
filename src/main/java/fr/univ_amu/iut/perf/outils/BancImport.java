@@ -19,6 +19,7 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -59,6 +60,7 @@ public final class BancImport {
     private static final int OCTETS_PAR_TRAME = 2; // mono, 16 bits
     private static final long MIO = 1024L * 1024L;
     private static final long GIO = 1024L * MIO;
+    private static final int TRAMES_PAR_BLOC = 1 << 16;
 
     private static final String LOG =
             "22/04/26 - 16:02:20 PR1925492 Demarrage Passive Recorder numero de serie 1925492, V1.01,"
@@ -252,12 +254,17 @@ public final class BancImport {
 
     /// Écrit le journal `LogPR`, un relevé `THLog` vide et `nbFichiers` WAV valides nommés
     /// `PaRecPR<série>_<date>_<heure>.wav` (dates/heures distinctes). Le PCM est identique d'un fichier
-    /// à l'autre (seul le volume importe pour la mesure), écrit une fois puis réutilisé.
+    /// à l'autre (seul le volume importe pour la mesure), écrit une fois puis recopié.
+    ///
+    /// Le modèle s'écrit **en flux** et se recopie sans passer par le heap (#104) : le générateur
+    /// chargeait sinon chaque WAV entier dans la JVM même qu'il mesure, et un WAV de 120 s faisait
+    /// tomber le banc sous `-Xmx128m` avant que l'import ne commence.
     private static void genererNuit(Path sd, int nbFichiers, int frequenceHz, double secondes) throws IOException {
         Files.createDirectories(sd);
         Files.writeString(sd.resolve("LogPR" + SERIE + ".txt"), LOG, StandardCharsets.UTF_8);
         Files.writeString(sd.resolve("PaRecPR" + SERIE + "_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
-        byte[] wav = construireWav(frequenceHz, secondes);
+        Path modele = sd.resolveSibling("modele-du-banc.wav");
+        ecrireWav(modele, frequenceHz, secondes);
         DateTimeFormatter heure = DateTimeFormatter.ofPattern("HHmmss", Locale.ROOT);
         DateTimeFormatter date = DateTimeFormatter.ofPattern("yyyyMMdd", Locale.ROOT);
         LocalDate base = LocalDate.of(2026, 4, 22);
@@ -265,23 +272,20 @@ public final class BancImport {
             LocalDate jour = base.plusDays(i / 86_400);
             LocalTime instant = LocalTime.ofSecondOfDay(i % 86_400);
             String nom = "PaRecPR" + SERIE + "_" + date.format(jour) + "_" + heure.format(instant) + ".wav";
-            Files.write(sd.resolve(nom), wav);
+            Files.copy(modele, sd.resolve(nom));
         }
+        Files.delete(modele);
     }
 
     /// Un WAV PCM mono 16 bits de `secondes` à `frequenceHz` (en-tête RIFF canonique de 44 octets +
-    /// signal en dents de scie déterministe). La fréquence doit être un **multiple de 10** (R10).
-    private static byte[] construireWav(int frequenceHz, double secondes) {
+    /// signal en dents de scie déterministe), écrit par blocs. La fréquence doit être un **multiple de
+    /// 10** (R10).
+    private static void ecrireWav(Path fichier, int frequenceHz, double secondes) throws IOException {
         int trames = (int) (frequenceHz * secondes);
-        byte[] pcm = new byte[trames * OCTETS_PAR_TRAME];
-        for (int i = 0; i < trames; i++) {
-            short echantillon = (short) (((i * 41) % 1000) - 500);
-            pcm[2 * i] = (byte) (echantillon & 0xFF);
-            pcm[2 * i + 1] = (byte) ((echantillon >> 8) & 0xFF);
-        }
-        ByteBuffer buf = ByteBuffer.allocate(44 + pcm.length).order(ByteOrder.LITTLE_ENDIAN);
+        int octetsPcm = trames * OCTETS_PAR_TRAME;
+        ByteBuffer buf = ByteBuffer.allocate(44).order(ByteOrder.LITTLE_ENDIAN);
         buf.put("RIFF".getBytes(StandardCharsets.US_ASCII));
-        buf.putInt(36 + pcm.length);
+        buf.putInt(36 + octetsPcm);
         buf.put("WAVE".getBytes(StandardCharsets.US_ASCII));
         buf.put("fmt ".getBytes(StandardCharsets.US_ASCII));
         buf.putInt(16);
@@ -292,9 +296,21 @@ public final class BancImport {
         buf.putShort((short) OCTETS_PAR_TRAME);
         buf.putShort((short) 16);
         buf.put("data".getBytes(StandardCharsets.US_ASCII));
-        buf.putInt(pcm.length);
-        buf.put(pcm);
-        return buf.array();
+        buf.putInt(octetsPcm);
+        byte[] bloc = new byte[TRAMES_PAR_BLOC * OCTETS_PAR_TRAME];
+        try (OutputStream sortie = Files.newOutputStream(fichier)) {
+            sortie.write(buf.array());
+            for (int debut = 0; debut < trames; debut += TRAMES_PAR_BLOC) {
+                int fin = Math.min(trames, debut + TRAMES_PAR_BLOC);
+                for (int i = debut; i < fin; i++) {
+                    short echantillon = (short) (((i * 41) % 1000) - 500);
+                    int k = 2 * (i - debut);
+                    bloc[k] = (byte) (echantillon & 0xFF);
+                    bloc[k + 1] = (byte) ((echantillon >> 8) & 0xFF);
+                }
+                sortie.write(bloc, 0, (fin - debut) * OCTETS_PAR_TRAME);
+            }
+        }
     }
 
     private static Injector creerInjecteur() {
