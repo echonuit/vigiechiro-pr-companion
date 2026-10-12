@@ -113,10 +113,12 @@ ci-dessus le montre.
 
 ## Le plancher du runner, mesuré
 
-**Six** tournages des 95 clips ordinaires, sur le **même commit** (`f9c9e1218`), lancés sur six
-runners GitHub distincts, soit **quinze paires** par clip. Mesurés le 5 octobre 2026 par l'atelier
-`mesurer-les-planchers.yml`, avec l'instrument du flux, ffmpeg 6.1.1 et ImageMagick 6.9.12-98
-(#5885).
+**Six** tournages des 95 clips ordinaires, sur le **même commit** (`ba5e78767d`), lancés sur six
+runners GitHub distincts, soit **quinze paires** par clip, et deux autres tournages du même commit
+pour témoins. Mesurés le 12 octobre 2026 par l'atelier `mesurer-les-planchers.yml`, avec
+l'instrument du flux, ffmpeg 6.1.1 et ImageMagick 6.9.12-98 (#5885), **en repartant de zéro** :
+#6135 venait de retirer le bruit de l'encodeur, que les planchers d'avant mesuraient pour
+l'essentiel (voir plus bas).
 
 **Le fichier s'est complété depuis, et les paires ne sont plus uniformes.** Chaque mesure ajoute les
 siennes à tous les clips des tournages qu'on lui donne (#5956, #5893), et un clip sorti de la table
@@ -135,28 +137,28 @@ demande contre l'outil et son fichier : un clip corrigé qui quitte la table fai
 tant qu'elle ne le dit pas. Un cas est de la plateforme de test quand sa méthode, ou sa classe, en
 porte le tag : ni le nom de sa classe ni le tag de sa seule classe ne suffisent à le dire.
 
-La distribution des planchers des clips ordinaires, **relevée le 6 octobre 2026** sur le fichier de
-`main` à `358205ef5`, qui en portait alors 89. C'est une mesure datée : elle ne suit pas le fichier,
-et se relève quand l'argument qu'elle sert en a besoin.
+La distribution des planchers des clips ordinaires, **relevée le 12 octobre 2026** sur le fichier
+rendu par la mesure `38221844314`, qui en porte 95. C'est une mesure datée : elle ne suit pas le
+fichier, et se relève quand l'argument qu'elle sert en a besoin.
 
 | plancher à 5 % de tolérance | cas |
 |---|---|
-| > 1 % | 1 |
-| 0,5 à 1 % | 9 |
-| 0,1 à 0,5 % | 50 |
-| 0,05 à 0,1 % | 8 |
-| < 0,05 % | 21, dont 5 à zéro |
+| > 1 % | 0 |
+| 0,5 à 1 % | 0 |
+| 0,1 à 0,5 % | 18 |
+| 0,05 à 0,1 % | 1 |
+| < 0,05 % | 76, dont 73 à zéro |
 
-**Médiane : 0,167 %.** Le pire vaut 1,033 %, sur
+**Médiane : 0,000 %.** Le pire vaut 0,297 %, sur
 `ScenarioJournalAbsentTest.sans_journal_la_nuit_est_inconnue`.
 
 !!! danger "Un seuil global mentirait dans les deux sens"
 
-    Retenir le pire plancher, 1,033 %, comme seuil unique **aveuglerait 79 cas pour se protéger de
-    dix** : un libellé entier changé, qui vaut 0,364 %, passerait sous le seuil sans être vu.
+    Retenir le pire plancher, 0,297 %, comme seuil unique **aveuglerait 73 cas à plancher nul pour
+    se protéger de vingt-deux** : un chiffre changé, qui vaut 0,021 %, passerait sous le seuil sans
+    être vu.
 
-    Retenir la médiane laisserait au contraire la moitié des cas crier au changement à chaque
-    tournage.
+    Retenir zéro laisserait au contraire vingt-deux cas crier au changement à chaque tournage.
 
     Un écart se lit donc contre **le plancher de son propre cas**, pas contre un seuil unique.
 
@@ -195,6 +197,28 @@ et se relève quand l'argument qu'elle sert en a besoin.
     Ce reste n'est pas un défaut de ces clips. Un maximum pris sur quinze valeurs est dépassé par
     une seizième de temps en temps, et chaque passage de l'atelier ajoute des paires.
 
+    Au contrôle du 12 octobre 2026, après la remise à zéro, deux témoins contre des planchers de
+    quinze paires : sur 95 clips, dix-neuf bougent et un seul dépasse son plancher,
+    `lire_le_diagnostic_d_un_passage`, à 0,059 % contre un plancher nul, lu ×5,6. Son écran est le
+    même, seules les courbes de son graphe diffèrent de quelques pixels (#6157).
+
+!!! note "Ce que mesuraient les planchers jusqu'au 12 octobre 2026"
+
+    La dernière image d'un clip variait de 0,3 à 0,9 % entre deux tournages du même commit, sans
+    que rien ait changé à l'écran. x264 posait sa dernière image clé selon le rythme du tournage, et
+    une image immobile garde la qualité de cette clé. Mesuré à source constante, ne déplacer que
+    cette clé suffisait à rendre cet écart (#6135, [ADR
+    6135](../decisions/6135-la-derniere-image-d-un-clip-ne-depend-plus-d-une-image-cle.md)).
+
+    Les clés tombent désormais toutes les 25 images et la séance finit sur un pas entier de copies
+    de sa dernière image. Remesurés depuis zéro, les planchers ordinaires sont passés d'une médiane
+    de 0,167 % à 0,000 %, et de 3 à 73 clips à zéro. Le pire, 1,033 %, est tombé à 0,297 %. La règle
+    du pire observé ne les aurait jamais fait redescendre seule : c'est pourquoi la mesure est
+    repartie de zéro.
+
+    Ces planchers ne valent que pour la chaîne de l'extension, qui les mesure. Le banc de
+    `lance-test-filme.sh` encode autrement et garde ce bruit (#6150).
+
 !!! note "Ce que valaient les planchers d'avant"
 
     Le fichier portait 51 planchers ordinaires, médiane **0,009 %**, pris sur un poste. Remesurés
@@ -206,19 +230,21 @@ et se relève quand l'argument qu'elle sert en a besoin.
 
 L'[ADR 5641](../decisions/5641-les-tests-connectes-ont-deux-cibles.md) ne levait le refus de comparer
 les clips connectés, pour la plateforme de test, que si la mesure le permettait. Elle a été prise le
-5 octobre 2026 : **six** tournages du commit `82f90b2a6`, sur six runners, soit quinze paires,
-mesurées avec l'instrument du flux (#5870).
+5 octobre 2026 sur six tournages (#5870), puis reprise depuis zéro le 12 octobre 2026 après #6135 :
+**quatre** tournages du commit `ba5e78767d`, soit six paires, et deux témoins, avec l'instrument du
+flux.
 
-| clip | cas | son plancher, sur quinze paires |
-|---|---|---|
-| `ScenarioConnectePublicationTest` | S4-90, S4-92 | 0,005 % |
-| `ScenarioConnecteConnexionTest` | S8-01, S8-05, S8-06 | 0,134 % |
-| `ScenarioConnecteActualisationTest` | S4-98 | 0,302 % |
-| `ScenarioConnecteAnnonceImportTest` | S2-59, S2-60 | 0,325 % |
-| `ScenarioConnecteLancementTest` | S4-47 | 0,503 % |
+| clip | cas | plancher au 5 octobre | plancher au 12 octobre |
+|---|---|---|---|
+| `ScenarioConnectePublicationTest` | S4-90, S4-92 | 0,005 % | 0,000 % |
+| `ScenarioConnecteConnexionTest` | S8-01, S8-05, S8-06 | 0,134 % | 0,000 % |
+| `ScenarioConnecteAnnonceImportTest` | S2-59, S2-60 | 0,325 % | 0,000 % |
+| `ScenarioConnecteLancementTest` | S4-47 | 0,503 % | 0,241 % |
+| `ScenarioConnecteActualisationTest` | S4-98 | 0,302 % | 0,267 % |
 
-Aucun ne dépasse le pire plancher des clips ordinaires, 1,033 % au relevé du 6 octobre 2026 : ces
-clips se comparent.
+Les deux qui gardent un écart finissent sur un écran qui affiche le chemin temporaire du banc, tiré
+au hasard à chaque tournage (#6156). Aucun ne dépasse le pire plancher des clips ordinaires,
+0,297 % au relevé du 12 octobre 2026 : ces clips se comparent.
 
 !!! danger "Un plancher se mesure avec l'instrument du flux, pas avec celui du poste"
 

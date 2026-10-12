@@ -27,11 +27,20 @@ public interface Encodeur extends AutoCloseable {
     /// un tube nommé et un `printf q >&3`. La difficulté que cela contournait n'existe plus :
     /// ffmpeg s'arrête quand son entrée se ferme, et il n'y a plus d'instant d'arrêt à relever
     /// puisqu'il n'y a plus de `t0` à calculer.
+    ///
+    /// La dernière image d'un clip ne dépend plus de la place de la dernière image clé (#6135) : les
+    /// clés tombent toutes les [#PAS_DES_CLES] images, et [#close] recopie la dernière image.
     final class VersFfmpeg implements Encodeur {
+
+        /// Le pas des images clés, à pas fixe et sans coupure de scène : 2,5 s à 10 i/s. Choisi par le
+        /// porteur sur la mesure de #6135, entre la taille (×3,2) et la fin immobile ajoutée.
+        static final int PAS_DES_CLES = 25;
 
         private final Process ffmpeg;
         private final OutputStream entree;
         private final Path fichier;
+        private byte[] derniere;
+        private int ecrites;
 
         public VersFfmpeg(Path fichier, int largeur, int hauteur, int imagesParSeconde) throws IOException {
             this.fichier = fichier;
@@ -56,6 +65,12 @@ public interface Encodeur extends AutoCloseable {
                     "veryfast",
                     "-crf",
                     "22",
+                    "-g",
+                    String.valueOf(PAS_DES_CLES),
+                    "-keyint_min",
+                    String.valueOf(PAS_DES_CLES),
+                    "-sc_threshold",
+                    "0",
                     "-pix_fmt",
                     "yuv420p",
                     "-y",
@@ -161,11 +176,25 @@ public interface Encodeur extends AutoCloseable {
             if (image.getType() != BufferedImage.TYPE_3BYTE_BGR) {
                 throw new IOException("image en type " + image.getType() + ", bgr24 attendu");
             }
-            entree.write(((DataBufferByte) image.getRaster().getDataBuffer()).getData());
+            derniere = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+            entree.write(derniere);
+            ecrites++;
+        }
+
+        /// Combien de copies de la dernière image suivent les `ecrites` images d'une séance.
+        ///
+        /// Jusqu'au multiple du pas, puis un pas entier : la dernière clé tombe alors sur une copie,
+        /// et toujours au même rang avant la fin. Avec un pas entier seul, ce rang varie, et la
+        /// quantification que x264 donne à la clé varie avec lui (0,354 % mesuré à ce pas, au lieu de 0).
+        static int copiesDeLaFin(int ecrites, int pas) {
+            return ecrites == 0 ? 0 : (pas - ecrites % pas) % pas + pas;
         }
 
         @Override
         public void close() throws IOException {
+            for (int i = copiesDeLaFin(ecrites, PAS_DES_CLES); i > 0; i--) {
+                entree.write(derniere);
+            }
             entree.close();
             try {
                 int code = ffmpeg.waitFor();

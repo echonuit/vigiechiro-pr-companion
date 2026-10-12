@@ -11,6 +11,7 @@ enforced_by:
 verification_note: "l auto-test tient qu un clip nommé est mesuré et affiché sans être écrit, qu il n entre pas dans le plancher le plus haut, que sa ligne quitte le fichier et que la comparaison l annonce avec son issue, quatre mutants tués. Rien ne tient le choix des clips nommés : c est la dernière image, regardée, et le contrôle ne sait pas regarder"
 relations:
   complete: ["5885-un-plancher-appartient-a-l-instrument-qui-l-a-pris", "4287-un-ecart-se-lit-contre-le-plancher-de-son-cas"]
+  amendee_par: ["6135-la-derniere-image-d-un-clip-ne-depend-plus-d-une-image-cle"]
 verified:
   - by: machine:ci
     at: 2026-10-05
@@ -20,6 +21,9 @@ generated:
 ---
 
 # Un clip à deux fins n'a pas de plancher, et la comparaison le dit
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Amendée le 2026-10-12** par l'[ADR 6135](6135-la-derniere-image-d-un-clip-ne-depend-plus-d-une-image-cle.md) : les causes nommées ici sont toutes dans le scénario, et une cinquième était dans l'encodeur. La place de la dernière image clé faisait varier de 0,3 à 0,9 % la dernière image de clips qui finissent pourtant au même endroit. Elle ne fait pas deux fins, seulement du bruit, et ne relève donc pas de cette table.
 
 ## Contexte
 

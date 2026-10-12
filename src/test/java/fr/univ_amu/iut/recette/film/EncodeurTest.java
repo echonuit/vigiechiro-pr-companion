@@ -5,10 +5,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -103,6 +107,64 @@ class EncodeurTest {
                 Encodeur.VersFfmpeg.estExecutable(inerte, true, ".BAT"),
                 "sous POSIX un suffixe ne rend rien exécutable");
         assertTrue(Encodeur.VersFfmpeg.estExecutable(executable(dossier.resolve("vrai")), true, ""));
+    }
+
+    @Test
+    @DisplayName("#6135 : la fin est recopiée jusqu'au multiple du pas, puis d'un pas entier")
+    void les_copies_de_la_fin_calent_la_derniere_cle() {
+        int pas = 25;
+        assertEquals(0, Encodeur.VersFfmpeg.copiesDeLaFin(0, pas), "une séance sans image n'a pas de fin à recopier");
+        assertEquals(49, Encodeur.VersFfmpeg.copiesDeLaFin(1, pas));
+        assertEquals(25, Encodeur.VersFfmpeg.copiesDeLaFin(25, pas));
+        assertEquals(49, Encodeur.VersFfmpeg.copiesDeLaFin(26, pas));
+        for (int ecrites = 1; ecrites <= 3 * pas; ecrites++) {
+            int copies = Encodeur.VersFfmpeg.copiesDeLaFin(ecrites, pas);
+            assertEquals(0, (ecrites + copies) % pas, "le total tombe sur un multiple du pas, après " + ecrites);
+            assertTrue(copies >= pas, "un pas entier de copies, donc une clé parmi elles, après " + ecrites);
+        }
+    }
+
+    /// Un faux ffmpeg garde ses arguments et ce qu'il a reçu : on lit ce que l'encodeur lui a envoyé.
+    @Test
+    @DisplayName("#6135 : ffmpeg reçoit des clés à pas fixe et la dernière image recopiée")
+    @EnabledIf("fr.univ_amu.iut.recette.film.EncodeurTest#posixDisponible")
+    void ffmpeg_recoit_le_pas_fixe_et_la_fin_recopiee(@TempDir Path dossier) throws IOException {
+        Path faux = Files.writeString(
+                dossier.resolve("ffmpeg"),
+                "#!/bin/sh\nfor a; do f=$a; done\nprintf '%s\\n' \"$@\" > \"$f.args\"\ncat > \"$f\"\n");
+        Files.setPosixFilePermissions(faux, PosixFilePermissions.fromString("rwx------"));
+        Path clip = dossier.resolve("clip.mp4");
+        System.setProperty("recette.ffmpeg", faux.toString());
+        try (Encodeur encodeur = new Encodeur.VersFfmpeg(clip, 2, 2, 10)) {
+            for (int i = 1; i <= 7; i++) {
+                encodeur.ajouter(image(i));
+            }
+        } finally {
+            System.clearProperty("recette.ffmpeg");
+        }
+
+        List<String> arguments = Files.readAllLines(Path.of(clip + ".args"));
+        assertTrue(
+                String.join(" ", arguments).contains("-g 25 -keyint_min 25 -sc_threshold 0"),
+                "les clés tombent à pas fixe, jamais sur une coupure de scène : " + arguments);
+        byte[] recu = Files.readAllBytes(clip);
+        int taille = 2 * 2 * 3;
+        assertEquals((7 + 43) * taille, recu.length, "7 images, 18 copies jusqu'à 25, puis 25 copies");
+        byte[] derniere = Arrays.copyOfRange(recu, 6 * taille, 7 * taille);
+        for (int rang = 7; rang < 50; rang++) {
+            assertTrue(
+                    Arrays.equals(derniere, Arrays.copyOfRange(recu, rang * taille, (rang + 1) * taille)),
+                    "l'image n° " + rang + " devrait être la dernière de la séance");
+        }
+    }
+
+    /// Une image de 2 x 2 dont tous les octets valent `valeur` : chaque image de la séance se distingue.
+    private static BufferedImage image(int valeur) {
+        BufferedImage image = new BufferedImage(2, 2, BufferedImage.TYPE_3BYTE_BGR);
+        int[] octets = new int[2 * 2 * 3];
+        Arrays.fill(octets, valeur);
+        image.getRaster().setPixels(0, 0, 2, 2, octets);
+        return image;
     }
 
     /// La vue POSIX est-elle celle de cette machine ? Condition de [#sous_posix_le_bit_decide].
