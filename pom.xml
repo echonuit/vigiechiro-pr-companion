@@ -126,9 +126,12 @@
              -Dsurefire.groups=recette-connectee, et ne joue donc QUE les scénarios écrits pour la
              plateforme, jamais les autres.
              `plateforme-de-test` (#5663) exige Docker, que les runners Windows et macOS n'ont pas : il
-             ne tourne que sous -Pplateforme-de-test, qui monte la plateforme de test par Testcontainers. -->
+             ne tourne que sous -Pplateforme-de-test, qui monte la plateforme de test par Testcontainers.
+             `banc-ihm` (#105) est le banc de l'IHM à volume réel : ses chiffres ne valent que pour la
+             machine qui les produit, et il importe des nuits de plusieurs Gio. Il se lance à la main,
+             -Dsurefire.groups=banc-ihm -Dsurefire.excludedGroups=api-live, jamais en CI. -->
         <surefire.groups></surefire.groups>
-        <surefire.excludedGroups>api-live,recette-connectee,plateforme-de-test</surefire.excludedGroups>
+        <surefire.excludedGroups>api-live,recette-connectee,plateforme-de-test,banc-ihm</surefire.excludedGroups>
 
         <!-- Forks Surefire parallèles : une JVM par cœur (1C). Le toolkit JavaFX est un
              singleton PAR JVM : la parallélisation intra-JVM est impossible pour les tests

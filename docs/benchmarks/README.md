@@ -12,6 +12,7 @@
 | [`perf.outils.GenerateurJeuDeDonnees`](../../src/main/java/fr/univ_amu/iut/perf/outils/GenerateurJeuDeDonnees.java) | Peuple une base SQLite : `perf.sites` carrés (déf. 40) de 10 points, `perf.passages` passages (déf. 1000) + `perf.observations` observations (déf. 4031). Déterministe, base réécrite à neuf. |
 | [`perf.outils.BancMesure`](../../src/main/java/fr/univ_amu/iut/perf/outils/BancMesure.java) | Génère le jeu puis chronomètre les opérations O5 **à froid** (1ᵉʳ appel) et **à chaud** (médiane), et imprime l'`EXPLAIN QUERY PLAN` de chaque requête. |
 | [`perf.outils.BancImport`](../../src/main/java/fr/univ_amu/iut/perf/outils/BancImport.java) | Génère une **nuit synthétique** de vrais WAV + journal `LogPR`, lance le **vrai** import (`ServiceImport`) et mesure temps (copie / transformation #12 / persistance), débit (fichiers/s, Mo/s) et **mémoire crête** (O3). |
+| [`perf.outils.BancIhmO5Test`](../../src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO5Test.java) et [`BancIhmO3Test`](../../src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO3Test.java) | Banc de l'**IHM** (#105) : monte les vrais écrans sur une vraie base et chronomètre les gestes d'O5 (ouverture, tri, filtre, clic, revue ; topologie), puis importe plusieurs nuits dans le même processus, sonde des images posée, heap après GC (O3). Étiqueté `banc-ihm`, jamais en CI. |
 
 ## Lancer le banc (couche données, O5)
 
@@ -25,8 +26,9 @@ export JAVA_HOME=~/.sdkman/candidates/java/25.0.2-open
   -Dexec.args="-Dvigiechiro.workspace=$HOME/vigiechiro-bench -cp %classpath fr.univ_amu.iut.perf.outils.BancMesure"
 ```
 
-Volumes paramétrables : `-Dperf.sites=...`, `-Dperf.passages=...`, `-Dperf.observations=...` (à ajouter
-dans `exec.args`).
+Volumes paramétrables : `-Dperf.sites=...`, `-Dperf.points=...` (points par carré, défaut 10),
+`-Dperf.passages=...`, `-Dperf.observations=...` (à ajouter dans `exec.args`). La topologie d'O5, cent
+cinquante carrés de deux points, est `-Dperf.sites=150 -Dperf.points=2`.
 
 > **`perf.sites` est la dimension qu'on oublie.** Le jeu a longtemps semé **un** carré, quelle que soit
 > la valeur de `perf.passages` : les relevés O5 étaient donc aveugles aux requêtes lancées **par site** ou
@@ -142,9 +144,93 @@ Place occupée par le workspace en fin d'import : 1,07 Gio pour la nuit de 100 W
   probablement encore dans le cache disque : la copie lit donc plus vite qu'elle ne lirait sur une
   carte.
 - L'IHM : `BancImport` n'a pas de fil JavaFX. Le freeze pendant et après un import, et le heap sur
-  plusieurs nuits dans un même processus, se mesurent dans l'application (#105).
+  plusieurs nuits dans un même processus, se mesurent dans l'IHM : section suivante.
 - **Les 20 Go du test de charge** : non mesurés sur ce poste, faute de disque. Il en faut environ
   60 Gio, et le poste en avait 40 de libres. La nuit de 9 Gio est la plus grosse qu'il pouvait tenir.
+
+### O5 et O3 dans l'IHM (`BancIhmO5Test`, `BancIhmO3Test`)
+
+Mesuré le 2026-10-12 sur la même machine, sur `main` à `2d4107261a` plus la branche de #105 (le banc et le
+réglage `perf.points`). Un seul tir, sur l'affichage réel (XWayland, profil `recette-filmee`, rendu
+logiciel `prism.order=sw` posé par le pom), fenêtre de 1280 × 860. Charge du poste sur 1 minute : 1,18 au
+départ, de 1,73 à 3,26 pendant le tir, le banc compris.
+
+Un premier tir, le même jour, a été jeté : ses quatre nuits portaient la même série et la même date, et
+l'assistant a demandé trois fois « cette nuit a déjà été importée, importer quand même ? ». Un clic
+humain est entré dans la mesure. Le banc date désormais chaque nuit, refuse toute confirmation et
+s'arrête à la première fenêtre en trop (voir « Ses contrôles »).
+
+**Comment le banc mesure.** Il monte les vrais écrans (`MainView.fxml`) sur la composition complète et une
+vraie base. Le robot met l'écran en place mais n'entre jamais dans le chronomètre : chaque geste passe par
+l'API du contrôle sur le fil JavaFX (ordre de tri de la table, texte du champ de recherche de l'écran,
+modèle de sélection, `fire()` du bouton). Le temps court de ce déclenchement jusqu'au premier pulse, après
+mise en page, où l'écran montre le résultat attendu (`Scene#addPostLayoutPulseListener`) : il compte le
+calcul, le CSS et la mise en page, pas le dessin de cette image. Chaque geste est joué une fois pour rien,
+puis trois fois ; les trois valeurs sont publiées, la première à part.
+
+**Ses contrôles**, rejoués dans ce tir : un geste qui bloque le fil 300 ms se lit à 301,1 ms, et la sonde y
+voit un écart de 304,5 ms ; une modale ouverte exprès et une question posée exprès arrêtent chacune le
+chronomètre. Vus rouges en Headless : un chronomètre démarré après le geste, une sonde aveugle, un filet
+des fenêtres muet, et des nuits de même date (le banc s'arrête alors en 8,7 s sur la question). Le
+**témoin à vide**, une action qui ne fait rien, attend le pulse suivant : 15 à 16 ms, le plancher de chaque
+chiffre ci-dessous.
+
+| O5, écran des sons à 4031 observations | Relevés | Seuil | Verdict |
+|---|---|---|---|
+| tri par la colonne probabilité | 33,3 · 27,0 · 27,2 ms | dizaines à centaines de ms | tenu |
+| filtre par taxon (recherche de l'écran) | 64,9 · 66,0 · 39,9 ms | dizaines à centaines de ms | tenu |
+| retrait du filtre | 63,8 · 36,9 · 43,4 ms | idem | tenu |
+| clic sur une ligne (sélection) | 11,0 · 4,8 · 3,7 ms | < 100 ms | tenu |
+| action de revue (valider) | 105,7 · 70,7 · 76,5 ms | aucun dans le brief | |
+| ouverture de l'écran | 236,5 · 241,8 · 230,0 ms (premier : 464,1) | aucun dans le brief | |
+
+| O5, vue multisite à 1000 passages | Relevés | Seuil | Verdict |
+|---|---|---|---|
+| tri par la colonne date | 13,0 · 10,3 · 9,9 ms | < 200 ms | tenu |
+| filtre (carré, recherche de l'écran) | 23,7 · 18,7 · 20,3 ms | < 200 ms | tenu |
+| retrait du filtre | 18,2 · 18,6 · 22,8 ms | < 200 ms | tenu |
+| ouverture de la vue | 133,8 · 375,5 · 125,8 ms (premier : 355,2) | aucun dans le brief | |
+
+| O5, topologie : ouverture | 15 carrés de 2 points | 150 carrés de 2 points | Seuil | Verdict |
+|---|---|---|---|---|
+| Mes sites | 41,9 · 41,4 · 54,1 ms | 346,8 · 360,7 · 339,0 ms | < 50 ms, sans croître | **non tenu** (#6172) |
+| vue multisite | 352,2 · 75,8 · 303,5 ms | 174,1 · 170,8 · 151,3 ms | < 50 ms | **non tenu** (#6172) |
+| écran des sons | 270,0 · 251,7 · 229,5 ms | 106,3 · 113,5 · 119,5 ms | < 50 ms | **non tenu** (#6172) |
+
+| O3, quatre nuits distinctes de 300 WAV de 5 s, un seul processus | Nuit 1 | Nuit 2 | Nuit 3 | Nuit 4 |
+|---|---|---|---|---|
+| durée de l'import, du clic au compte rendu | 1,4 s | 1,0 s | 1,0 s | 1,1 s |
+| écart max entre deux images pendant l'import | 151 ms | 98 ms | 76 ms | 87 ms |
+| écart max en navigation après l'import | 758 ms | 224 ms | 255 ms | 244 ms |
+| écarts de plus de 200 ms en navigation (neuf ouvertures) | 5 | 4 | 4 | 5 |
+| heap après GC (50 Mo avant la nuit 1) | 148 Mo | 208 Mo | 265 Mo | 322 Mo |
+
+**Lectures** :
+
+- **Pendant l'import, aucun écart ne dépasse 200 ms** : tenu, sur des nuits de 300 WAV. L'import tourne hors
+  du fil JavaFX. À 20 Go, non mesuré.
+- **En navigation après l'import, le seuil n'est pas tenu** (#6171) : les écarts tombent à l'ouverture
+  des écrans, à chaque nuit, et pas seulement à la première ouverture. Ils ne grandissent pas avec le
+  nombre de nuits en base.
+- **Le heap après GC grandit de 57 à 98 Mo par nuit** (#6170). Ce n'est pas une fuite établie : le
+  processus porte aussi TestFX et l'espion des écritures, et la base grandit. Un histogramme de classes
+  entre deux nuits, puis la même mesure dans l'application lancée hors des tests, départagera.
+- La durée d'import n'est pas le chiffre O3 de ce banc : c'est celui de `BancImport`, plus haut.
+
+**Ce que ces chiffres ne mesurent pas** : la latence d'entrée (souris et clavier contournés), le dessin
+de l'image et son affichage par le compositeur, un rendu GPU, une vraie carte SD, une autre machine, et
+les 20 Go.
+
+**Le relancer** (jamais en CI : l'étiquette `banc-ihm` est exclue par défaut) :
+
+```bash
+./mvnw test -Precette-filmee -Dsurefire.groups=banc-ihm -Dsurefire.excludedGroups=api-live \
+  '-Dtest=BancIhmO5Test,BancIhmO3Test' -Dperf.ihm.racine=$HOME/banc-ihm
+```
+
+Volumes : `-Dperf.ihm.observations` (4031), `-Dperf.ihm.passages` (1000), `-Dperf.ihm.nuits` (4),
+`-Dperf.ihm.wav` (300 WAV par nuit, environ 2,3 Gio gardés par nuit importée). Le relevé s'ajoute à
+`releve.tsv` sous `perf.ihm.racine`.
 
 ### La lecture par morceaux (#104) : la mémoire ne suit plus la durée d'un WAV
 
@@ -229,8 +315,11 @@ Relevés du 2026-10-12, machine nommée plus haut. La campagne est portée par #
 
 - **O5, couche données** : sélection des 4031 observations de 11 à 19 ms à chaud (seuil 100 ms) ; tri
   et filtre des 1000 passages de 10 à 12 ms à chaud (seuil 200 ms). Index `#28` en place et verrouillé
-  par un test CI. **Dans l'IHM : non mesuré.**
+  par un test CI. **Dans l'IHM** : tri, filtre et clic tenus (au plus 66 ms) ; à 150 carrés, aucun écran ne
+  s'ouvre sous 50 ms, et Mes sites croît avec les carrés (#6172).
 - **O3** : nuit standard de 5,62 Gio en 40 à 49 s ; 9 Gio en 84 à 87 s ; occupation après GC de 81
-  à 85 Mo, la nuit standard passant sous `-Xmx128m`. **20 Go, freeze IHM et heap sur plusieurs nuits
-  dans l'application : non mesurés.**
-- Outillage réutilisable en **non-régression** : `GenerateurJeuDeDonnees`, `BancMesure`, `BancImport`.
+  à 85 Mo, la nuit standard passant sous `-Xmx128m`. **Dans l'IHM** : pas d'écart de plus de 200 ms pendant l'import ; des écarts de 203 à 758 ms à
+  l'ouverture des écrans après import (#6171) ; un heap après GC qui grandit de nuit en nuit dans le
+  banc (#6170). **20 Go : non mesurés**, faute de disque.
+- Outillage réutilisable en **non-régression** : `GenerateurJeuDeDonnees`, `BancMesure`, `BancImport`,
+  et le banc de l'IHM (`BancIhmO5Test`, `BancIhmO3Test`), lancé à la main.

@@ -89,7 +89,7 @@ public final class BancImport {
     ///
     /// Le modèle de processeur et la mémoire totale se lisent sous `/proc` : ailleurs, la ligne le
     /// **dit** plutôt que de laisser croire à une mesure.
-    private static void imprimerMachine() {
+    static void imprimerMachine() {
         System.out.printf(
                 Locale.ROOT,
                 "  machine         : %s · %d cœurs · RAM %s%n",
@@ -260,14 +260,22 @@ public final class BancImport {
     /// chargeait sinon chaque WAV entier dans la JVM même qu'il mesure, et un WAV de 120 s faisait
     /// tomber le banc sous `-Xmx128m` avant que l'import ne commence.
     private static void genererNuit(Path sd, int nbFichiers, int frequenceHz, double secondes) throws IOException {
+        genererNuit(sd, nbFichiers, frequenceHz, secondes, LocalDate.of(2026, 4, 22));
+    }
+
+    /// La même nuit, datée de `nuit` : journal et noms de fichiers. Deux nuits de dates distinctes sont
+    /// deux nuits pour l'import, là où la même date ferait demander « nuit déjà importée » (#147).
+    static void genererNuit(Path sd, int nbFichiers, int frequenceHz, double secondes, LocalDate nuit)
+            throws IOException {
         Files.createDirectories(sd);
-        Files.writeString(sd.resolve("LogPR" + SERIE + ".txt"), LOG, StandardCharsets.UTF_8);
+        String journal = LOG.replace("22/04/26", nuit.format(DateTimeFormatter.ofPattern("dd/MM/yy", Locale.ROOT)));
+        Files.writeString(sd.resolve("LogPR" + SERIE + ".txt"), journal, StandardCharsets.UTF_8);
         Files.writeString(sd.resolve("PaRecPR" + SERIE + "_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
         Path modele = sd.resolveSibling("modele-du-banc.wav");
         ecrireWav(modele, frequenceHz, secondes);
         DateTimeFormatter heure = DateTimeFormatter.ofPattern("HHmmss", Locale.ROOT);
         DateTimeFormatter date = DateTimeFormatter.ofPattern("yyyyMMdd", Locale.ROOT);
-        LocalDate base = LocalDate.of(2026, 4, 22);
+        LocalDate base = nuit;
         for (int i = 0; i < nbFichiers; i++) {
             LocalDate jour = base.plusDays(i / 86_400);
             LocalTime instant = LocalTime.ofSecondOfDay(i % 86_400);
