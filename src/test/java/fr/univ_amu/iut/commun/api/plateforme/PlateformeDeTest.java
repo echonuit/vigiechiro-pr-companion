@@ -72,6 +72,19 @@ public final class PlateformeDeTest implements BeforeAllCallback {
             return id;
         }
 
+        /// L'adresse du front web, que l'API sert à sa racine (#6060).
+        ///
+        /// Le front et l'API ont la même origine : le front appelle l'API par `/api/v1`, adresse
+        /// relative, et il n'y a pas de CORS. Dériver l'une de l'autre écrit ce choix ici plutôt que de
+        /// rendre deux adresses qui pourraient se mettre à diverger.
+        public String urlDuFront() {
+            if (!urlDeBase.endsWith(PREFIXE_DE_L_API)) {
+                throw new IllegalStateException("l'adresse de l'API ne finit pas par " + PREFIXE_DE_L_API
+                        + " : le front ne se trouve plus à sa racine (" + urlDeBase + ")");
+            }
+            return urlDeBase.substring(0, urlDeBase.length() - PREFIXE_DE_L_API.length()) + "/";
+        }
+
         /// Le journal des PUT reçus par le faux S3, tel qu'il le rend.
         public String journalS3() {
             try (HttpClient client = HttpClient.newHttpClient()) {
@@ -87,6 +100,9 @@ public final class PlateformeDeTest implements BeforeAllCallback {
             }
         }
     }
+
+    /// Le préfixe sous lequel l'API répond, que le front construit emploie tel quel.
+    static final String PREFIXE_DE_L_API = "/api/v1";
 
     private static final String MONGO_DANS_LE_RESEAU = "mongodb://mongo:27017/vigiechiro";
     private static Acces acces;
@@ -143,7 +159,8 @@ public final class PlateformeDeTest implements BeforeAllCallback {
 
         GenericContainer<?> api = new GenericContainer<>(new ImageFromDockerfile("vigiechiro-plateforme-api", false)
                         .withDockerfile(dossier.resolve("api.Dockerfile"))
-                        .withBuildArg("REVISION", epingles.getProperty("api.revision")))
+                        .withBuildArg("REVISION", epingles.getProperty("api.revision"))
+                        .withBuildArg("FRONT_REVISION", epingles.getProperty("front.revision")))
                 .withNetwork(reseau)
                 .withEnv("MONGO_HOST", MONGO_DANS_LE_RESEAU)
                 .withEnv("DEV_FAKE_S3_URL", urlS3)
@@ -155,7 +172,7 @@ public final class PlateformeDeTest implements BeforeAllCallback {
         JsonObject amorce = amorcer(api, dossier);
         deposer(urlS3, amorce.getAsJsonObject("objets"));
         return new Acces(
-                "http://" + api.getHost() + ":" + api.getMappedPort(8080) + "/api/v1",
+                "http://" + api.getHost() + ":" + api.getMappedPort(8080) + PREFIXE_DE_L_API,
                 urlS3,
                 enTable(amorce.getAsJsonObject("jetons")),
                 enTable(amorce.getAsJsonObject("ids")));
@@ -255,7 +272,7 @@ public final class PlateformeDeTest implements BeforeAllCallback {
         throw new IllegalStateException("aucun gestionnaire de confiance X.509");
     }
 
-    private static Properties epingles(Path dossier) {
+    static Properties epingles(Path dossier) {
         Properties epingles = new Properties();
         try (InputStream flux = Files.newInputStream(dossier.resolve("epingles.properties"))) {
             epingles.load(flux);

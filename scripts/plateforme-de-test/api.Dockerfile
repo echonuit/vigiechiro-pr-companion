@@ -1,14 +1,60 @@
-# L'API Vigie-Chiro de la plateforme de test (#5661), à la révision que porte `epingles.properties`.
+# L'API Vigie-Chiro de la plateforme de test (#5661), et le front web qu'elle sert à sa racine (#6060),
+# aux révisions que porte `epingles.properties`.
 #
+#   E=scripts/plateforme-de-test/epingles.properties
 #   docker build -f scripts/plateforme-de-test/api.Dockerfile \
-#       --build-arg REVISION=$(sed -n 's/^api.revision=//p' scripts/plateforme-de-test/epingles.properties) \
+#       --build-arg REVISION=$(sed -n 's/^api.revision=//p' $E) \
+#       --build-arg FRONT_REVISION=$(sed -n 's/^front.revision=//p' $E) \
 #       scripts/plateforme-de-test
 #
-# La révision n'a pas de valeur par défaut : une valeur ici serait une seconde épingle, et les deux
-# divergeraient. Construite sans elle, l'image refuse.
+# Les révisions n'ont pas de valeur par défaut : une valeur ici serait une seconde épingle, et les deux
+# divergeraient. Construite sans l'une d'elles, l'image refuse.
 #
-# L'API vient de l'archive de sa révision, et non d'un `git clone` : ni `git` à installer, ni
-# historique à rapatrier, et ce qui est installé est exactement l'arbre de ce commit.
+# L'API et le front viennent de l'archive de leur révision, et non d'un `git clone` : ni historique à
+# rapatrier, et ce qui est installé est exactement l'arbre de ce commit.
+
+# Les deux épingles se vérifient D'ABORD, avant toute construction. Le constructeur de Testcontainers
+# construit les étapes dans l'ordre : sans cette étape, une image construite sans `REVISION` bâtissait
+# tout le front avant de refuser, et `ImageDeLApiSansRevisionTest` disputait le runner à la plateforme
+# (#6060). Chaque étape garde sa propre vérification : BuildKit saute une étape que rien ne référence.
+FROM python:3.12-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f AS epingles
+ARG REVISION
+ARG FRONT_REVISION
+RUN test -n "$REVISION" \
+    || { echo "REVISION est obligatoire : sa valeur est api.revision dans epingles.properties" >&2; exit 1; }
+RUN test -n "$FRONT_REVISION" \
+    || { echo "FRONT_REVISION est obligatoire : sa valeur est front.revision dans epingles.properties" >&2; exit 1; }
+
+# Le front, construit comme son amont le déploie (`.github/workflows/ci.yml` de vigiechiro-front) :
+# Node 22, `grunt-cli` et `bower`, puis `grunt build`. `git` est dans l'image : `bower` en a besoin.
+FROM node:22-bookworm@sha256:0e5f906573693feaa1e21057ebdcfdb5bd5021f050b2dc7c9deceb629c7da2a8 AS front
+
+ARG FRONT_REVISION
+RUN test -n "$FRONT_REVISION" \
+    || { echo "FRONT_REVISION est obligatoire : sa valeur est front.revision dans epingles.properties" >&2; exit 1; }
+
+ADD https://github.com/Scille/vigiechiro-front/archive/${FRONT_REVISION}.tar.gz /tmp/front.tar.gz
+
+# Les dépendances sont retirées dans la MÊME instruction, une fois `grunt build` fini. Le constructeur
+# de Testcontainers garde l'image de cette étape, et chaque reconstruction en laissait une copie de
+# plusieurs centaines de mégaoctets : trois mutations ont rempli le disque d'un poste (#6060).
+#
+# L'adresse de l'API est figée à la construction, dans `settings.coffee`. Elle est RELATIVE : le front
+# est servi par l'API elle-même (`FRONTEND_HOSTED`, plus bas), donc sur la même origine, et le port
+# publié, qu'on ne connaît qu'au démarrage, n'a pas à y figurer. Même origine, pas de CORS.
+RUN mkdir /front \
+    && tar -xzf /tmp/front.tar.gz -C /front --strip-components=1 \
+    && rm /tmp/front.tar.gz \
+    && cd /front \
+    && npm install -g grunt-cli@1.3.2 bower@1.8.14 \
+    && npm ci \
+    && bower install --allow-root \
+    && sed -i "s#API_DOMAIN.*#API_DOMAIN: '/api/v1'#" app/scripts/settings.coffee \
+    && sed -i "s#FRONT_DOMAIN.*#FRONT_DOMAIN: ''#" app/scripts/settings.coffee \
+    && grep -q "API_DOMAIN: '/api/v1'" app/scripts/settings.coffee \
+    && grunt build \
+    && rm -rf node_modules bower_components /root/.npm /root/.cache
+
 FROM python:3.12-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f
 
 ARG REVISION
@@ -37,13 +83,20 @@ RUN apt-get update \
 
 WORKDIR /api
 
+# Le front construit plus haut, là où `FRONTEND_HOSTED` le cherche : `vigiechiro/app.py` sert à la
+# racine le dossier `static` de `/api`. Posé après les dépendances et `unzip`, pour ne pas refaire
+# leurs couches quand seul le front change.
+COPY --from=front /front/dist /api/static
+
 # `/api/v1` : le préfixe de la plateforme nationale, que Companion emploie. Sans lui, l'API servirait
 # à la racine, et viser la plateforme de test demanderait une autre forme d'URL que la production.
+# `FRONTEND_HOSTED` sert le front à la racine, à côté de l'API (#6060).
 # `DEV_FAKE_AUTH` frappe un jeton sans OAuth ; `DEV_FAKE_S3_URL` et `MONGO_HOST` se posent au
 # démarrage, parce qu'ils dépendent de l'endroit où tournent le faux S3 et Mongo.
 ENV BACKEND_URL_PREFIX=/api/v1 \
     BACKEND_PORT=8080 \
-    DEV_FAKE_AUTH=true
+    DEV_FAKE_AUTH=true \
+    FRONTEND_HOSTED=true
 
 EXPOSE 8080
 

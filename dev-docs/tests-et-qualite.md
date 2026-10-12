@@ -501,7 +501,10 @@ monte une plateforme **par JVM**, au premier test qui la demande, dans cet ordre
 2. le faux S3 en TLS (`faux_s3.py`, `faux-s3.Dockerfile`), dont le certificat couvre l'hôte que
    Testcontainers rend ;
 3. l'API Vigie-Chiro (`api.Dockerfile`), à la révision épinglée, sous `/api/v1`, avec
-   `DEV_FAKE_S3_URL` pointé sur l'adresse du faux S3 **vue depuis la JVM**, d'où l'ordre ;
+   `DEV_FAKE_S3_URL` pointé sur l'adresse du faux S3 **vue depuis la JVM**, d'où l'ordre. La même
+   image porte le **front web** de Vigie-Chiro, construit à sa propre révision, que l'API sert à sa
+   racine (`FRONTEND_HOSTED`) : le front et l'API ont la même origine, et le front appelle l'API par
+   l'adresse relative `/api/v1` (#6060) ;
 4. l'état de départ déclaré (`etat-de-depart.json`), matérialisé par `amorcer.py` dans le
    conteneur de l'API.
 
@@ -515,6 +518,9 @@ fork, ce que garantit le profil, qui ne joue que ce tag.
   déclarée (`observatrice`, `validatrice`, `administratrice`) et les identifiants de l'état de départ
   (`participations:nuit-traitee`). Exemple :
   [`DepotSurLaPlateformeDeTestTest`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/test/java/fr/univ_amu/iut/commun/api/plateforme/DepotSurLaPlateformeDeTestTest.java).
+- Le front web : `acces().urlDuFront()` rend l'adresse de sa page d'entrée, dérivée de celle de l'API
+  puisqu'ils partagent leur origine. Exemple :
+  [`FrontWebSurLaPlateformeDeTestTest`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/test/java/fr/univ_amu/iut/commun/api/plateforme/FrontWebSurLaPlateformeDeTestTest.java).
 - Un scénario d'écran : `BancDeRecette.surLaPlateformeDeTest("observatrice")`, exclusive des autres
   déclarations du banc. Le banc vise la plateforme et dépose le jeton sans profil ; la modale le
   revérifie seule. Exemple :
@@ -526,7 +532,7 @@ fork, ce que garantit le profil, qui ne joue que ce tag.
   refuse tout saut (`scripts/plateforme-de-test/releve_des_sautes.py`) : une donnée qu'une sonde suppose
   se déclare dans l'état de départ.
 
-Dans les trois cas la classe porte `@Tag("plateforme-de-test")`, et `DeclarationDeLaPlateformeTest`
+Dans tous les cas la classe porte `@Tag("plateforme-de-test")`, et `DeclarationDeLaPlateformeTest`
 le refuse sinon.
 
 Un scénario d'écran peut aussi se **filmer** sur cette cible : `tournage-recette.yml` prend l'entrée
@@ -537,9 +543,18 @@ au suivant (#5644). Un scénario qui n'existe que sur la plateforme de test port
 
 ### Ses épingles
 
-`epingles.properties` est le **seul** endroit qui porte la révision de l'API et le digest de Mongo.
-`api.Dockerfile` ne donne donc aucune valeur par défaut à `REVISION`, et `ImageDeLApiSansRevisionTest`
-exige qu'il refuse de se construire sans elle.
+`epingles.properties` est le **seul** endroit qui porte la révision de l'API, celle du front et le
+digest de Mongo. `api.Dockerfile` ne donne donc aucune valeur par défaut à `REVISION` ni à
+`FRONT_REVISION`, et `ImageDeLApiSansRevisionTest` exige qu'il refuse de se construire sans l'une ou
+l'autre. Chacun de ses deux cas vise le nom de son épingle : un refus qui ne nommerait
+qu'`epingles.properties` laisserait un cas passer sur le refus de l'autre. Les deux épingles se
+vérifient dans la première étape du Dockerfile, avant toute construction : sans elle, le cas de l'API
+bâtissait tout le front avant de refuser, et disputait le runner à la plateforme.
+
+Le front se construit comme son amont le déploie (Node 22, `bower`, `grunt build`), en une minute
+environ. Ses dépendances sont retirées dans la même instruction : le constructeur de Testcontainers
+garde l'image de cette étape à chaque reconstruction, et chacune laissait plusieurs centaines de
+mégaoctets sur le disque.
 Remonter la révision est le remède d'une dérive constatée face à la plateforme nationale : c'est une
 décision, qui se dit dans la demande qui la porte.
 
@@ -553,7 +568,9 @@ décision, qui se dit dans la demande qui la porte.
   (`WorkerDeLaPlateformeDeTest.jouerLExtraction`,
   [ADR 5970](decisions/5970-la-plateforme-de-test-joue-l-extraction-d-une-archive-par-le-code-du-serveur.md)).
   C'est elle qui dit ce que le serveur fait d'un son qu'une archive lui rend alors qu'il l'a déjà.
-- **La lecture par la fiche web** des écritures de Companion : c'est le lot #5645.
+- **La lecture par la fiche web** des écritures de Companion : le front est servi, mais aucun
+  navigateur ne l'ouvre encore (#6061), et ce qu'il rend sans les ressources qu'il charge du dehors
+  (cdnjs, Google Maps) n'est pas mesuré. C'est la suite du sous-chantier #5645.
 - **Un transfert ou une durée** : sur un lien local, la latence est nulle (lot #5646).
 
 ## Les outils qualité

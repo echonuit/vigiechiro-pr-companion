@@ -59,6 +59,12 @@ celle du plus long job de chaque run, par l'API des jobs (`/actions/runs/<id>/jo
 `started_at` et `completed_at`). Une mesure prise sur un seul run ne suffit pas : les durées varient
 d'un facteur deux d'un runner à l'autre.
 
+**Remesurée le 12 octobre 2026, quand le front web est entré dans l'image de l'API (#6060).** Le job
+durait de 100 à 144 s sur six runs verts de `main`. Sur trois tentatives du commit qui porte le
+front, il dure 227, 209 et 246 s, la deuxième rougie par la chute de #5818. Il finit septième sur
+quatorze, quand le plus long dure 537 à 612 s. La construction du front, environ une minute et
+demie, ne raccourcirait donc toujours pas l'attente d'un verdict : la décision tient.
+
 ## Ce qui a été écarté
 
 **Construire les images par `buildx` hors de l'extension**, puis les lui passer par leur nom : c'est
