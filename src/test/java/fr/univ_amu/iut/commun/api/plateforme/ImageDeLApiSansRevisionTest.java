@@ -15,8 +15,9 @@ import org.testcontainers.images.builder.ImageFromDockerfile;
 /// toujours, donc le chemin du refus ne tournait jamais : rendre une valeur par défaut à un `ARG`, ce qui
 /// recréerait une seconde épingle, n'aurait rien fait rougir.
 ///
-/// Chaque cas vise le NOM de son épingle. Les deux refus citent `epingles.properties`, et l'étape du front
-/// se construit avant celle de l'API : sans cela, le cas de l'API passerait sur le refus du front.
+/// Chaque cas vise le NOM de son épingle : les deux refus citent `epingles.properties`, et un cas qui ne
+/// viserait que lui passerait sur le refus de l'autre. Les deux se vérifient dans la première étape, et
+/// échouent donc en quelques secondes, sans construire le front.
 @Tag("plateforme-de-test")
 class ImageDeLApiSansRevisionTest {
 

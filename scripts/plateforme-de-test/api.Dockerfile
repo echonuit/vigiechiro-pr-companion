@@ -13,6 +13,18 @@
 # L'API et le front viennent de l'archive de leur révision, et non d'un `git clone` : ni historique à
 # rapatrier, et ce qui est installé est exactement l'arbre de ce commit.
 
+# Les deux épingles se vérifient D'ABORD, avant toute construction. Le constructeur de Testcontainers
+# construit les étapes dans l'ordre : sans cette étape, une image construite sans `REVISION` bâtissait
+# tout le front avant de refuser, et `ImageDeLApiSansRevisionTest` disputait le runner à la plateforme
+# (#6060). Chaque étape garde sa propre vérification : BuildKit saute une étape que rien ne référence.
+FROM python:3.12-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f AS epingles
+ARG REVISION
+ARG FRONT_REVISION
+RUN test -n "$REVISION" \
+    || { echo "REVISION est obligatoire : sa valeur est api.revision dans epingles.properties" >&2; exit 1; }
+RUN test -n "$FRONT_REVISION" \
+    || { echo "FRONT_REVISION est obligatoire : sa valeur est front.revision dans epingles.properties" >&2; exit 1; }
+
 # Le front, construit comme son amont le déploie (`.github/workflows/ci.yml` de vigiechiro-front) :
 # Node 22, `grunt-cli` et `bower`, puis `grunt build`. `git` est dans l'image : `bower` en a besoin.
 FROM node:22-bookworm@sha256:0e5f906573693feaa1e21057ebdcfdb5bd5021f050b2dc7c9deceb629c7da2a8 AS front

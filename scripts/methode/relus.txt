@@ -1490,7 +1490,7 @@ a1e593d0ca8a  src/test/java/fr/univ_amu/iut/commun/api/plateforme/ArchiveDuRepli
 eb4b2f869205  src/test/java/fr/univ_amu/iut/commun/api/plateforme/CibleLiveTest.java
 306bdc2a1902  src/test/java/fr/univ_amu/iut/commun/api/plateforme/DepotSurLaPlateformeDeTestTest.java
 cdd0f8a1fa2f  src/test/java/fr/univ_amu/iut/commun/api/plateforme/FrontWebSurLaPlateformeDeTestTest.java
-c254371270bd  src/test/java/fr/univ_amu/iut/commun/api/plateforme/ImageDeLApiSansRevisionTest.java
+df1637e55f07  src/test/java/fr/univ_amu/iut/commun/api/plateforme/ImageDeLApiSansRevisionTest.java
 4f17a7d9ae4f  src/test/java/fr/univ_amu/iut/commun/api/plateforme/PlateformeDeTest.java
 7292391074af  src/test/java/fr/univ_amu/iut/commun/api/plateforme/WorkerDeLaPlateformeDeTest.java
 08562833df8b  src/test/java/fr/univ_amu/iut/commun/di/AmorcageTest.java

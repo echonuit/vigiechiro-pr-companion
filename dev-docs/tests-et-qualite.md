@@ -546,9 +546,10 @@ au suivant (#5644). Un scénario qui n'existe que sur la plateforme de test port
 `epingles.properties` est le **seul** endroit qui porte la révision de l'API, celle du front et le
 digest de Mongo. `api.Dockerfile` ne donne donc aucune valeur par défaut à `REVISION` ni à
 `FRONT_REVISION`, et `ImageDeLApiSansRevisionTest` exige qu'il refuse de se construire sans l'une ou
-l'autre. Chacun de ses deux cas vise le nom de son épingle : l'étape du front se construit avant celle
-de l'API, et un refus qui ne nommerait qu'`epingles.properties` laisserait le cas de l'API passer sur
-celui du front.
+l'autre. Chacun de ses deux cas vise le nom de son épingle : un refus qui ne nommerait
+qu'`epingles.properties` laisserait un cas passer sur le refus de l'autre. Les deux épingles se
+vérifient dans la première étape du Dockerfile, avant toute construction : sans elle, le cas de l'API
+bâtissait tout le front avant de refuser, et disputait le runner à la plateforme.
 
 Le front se construit comme son amont le déploie (Node 22, `bower`, `grunt build`), en une minute
 environ. Ses dépendances sont retirées dans la même instruction : le constructeur de Testcontainers
