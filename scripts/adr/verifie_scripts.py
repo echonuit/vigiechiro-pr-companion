@@ -1190,8 +1190,10 @@ def test_5278_attente_hors_du_fil() -> None:
     m = _charge("5278-attente-hors-du-fil.py")
     lecture = '() -> !robot.lookup("#t").queryAll().isEmpty()'
 
-    def classe(appel: str) -> str:
-        return "class A {\n    void t() {\n        " + appel + "\n    }\n}\n"
+    # Un banc qui lit le graphe importe TestFX : depuis #6061, un fichier sans JavaFX ni TestFX est
+    # ignore, son `getText()` pouvant etre celui d une page web.
+    def classe(appel: str, entete: str = "import org.testfx.api.FxRobot;\n") -> str:
+        return entete + "class A {\n    void t() {\n        " + appel + "\n    }\n}\n"
 
     with tempfile.TemporaryDirectory() as d:
         racine = pathlib.Path(d)
@@ -1200,8 +1202,14 @@ def test_5278_attente_hors_du_fil() -> None:
         _verifie(
             "5278 une attente qui lit le graphe est vue",
             m.suspects(racine),
-            ["fr/a/A.java:3"],
+            ["fr/a/A.java:4"],
         )
+
+        # #6061 : le MEME site, dans un fichier qui n importe ni JavaFX ni TestFX, n est pas accuse.
+        _ecrire(
+            racine, "fr/a/A.java", classe(f'Attente.que({lecture}, "que ca vienne");', entete="")
+        )
+        _verifie("5278 un fichier sans JavaFX ni TestFX est ignore", m.suspects(racine), [])
 
         # LE SECOND FAIT, celui qui distingue ce cliquet d un compte : le MEME site, ecrit sur le
         # fil FX, est la forme JUSTE et sort du compte. Sans ce cas, un detecteur qui accuserait

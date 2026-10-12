@@ -68,5 +68,7 @@ Le constructeur de Testcontainers garde l'image de l'étape du front à chaque r
 dépendances sont donc retirées dans l'instruction qui la construit : sans cela, trois reconstructions
 avaient rempli le disque d'un poste.
 
-Ce que le front rend sans les ressources qu'il charge du dehors (cdnjs, Google Maps) n'est pas encore
-mesuré. C'est le lot suivant, avec le navigateur (#6061).
+**Mise à jour du 12 octobre 2026 (#6061).** Le front ne démarre pas sans le sélecteur de dates qu'il charge
+de cdnjs ; il y prend aussi sa locale française et Font Awesome. Ces fichiers sont rapatriés à la construction et
+servis par l'API, et le navigateur des tests ne joint plus aucun hôte extérieur. Google Maps et
+Analytics, dont la fiche se passe, y tombent en erreur sans la retenir.

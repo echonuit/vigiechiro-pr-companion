@@ -242,6 +242,19 @@ def sites_de(racine_ast) -> list[int]:
     return trouves
 
 
+# Un fichier qui n importe rien de JavaFX ni de TestFX n a pas de graphe de scene a lire : son
+# `.getText()` est celui d autre chose. Le premier vu etait celui d un element de page web, que
+# Selenium lit dans un navigateur (#6061), et le garde l accusait de lire le graphe hors du fil.
+TOUCHE_JAVAFX = re.compile(rb"^import\s+(static\s+)?(javafx|org\.testfx)\.", re.MULTILINE)
+
+
+def sites_du_fichier(source: bytes, racine_ast=None) -> list[int]:
+    """Les sites d un FICHIER entier : aucun s il n importe ni JavaFX ni TestFX."""
+    if not TOUCHE_JAVAFX.search(source):
+        return []
+    return sites_de(arbre(source).root_node if racine_ast is None else racine_ast)
+
+
 def analyse(racine: pathlib.Path | None = None) -> tuple[list[str], int, list[str]]:
     """UNE passe sur le corpus, TROIS sorties : les suspects, les appels lus, les zones illisibles.
 
@@ -253,11 +266,12 @@ def analyse(racine: pathlib.Path | None = None) -> tuple[list[str], int, list[st
     racine = TESTS_ANCRES if racine is None else racine
     fautifs, combien, zones_dites = [], 0, []
     for fichier in sorted(racine.rglob("*.java")):
-        racine_ast = arbre(fichier.read_bytes()).root_node
+        source = fichier.read_bytes()
+        racine_ast = arbre(source).root_node
         ou = fichier.relative_to(racine)
         zones_dites += [f"{ou}:{d}-{b}" for d, b in zones_illisibles(racine_ast)]
         combien += len(appels_d_attente(racine_ast))
-        fautifs += [f"{ou}:{ligne}" for ligne in sites_de(racine_ast)]
+        fautifs += [f"{ou}:{ligne}" for ligne in sites_du_fichier(source, racine_ast)]
     return fautifs, combien, zones_dites
 
 
@@ -292,6 +306,16 @@ def _auto_test() -> int:
     verifie("un predicat qui ne touche pas le graphe est ignore", sites(sobre), [])
 
     verifie("une source sans Attente ne rend rien", sites("int x = lookup(3);\n"), [])
+
+    # #6061 : le `.getText()` d un element de page web n est pas une lecture de noeud. Le MEME site,
+    # dans un fichier qui importe Selenium et rien de JavaFX, ne rend rien ; importe JavaFX, il est vu.
+    texte = 'Attente.que(() -> page.getText().contains("x"), "que la page le dise");\n'
+    web = "import org.openqa.selenium.WebElement;\n" + texte
+    verifie("un fichier sans JavaFX ni TestFX est ignore", sites_du_fichier(web.encode()), [])
+    fx = "import javafx.scene.control.Label;\n" + texte
+    verifie("le meme fichier qui importe JavaFX est vu", sites_du_fichier(fx.encode()), [2])
+    testfx = "import org.testfx.api.FxRobot;\n" + fautif
+    verifie("un fichier qui importe TestFX est vu", sites_du_fichier(testfx.encode()), [2])
 
     multiple = fautif + "\n" + sobre + "\n" + fautif
     verifie("plusieurs sites sont tous vus", len(sites(multiple)), 2)

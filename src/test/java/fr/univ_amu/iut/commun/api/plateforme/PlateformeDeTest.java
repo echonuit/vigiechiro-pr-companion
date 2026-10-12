@@ -110,6 +110,12 @@ public final class PlateformeDeTest implements BeforeAllCallback {
     /// Le conteneur de l'API, gardé pour [#api()].
     private static GenericContainer<?> apiMontee;
 
+    /// Le nom sous lequel l'API répond dans le réseau de la plateforme, pour un conteneur qui le rejoint.
+    static final String ALIAS_DE_L_API = "api";
+
+    /// Le réseau de la plateforme, gardé pour [#reseau()].
+    private static Network reseauMonte;
+
     @Override
     public void beforeAll(ExtensionContext contexte) {
         acces();
@@ -128,6 +134,19 @@ public final class PlateformeDeTest implements BeforeAllCallback {
     static synchronized GenericContainer<?> api() {
         acces();
         return apiMontee;
+    }
+
+    /// Le réseau de la plateforme, pour un conteneur qui doit la joindre de l'intérieur : le navigateur
+    /// qui lit la fiche web (#6061).
+    static synchronized Network reseau() {
+        acces();
+        return reseauMonte;
+    }
+
+    /// L'adresse du front web vue DANS le réseau de la plateforme. Le front a la même origine que l'API
+    /// (ADR 6060) : un navigateur qui ouvre cette adresse appelle l'API par `/api/v1` sans autre réglage.
+    static String urlDuFrontDansLeReseau() {
+        return "http://" + ALIAS_DE_L_API + ":8080/";
     }
 
     private static Acces monter(Path dossier) {
@@ -162,12 +181,14 @@ public final class PlateformeDeTest implements BeforeAllCallback {
                         .withBuildArg("REVISION", epingles.getProperty("api.revision"))
                         .withBuildArg("FRONT_REVISION", epingles.getProperty("front.revision")))
                 .withNetwork(reseau)
+                .withNetworkAliases(ALIAS_DE_L_API)
                 .withEnv("MONGO_HOST", MONGO_DANS_LE_RESEAU)
                 .withEnv("DEV_FAKE_S3_URL", urlS3)
                 .withExposedPorts(8080)
                 .waitingFor(Wait.forListeningPort());
         api.start();
         apiMontee = api;
+        reseauMonte = reseau;
 
         JsonObject amorce = amorcer(api, dossier);
         deposer(urlS3, amorce.getAsJsonObject("objets"));
