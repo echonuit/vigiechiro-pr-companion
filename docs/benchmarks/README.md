@@ -69,6 +69,11 @@ débit, nb séquences, **mémoire crête**.
   se compare aux seuils ; la valeur à froid se publie à part, sous son nom, comme l'attente du premier
   écran du jour (ADR 0027).
 - **Trois lancements**, dont on publie les trois valeurs : un chiffre seul ne dit pas sa dispersion.
+- **Le banc de l'IHM se tire à une échelle d'écran écrite.** Il dessine en rendu logiciel : sur un
+  écran que le système double, chaque image coûte quatre fois plus de pixels, et l'écart entre deux
+  images va du simple au triple pendant un import, davantage en navigation (mesuré le 2026-10-12,
+  « Le test de charge à 20 Gio »).
+  L'échelle se force à 1 par `-Dglass.gtk.uiScale=1`, ou s'écrit à côté du relevé.
 
 ## Relevés du 2026-10-12
 
@@ -221,7 +226,8 @@ chiffre ci-dessous.
 
 **Ce que ces chiffres ne mesurent pas** : la latence d'entrée (souris et clavier contournés), le dessin
 de l'image et son affichage par le compositeur, un rendu GPU, une vraie carte SD et une autre machine.
-Les 20 Go ont leur sous-section.
+L'échelle de l'écran de ce poste n'a pas été relevée ; le second poste, tiré à l'échelle 1, rend
+presque les mêmes chiffres. Les 20 Go ont leur sous-section.
 
 **Le relancer** (jamais en CI : l'étiquette `banc-ihm` est exclue par défaut) :
 
@@ -265,32 +271,35 @@ Place occupée par le workspace en fin d'import : 1,07 Gio pour 100 WAV, 60,0 Gi
 20 Gio, aux deux lancements. C'est encore trois fois la source. Charge au plus haut pendant les tirs à
 20 Gio : 7,45 et 5,28, le banc compris.
 
-**Dans l'IHM** (`BancIhmO3Test`). Deux tirs, sur l'affichage réel (XWayland, profil `recette-filmee`,
-rendu logiciel `prism.order=sw` posé par le pom), fenêtre de 1280 × 860 sur un écran de 3072 × 1920
-que le serveur X annonce à 192 points par pouce. Le premier importe la nuit de 20 Gio
-(`-Dperf.ihm.nuits=1 -Dperf.ihm.wav=5593`) ; charge du poste sur 1 minute : 1,59 au départ, 7,15 au
-plus haut, le banc compris. Le second reprend les réglages du premier poste
-(`-Dperf.ihm.nuits=4 -Dperf.ihm.wav=300`), pour séparer la taille de la nuit de la machine ; charge de
-0,63 au départ, 3,60 au plus haut.
+**Dans l'IHM** (`BancIhmO3Test`). Quatre tirs, sur l'affichage réel (XWayland, profil `recette-filmee`,
+rendu logiciel `prism.order=sw` posé par le pom), fenêtre de 1280 × 860. L'écran fait 3072 × 1920 et
+le serveur X l'annonce à 192 points par pouce, le double de 96. Deux tailles, la nuit de 20 Gio
+(`-Dperf.ihm.nuits=1 -Dperf.ihm.wav=5593`) et les quatre nuits de 300 WAV du premier poste
+(`-Dperf.ihm.nuits=4 -Dperf.ihm.wav=300`), chacune à l'échelle par défaut de cet écran puis à
+l'échelle forcée à 1 (`-Dglass.gtk.uiScale=1`). Charge du poste sur 1 minute, au départ puis au plus
+haut, le banc compris. À 20 Gio : 1,59 et 7,15 à l'échelle par défaut, 1,67 et 4,20 à l'échelle 1.
+À 300 WAV : 0,63 et 3,60, puis 1,55 et 2,27.
 
-| O3, une nuit de 5593 WAV de 5 s (20,00 Gio) | Relevé | Seuil | Verdict |
-|---|---|---|---|
-| durée de l'import, du clic au compte rendu | 14,4 s | | |
-| écart max entre deux images pendant l'import | 472 ms sur 343 images ; trois écarts au-delà de 200 ms (253, 472, 225 ms) | 200 ms | **non tenu** (#6175) |
-| écart max en navigation après l'import | 1310 ms ; douze écarts au-delà de 200 ms pour neuf ouvertures | 200 ms | **non tenu** (#6171) |
-| heap après GC complet | 68 Mo avant la nuit, 247 Mo après | palier stable | voir #6170 |
-| journal G1 du processus | 234 Mo au plus haut après une pause jeune, 2323 Mo de crête | | |
-
-| O3, quatre nuits distinctes de 300 WAV de 5 s, un seul processus | Nuit 1 | Nuit 2 | Nuit 3 | Nuit 4 |
+| O3, une nuit de 5593 WAV de 5 s (20,00 Gio) | Échelle par défaut | Échelle 1 | Seuil | Verdict |
 |---|---|---|---|---|
-| durée de l'import, du clic au compte rendu | 1,2 s | 0,8 s | 0,7 s | 0,8 s |
-| images vues par la sonde pendant l'import | 17 | 18 | 10 | 12 |
-| écart max entre deux images pendant l'import | 338 ms | 235 ms | 224 ms | 301 ms |
-| écart max en navigation après l'import | 1323 ms | 1272 ms | 1276 ms | 1277 ms |
-| écarts de plus de 200 ms en navigation (neuf ouvertures) | 9 | 7 | 6 | 8 |
-| heap après GC (68 Mo avant la nuit 1) | 282 Mo | 380 Mo | 478 Mo | 576 Mo |
+| durée de l'import, du clic au compte rendu | 14,4 s | 13,0 s | | |
+| images vues par la sonde pendant l'import | 343 | 461 | | |
+| écart max entre deux images pendant l'import | 472 ms | 465 ms | 200 ms | **non tenu** (#6175) |
+| écarts de plus de 200 ms pendant l'import | 253, 472, 225 ms | 268, 441, 465 ms | aucun | **non tenu** (#6175) |
+| écart max en navigation après l'import | 1310 ms | 377 ms | 200 ms | **non tenu** (#6171) |
+| heap après GC complet, avant puis après la nuit | 68 puis 247 Mo | 51 puis 160 Mo | palier stable | voir #6170 |
+| journal G1 : au plus haut après une pause jeune, et crête | 234 et 2323 Mo | 188 et 2176 Mo | | |
 
-Aucune fenêtre ni question ne s'est ouverte pendant ces deux tirs. Avant eux, le banc a été vu rouge
+| O3, quatre nuits de 300 WAV de 5 s, un seul processus | Échelle par défaut | Échelle 1 | Premier poste |
+|---|---|---|---|
+| durée de l'import, nuits 1 à 4 | 1,2 · 0,8 · 0,7 · 0,8 s | 0,9 · 0,8 · 0,7 · 0,7 s | 1,4 · 1,0 · 1,0 · 1,1 s |
+| images vues par la sonde pendant l'import | 17 · 18 · 10 · 12 | 21 · 24 · 29 · 25 | non relevé |
+| écart max entre deux images pendant l'import | 338 · 235 · 224 · 301 ms | 99 · 100 · 100 · 114 ms | 151 · 98 · 76 · 87 ms |
+| écart max en navigation après l'import | 1323 · 1272 · 1276 · 1277 ms | 384 · 197 · 269 · 198 ms | 758 · 224 · 255 · 244 ms |
+| écarts de plus de 200 ms en navigation (neuf ouvertures) | 9 · 7 · 6 · 8 | 6 · 0 · 1 · 0 | 5 · 4 · 4 · 5 |
+| heap après GC, avant la nuit 1 puis après chaque nuit | 68, puis 282 · 380 · 478 · 576 Mo | 51, puis 147 · 204 · 263 · 320 Mo | 50, puis 148 · 208 · 265 · 322 Mo |
+
+Aucune fenêtre ni question ne s'est ouverte pendant ces quatre tirs. Avant eux, le banc a été vu rouge
 sur ce poste, en Headless : deux nuits de même date l'arrêtent seul, en 13 s, sur la question « nuit
 déjà importée ».
 
@@ -303,23 +312,27 @@ déjà importée ».
 - **Le débit ne baisse pas avec la taille sur ce poste** (469 Mo/s à 0,36 Gio), à l'inverse du premier.
   Cela s'accorde avec l'hypothèse du cache disque sans la prouver : ce poste avait environ 19 Gio de
   mémoire disponible, presque toute la source.
-- **Dans l'IHM, le seuil de 200 ms n'est tenu à aucune taille sur ce poste** (#6175) : de 224 à 338 ms
-  pendant l'import à 300 WAV, 472 ms à 20 Gio. Le premier poste relevait de 76 à 151 ms sur les mêmes
-  nuits de 300 WAV. C'est donc le poste ou son affichage qui sépare les deux relevés, avant la taille
-  de la nuit : six écarts pour 57 images sur les quatre petites nuits, trois pour 343 images à 20 Gio.
-- **La sonde voit de 14 à 24 images par seconde sur ce poste** (17 images en 1,2 s, 343 en 14,4 s).
-  Chaque image y coûte donc plusieurs dizaines de ms avant tout gel. Le rendu logiciel d'une fenêtre
-  que l'écran double est l'hypothèse la plus simple, et elle n'est pas vérifiée.
-- **En navigation, la plupart des ouvertures d'écran gèlent le fil de 1,2 à 1,3 s**, à 300 WAV comme
-  à 20 Gio (#6171) : cet écart ne suit pas la taille de la nuit. Le premier poste relevait de 203 à 758 ms.
-- **Le heap après GC ne suit pas la taille de la nuit** (#6170) : une nuit de 300 WAV laisse 282 Mo,
-  une nuit de 20 Gio 247 Mo. Il gagne 98 Mo à chacune des trois nuits suivantes.
-- **Ce ne sont pas des pauses du ramasse-miettes** : hors GC complet, la plus longue dure 63 ms dans
-  le tir à 20 Gio et 22 ms dans le tir à 300 WAV, et les GC complets, que le banc demande lui-même,
-  tombent hors des périodes sondées.
+- **À 20 Gio, le seuil de 200 ms n'est pas tenu pendant l'import** (#6175) : 472 puis 465 ms, trois
+  écarts à chaque tir, quelle que soit l'échelle. À 300 WAV et à l'échelle 1, le même poste le tient
+  (de 99 à 114 ms), comme le premier (de 76 à 151 ms). À affichage égal, c'est donc la taille de la
+  nuit qui fait passer le seuil.
+- **L'échelle de l'écran change tout le reste.** À l'échelle par défaut, la sonde voit de 14 à
+  24 images par seconde pendant l'import, contre 23 à 41 à l'échelle 1 ; les nuits de 300 WAV
+  dépassent le seuil (de 224 à 338 ms) et la navigation gèle de 1,2 à 1,3 s. Ces chiffres-là
+  mesurent le dessin en rendu logiciel, pas l'application : ils ont motivé la règle du protocole.
+- **En navigation, le seuil n'est pas tenu à l'échelle 1 non plus** (#6171) : de 197 à 384 ms, l'ordre
+  de grandeur du premier poste, et 377 ms après la nuit de 20 Gio. L'écart ne suit pas la taille de la
+  nuit.
+- **Le heap après GC, à l'échelle 1, est celui du premier poste à quelques Mo près** (#6170) : de 57 à
+  59 Mo de plus par nuit. Deux faits nouveaux : la nuit de 20 Gio laisse 160 Mo, 13 de plus qu'une
+  nuit de 300 WAV pour dix-neuf fois plus de séquences ; et l'échelle par défaut porte le gain à 98 Mo
+  par nuit. Ce qui grandit suit donc la surface dessinée plus que les données.
+- **Ce ne sont pas des pauses du ramasse-miettes** : hors GC complet, la plus longue du journal dure
+  72 ms sur les quatre tirs, et 20 ms dans le tir à 20 Gio à l'échelle 1. Les GC complets, que le
+  banc demande lui-même, tombent hors des périodes sondées.
 - **L'import de l'IHM ne fait pas le même travail que `BancImport`** : l'assistant ne recopie pas les
-  bruts par défaut (ADR 0036). Il transforme et persiste, d'où 14,4 s contre 20 s, et il garde 20,0 Gio,
-  les séquences seules. Avec la carte, le tir a occupé 39 Go au plus haut.
+  bruts par défaut (ADR 0036). Il transforme et persiste, d'où 13 à 14 s contre 20 s, et il garde
+  20,0 Gio, les séquences seules. Avec la carte, un tir occupe 39 Go au plus haut.
 
 **Ce que ces chiffres ne mesurent pas** :
 
@@ -328,16 +341,17 @@ déjà importée ».
   1176 Mo de pages restaient à écrire, sur 40 Gio produits.
 - Une vraie carte SD, et un poste à huit cœurs ou à disque plus lent : le premier poste n'a pas tiré
   20 Gio.
-- Dans l'IHM : la dispersion à 20 Gio (un tir), le moment où tombent les écarts, la part du rendu
-  logiciel et de l'échelle de l'écran, et l'application lancée hors des tests. Le processus porte
-  TestFX, l'agent ByteBuddy et celui de JaCoCo.
+- Dans l'IHM : le moment où tombent les trois écarts de l'import à 20 Gio, et l'application lancée
+  hors des tests, où un rendu GPU peut donner autre chose. Le processus porte TestFX, l'agent
+  ByteBuddy et celui de JaCoCo.
 - La réactivation d'une nuit, qu'aucun banc ne mesure (#6174).
 
-**Le relancer.** La JVM de test reçoit sa ligne d'arguments du pom : `-Djava.io.tmpdir` et `-Xlog:gc` y
-entrent par la variable `JAVA_TOOL_OPTIONS`, et le banc écrit sous `perf.ihm.racine`.
+**Le relancer.** La JVM de test reçoit sa ligne d'arguments du pom : `-Djava.io.tmpdir`, l'échelle et
+`-Xlog:gc` y entrent par la variable `JAVA_TOOL_OPTIONS`, et le banc écrit sous `perf.ihm.racine`.
 
 ```bash
-JAVA_TOOL_OPTIONS="-Djava.io.tmpdir=$HOME/banc-20go/tmp -Xlog:gc:file=$HOME/banc-20go/gc-%p.log" \
+JAVA_TOOL_OPTIONS="-Djava.io.tmpdir=$HOME/banc-20go/tmp -Dglass.gtk.uiScale=1 \
+  -Xlog:gc:file=$HOME/banc-20go/gc-%p.log" \
   ./mvnw test -Precette-filmee -Dsurefire.groups=banc-ihm -Dsurefire.excludedGroups=api-live \
   -Dtest=BancIhmO3Test -Dperf.ihm.racine=$HOME/banc-20go/ihm -Dperf.ihm.nuits=1 -Dperf.ihm.wav=5593
 ```
@@ -432,7 +446,7 @@ critère a son relevé, et chaque seuil non tenu son issue.
   à 85 Mo, la nuit standard passant sous `-Xmx128m`. **Dans l'IHM** : pas d'écart de plus de 200 ms pendant l'import ; des écarts de 203 à 758 ms à
   l'ouverture des écrans après import (#6171) ; un heap après GC qui grandit de nuit en nuit dans le
   banc (#6170). **20 Gio, sur le second poste** : import en 20 à 21 s, 108 à 115 Mo après GC ; dans
-  l'IHM de ce poste, des écarts de 224 à 472 ms entre deux images pendant l'import, à 300 WAV comme
-  à 20 Gio (#6175).
+  l'IHM, un écart de 465 à 472 ms entre deux images pendant l'import, là où les nuits de 300 WAV
+  tiennent le seuil à échelle d'écran égale (#6175).
 - Outillage réutilisable en **non-régression** : `GenerateurJeuDeDonnees`, `BancMesure`, `BancImport`,
   et le banc de l'IHM (`BancIhmO5Test`, `BancIhmO3Test`), lancé à la main.
