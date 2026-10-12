@@ -65,6 +65,10 @@ front, il dure 227, 209 et 246 s, la deuxième rougie par la chute de #5818. Il 
 quatorze, quand le plus long dure 537 à 612 s. La construction du front, environ une minute et
 demie, ne raccourcirait donc toujours pas l'attente d'un verdict : la décision tient.
 
+**Remesurée le 12 octobre 2026, quand un navigateur a lu la fiche web (#6061).** Trois tentatives :
+303 s, puis 247 et 314 s, ces deux dernières rougies par la chute de #5818 après avoir joué toute
+la suite. Le job finit huitième sur quatorze, quand le plus long dure 615 s : la décision tient.
+
 ## Ce qui a été écarté
 
 **Construire les images par `buildx` hors de l'extension**, puis les lui passer par leur nom : c'est
