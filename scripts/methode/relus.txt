@@ -1085,6 +1085,7 @@ ebc7965c702c  src/main/java/fr/univ_amu/iut/passage/viewmodel/SelectionCampagne.
 9e30cc6f7ce1  src/main/java/fr/univ_amu/iut/passage/viewmodel/VerificationDuTraitement.java
 8d897d3f7089  src/main/java/fr/univ_amu/iut/perf/outils/BancImport.java
 d8df481f824d  src/main/java/fr/univ_amu/iut/perf/outils/BancMesure.java
+9e46552bdf7f  src/main/java/fr/univ_amu/iut/perf/outils/BancReactivation.java
 767df64caea1  src/main/java/fr/univ_amu/iut/perf/outils/GenerateurJeuDeDonnees.java
 a7a734f95bd5  src/main/java/fr/univ_amu/iut/qualification/di/QualificationModule.java
 73b492e3e943  src/main/java/fr/univ_amu/iut/qualification/model/AgregationVerdict.java
