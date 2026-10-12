@@ -86,6 +86,12 @@ nuit** (1572 fichiers) s'importe en **~6-8 s**, **2109 séquences** (découpage 
     `-Xmx128m` avec 82-83 Mo vifs, au même débit (#104). Pour dimensionner une machine, c'est ce
     second chiffre qui compte.
 
+**La mémoire ne suit plus la durée d'un WAV (#104).** La transformation lit l'original par morceaux
+(`FichierWav.ouvrirPcm`), une tranche de 5 s en mémoire par original en vol, au lieu de le charger
+entier. Mesuré le 2026-10-12 sur 16 WAV de 120 s : l'occupation après GC passe de 904 à 68 Mo sous
+`-Xmx2g`, et la nuit, qui tombait sur une `OutOfMemoryError` sous `-Xmx128m`, s'importe. Le tableau
+complet est dans `docs/benchmarks/README.md`.
+
 !!! warning "Des ordres de grandeur, pas des garanties"
     Ces chiffres viennent d'une **machine de référence**. Sur un poste plus modeste, refaire la mesure.
     La règle du banc : **première utilisation du jour** (JIT + cache disque froids) pour la valeur

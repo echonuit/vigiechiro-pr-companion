@@ -32,6 +32,23 @@ import java.util.Objects;
 /// en-tête canonique fixe par [FichierWav#ecrire]. Relancer réécrit des fichiers identiques au bit près.
 public class TransformationAudio {
 
+    /// Ouvre un original pour la lecture par morceaux. Point de substitution des tests, qui y simulent un
+    /// fichier qui cesse de se lire au milieu d'une tranche.
+    @FunctionalInterface
+    interface OuvertureWav {
+        FichierWav.LecturePcm ouvrir(Path fichier) throws IOException;
+    }
+
+    private final OuvertureWav ouverture;
+
+    public TransformationAudio() {
+        this(FichierWav::ouvrirPcm);
+    }
+
+    TransformationAudio(OuvertureWav ouverture) {
+        this.ouverture = Objects.requireNonNull(ouverture, "ouverture");
+    }
+
     /// Durée d'une séquence d'écoute, en secondes **réelles** (au rythme d'acquisition) : une tranche = 5 s
     /// de l'enregistrement d'origine, soit 50 s à l'écoute une fois expansée ×10 (R10).
     ///
@@ -78,14 +95,32 @@ public class TransformationAudio {
         Objects.requireNonNull(dossierSortie, "dossierSortie");
         Objects.requireNonNull(prefixe, "prefixe");
 
-        // Lecture + format de la SOURCE : un échec ici est **récupérable** (#155) → l'original est rejeté.
-        FichierWav source = lireSource(originalWav);
+        // Ouverture + format de la SOURCE : un échec ici est **récupérable** (#155) → l'original est rejeté.
+        try (FichierWav.LecturePcm source = ouvrirSource(originalWav)) {
+            return transformer(source, originalWav, nomR6, dossierSortie, prefixe, frequenceAcquisitionLogHz);
+        } catch (IOException e) {
+            // Seule la fermeture du canal peut lever ici : la lecture est déjà faite, rien n'est perdu.
+            throw new UncheckedIOException("Fermeture de l'original impossible : " + originalWav.getFileName(), e);
+        }
+    }
+
+    /// Découpe la source ouverte, **par morceaux** (#104) : l'original n'est jamais chargé entier, il se lit
+    /// tranche par tranche dans un seul tampon de 5 s. La mémoire tenue par un original ne dépend donc plus
+    /// de sa durée, et un WAV de plus de 2 Gio se transforme comme les autres.
+    private TransformationOriginal transformer(
+            FichierWav.LecturePcm source,
+            Path originalWav,
+            String nomR6,
+            Path dossierSortie,
+            Prefixe prefixe,
+            Integer frequenceAcquisitionLogHz) {
+        FichierWav.EnteteWav entete = source.entete();
         // C'est la **vraie fréquence d'acquisition** qui pilote toute l'arithmétique, PAS l'en-tête WAV :
         // l'enregistreur PR écrit ses bruts déjà expansés ×10 (en-tête = Fe/10). Le log fait foi ; à défaut,
         // on la déduit de l'en-tête (cf. FrequenceAcquisition). L'en-tête ne sert plus qu'au format brut
         // (canaux, bits, octets par trame) et à la copie verbatim du PCM.
         int frequenceAcquisition =
-                FrequenceAcquisition.reelle(source.frequenceEchantillonnageHz(), frequenceAcquisitionLogHz);
+                FrequenceAcquisition.reelle(entete.frequenceEchantillonnageHz(), frequenceAcquisitionLogHz);
         if (frequenceAcquisition % FACTEUR_EXPANSION != 0) {
             throw new OriginalIllisibleException("Fréquence d'acquisition "
                     + frequenceAcquisition
@@ -95,9 +130,8 @@ public class TransformationAudio {
                     + originalWav.getFileName());
         }
         int frequenceSortie = frequenceAcquisition / FACTEUR_EXPANSION;
-        int octetsParTrame = source.octetsParTrame();
-        byte[] pcm = source.donneesPcm();
-        long tramesTotal = (long) pcm.length / octetsParTrame;
+        int octetsParTrame = entete.octetsParTrame();
+        long tramesTotal = entete.nombreTrames();
         double dureeAcquisitionSecondes = tramesTotal / (double) frequenceAcquisition;
         // Découpage à 5 s **réelles** = au rythme d'ACQUISITION (ni de sortie, ni de l'en-tête). Chaque
         // séquence porte les octets de 5 s de l'enregistrement d'origine, qui, rejoués à `frequenceSortie`
@@ -116,9 +150,12 @@ public class TransformationAudio {
         try {
             Files.createDirectories(dossierSortie);
             List<SequenceProduite> sequences = new ArrayList<>();
+            // Un seul tampon pour tout l'original : chaque tranche y est lue puis écrite avant la suivante.
+            byte[] tampon = new byte[(int) Math.min(octetsParSequence, entete.octetsDonnees())];
             int index = 0;
-            for (int offset = 0; offset < pcm.length; offset += octetsParSequence) {
-                int longueur = Math.min(octetsParSequence, pcm.length - offset);
+            long offset = 0;
+            int longueur;
+            while ((longueur = lireTranche(source, tampon, originalWav)) > 0) {
                 // Nommage horodaté (convention Vigie-Chiro/Tadarida) : la tranche d'index k porte l'heure
                 // réelle de son début = horodatage de l'original + k × 5 s, avec un `_000` systématique. Ce
                 // nom est la clé de jointure avec les lignes de l'observations.csv (cf. ServiceValidation).
@@ -128,11 +165,11 @@ public class TransformationAudio {
                 // jamais persister une séquence périmée/corrompue par un crash, même de taille identique.
                 FichierWav.ecrire(
                         cheminSequence,
-                        source.nombreCanaux(),
+                        entete.nombreCanaux(),
                         frequenceSortie,
-                        source.bitsParEchantillon(),
-                        pcm,
-                        offset,
+                        entete.bitsParEchantillon(),
+                        tampon,
+                        0,
                         longueur);
 
                 long tramesSequence = (long) longueur / octetsParTrame;
@@ -140,7 +177,7 @@ public class TransformationAudio {
                 // découpage (L.116/122). C'est la durée d'enregistrement (≈5 s) qu'on persiste ; rejouée à
                 // `frequenceSortie` (Fe/10), la séquence dure ×10 (≈50 s) à l'écoute (#1051).
                 double dureeReelleSecondes = tramesSequence / (double) frequenceAcquisition;
-                double offsetSource = ((long) offset / octetsParTrame) / (double) frequenceAcquisition;
+                double offsetSource = (offset / octetsParTrame) / (double) frequenceAcquisition;
                 // Taille et empreinte courte (#1299), posées à l'écriture : le fichier vient d'être
                 // écrit (cache disque chaud), relire ses 64 premiers Kio est quasi gratuit, et
                 // l'empreinte est ainsi calculée sur EXACTEMENT ce qu'une réactivation relira.
@@ -154,6 +191,7 @@ public class TransformationAudio {
                         Files.size(cheminSequence),
                         Empreintes.empreinteCourte(cheminSequence)));
                 index++;
+                offset += longueur;
             }
             return new TransformationOriginal(
                     nomOriginal,
@@ -170,14 +208,30 @@ public class TransformationAudio {
         }
     }
 
-    /// Lit le WAV source ; une erreur de lecture/format est **récupérable** ([OriginalIllisibleException]).
-    private static FichierWav lireSource(Path originalWav) {
+    /// Ouvre le WAV source ; une erreur de lecture/format est **récupérable** ([OriginalIllisibleException]).
+    private FichierWav.LecturePcm ouvrirSource(Path originalWav) {
         try {
-            return FichierWav.lire(originalWav);
+            return ouverture.ouvrir(originalWav);
         } catch (IOException e) {
-            throw new OriginalIllisibleException(
-                    "Original illisible (" + e.getMessage() + ") : " + originalWav.getFileName(), e);
+            throw illisible(originalWav, e);
         }
+    }
+
+    /// Lit la tranche suivante de la source. Une erreur ici est une erreur de **lecture** de l'original, donc
+    /// récupérable comme à l'ouverture (#155), et non une erreur d'écriture du workspace. Les tranches déjà
+    /// écrites restent dans `dossierSortie`, que tous les appelants tiennent pour jetable : un sous-dossier
+    /// temporaire par original à l'import, un dossier temporaire à la régénération.
+    private static int lireTranche(FichierWav.LecturePcm source, byte[] tampon, Path originalWav) {
+        try {
+            return source.lire(tampon);
+        } catch (IOException e) {
+            throw illisible(originalWav, e);
+        }
+    }
+
+    private static OriginalIllisibleException illisible(Path originalWav, IOException e) {
+        return new OriginalIllisibleException(
+                "Original illisible (" + e.getMessage() + ") : " + originalWav.getFileName(), e);
     }
 
     /// Empreinte SHA-256 de la **source** ; une lecture impossible est récupérable (rejet du fichier).

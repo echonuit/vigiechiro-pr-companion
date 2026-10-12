@@ -23,8 +23,8 @@ import java.util.function.Consumer;
 ///
 /// Ce qui lui appartient en propre :
 ///
-/// - **la raison de sa borne** : `transformer` charge tout le PCM en mémoire puis écrit sur disque ;
-///   sans plafond, une grosse nuit (~1572 fichiers) tiendrait trop de WAV en vol → saturation mémoire ;
+/// - **la raison de sa borne** : `transformer` tient une tranche de 5 s par original en vol (#104) ; sans
+///   plafond, une grosse nuit (~1572 fichiers) en tiendrait des Go en vol → saturation mémoire ;
 /// - **la résilience (#155)** : un original illisible n'abat plus l'import, il devient un
 ///   [ResultatDecoupage] rejeté **à l'intérieur de la tâche**. C'est là ce qui a rendu la migration
 ///   possible : le socle n'a jamais d'exception à propager pour ce cas. Une erreur d'écriture workspace

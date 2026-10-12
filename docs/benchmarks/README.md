@@ -143,6 +143,30 @@ ajouter `-Dperf.import.secondes=2.0` pour retrouver exactement ces chiffres._
     ce que l'import prend quand on le laisse faire, pas ce dont il a besoin. C'est le second chiffre
     qu'il faut regarder pour savoir si une machine tient.
 
+### La lecture par morceaux (#104) : la mémoire ne suit plus la durée d'un WAV
+
+Jusqu'à #104, l'import chargeait chaque WAV entier avant de le découper. Il le lit désormais tranche
+par tranche, une tranche de 5 s en mémoire par original en vol. Le gain ne se voit pas sur la nuit de
+ce tableau, dont chaque WAV de 5 s tient déjà en une tranche : il se voit quand le **fichier** grandit,
+le cas d'un enregistreur qui ne découpe pas.
+
+Mesuré le 2026-10-12 (8 cœurs, JDK 25.0.3, Linux, workspace sur disque réel), 16 WAV à 384 kHz, mêmes
+réglages et même générateur des deux côtés. « Après GC » est l'occupation maximale relevée juste après
+un GC dans le journal G1 (`-Xlog:gc`) :
+
+| Durée d'un WAV | Crête `-Xmx2g`, avant | après | Après GC `-Xmx2g`, avant | après | `-Xmx128m`, avant | après |
+|---|---|---|---|---|---|---|
+| 5 s | 240 Mo | 176 Mo | 13 Mo | 13 Mo | passe | passe |
+| 60 s | 1259 Mo | 132 Mo | 416 Mo | 68 Mo | `OutOfMemoryError` | passe |
+| 120 s | 1900 Mo | 210 Mo | 904 Mo | 68 Mo | `OutOfMemoryError` | passe |
+
+Les deux régimes ne se lisent pas l'un avec l'autre. Sous `-Xmx2g`, la crête compte le déchet
+transitoire et saute d'un lancement à l'autre ; l'occupation après GC approche ce que l'import tient
+vivant, et c'est elle qui cesse de croître avec la durée. Sous `-Xmx128m`, les deux chiffres restent
+collés au plafond : ce régime dit si l'import tient, pas combien il garde. Avant #104, une nuit de WAV de
+60 s n'y tenait pas, l'erreur partant de `DecoupageParallele`. Un WAV de plus de 2 Gio, qui faisait
+tomber l'import, se transforme comme les autres.
+
 **Ordre de grandeur de référence** : une **vraie nuit** (1572 fichiers) s'importe en
 **~6-8 s** (~200 fichiers/s), produit **2109 séquences**, avec une empreinte ~600-700 Mo. _(Le temps et
 l'empreinte sont ceux de la machine de référence ; un poste plus modeste sera plus lent. Le nombre de

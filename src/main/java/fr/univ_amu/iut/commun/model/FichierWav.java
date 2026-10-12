@@ -3,9 +3,11 @@ package fr.univ_amu.iut.commun.model;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 
 /// Lecture / écriture d'un fichier WAV PCM, en `java.base` **pur** (aucun recours à
@@ -90,8 +92,41 @@ public record FichierWav(int nombreCanaux, int frequenceEchantillonnageHz, int b
         }
     }
 
-    /// Ce que le balayage des chunks a trouvé, avant toute copie de données.
-    private record Zones(int canaux, int frequence, int bits, int dataDebut, long dataLongueur) {}
+    /// Ce que le balayage des chunks a trouvé, avant toute copie de données. Positions et longueur en
+    /// `long` (#104) : le chunk `data` d'un enregistrement qui ne découpe pas dépasse 2 Gio.
+    private record Zones(int canaux, int frequence, int bits, long dataDebut, long dataLongueur) {}
+
+    /// Ce que le balayage sait lire : le fichier entier déjà en mémoire, son seul début, ou le fichier
+    /// sur disque. Un seul balayage pour les trois, sans quoi la lecture par morceaux pourrait situer le
+    /// signal ailleurs que la lecture complète.
+    @FunctionalInterface
+    private interface Source {
+
+        /// Copie `n` octets pris à `position` dans le début de `destination`.
+        ///
+        /// @return `false` si ces octets ne sont pas tous lisibles
+        boolean lire(long position, byte[] destination, int n) throws IOException;
+    }
+
+    /// Un WAV ouvert pour être lu **par morceaux** (#104) : l'en-tête est analysé à l'ouverture, puis le
+    /// signal se lit dans un tampon fourni par l'appelant, sans que le fichier entier passe en mémoire.
+    /// C'est ce que demande l'objectif O3 : « jamais de chargement complet d'un fichier en mémoire ».
+    public interface LecturePcm extends AutoCloseable {
+
+        /// L'en-tête du fichier, tel que [FichierWav#lireEntete] le rendrait.
+        EnteteWav entete();
+
+        /// Remplit `tampon` avec les octets PCM suivants. Le tampon est rempli **en entier** tant qu'il reste
+        /// assez de signal : une découpe positionnelle en dépend, une tranche ne commence jamais au milieu
+        /// d'une lecture.
+        ///
+        /// @return le nombre d'octets écrits au début de `tampon`, `0` quand tout le signal a été rendu
+        /// @throws IOException si le fichier ne rend pas les octets que son en-tête annonce
+        int lire(byte[] tampon) throws IOException;
+
+        @Override
+        void close() throws IOException;
+    }
 
     /// Lit **seulement l'en-tête** d'un WAV : les premiers kilo-octets suffisent à situer les chunks `fmt`
     /// et `data`, et la taille du fichier donne la longueur des données quand l'en-tête l'ignore.
@@ -107,69 +142,153 @@ public record FichierWav(int nombreCanaux, int frequenceEchantillonnageHz, int b
                 throw new IOException("Lecture d'en-tête incomplète : " + fichier);
             }
         }
-        Zones zones = analyser(debut, taille, fichier);
+        return entete(analyser(enMemoire(debut), debut.length, taille, fichier));
+    }
+
+    /// Lit un fichier WAV PCM depuis le disque, **en entier**. Réservé aux fichiers bornés par
+    /// construction, une séquence d'écoute de 5 s par exemple ; un original se lit par [#ouvrirPcm].
+    public static FichierWav lire(Path fichier) throws IOException {
+        byte[] o = Files.readAllBytes(fichier);
+        Zones zones = analyser(enMemoire(o), o.length, o.length, fichier);
+        int debut = (int) zones.dataDebut();
+        byte[] pcm = Arrays.copyOfRange(o, debut, debut + (int) zones.dataLongueur());
+        return new FichierWav(zones.canaux(), zones.frequence(), zones.bits(), pcm);
+    }
+
+    /// Ouvre un WAV pour en lire le signal **par morceaux** (#104). Les chunks se repèrent par lectures
+    /// positionnelles, sans fenêtre fixe : un chunk annexe volumineux avant `data` ne fait pas échouer
+    /// l'ouverture, et aucune position ne déborde au-delà de 2 Gio.
+    ///
+    /// @throws IOException si le fichier est illisible, tronqué, non PCM ou sans chunk `fmt`/`data`
+    public static LecturePcm ouvrirPcm(Path fichier) throws IOException {
+        FileChannel canal = FileChannel.open(fichier, StandardOpenOption.READ);
+        boolean rendu = false;
+        try {
+            long taille = canal.size();
+            Zones zones = analyser(
+                    (position, destination, n) -> lirePlein(canal, position, destination, n) == n,
+                    taille,
+                    taille,
+                    fichier);
+            LecturePcm lecture = new LecturePcmSurCanal(canal, entete(zones), zones.dataDebut(), fichier);
+            rendu = true;
+            return lecture;
+        } finally {
+            // Un en-tête refusé ne laisse pas de canal ouvert derrière lui ; un canal rendu, l'appelant le ferme.
+            if (!rendu) {
+                canal.close();
+            }
+        }
+    }
+
+    private static EnteteWav entete(Zones zones) {
         return new EnteteWav(zones.canaux(), zones.frequence(), zones.bits(), zones.dataLongueur());
     }
 
-    /// Lit un fichier WAV PCM depuis le disque.
-    public static FichierWav lire(Path fichier) throws IOException {
-        byte[] o = Files.readAllBytes(fichier);
-        Zones zones = analyser(o, o.length, fichier);
-        byte[] pcm = Arrays.copyOfRange(o, zones.dataDebut(), zones.dataDebut() + (int) zones.dataLongueur());
-        return new FichierWav(zones.canaux(), zones.frequence(), zones.bits(), pcm);
+    private static Source enMemoire(byte[] octets) {
+        return (position, destination, n) -> {
+            if (position + n > octets.length) {
+                return false;
+            }
+            System.arraycopy(octets, (int) position, destination, 0, n);
+            return true;
+        };
+    }
+
+    /// Lit `n` octets à `position`, en relançant la lecture tant que le canal en rend moins : un canal ne
+    /// promet pas de remplir le tampon d'un seul appel.
+    ///
+    /// @return le nombre d'octets lus, moins que `n` seulement si la fin du fichier est atteinte
+    private static int lirePlein(FileChannel canal, long position, byte[] destination, int n) throws IOException {
+        ByteBuffer tampon = ByteBuffer.wrap(destination, 0, n);
+        while (tampon.hasRemaining()) {
+            if (canal.read(tampon, position + tampon.position()) < 0) {
+                break;
+            }
+        }
+        return tampon.position();
+    }
+
+    /// La lecture par morceaux, sur le canal ouvert par [#ouvrirPcm].
+    private static final class LecturePcmSurCanal implements LecturePcm {
+
+        private final FileChannel canal;
+        private final EnteteWav entete;
+        private final long fin;
+        private final Path fichier;
+        private long position;
+
+        LecturePcmSurCanal(FileChannel canal, EnteteWav entete, long dataDebut, Path fichier) {
+            this.canal = canal;
+            this.entete = entete;
+            this.position = dataDebut;
+            this.fin = dataDebut + entete.octetsDonnees();
+            this.fichier = fichier;
+        }
+
+        @Override
+        public EnteteWav entete() {
+            return entete;
+        }
+
+        @Override
+        public int lire(byte[] tampon) throws IOException {
+            int attendus = (int) Math.min(tampon.length, fin - position);
+            int lus = lirePlein(canal, position, tampon, attendus);
+            if (lus < attendus) {
+                // Le fichier a raccourci depuis l'ouverture : rendre moins sans le dire décalerait les
+                // tranches suivantes, et la dernière serait fausse sans qu'on le sache (#156).
+                throw new IOException("Fichier WAV tronqué en cours de lecture : " + fichier);
+            }
+            position += lus;
+            return lus;
+        }
+
+        @Override
+        public void close() throws IOException {
+            canal.close();
+        }
     }
 
     /// Balaye les chunks RIFF. **Un seul balayage** pour les deux lectures : l'en-tête seul et le fichier
     /// entier doivent voir exactement la même chose, sans quoi une durée pourrait dire autre chose que le
     /// signal qu'on découpe ensuite.
     ///
-    /// @param o les octets disponibles - le fichier entier, ou seulement son début
+    /// @param source les octets lisibles - le fichier entier, seulement son début, ou le fichier sur disque
+    /// @param tailleLisible combien d'octets `source` peut rendre, depuis le début du fichier
     /// @param tailleFichier la taille **réelle** du fichier, qui borne les données quand l'en-tête annonce
     ///     une taille inconnue ou trop grande
-    private static Zones analyser(byte[] o, long tailleFichier, Path fichier) throws IOException {
-        if (o.length < 12 || !tag(o, 0, TAG_RIFF) || !tag(o, 8, TAG_WAVE)) {
-            throw new IOException("Fichier WAV invalide (en-tête RIFF/WAVE absent) : " + fichier);
-        }
+    private static Zones analyser(Source source, long tailleLisible, long tailleFichier, Path fichier)
+            throws IOException {
+        verifierRiff(source, tailleLisible, fichier);
         Integer canaux = null;
         Integer frequence = null;
         Integer bits = null;
         int formatAudio = 0;
-        int dataDebut = -1;
-        int dataLongueur = -1;
+        long dataDebut = -1;
+        long dataLongueur = -1;
 
-        int pos = 12;
-        while (pos + 8 <= o.length) {
-            String id = new String(o, pos, 4, StandardCharsets.US_ASCII);
-            long taille = lireUint32(o, pos + 4);
-            int corps = pos + 8;
-            if (TAG_FMT.equals(id) && corps + 16 <= o.length) {
-                formatAudio = lireUint16(o, corps);
-                canaux = lireUint16(o, corps + 2);
-                frequence = (int) lireUint32(o, corps + 4);
-                bits = lireUint16(o, corps + 14);
+        byte[] chunk = new byte[8];
+        byte[] fmt = new byte[16];
+        long pos = 12;
+        while (pos + 8 <= tailleLisible && source.lire(pos, chunk, 8)) {
+            String id = new String(chunk, 0, 4, StandardCharsets.US_ASCII);
+            long taille = lireUint32(chunk, 4);
+            long corps = pos + 8;
+            if (TAG_FMT.equals(id) && corps + 16 <= tailleLisible && source.lire(corps, fmt, 16)) {
+                formatAudio = lireUint16(fmt, 0);
+                canaux = lireUint16(fmt, 2);
+                frequence = (int) lireUint32(fmt, 4);
+                bits = lireUint16(fmt, 14);
             } else if ("data".equals(id)) {
                 dataDebut = corps;
-                long disponible = tailleFichier - corps;
+                dataLongueur = longueurData(taille, tailleFichier - corps, fichier);
                 if (taille == TAILLE_DATA_INCONNUE) {
-                    // Taille inconnue (enregistreur en flux) : les données vont jusqu'à la fin du fichier.
-                    // On arrête ici le balayage des chunks : avancer de (int) 0xFFFFFFFF = -1 (+1 de padding)
-                    // ramènerait `pos` au début du PCM et relirait les données audio comme de faux chunks
-                    // RIFF (corruption de dataDebut/dataLongueur, PCM vide ou « tronqué » à tort).
-                    dataLongueur = (int) disponible;
+                    // Taille inconnue (enregistreur en flux) : les données vont jusqu'à la fin du fichier, et
+                    // le balayage s'arrête ici. Avancer de 0xFFFFFFFF octets ne mènerait à aucun chunk : ce
+                    // qui suit `data` est du signal, qu'il ne faut pas relire comme de faux chunks RIFF.
                     break;
                 }
-                // Intégrité (#156) : un en-tête qui annonce plus d'octets de données que le fichier n'en
-                // contient = fichier **tronqué/corrompu**. On le refuse au lieu de le lire silencieusement
-                // plus court (ce qui « passerait inaperçu » et fausserait l'analyse).
-                if (taille > disponible) {
-                    throw new IOException("Fichier WAV tronqué (données annoncées "
-                            + taille
-                            + " octets, "
-                            + disponible
-                            + " présents) : "
-                            + fichier);
-                }
-                dataLongueur = (int) Math.min(taille, disponible);
             }
             if (canaux != null && dataDebut >= 0) {
                 // Tout ce qu'on cherche est trouvé. S'arrêter là est nécessaire pour la lecture d'en-tête
@@ -178,7 +297,7 @@ public record FichierWav(int nombreCanaux, int frequenceEchantillonnageHz, int b
                 break;
             }
             // Avance au chunk suivant (taille + padding éventuel pour rester aligné sur un mot).
-            pos = corps + (int) taille + (taille % 2 == 1 ? 1 : 0);
+            pos = corps + taille + (taille % 2 == 1 ? 1 : 0);
         }
 
         if (canaux == null || frequence == null || bits == null || dataDebut < 0) {
@@ -188,6 +307,33 @@ public record FichierWav(int nombreCanaux, int frequenceEchantillonnageHz, int b
             throw new IOException("Seul le PCM non compressé est géré (format=" + formatAudio + ") : " + fichier);
         }
         return new Zones(canaux, frequence, bits, dataDebut, dataLongueur);
+    }
+
+    private static void verifierRiff(Source source, long tailleLisible, Path fichier) throws IOException {
+        byte[] riff = new byte[12];
+        if (tailleLisible < 12 || !source.lire(0, riff, 12) || !tag(riff, 0, TAG_RIFF) || !tag(riff, 8, TAG_WAVE)) {
+            throw new IOException("Fichier WAV invalide (en-tête RIFF/WAVE absent) : " + fichier);
+        }
+    }
+
+    /// Longueur du chunk `data` : ce qu'annonce l'en-tête, ou tout ce qui reste du fichier quand la taille
+    /// est inconnue (enregistreur en flux).
+    ///
+    /// @throws IOException si l'en-tête annonce plus d'octets que le fichier n'en contient (#156) : un
+    ///     fichier tronqué se refuse au lieu de se lire silencieusement plus court
+    private static long longueurData(long annoncee, long disponible, Path fichier) throws IOException {
+        if (annoncee == TAILLE_DATA_INCONNUE) {
+            return disponible;
+        }
+        if (annoncee > disponible) {
+            throw new IOException("Fichier WAV tronqué (données annoncées "
+                    + annoncee
+                    + " octets, "
+                    + disponible
+                    + " présents) : "
+                    + fichier);
+        }
+        return annoncee;
     }
 
     /// Écrit un WAV canonique (en-tête 44 octets) avec la fréquence et le format donnés, en copiant
