@@ -2,6 +2,7 @@ package fr.univ_amu.iut.audio.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import java.time.LocalDateTime;
 import javafx.scene.control.TableColumn;
@@ -18,7 +19,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// quatre lignes, qu'une inattention aurait effacé sans rien faire rougir. #3164, en ajoutant la
 /// commune au même groupe, a rendu ce trou visible - c'est le moment de le combler plutôt que d'y
 /// verser une cinquième colonne.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ColonnesAudioContexteTest {
 
     private static ColonnesAudio.Colonnes colonnes() {

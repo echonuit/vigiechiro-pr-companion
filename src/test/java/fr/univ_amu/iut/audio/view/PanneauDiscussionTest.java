@@ -2,6 +2,7 @@ package fr.univ_amu.iut.audio.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.validation.model.MessageObservation;
 import java.time.Instant;
 import java.util.List;
@@ -18,7 +19,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 ///
 /// Bâti comme un **nœud**, pas comme une fenêtre : c'est ce qui le rend vérifiable ici sans qu'un
 /// `showAndWait()` fige le test (leçon #1013 / #1405).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class PanneauDiscussionTest {
 
     private static final String MOI = "u-moi";

@@ -19,7 +19,7 @@ import org.testfx.util.WaitForAsyncUtils;
 ///
 /// Un garde qui ne sait que reussir ne garde rien. Ce cas plante une exception dans le fil JavaFX
 /// et exige que le garde la voie ; le second exige qu il se taise quand il n y a rien.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class SansExceptionAvaleeTest {
 
     @Start

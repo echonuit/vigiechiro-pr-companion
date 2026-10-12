@@ -22,6 +22,7 @@ import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Jugement;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -67,7 +68,12 @@ import org.testfx.util.WaitForAsyncUtils;
 /// de vrai, puis le banc pose des détections **sur ce passage-là** et rejoint l'écran par sa carte. Le
 /// chemin reste filmé de bout en bout ; ce que le clip ne montre pas, et que la page des clips dit,
 /// c'est d'où viennent les contacts.
-@ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class, SansExceptionAvalee.class})
+@ExtendWith({
+    ApplicationExtension.class,
+    EnregistreurDeFilm.class,
+    SansExceptionAvalee.class,
+    SansEcritureHorsDuFil.class
+})
 class ScenarioCourbeActiviteTest {
 
     private static final String ID_USER = "u-recette";

@@ -40,6 +40,7 @@ import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -62,7 +63,7 @@ import org.testfx.framework.junit5.Start;
 /// Test d'intégration TestFX de l'écran **M-Passage** : chargement du FXML via Guice
 /// (avec un [ServicePassage] mocké), ouverture sur un passage + contexte site, et vérification du
 /// câblage (titre/bandeau d'identité, stepper de statut). Pas de base de données.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class PassageViewTest {
 
     private static final long ID_PASSAGE = 42L;

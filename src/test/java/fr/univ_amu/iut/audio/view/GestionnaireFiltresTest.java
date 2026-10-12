@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.view.DescripteurCritere;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.time.LocalDateTime;
@@ -38,7 +39,7 @@ import org.testfx.framework.junit5.Start;
 
 /// Barre de filtres « à la Notion » (#470/#471) : ajouter/retirer une puce via « + Filtre », recherche
 /// texte permanente, réinitialisation. Vérifie le câblage sur la [FilteredList] via [Filtres].
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class GestionnaireFiltresTest {
 
     private TextField recherche;

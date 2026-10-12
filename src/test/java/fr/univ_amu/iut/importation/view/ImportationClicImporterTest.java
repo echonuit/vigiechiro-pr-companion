@@ -22,6 +22,7 @@ import fr.univ_amu.iut.importation.viewmodel.EtatImport;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.importation.viewmodel.LigneFichierImport;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.io.IOException;
@@ -61,7 +62,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// progression, libellés). Lancer l'`ImportationViewModel#importer()` synchrone
 /// directement sur un fil d'arrière-plan lèverait « Not on FX application thread »
 /// (avalée par le thread daemon), et l'écran ne bougerait plus.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ImportationClicImporterTest {
 
     private static final String ID_USER = "u-clic";

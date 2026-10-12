@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -50,7 +51,7 @@ import org.testfx.framework.junit5.Start;
 /// Une lecture de source dirait que la règle existe. Elle ne dirait pas qu'elle **s'applique** : c'est
 /// tout le sujet ici, puisque le défaut tenait à un sélecteur qui n'atteignait pas sa cible. Un garde
 /// qui lit la feuille aurait été vert sur le bug qu'on corrige.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class SocleHauteurControlesTest {
 
     /// La valeur de `-hauteur-controle-barre` dans `palette.css`. Écrite en clair : un test qui relirait

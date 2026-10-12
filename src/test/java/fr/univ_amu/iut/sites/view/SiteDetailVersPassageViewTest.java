@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.DoubleClicDeterministe;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
@@ -37,7 +38,7 @@ import org.testfx.framework.junit5.Start;
 /// injecteur ([RacineInjecteur]) avec un site + un point + un passage seedés, on ouvre
 /// M-Site-detail puis on **double-clique** sur la ligne de passage. On vérifie que l'écran pivot
 /// M-Passage s'affiche (son stepper de statut apparaît). Couvre la chaîne `sites → passage`.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class SiteDetailVersPassageViewTest {
 
     // Test d'intégration sites -> passage : pilote l'écran M-Passage (il cherche #stepper).

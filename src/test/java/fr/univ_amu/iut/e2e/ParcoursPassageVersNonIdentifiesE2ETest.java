@@ -21,6 +21,7 @@ import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -58,7 +59,7 @@ import org.testfx.framework.junit5.Start;
 /// validables en l'état** (« Valider » reste désactivé : pas de proposition Tadarida à retenir), puis qu'on
 /// peut les **valider à la main** (« Corriger ») : ce qui crée une observation corrigée qui **persiste** et
 /// laisse la séquence dans la liste.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ParcoursPassageVersNonIdentifiesE2ETest {
 
     private static final String ID_USER = "u-e2e-ni";

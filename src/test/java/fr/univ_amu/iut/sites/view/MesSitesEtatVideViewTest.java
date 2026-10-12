@@ -8,6 +8,7 @@ import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import java.io.IOException;
 import javafx.scene.control.Button;
@@ -36,7 +37,7 @@ import org.testfx.framework.junit5.Start;
 /// l'application a fini de charger, si elle a perdu ses données, ni ce qu'il doit faire. Les trois
 /// pièces ci-dessous répondent chacune à une de ces questions - un repère visuel, une **porte de
 /// sortie**, et l'explication de ce qui doit exister ailleurs avant d'exister ici.
-@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
+@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class, SansEcritureHorsDuFil.class})
 class MesSitesEtatVideViewTest {
 
     private Injector injector;

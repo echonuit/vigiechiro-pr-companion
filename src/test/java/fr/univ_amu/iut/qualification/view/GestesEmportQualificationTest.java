@@ -18,6 +18,7 @@ import fr.univ_amu.iut.commun.view.SelecteursDeTest;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.qualification.model.ServiceEmport;
 import fr.univ_amu.iut.qualification.viewmodel.SelectionEcouteViewModel;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,7 +36,7 @@ import org.testfx.framework.junit5.Start;
 
 /// Les gestes de l'emport, pris seuls : ce qu'ils disent sans connexion, et quand ils font relire
 /// la sélection affichée.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class GestesEmportQualificationTest {
 
     private static final long NUIT = 7L;

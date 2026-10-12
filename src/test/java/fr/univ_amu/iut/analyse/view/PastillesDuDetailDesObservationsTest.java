@@ -7,6 +7,7 @@ import fr.univ_amu.iut.analyse.model.ServiceAnalyse;
 import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.PastillesEntieres;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.util.Arrays;
@@ -26,7 +27,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// Le panneau est chargé depuis son FXML, donc avec la largeur que l'écran déclare, et les trois
 /// statuts de revue sont semés.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class PastillesDuDetailDesObservationsTest {
 
     private static final String FXML = "DetailObservations.fxml";

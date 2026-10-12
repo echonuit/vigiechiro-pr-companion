@@ -24,6 +24,7 @@ import fr.univ_amu.iut.commun.view.SuiviOperation;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.validation.model.BilanImport;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -52,7 +53,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// (c'est tout l'intérêt de l'abstraction). La plateforme JavaFX reste initialisée ([ApplicationExtension])
 /// pour le voile d'occupation (chemin non rattaché), mais aucun robot n'est piloté. Le chemin **non
 /// rattaché** (choix de participation, réseau) reste couvert par [ImportVigieChiroViewModelTest].
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ImportVigieChiroUITest {
 
     private final ImportVigieChiroViewModel importVigieChiro = mock(ImportVigieChiroViewModel.class);

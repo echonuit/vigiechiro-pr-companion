@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.GesteVisible;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import java.io.IOException;
 import java.util.List;
@@ -33,7 +34,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// L'état de départ étant déclaré, l'identité attendue est connue : « Observatrice ». Le scénario de la
 /// plateforme réelle ne peut asserter que la non-vacuité, le compte de tournage changeant.
 @Tag("plateforme-de-test")
-@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
+@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class, SansEcritureHorsDuFil.class})
 class ScenarioPlateformeDeTestConnexionTest {
 
     private static final String LIBELLE_ENTREE_MENU = "Se connecter à Vigie-Chiro…";

@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.outils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -28,7 +29,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// était correct, c'était la scène qui était trop courte.
 ///
 /// Sans ce test, désactiver le contrôle ne casserait rien de visible.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ApercuFxElisionTest {
 
     /// Un texte assez long pour demander plusieurs lignes à la largeur imposée par [#scene].

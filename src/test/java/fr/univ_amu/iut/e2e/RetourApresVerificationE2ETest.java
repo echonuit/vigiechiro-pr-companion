@@ -23,6 +23,7 @@ import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -61,7 +62,7 @@ import org.testfx.framework.junit5.Start;
 /// Parcours réel sur de vrais services + base SQLite : écran d'origine (agrégat) → M-Passage →
 /// M-Qualification (verdict OK **par les boutons**) → ← Retour (M-Passage à jour) → ← Retour (l'écran
 /// d'origine à jour).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class RetourApresVerificationE2ETest {
 
     private static final String ID_USER = "u-retour";

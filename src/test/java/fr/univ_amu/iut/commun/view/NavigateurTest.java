@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.scene.Group;
@@ -19,7 +20,7 @@ import org.testfx.framework.junit5.Start;
 /// Tests unitaires du [Navigateur] (socle) : historique de navigation (empiler / revenir / dépiler),
 /// anti-ré-entrance, fil d'Ariane (emplacement sinon historique), garde de saisie et verrou (#54).
 /// [ApplicationExtension] initialise le toolkit JavaFX (construction de nœuds) ; aucune scène affichée.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class NavigateurTest {
 
     @Start

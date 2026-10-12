@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.outils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,7 +27,7 @@ import org.testfx.framework.junit5.Start;
 
 /// Contrat de [ApercuFx#enregistrerFenetreSurgissante] (#5861) : l'aperçu est celui de la fenêtre que le
 /// produit ouvre, et non d'un contenu reconstruit ailleurs.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ApercuFxFenetreSurgissanteTest {
 
     private StackPane racine;

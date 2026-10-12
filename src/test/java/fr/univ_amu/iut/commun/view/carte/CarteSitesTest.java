@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -25,7 +26,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// Tests TestFX (headless) du composant [CarteSites] (#152) : carrés et points apparaissent dans le graphe
 /// de scène, les marqueurs sont **focusables** et porteurs d'un `accessibleText` (#163), et le clic d'un
 /// point déclenche le callback. **Sans tuiles** (réseau) : on n'asserte jamais le fond OSM.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class CarteSitesTest {
 
     private CarteSites carte;

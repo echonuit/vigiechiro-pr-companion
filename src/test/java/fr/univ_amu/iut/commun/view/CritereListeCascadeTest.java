@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -21,7 +22,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// Le domaine était auparavant photographié à la création de la puce et ne bougeait plus : elle
 /// proposait des valeurs devenues impossibles, et ne faisait pas réapparaître celles qui redevenaient
 /// disponibles.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class CritereListeCascadeTest {
 
     /// Les valeurs offertes, que le test fait varier entre deux ouvertures du menu comme le ferait un

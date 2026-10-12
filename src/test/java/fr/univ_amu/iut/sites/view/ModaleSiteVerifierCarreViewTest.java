@@ -23,6 +23,7 @@ import fr.univ_amu.iut.commun.viewmodel.EtatConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.PresenceDuCarre;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
@@ -32,6 +33,7 @@ import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
@@ -60,7 +62,7 @@ import org.testfx.util.WaitForAsyncUtils;
 ///
 /// L'exécuteur est celui du socle : synchrone en test (`@ImplementedBy`), donc le verdict est lisible
 /// dès le retour du clic, sans attente ni `sleep`.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ModaleSiteVerifierCarreViewTest {
 
     // Cette classe ne cite plus de cas de recette, et ce n'est pas un oubli. Elle monte
@@ -98,7 +100,9 @@ class ModaleSiteVerifierCarreViewTest {
         LienVigieChiroDao liens = mock(LienVigieChiroDao.class);
         // Le jeton de ces cas, pilotable : « Vérifier » est fermé sans lui depuis #4210, et deux cas
         // d'ici jouent justement l'absence de connexion.
-        reflet = new RefletDuJeton(jeton::get, Runnable::run);
+        // Le reflet reposte sur le fil JavaFX, comme en production : le relire depuis le fil du
+        // test n'écrit alors plus le bouton hors du fil (#6142).
+        reflet = new RefletDuJeton(jeton::get, Platform::runLater);
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Override
             protected void configure() {

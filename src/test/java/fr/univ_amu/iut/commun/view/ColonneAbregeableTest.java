@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.scene.control.TableColumn;
@@ -17,7 +18,7 @@ import org.testfx.framework.junit5.Start;
 
 /// Ce que [ColonneAbregeable] pose, et dans quel ordre de dépendance (#5113) : la marque ne va pas
 /// sans l'infobulle qui rend le texte entier.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ColonneAbregeableTest {
 
     private static final String TITRE = "Fichier";

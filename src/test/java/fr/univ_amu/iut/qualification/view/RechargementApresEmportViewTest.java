@@ -21,6 +21,7 @@ import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CarteDeRecette;
 import fr.univ_amu.iut.recette.GesteVisible;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -48,7 +49,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// Les deux scénarios filmés de l'emport constatent le compte rendu et la base, jamais la table.
 /// Cette classe lit la table, **sans quitter l'écran**, et n'est pas filmée : elle ne cite aucun cas
 /// de recette et ne pèse sur aucun clip.
-@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
+@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class, SansEcritureHorsDuFil.class})
 class RechargementApresEmportViewTest {
 
     private static final String ID_USER = "u-recette";

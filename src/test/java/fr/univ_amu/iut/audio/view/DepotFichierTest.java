@@ -5,6 +5,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +27,7 @@ import org.testfx.framework.junit5.Start;
 /// Tests unitaires du helper [DepotFichier] sur le vrai chemin `DragEvent` / `Dragboard` : le dépôt
 /// délègue les fichiers à `surDepot` et marque le dépôt complété quand l'activation est vraie ; il est
 /// refusé hors activation (source non workflow) ou sans fichier. Presse-papiers mocké, pas de VM.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class DepotFichierTest {
 
     private Region cible;
@@ -58,10 +59,10 @@ class DepotFichierTest {
     @DisplayName("Dépôt actif avec fichiers : surDepot reçoit les fichiers, le dépôt est marqué complété")
     void depot_actif_delegue(FxRobot robot) {
         List<List<File>> recus = new ArrayList<>();
-        DepotFichier.installer(cible, () -> true, fichiers -> {
+        robot.interact(() -> DepotFichier.installer(cible, () -> true, fichiers -> {
             recus.add(fichiers);
             return true;
-        });
+        }));
         DragEvent drop = depot(dragboardAvec(new File("a.csv")));
 
         robot.interact(() -> Event.fireEvent(cible, drop));
@@ -74,10 +75,10 @@ class DepotFichierTest {
     @DisplayName("Dépôt hors activation (source non workflow) : refusé, surDepot jamais appelé")
     void depot_inactif_refuse(FxRobot robot) {
         List<List<File>> recus = new ArrayList<>();
-        DepotFichier.installer(cible, () -> false, fichiers -> {
+        robot.interact(() -> DepotFichier.installer(cible, () -> false, fichiers -> {
             recus.add(fichiers);
             return true;
-        });
+        }));
         DragEvent drop = depot(dragboardAvec(new File("a.csv")));
 
         robot.interact(() -> Event.fireEvent(cible, drop));
@@ -92,10 +93,10 @@ class DepotFichierTest {
     @DisplayName("Dépôt sans fichier (texte glissé) : refusé sans solliciter surDepot")
     void depot_sans_fichier_refuse(FxRobot robot) {
         List<List<File>> recus = new ArrayList<>();
-        DepotFichier.installer(cible, () -> true, fichiers -> {
+        robot.interact(() -> DepotFichier.installer(cible, () -> true, fichiers -> {
             recus.add(fichiers);
             return true;
-        });
+        }));
         DragEvent drop = depot(dragboardAvec());
 
         robot.interact(() -> Event.fireEvent(cible, drop));
@@ -107,7 +108,7 @@ class DepotFichierTest {
     @Test
     @DisplayName("#801 : le survol d'un fichier acceptable surligne la cible, la sortie retire la surbrillance")
     void survol_actif_surligne_la_cible(FxRobot robot) {
-        DepotFichier.installer(cible, () -> true, fichiers -> true);
+        robot.interact(() -> DepotFichier.installer(cible, () -> true, fichiers -> true));
 
         robot.interact(
                 () -> Event.fireEvent(cible, evenement(DragEvent.DRAG_ENTERED, dragboardAvec(new File("a.csv")))));
@@ -121,7 +122,7 @@ class DepotFichierTest {
     @Test
     @DisplayName("#801 : hors activation (source non workflow), le survol ne surligne pas")
     void survol_inactif_ne_surligne_pas(FxRobot robot) {
-        DepotFichier.installer(cible, () -> false, fichiers -> true);
+        robot.interact(() -> DepotFichier.installer(cible, () -> false, fichiers -> true));
 
         robot.interact(
                 () -> Event.fireEvent(cible, evenement(DragEvent.DRAG_ENTERED, dragboardAvec(new File("a.csv")))));

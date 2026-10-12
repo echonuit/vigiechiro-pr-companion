@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.view.Confirmateur;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.Notificateur;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -34,7 +35,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// s'ouvre : un « êtes-vous sûr ? » générique ne serait pas un consentement.
 ///
 /// **Aucune écriture réelle n'est tirée.** Une sonde live sur cette route serait irréversible.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class EnvoiMessageTest {
 
     private static final Long OBSERVATION = 7L;

@@ -27,6 +27,7 @@ import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.recette.Seance;
 import fr.univ_amu.iut.sites.model.ImportSiteDistant;
@@ -79,7 +80,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// Même raison qu'en [ScenarioPerceptifRecuperationCarreTest] : en synchrone, la vérification se ferait
 /// sur le fil JavaFX, aucune image ne serait rendue pendant ce temps, et l'attente que ces cas font
 /// juger n'existerait sur aucune trame.
-@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
+@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class, SansEcritureHorsDuFil.class})
 class ScenarioModaleCarreTest {
 
     private static final String ID_USER = "u-modale-carre";

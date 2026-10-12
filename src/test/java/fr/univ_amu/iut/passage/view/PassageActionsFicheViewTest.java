@@ -45,6 +45,7 @@ import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +77,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// La fixture est un passage **vérifié** (la suppression est fermée sur un passage déposé) ; les tests
 /// qui ont besoin d'un autre statut rouvrent l'écran dessus.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class PassageActionsFicheViewTest {
 
     private static final long ID_PASSAGE = 42L;

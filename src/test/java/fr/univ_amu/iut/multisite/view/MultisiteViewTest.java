@@ -39,6 +39,7 @@ import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import fr.univ_amu.iut.multisite.viewmodel.ReconstructionViewModel;
 import fr.univ_amu.iut.recette.GesteVisible;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.ServiceCommunes;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.nio.file.Path;
@@ -75,7 +76,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// [ServiceMultisite] et un [OuvrirPassage] mockés), auto-chargement du tableau en `initialize()`,
 /// vérification du câblage (tableau peuplé, résumé, filtre → tableau filtré en mémoire, export actif)
 /// et du **drill-down** double-clic → contrat socle `OuvrirPassage`. Pas de base de données.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class MultisiteViewTest {
 
     /// Lien portail rendu par le mock : « le passage est lié à une participation ».

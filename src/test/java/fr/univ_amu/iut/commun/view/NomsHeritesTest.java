@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.commun.viewmodel.ResteDeRestauration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -25,7 +26,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 ///
 /// [CritereFiltre#nomsHerites()] évite la migration de base : le critère déclare les noms qu'il a
 /// portés, et la restauration les accepte.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class NomsHeritesTest {
 
     private static final String ANCIENNE = "statut";

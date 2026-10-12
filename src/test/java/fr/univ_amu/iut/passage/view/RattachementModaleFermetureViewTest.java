@@ -23,6 +23,7 @@ import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceRattachement;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import fr.univ_amu.iut.passage.viewmodel.RattachementViewModel;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import java.util.Optional;
 import javafx.fxml.FXMLLoader;
@@ -48,7 +49,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// donc une passerelle **présente et refusante** pour exercer l'autre branche - d'où cette fixture
 /// distincte plutôt qu'un aménagement de celle de [RattachementModaleViewTest], dont trois tests
 /// dépendent de l'absence de passerelle.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class RattachementModaleFermetureViewTest {
 
     private final SynchronisationParticipation synchronisation = mock(SynchronisationParticipation.class);

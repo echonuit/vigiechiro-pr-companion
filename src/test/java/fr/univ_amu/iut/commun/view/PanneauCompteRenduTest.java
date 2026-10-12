@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Motif;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Segment;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Teinte;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Ventilation;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -37,7 +38,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// peints l'un sur l'autre). Un test qui relirait la formule ne dirait rien de ce qui est dessiné.
 ///
 /// [ApplicationExtension] initialise le toolkit ; aucune scène n'est affichée.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class PanneauCompteRenduTest {
 
     private static final double LARGEUR = 800;

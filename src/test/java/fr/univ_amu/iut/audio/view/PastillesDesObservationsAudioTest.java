@@ -21,6 +21,7 @@ import fr.univ_amu.iut.commun.view.PastillesEntieres;
 import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.validation.model.ExportObservationsEtSons;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
@@ -61,7 +62,7 @@ import org.testfx.framework.junit5.Start;
 /// L'avis du validateur écrit un nom de taxon suivi d'une certitude. Les noms ne sont pas une
 /// énumération : ils viennent du référentiel que les migrations sèment. Le test les y lit et retient
 /// les plus longs, croisés avec les trois certitudes, pour que la largeur suive le référentiel.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class PastillesDesObservationsAudioTest {
 
     private static final String FXML = "TableObservations.fxml";

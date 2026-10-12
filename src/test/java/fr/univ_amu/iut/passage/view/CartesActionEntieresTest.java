@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.io.IOException;
 import java.util.List;
 import javafx.scene.Node;
@@ -48,7 +49,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// Celle des bancs filmés, où le défaut a été vu, puis les deux que `TailleOuverture` livre : la
 /// largeur d'ouverture et la largeur minimale de la fenêtre.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class CartesActionEntieresTest {
 
     private static final double LARGEUR_DES_BANCS = 1180;

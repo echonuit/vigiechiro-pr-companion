@@ -5,6 +5,7 @@ import static org.mockito.Mockito.mock;
 
 import fr.univ_amu.iut.commun.model.ActionGroupee;
 import fr.univ_amu.iut.multisite.model.LignePassage;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import java.util.Optional;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -32,7 +33,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// Le test appelle [MenuActionsMultisite#installer] directement : la vue entière n'apporterait rien ici,
 /// et son injecteur fixe les quatre actions comme présentes.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class MenuActionsMultisiteTest {
 
     /// TestFX exige un point de départ ; le toolkit JavaFX suffit, aucune scène n'est nécessaire pour

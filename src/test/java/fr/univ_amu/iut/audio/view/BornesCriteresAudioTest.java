@@ -3,6 +3,7 @@ package fr.univ_amu.iut.audio.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.PlageNuit;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.time.LocalDateTime;
@@ -34,7 +35,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// Chaque cas ci-dessous suit la même forme : **sous**, **exactement à**, et **au-dessus** de la
 /// borne. C'est le cas du milieu qui manquait partout.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class BornesCriteresAudioTest {
 
     @Start

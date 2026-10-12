@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,7 +32,7 @@ import org.testfx.framework.junit5.Start;
 /// transitoire hors écran que l'utilisateur ne voit ni ne peut corriger, et faire échouer son export
 /// là-dessus le laisserait sans recours. Ce qui manquait n'était pas un garde, c'était de **regarder
 /// une fois** ce que cet export produit.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ExportGrapheTest {
 
     /// Le contexte que la documentation utilisateur promet sous le graphe.

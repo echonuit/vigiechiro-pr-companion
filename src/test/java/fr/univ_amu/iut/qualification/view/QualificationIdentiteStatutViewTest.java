@@ -29,6 +29,7 @@ import fr.univ_amu.iut.qualification.model.ServiceEmport;
 import fr.univ_amu.iut.qualification.model.ServiceQualification;
 import fr.univ_amu.iut.qualification.viewmodel.QualificationViewModel;
 import fr.univ_amu.iut.qualification.viewmodel.SelectionEcouteViewModel;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -48,7 +49,7 @@ import org.testfx.framework.junit5.Start;
 /// `progressionTexte` de `""` à `"Aucune séquence"`. Cette propriété est déclarée, donc le binding se
 /// recalculait, et la zone gauche redevenait juste. Retirer ce libellé d'attente aurait cassé la barre
 /// de statut sans qu'aucun test ne le voie. Ce test transforme l'accident en garde.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class QualificationIdentiteStatutViewTest {
 
     private static final long ID_PASSAGE = 42L;

@@ -24,6 +24,7 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -57,7 +58,7 @@ import org.testfx.util.WaitForAsyncUtils;
 ///
 /// `ApercuFx` refuse déjà une capture dont un **bloc** déborde (ADR 0042), mais une cellule de tableau
 /// élide silencieusement : elle ne déborde pas, elle se coupe. D'où ce garde séparé.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class SyntheseLargeurColonnesTest {
 
     /// Largeur de la scène des deux aperçus (`CaptureSynthese`). Le garde ne vaut que s'il mesure à la

@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.io.InputStream;
 import javafx.scene.text.Font;
 import org.junit.jupiter.api.DisplayName;
@@ -23,7 +24,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// La vérification porte donc d'abord sur ce qui est **déterministe partout** : les fichiers sont-ils
 /// présents et lisibles dans les ressources ? C'est le risque réel - un changement de packaging, un
 /// filtrage de ressources, un `.gitattributes` qui abîme un binaire.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class TypographieTest {
 
     @Test

@@ -20,7 +20,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// résultat par `Platform.runLater`, qui n'a nulle part où le poster sans lui. Sans cette extension,
 /// `succes` et `echec` ne sont jamais appelés, l'exception se perd sur le fil virtuel, et les cas
 /// expirent en accusant le retard là où il n'y a qu'un toolkit absent.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ExecuteurTacheDiffereTest {
 
     /// Court, pour que ces cas restent en dixièmes de seconde.

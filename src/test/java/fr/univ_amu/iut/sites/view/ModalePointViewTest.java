@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Path;
@@ -47,7 +48,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// Les actions sont déclenchées sur le thread JavaFX (`robot.interact` + `fire()` + saisie via la
 /// propriété liée) plutôt qu'avec le robot souris/clavier de l'OS, pour rester déterministe sous
 /// xvfb comme sous Wayland (cf. note dans `MesSitesViewTest`).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ModalePointViewTest {
 
     // Cette classe ne cite plus `S1-24`, et ce n'est pas un oubli.

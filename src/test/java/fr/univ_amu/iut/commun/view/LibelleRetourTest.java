@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -21,7 +22,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 ///
 /// Écrit avec le composant, et non après : `BandeauRetour` a vécu sans test propre jusqu'à #1870, et sa
 /// table d'icônes jusqu'à #2045 - on pouvait la vider sans rien faire rougir.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class LibelleRetourTest {
 
     private Label libelle;

@@ -26,7 +26,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// L'accès à la plateforme est fabriqué ici, sans la monter : ce qu'on éprouve est que la déclaration
 /// produit la bonne cible, pas la plateforme elle-même, que `DepotSurLaPlateformeDeTestTest` tient.
-@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
+@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class, SansEcritureHorsDuFil.class})
 class BancDeRecettePlateformeDeTestTest {
 
     private static final String JETON_FACTICE = "JETONFACTICEDELAPLATEFORMEDETEST";

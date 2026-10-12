@@ -47,6 +47,7 @@ import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.ExportObservationsEtSons;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
@@ -111,7 +112,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// écoute, bascule de référence, et adaptation à la source (menu « Exporter la bibliothèque » visible,
 /// actions de passage masquées ; colonnes de contexte visibles car la source n'est pas un seul passage).
 /// Services métier mockés ; seule une base `app_setting` jetable sert aux préférences de lecture (#1006).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class SonsValidationViewTest {
 
     private ServiceValidation service;

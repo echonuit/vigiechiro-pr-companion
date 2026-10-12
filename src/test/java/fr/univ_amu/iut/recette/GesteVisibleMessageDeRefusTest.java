@@ -23,7 +23,7 @@ import org.testfx.framework.junit5.Start;
 /// **Aucun cas n'attend l'expiration** : `surLeFil` attrape `Throwable`, et chaque entrée est forcée
 /// à lever DANS sa callable - sélecteur introuvable, nœud sans scène, prédicat qui ne reconnaît rien.
 /// Un cas par surcharge, parce que trois copies exactes ne rougissent jamais ensemble.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class GesteVisibleMessageDeRefusTest {
 
     /// La phrase qu'[Attente#surLeFil] ajoute elle-même, et qu'un libellé ne doit donc pas porter.

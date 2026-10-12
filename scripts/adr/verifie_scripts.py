@@ -1146,6 +1146,46 @@ def test_6022_annotation_qui_fait_taire() -> None:
         _verifie("6022 une mention en javadoc n est pas une marque", m.suspects(racine), [])
 
 
+def test_6142_banc_a_toolkit_sans_espion() -> None:
+    m = _charge("6142-banc-a-toolkit-sans-espion.py")
+
+    def banc(extensions: str, javadoc: str = "") -> str:
+        return f"{javadoc}@ExtendWith({extensions})\nclass ABancTest {{}}\n"
+
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        chemin = "src/test/java/fr/a/ABancTest.java"
+
+        _ecrire(racine, chemin, banc("ApplicationExtension.class"))
+        _verifie(
+            "6142 un banc a toolkit sans l espion est vu",
+            m.suspects(racine),
+            [f"{chemin}:1  @ExtendWith monte le toolkit sans SansEcritureHorsDuFil"],
+        )
+
+        # LE SECOND FAIT, celui qui distingue ce garde d un compte des bancs : le MEME banc, l espion
+        # pose, sort des suspects et le fichier reste LU.
+        _ecrire(racine, chemin, banc("{ApplicationExtension.class, SansEcritureHorsDuFil.class}"))
+        _verifie("6142 le meme banc, avec l espion, sort du compte", m.suspects(racine), [])
+        _verifie("6142 et le garde a bien LU ce fichier", m.lus(racine), 1)
+
+        # LA JAVADOC QUI CITE L ESPION, raison d etre de la lecture par l arbre.
+        _ecrire(
+            racine,
+            chemin,
+            banc("ApplicationExtension.class", "/// Porte SansEcritureHorsDuFil.class, dit-on.\n"),
+        )
+        _verifie("6142 l espion cite en javadoc n annote rien", len(m.suspects(racine)), 1)
+
+        # L EXEMPTE, a son nom exact et a aucun autre.
+        _ecrire(
+            racine,
+            "src/test/java/fr/a/SansEcritureHorsDuFilTest.java",
+            banc("ApplicationExtension.class"),
+        )
+        _verifie("6142 l auto-test de l extension est exempte", len(m.suspects(racine)), 1)
+
+
 def test_5278_attente_hors_du_fil() -> None:
     m = _charge("5278-attente-hors-du-fil.py")
     lecture = '() -> !robot.lookup("#t").queryAll().isEmpty()'
@@ -2999,6 +3039,7 @@ if __name__ == "__main__":
         test_4974_attente_reinventee,
         test_5437_fixture_suppose_la_plateforme,
         test_6022_annotation_qui_fait_taire,
+        test_6142_banc_a_toolkit_sans_espion,
         test_5278_attente_hors_du_fil,
         test_5707_geste_du_pointeur_hors_du_fil,
         test_5307_designation_hors_fabrique,

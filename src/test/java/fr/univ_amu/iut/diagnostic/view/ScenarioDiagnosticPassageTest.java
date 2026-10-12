@@ -20,6 +20,7 @@ import fr.univ_amu.iut.recette.ExecuteurTacheRalenti;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -54,7 +55,12 @@ import org.testfx.util.WaitForAsyncUtils;
 ///
 /// Le chrome entier est monté, et ce n'est pas un confort : `S2-39` lit la **barre de statut**, qui
 /// n'appartient pas à cet écran-ci.
-@ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class, SansExceptionAvalee.class})
+@ExtendWith({
+    ApplicationExtension.class,
+    EnregistreurDeFilm.class,
+    SansExceptionAvalee.class,
+    SansEcritureHorsDuFil.class
+})
 class ScenarioDiagnosticPassageTest {
 
     private static final String ID_USER = "u-recette";

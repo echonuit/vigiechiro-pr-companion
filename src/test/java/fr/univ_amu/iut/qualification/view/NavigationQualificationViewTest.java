@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -34,7 +35,7 @@ import org.testfx.framework.junit5.Start;
 /// Le passage demandé est absent : les deux ViewModel neutralisent l'erreur dans leur message, ce
 /// qui suffit à exercer toute la chaîne de navigation sans seeding d'un passage vérifiable complet
 /// (ce flux nominal est couvert par `QualificationViewTest` et `ServiceQualificationTest`).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class NavigationQualificationViewTest {
 
     /// JUnit crée ce répertoire et le **supprime** en fin de test (#4924).

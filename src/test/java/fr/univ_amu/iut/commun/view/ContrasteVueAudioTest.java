@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.scene.Node;
@@ -51,7 +52,7 @@ import org.testfx.framework.junit5.Start;
 /// `stylesheets="@audio-view.css"` **sur sa propre racine**, donc plus profond que les feuilles de
 /// l'écran. Une surcharge écrite à spécificité égale serait **juste dans le fichier et sans effet à
 /// l'écran** - un vert faux, sur un test qui lirait le CSS.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ContrasteVueAudioTest {
 
     /// WCAG 2.2 §1.4.11 : seuil des composants d'interface **non textuels**. Ce qui fait qu'un contrôle

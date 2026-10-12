@@ -20,6 +20,7 @@ import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.multisite.view.NavigationMultisite;
 import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.GesteVisible;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -51,7 +52,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// **M-Passage**, sur le vrai chrome. On ouvre l'écran multi-sites (navigation réelle), on vérifie
 /// que le passage importé y figure, puis un **double-clic** sur sa ligne ouvre M-Passage via le
 /// contrat socle `OuvrirPassage` (`multisite → passage`).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ParcoursMultisiteVersPassageE2ETest {
 
     private static final String ID_USER = "u-e2e-ms";

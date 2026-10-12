@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.DefilementChrome;
 import fr.univ_amu.iut.commun.view.TailleOuverture;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -41,7 +42,7 @@ import org.testfx.framework.junit5.Start;
 /// Que l'attente avant clic **fait défiler** vers sa cible, par le port de révélation du chrome, plutôt
 /// que de conclure à l'inaccessibilité. Le contenu défile : la barre verticale du `ScrollPane` central
 /// est visible, et après défilement les sept cartes sont dans le cadre.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class CarteHorsCadreAccueilTest {
 
     private Injector injector;

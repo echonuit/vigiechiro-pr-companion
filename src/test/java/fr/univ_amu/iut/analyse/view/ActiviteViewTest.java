@@ -23,6 +23,7 @@ import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import java.awt.image.BufferedImage;
 import java.nio.file.Files;
@@ -66,7 +67,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// Test d'intégration TestFX de l'écran **Activité de la nuit** (#2352) : chargement du FXML via Guice
 /// (avec un [ServiceActivite] mocké), courbe par espèce (cinq séries par défaut), sélecteur d'espèces et
 /// état vide. Pas de base de données ; chaque test décrit son propre passage.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ActiviteViewTest {
 
     private static final long PASSAGE = 1L;

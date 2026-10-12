@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -37,7 +38,7 @@ import org.testfx.framework.junit5.Start;
 /// publication dans le [Navigateur].
 ///
 /// Le passage est **absent de la base** : cela suffit à exercer la chaîne sans seeding.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class NavigationAudioViewTest {
 
     private Injector injector;

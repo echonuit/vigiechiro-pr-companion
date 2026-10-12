@@ -19,6 +19,7 @@ import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.GesteVisible;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -56,7 +57,7 @@ import org.testfx.util.WaitForAsyncUtils;
 ///
 /// L'utilisateur seedé est l'unique en base, donc `idUtilisateurCourant` (singleton, premier
 /// utilisateur) le désigne : le site qu'on lui rattache apparaît bien sur M-Sites.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ParcoursSitesVersPassageE2ETest {
 
     private static final String ID_USER = "u-e2e-sites";

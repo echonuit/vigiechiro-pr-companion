@@ -21,6 +21,7 @@ import fr.univ_amu.iut.recette.ExecuteurTacheRalenti;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -59,7 +60,12 @@ import org.testfx.util.WaitForAsyncUtils;
 ///
 /// Chacun relève donc d'abord **l'autre condition** : la touche agit là où elle doit agir, puis se
 /// tait là où elle doit se taire. C'est le seul moyen qu'un non-effet prouve quelque chose.
-@ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class, SansExceptionAvalee.class})
+@ExtendWith({
+    ApplicationExtension.class,
+    EnregistreurDeFilm.class,
+    SansExceptionAvalee.class,
+    SansEcritureHorsDuFil.class
+})
 class ScenarioRaccourcisVerificationTest {
 
     private static final String ID_USER = "u-recette";

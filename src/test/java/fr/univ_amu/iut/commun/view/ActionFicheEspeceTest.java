@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.ConstructeurLienEspece;
 import fr.univ_amu.iut.commun.model.EspeceIdentifiee;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.scene.control.MenuItem;
@@ -15,7 +16,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// Tests de l'action réutilisable [ActionFicheEspece]. [ApplicationExtension] initialise le toolkit
 /// JavaFX (construction du [MenuItem]) ; aucune scène affichée. Le navigateur est un **faux**
 /// [OuvreurDeLien] qui enregistre l'URL demandée : on vérifie le câblage **sans réseau**.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ActionFicheEspeceTest {
 
     private final List<String> urlsOuvertes = new ArrayList<>();

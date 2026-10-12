@@ -24,7 +24,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// Ce banc regarde le champ, et il est le seul à le faire. Il éprouve donc la couture, pas le
 /// dialogue qui l'emploie.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class GesteVisibleRemplacementTest {
 
     private static final String DEJA_LA = "/un/chemin/deja/saisi";

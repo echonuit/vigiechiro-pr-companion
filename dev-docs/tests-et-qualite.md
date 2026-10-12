@@ -1028,6 +1028,11 @@ pose le trio du chrome.
     [Patterns](patterns.md)), **synchrone par défaut en test de vue/ViewModel** (liaison Guice
     `@ImplementedBy(ExecuteurTacheSynchrone.class)`, cf. [Patterns](patterns.md)) : avec lui,
     `bouton.fire()` rend l'état terminal observable au retour du clic, sans attente.
+    L'exécuteur synchrone cache donc l'écriture d'une tâche dans la scène : elle a lieu sur le fil
+    JavaFX. Toute classe qui monte le toolkit porte `SansEcritureHorsDuFil`, qui relève les écritures
+    d'un nœud affiché faites hors de ce fil quand le banc monte l'exécuteur asynchrone, et un garde
+    refuse la classe qui ne la porte pas
+    ([ADR 6142](decisions/6142-une-tache-de-fond-rend-une-valeur-et-n-ecrit-pas-la-scene.md)).
 
 !!! warning "Dès que l'exécuteur est asynchrone : attendre le signal, pas le retour du clic"
     Un test `*E2ETest` monte le **vrai** `RacineInjecteur`, pas le module de test qui rebranche

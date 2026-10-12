@@ -37,6 +37,7 @@ import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.ObservationAnalyse;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
@@ -80,7 +81,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// Test d'intégration TestFX de l'écran **« Espèces & observations »** : chargement du FXML via Guice
 /// (avec un [ServiceAnalyse] mocké), table par espèce affichée par défaut, et bascule Par carré qui
 /// montre la table des carrés. Pas de base de données.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class AnalyseViewTest {
 
     private ServiceAnalyse service;

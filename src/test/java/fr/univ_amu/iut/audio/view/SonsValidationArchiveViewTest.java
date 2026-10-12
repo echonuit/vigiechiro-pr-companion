@@ -35,6 +35,7 @@ import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.ExportObservationsEtSons;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
@@ -72,7 +73,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// présence). Le bandeau porte le décompte, l'écoute marche là où le fichier existe et l'encart
 /// d'explication remplace le lecteur ailleurs, tandis que les actions sur les **données** (marquer
 /// douteux…) restent actives : consulter sans écouter.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class SonsValidationArchiveViewTest {
 
     private static final ContextePassage PASSAGE_7 =

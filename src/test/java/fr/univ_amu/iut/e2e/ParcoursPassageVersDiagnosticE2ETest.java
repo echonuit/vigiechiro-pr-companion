@@ -20,6 +20,7 @@ import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.recette.GesteVisible;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -45,7 +46,7 @@ import org.testfx.framework.junit5.Start;
 /// est **toujours disponible** (indépendant du statut du passage) : on part donc d'un passage
 /// fraîchement importé (Transformé) et on vérifie que le bouton réel ouvre l'écran de diagnostic
 /// (`passage → diagnostic`, sans dépendance directe entre les deux features).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ParcoursPassageVersDiagnosticE2ETest {
 
     private static final String ID_USER = "u-e2e-diag";

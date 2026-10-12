@@ -32,7 +32,7 @@ import org.testfx.framework.junit5.Start;
 /// Ils gardent que les deux semis **s'exécutent**, et dans l'ordre déclaré. Ils ne gardent pas qu'un
 /// semis voie ce que le précédent a écrit : les deux reçoivent le même injecteur, et cela découle de
 /// la signature plutôt que d'un choix à éprouver.
-@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
+@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class, SansEcritureHorsDuFil.class})
 class BancDeRecetteSemisTest {
 
     private final List<String> passages = new ArrayList<>();

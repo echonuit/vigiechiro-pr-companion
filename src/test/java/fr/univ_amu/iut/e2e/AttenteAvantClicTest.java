@@ -3,6 +3,7 @@ package fr.univ_amu.iut.e2e;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
@@ -19,7 +20,7 @@ import org.testfx.framework.junit5.Start;
 /// Les deux situations que l'attente doit distinguer sont montées **pour de bon** : un libellé absent,
 /// et un libellé présent mais posé hors du cadre de la scène. La seconde est celle qui a coûté trois
 /// enquêtes, et c'est celle qu'aucun message ne nommait.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class AttenteAvantClicTest {
 
     @Start

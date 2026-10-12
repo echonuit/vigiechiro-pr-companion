@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.DescripteurColonnes;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -23,7 +24,7 @@ import org.testfx.framework.junit5.Start;
 
 /// Test du sélecteur de colonnes extrait de l'analyse : câblage des clic droit + ☰ sur les trois tables, et
 /// aller-retour de l'adaptateur des vues mémorisées (une entrée de map par table).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class SelecteurColonnesAnalyseTest {
 
     private StackPane racine;

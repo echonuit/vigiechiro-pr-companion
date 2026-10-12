@@ -31,7 +31,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// Un banc qui croit avoir agi est pire qu'un banc qui échoue : rien ne proteste, et le clip montre un
 /// geste qui n'a pas eu lieu.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class GesteVisibleCadreImbriqueTest {
 
     private static final double REMPLISSAGE = 1200;

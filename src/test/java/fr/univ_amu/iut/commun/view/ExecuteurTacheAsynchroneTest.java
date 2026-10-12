@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -21,7 +22,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// fil JavaFX, résultat et erreur sont reprogrammés **sur** le fil JavaFX. [ApplicationExtension]
 /// initialise le toolkit ; on attend le fil de fond + `runLater` via [WaitForAsyncUtils]. Les
 /// extensions #1252 (progression, annulation coopérative) reviennent elles aussi sur le fil JavaFX.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ExecuteurTacheAsynchroneTest {
 
     private final ExecuteurTache executeur = new ExecuteurTacheAsynchrone();

@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -19,7 +20,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// Ces fabriques ont remplacé cinq implémentations écrites à la main. Deux de leurs règles n'étaient
 /// gardées **nulle part** avant ce fichier, ce qui s'est vu en mutant le code : la **présélection** de
 /// l'écran de revue et la **restauration** d'une vue mémorisée par le `name()` de la constante.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class CritereListeEnumerationTest {
 
     private static final String CLE = "couleur";

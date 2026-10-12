@@ -41,6 +41,7 @@ import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.TraitementViewModel;
 import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.GesteVisible;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -73,7 +74,7 @@ import org.testfx.framework.junit5.Start;
 /// réel **après** un téléversement par l'API, et celui qui a fait apparaître la régression corrigée
 /// (bouton ④ désactivé dès la fin de l'upload, alors que c'est précisément le moment de lancer le
 /// traitement serveur).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class LotDepotConnecteViewTest {
 
     private static final long ID_PASSAGE = 42L;

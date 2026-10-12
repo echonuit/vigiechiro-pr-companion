@@ -2,6 +2,7 @@ package fr.univ_amu.iut.multisite.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -24,7 +25,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// La **taille**, elle, n'a pas besoin de règle : mesure faite, une `FontIcon` se dimensionne sur la
 /// police héritée, donc le `-fx-font-size` déjà présent sur ces classes la porte. C'est le contraire de
 /// ce que l'on pourrait croire en lisant que « le CSS d'une icône est séparé » : seule la couleur l'est.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class StyleControlesCarteTest {
 
     /// Gris ardoise des contrôles de carte, aligné sur le `-fx-text-fill` de leurs classes dans

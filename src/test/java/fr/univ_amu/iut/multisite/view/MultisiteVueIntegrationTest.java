@@ -33,6 +33,7 @@ import fr.univ_amu.iut.multisite.model.TriMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import fr.univ_amu.iut.multisite.viewmodel.ReconstructionViewModel;
 import fr.univ_amu.iut.recette.GesteVisible;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.ServiceCommunes;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.util.List;
@@ -73,7 +74,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// et les vues mémorisées par les **onglets** (`GestionnaireVues`) : ces tests forcent une vraie
 /// **interaction** (ajout d'une puce, saisie, clic-carte, tri) et vérifient que **le tableau reflète le
 /// filtre / le tri**. Complète [MultisiteViewTest] sans le dupliquer. Pas de base de données.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class MultisiteVueIntegrationTest {
 
     private static final String RELEVE_LE = "2026-07-14T09:00:00Z";

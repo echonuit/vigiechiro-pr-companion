@@ -24,6 +24,7 @@ import fr.univ_amu.iut.recette.ExecuteurTacheRalenti;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -63,7 +64,12 @@ import org.testfx.util.WaitForAsyncUtils;
 /// `S2-69` demande de **survoler** la pastille. Un popup ne se rend pas en headless : le banc lit
 /// l'infobulle **installée**, comme `ScenarioPassagePivotTest` le fait déjà. Il affirme donc ce
 /// qu'elle dit - le fond du cas - sans montrer son ouverture, et le clip porte cette limite écrite.
-@ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class, SansExceptionAvalee.class})
+@ExtendWith({
+    ApplicationExtension.class,
+    EnregistreurDeFilm.class,
+    SansExceptionAvalee.class,
+    SansEcritureHorsDuFil.class
+})
 class ScenarioJournalAbsentTest {
 
     private static final String ID_USER = "u-recette";

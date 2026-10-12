@@ -6,6 +6,7 @@ import com.gluonhq.maps.MapLayer;
 import com.gluonhq.maps.MapPoint;
 import com.gluonhq.maps.MapView;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
@@ -22,7 +23,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// réseau** (le fond de tuiles est best-effort et ne charge pas en CI ; on ne l'asserte jamais). C'est
 /// exactement le mécanisme des futurs overlays carrés/points. Si ce test passe en headless, Gluon Maps
 /// est viable pour le composant `CarteSites`.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class GluonMapSpikeTest {
 
     private MapView carte;

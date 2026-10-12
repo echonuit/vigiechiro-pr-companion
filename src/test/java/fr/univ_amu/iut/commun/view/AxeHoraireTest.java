@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.time.LocalTime;
 import javafx.scene.chart.NumberAxis;
 import javafx.util.StringConverter;
@@ -19,7 +20,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 ///
 /// [ApplicationExtension] : construire un `NumberAxis` démarre le toolkit JavaFX (un axe est un
 /// `Node`), sans quoi la classe ne se charge même pas.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class AxeHoraireTest {
 
     @Test

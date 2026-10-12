@@ -21,6 +21,7 @@ import fr.univ_amu.iut.recette.ExecuteurTacheRalenti;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -54,7 +55,12 @@ import org.testfx.util.WaitForAsyncUtils;
 /// Ce geste **était injouable** : `personnaliser()` se terminait par un `showAndWait`, qui fige
 /// TestFX, alors même qu'il efface la progression. #1431 en a fait une vraie modale, et c'est ce qui
 /// le rend filmable.
-@ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class, SansExceptionAvalee.class})
+@ExtendWith({
+    ApplicationExtension.class,
+    EnregistreurDeFilm.class,
+    SansExceptionAvalee.class,
+    SansEcritureHorsDuFil.class
+})
 class ScenarioSelectionEcouteTest {
 
     private static final String ID_USER = "u-recette";

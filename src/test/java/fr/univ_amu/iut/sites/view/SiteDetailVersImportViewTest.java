@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.recette.GesteVisible;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Path;
 import javafx.fxml.FXMLLoader;
@@ -32,7 +33,7 @@ import org.testfx.framework.junit5.Start;
 ///  - l'assistant s'ouvre avec le site **déjà pré-sélectionné** dans le rattachement ;
 ///  - le bouton **Retour** ramène à la **fiche appelante** (et non à l'accueil) : la navigation
 ///    contextuelle **empile** sur le fil au lieu de le réinitialiser.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class SiteDetailVersImportViewTest {
 
     private static final String ID_USER = "u-1";

@@ -21,6 +21,7 @@ import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
@@ -45,7 +46,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// Le geste est joué par le **chemin réel** - le rappel de succès que `modifierSite()` passe à la
 /// modale d'édition - au moyen d'un double de [NavigationSites] qui renomme puis exécute ce rappel,
 /// sans ouvrir de fenêtre. Un appel direct au service ne prouverait que le service.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class SiteDetailRenommageViewTest {
 
     // Cette classe ne cite plus `S1-22`, et ce n'est pas un oubli.

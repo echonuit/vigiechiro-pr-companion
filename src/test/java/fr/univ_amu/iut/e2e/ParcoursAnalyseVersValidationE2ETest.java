@@ -18,6 +18,7 @@ import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.Observation;
@@ -50,7 +51,7 @@ import org.testfx.framework.junit5.Start;
 /// audio unifiée** sur **toute l'espèce** (source `ParEspece`) **pré-focalisée** sur cette observation.
 /// Sur le vrai chrome et le vrai injecteur, base seedée directement (un utilisateur, un passage, une
 /// observation).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ParcoursAnalyseVersValidationE2ETest {
 
     private static final String ID_USER = "u-e2e-analyse";

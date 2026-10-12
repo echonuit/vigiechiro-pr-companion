@@ -20,6 +20,7 @@ import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import fr.univ_amu.iut.passage.viewmodel.VerificationDuTraitement;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.Optional;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.Button;
@@ -33,7 +34,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// Le câblage du bouton « Vérifier le traitement » (#5862) : quand il se grise et ce qu'il en dit, et ce
 /// que le bandeau de la vue reçoit d'un clic. Sans FXML : c'est la couture entre le bouton, le geste et
 /// le ViewModel qui est éprouvée, sur un exécuteur synchrone.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class VerificationDuTraitementUITest {
 
     private static final Long ID_PASSAGE = 42L;

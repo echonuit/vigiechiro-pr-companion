@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.outils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.view.Habillage;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -29,7 +30,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// cette clôture de suites a trouvé, et la raison d'être de ce fichier. Sans lui, retirer le contrôle
 /// de l'invite ne casserait rien de visible, et la panne réapparaîtrait sous la forme exacte qu'elle
 /// avait déjà prise.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ApercuFxInviteTest {
 
     /// L'invite réelle de « Sons & validation », celle qui a motivé #3170.

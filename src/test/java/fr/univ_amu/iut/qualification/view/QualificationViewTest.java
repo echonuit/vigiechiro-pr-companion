@@ -32,6 +32,7 @@ import fr.univ_amu.iut.qualification.model.ServiceEmport;
 import fr.univ_amu.iut.qualification.model.ServiceQualification;
 import fr.univ_amu.iut.qualification.viewmodel.QualificationViewModel;
 import fr.univ_amu.iut.qualification.viewmodel.SelectionEcouteViewModel;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.fxml.FXMLLoader;
@@ -59,7 +60,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// service mocké), sans base de données. La logique de bout en bout est couverte ailleurs
 /// (`ServiceQualificationTest` + tests Mockito des deux VM) et le câblage Guice réel par
 /// `QualificationModuleTest`.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class QualificationViewTest {
 
     private static final long ID_PASSAGE = 42L;

@@ -25,6 +25,7 @@ import fr.univ_amu.iut.recette.ExecuteurTacheRalenti;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -65,7 +66,12 @@ import org.testfx.util.WaitForAsyncUtils;
 /// L'ordre du bandeau porte son sens : d'abord que l'import fonctionne, ensuite le geste à faire,
 /// enfin que c'est la **prochaine** nuit qui est en jeu. Le banc l'affirme dans cet ordre, et non par
 /// la seule présence des trois phrases.
-@ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class, SansExceptionAvalee.class})
+@ExtendWith({
+    ApplicationExtension.class,
+    EnregistreurDeFilm.class,
+    SansExceptionAvalee.class,
+    SansEcritureHorsDuFil.class
+})
 class ScenarioBandeauLectureSeuleTest {
 
     private static final String ID_USER = "u-recette";

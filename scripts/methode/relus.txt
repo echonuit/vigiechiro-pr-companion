@@ -2077,6 +2077,8 @@ b5e7288906d9  src/test/java/fr/univ_amu/iut/recette/ClipDeModaleTest.java
 430d522b9848  src/test/java/fr/univ_amu/iut/recette/DeclarationDeLaPlateformeTest.java
 9e81f5097238  src/test/java/fr/univ_amu/iut/recette/DialoguesALImage.java
 fb2f197b3036  src/test/java/fr/univ_amu/iut/recette/DispositionDesBrutsTest.java
+3db374835e8f  src/test/java/fr/univ_amu/iut/recette/EcrituresHorsDuFil.java
+2cff36db20db  src/test/java/fr/univ_amu/iut/recette/EspionEteintTemoin.java
 f77cce1c3b9d  src/test/java/fr/univ_amu/iut/recette/ExecuteurTacheDiffere.java
 a0cad8cca4aa  src/test/java/fr/univ_amu/iut/recette/ExecuteurTacheDiffereTest.java
 af9b80216119  src/test/java/fr/univ_amu/iut/recette/ExecuteurTacheRalenti.java
@@ -2117,6 +2119,9 @@ ba84a77dca75  src/test/java/fr/univ_amu/iut/recette/RecetteImportCliGoldenTest.j
 17d9c207c5bf  src/test/java/fr/univ_amu/iut/recette/ReperesDeSeanceTest.java
 44bcaacaf194  src/test/java/fr/univ_amu/iut/recette/Respiration.java
 8cc17fe2b007  src/test/java/fr/univ_amu/iut/recette/RespirationDesClipsTest.java
+ad208980a6fb  src/test/java/fr/univ_amu/iut/recette/SansEcritureHorsDuFil.java
+6a07f333e5bf  src/test/java/fr/univ_amu/iut/recette/SansEcritureHorsDuFilEteintTest.java
+45aa7c045bf9  src/test/java/fr/univ_amu/iut/recette/SansEcritureHorsDuFilTest.java
 24936b1cbbb2  src/test/java/fr/univ_amu/iut/recette/SansExceptionAvalee.java
 955859ce669d  src/test/java/fr/univ_amu/iut/recette/SansExceptionAvaleeTest.java
 accdcc27fbcd  src/test/java/fr/univ_amu/iut/recette/Seance.java

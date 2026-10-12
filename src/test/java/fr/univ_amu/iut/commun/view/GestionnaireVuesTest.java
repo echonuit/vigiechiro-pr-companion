@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +38,7 @@ import org.testfx.framework.junit5.Start;
 /// Onglets de vues mémorisées « à la Notion » (#623) : un onglet par vue de la feature, « + Vue »
 /// enregistre les filtres courants, cliquer un onglet rejoue ses filtres, ✕ supprime, ✎ renomme. Test en
 /// isolation : DAO réel sur une base SQLite jetable + barre de filtres pilotant une [FilteredList].
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class GestionnaireVuesTest {
 
     private static final String FEATURE = "test";

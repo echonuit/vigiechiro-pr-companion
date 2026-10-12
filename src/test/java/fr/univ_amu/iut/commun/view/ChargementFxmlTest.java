@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.io.File;
 import java.net.URL;
 import java.nio.file.Files;
@@ -44,7 +45,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// On ne seede aucune donnée d'écran : comme dans les `CaptureXxx`, le `load()` précède toute
 /// alimentation (la navigation / les `demarrerXxx` poussent les données ensuite). On insère
 /// seulement un utilisateur courant, car certains ViewModels le résolvent à la construction.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ChargementFxmlTest {
 
     /// Racine des sources : les `.fxml` vivent à côté de leur controller dans `…/view/`

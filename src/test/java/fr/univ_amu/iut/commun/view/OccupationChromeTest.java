@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -17,7 +18,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// couvre la fenêtre pendant le travail, l'**opération critique** (#906) est posée le temps du
 /// travail puis effacée (succès comme échec), et le résultat/l'erreur est routé au bon callback -
 /// y compris quand le chrome n'est pas installé (contexte partiel : pas de voile, mêmes garanties).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class OccupationChromeTest {
 
     private final NavigationViewModel navigation = new NavigationViewModel();

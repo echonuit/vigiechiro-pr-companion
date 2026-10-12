@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -51,7 +52,7 @@ import org.testfx.framework.junit5.Start;
 /// Test d'intégration sur le **vrai** injecteur et une **vraie** base : ce qui est vérifié après le
 /// clic, ce n'est pas qu'un mock a été appelé, c'est que la ligne a **disparu de la base** - ou qu'elle
 /// y est **toujours** quand l'utilisateur a dit non.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class SiteDetailSuppressionsViewTest {
 
     private static final String ID_USER = "u-1";

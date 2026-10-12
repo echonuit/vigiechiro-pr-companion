@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.lang.ref.WeakReference;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -27,7 +28,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// Le cas reste couvert là où un utilisateur le **voit** : `ModaleSiteViewTest`, où le bouton « Créer »
 /// s'ouvre à mesure qu'on tape les six chiffres. Ce qui se filme est le geste dans la modale, pas la
 /// liaison du socle - et c'est bien la liaison du socle que cette classe-ci éprouve.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ValidationFormulaireTest {
 
     @Test

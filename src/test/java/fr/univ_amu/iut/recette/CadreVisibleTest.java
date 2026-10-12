@@ -32,7 +32,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// ## Ce que ce test fixe
 ///
 /// Les quatre positions qui décident, sur un vrai [ScrollPane] mesuré par la plateforme.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class CadreVisibleTest {
 
     private static final double HAUTEUR_CADRE = 300;

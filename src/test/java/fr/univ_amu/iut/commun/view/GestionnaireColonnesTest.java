@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.DispositionColonnesEnMemoire;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.scene.control.Button;
@@ -29,7 +30,7 @@ import org.testfx.util.WaitForAsyncUtils;
 
 /// Tests du composant réutilisable [GestionnaireColonnes] : réordonnancement des colonnes (cœur du
 /// glisser-déposer), tolérance aux colonnes non gérées, et panneau (liste + cases de visibilité liées).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class GestionnaireColonnesTest {
 
     private StackPane racine;

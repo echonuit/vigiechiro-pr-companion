@@ -24,6 +24,7 @@ import fr.univ_amu.iut.commun.viewmodel.EtatConnexion;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.PresenceDuCarre;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
@@ -53,7 +54,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// et cliquait directement « Créer » n'apprenait rien avant le dépôt, et pouvait même créer le doublon
 /// local d'un carré déjà en Point Fixe, que le dépôt ne sait pas rattacher. Chaque cas compte les appels
 /// au portail, parce que c'est ce nombre qui dit si la vérification a eu lieu.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ModaleSiteCreerSansVerifierTest {
 
     private static final String CARRE = "202013";

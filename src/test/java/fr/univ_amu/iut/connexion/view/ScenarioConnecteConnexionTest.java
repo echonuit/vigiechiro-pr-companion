@@ -12,6 +12,7 @@ import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import java.io.IOException;
@@ -63,7 +64,12 @@ import org.testfx.util.WaitForAsyncUtils;
 /// `@Tag("recette-connectee")`, exclu par `surefire.excludedGroups`. Le tournage connecté inverse les
 /// **deux** propriétés : poser `groups` seul ne lève pas l'exclusion.
 @Tag("recette-connectee")
-@ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class, SansExceptionAvalee.class})
+@ExtendWith({
+    ApplicationExtension.class,
+    EnregistreurDeFilm.class,
+    SansExceptionAvalee.class,
+    SansEcritureHorsDuFil.class
+})
 class ScenarioConnecteConnexionTest {
 
     /// Même cadrage que les scénarios de connexion bouchonnés : la fenêtre reste plus petite que

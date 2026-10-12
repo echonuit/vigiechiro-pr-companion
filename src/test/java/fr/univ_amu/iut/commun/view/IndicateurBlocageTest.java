@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -15,7 +16,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// JavaFX (construction des nœuds et du Tooltip) ; aucune scène affichée. On vérifie le **contrat
 /// d'enrobage** : `enrober` renvoie une enveloppe qui entoure exactement le contrôle (celui-ci reste
 /// désactivable indépendamment, l'enveloppe reçoit le survol pour le tooltip).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class IndicateurBlocageTest {
 
     @Test

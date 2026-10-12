@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.TailleOuverture;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 import javafx.scene.control.Label;
@@ -27,7 +28,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// le `FXMLLoader` + la `controllerFactory` Guice, et que la barre de navigation affiche bien le
 /// titre de l'application. Tourne en headless via la Headless Platform JavaFX 26
 /// (glass.platform=Headless), sans fenêtre ni serveur d'affichage, localement comme en CI.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class AppTest {
 
     private Stage stage;

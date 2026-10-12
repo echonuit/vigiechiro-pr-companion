@@ -24,6 +24,7 @@ import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.TraitementViewModel;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import java.util.Optional;
 import javafx.fxml.FXMLLoader;
@@ -43,7 +44,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// Le déclencheur y est plus rare que sur M-Diagnostic : `consulterLot` tolère une session absente et ne
 /// lève que sur un **passage** introuvable, ce qui demande un état périmé ou concurrent.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class LotIdentiteStatutViewTest {
 
     private static final ContextePassage CONTEXTE =

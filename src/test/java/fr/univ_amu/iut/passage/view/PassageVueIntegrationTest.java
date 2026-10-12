@@ -34,6 +34,7 @@ import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -67,7 +68,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// Chargement du FXML via Guice avec un [ServicePassage] mocké, ouverture sur un passage + contexte
 /// site. Pas de base de données.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class PassageVueIntegrationTest {
 
     private static final long ID_PASSAGE = 42L;

@@ -19,6 +19,7 @@ import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.util.Set;
 import javafx.fxml.FXMLLoader;
@@ -41,7 +42,7 @@ import org.testfx.framework.junit5.Start;
 /// toujours injoignable : l'état reste « non vérifié », dit honnêtement), la saisie reste possible
 /// (recoller un autre jeton) et la déconnexion aussi (jeter ce jeton). Socle synchrone en test, pas
 /// de réseau.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ConnexionModaleJetonNonVerifieViewTest {
 
     private ClientVigieChiro client;

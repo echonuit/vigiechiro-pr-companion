@@ -22,6 +22,7 @@ import fr.univ_amu.iut.qualification.model.PreCheckNuit;
 import fr.univ_amu.iut.qualification.model.SelectionDEcoute;
 import fr.univ_amu.iut.qualification.model.SequenceSelectionnee;
 import fr.univ_amu.iut.qualification.model.ServiceQualification;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -58,7 +59,7 @@ import org.testfx.framework.junit5.Start;
 /// par leurs modules Guice via les mêmes constructeurs que l'application), et asserté **en base** ou
 /// sur les objets métier renvoyés. La nuit est importée par le vrai [ServiceImport] (l'écran M-Import
 /// passe par un `DirectoryChooser` natif non pilotable par TestFX, comme dans `ParcoursDepotE2ETest`).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ParcoursVerifierEchantillonnageE2ETest {
 
     private static final String ID_USER = "u-e2e-p3";

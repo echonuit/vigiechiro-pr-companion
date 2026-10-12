@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.commun.viewmodel.ResteDeRestauration;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.collections.FXCollections;
@@ -34,7 +35,7 @@ import org.testfx.framework.junit5.Start;
 /// **Filtres et tri sont mémorisés séparément**, et ce n'est pas une commodité. Les quatre écrans ont
 /// tous des filtres ; ils ont zéro, une ou trois tables. Une mémoire qui exigerait « la » table de
 /// l'écran ne conviendrait ni à Activité (un graphe) ni à Espèces & observations (trois tables).
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class MemoireFiltresTest {
 
     private static final String ECRAN = "analyse";

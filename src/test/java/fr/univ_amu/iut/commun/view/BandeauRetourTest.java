@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -26,7 +27,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// `installer` serait donc passée selon l'écran regardé.
 ///
 /// [ApplicationExtension] initialise le toolkit JavaFX (construction de nœuds) ; aucune scène affichée.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class BandeauRetourTest {
 
     private HBox conteneur;

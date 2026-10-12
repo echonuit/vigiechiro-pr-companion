@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.DefilementChrome;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.file.Path;
 import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
@@ -34,7 +35,7 @@ import org.testfx.framework.junit5.Start;
 /// sur une base vide : il s'agit d'un fumigène, pas d'un parcours de données (le corpus de référence est
 /// alimenté séparément). Remplace l'ancien parcours « accueil → bibliotheque » depuis que la carte est
 /// repointée vers la vue audio unifiée.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ParcoursSonsReferenceE2ETest {
 
     private Injector injector;

@@ -34,6 +34,7 @@ import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.validation.model.BilanPublication;
 import fr.univ_amu.iut.validation.model.ImportVigieChiro;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
@@ -72,7 +73,7 @@ import org.testfx.framework.junit5.Start;
 /// chantier a failli casser deux fois.
 ///
 /// Câblage **réel** de l'application ([RacineInjecteur]), seule la plateforme est bouchonnée.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ParcoursPublierCorrectionsE2ETest {
 
     private static final String PARTICIPATION = "6a53f5faae21902a597394d3";

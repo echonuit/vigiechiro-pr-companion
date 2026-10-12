@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -16,7 +17,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// l'overlay se superpose au contenu, `enCours` et sa visibilité suivent le cycle du traitement, le
 /// libellé est affiché, et le résultat/l'erreur est routé au bon callback. [ApplicationExtension]
 /// initialise le toolkit (construction des nœuds), aucune scène affichée.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class IndicateurOccupationTest {
 
     private final ExecuteurTache synchrone = new ExecuteurTacheSynchrone();

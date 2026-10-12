@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.Certitude;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.time.LocalDateTime;
@@ -27,7 +28,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 ///
 /// Les assertions comparent à la **constante**, jamais à un littéral : un tiret d'imprimerie tapé à la
 /// main ressemble au cadratin à l'écran et n'est pas le même caractère.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ColonnesContexteAbsenteTest {
 
     /// Une observation dont **tout le contexte manque** : ni carré, ni point, ni commune, ni date, ni

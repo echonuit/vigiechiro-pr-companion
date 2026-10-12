@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -44,7 +45,7 @@ import org.testfx.util.WaitForAsyncUtils;
 ///
 /// Le centre du propriétaire, à un pixel près : la tolérance absorbe l'arrondi de la division par
 /// deux, sans absorber un placement en (0, 0), qui est le défaut recherché.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class ModalesCentrageTest {
 
     /// Coin et taille de l'hôte, choisis **non nuls et non centrés** : un propriétaire posé en (0, 0)

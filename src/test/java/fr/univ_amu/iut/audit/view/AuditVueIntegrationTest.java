@@ -21,6 +21,7 @@ import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.InfobullesDeColonne;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.recette.GesteVisible;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.util.List;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -37,7 +38,7 @@ import org.testfx.framework.junit5.Start;
 
 /// Écran « Audit de cohérence » : chargé via Guice (service mocké), il liste les constats de l'audit
 /// global et affiche le résumé chiffré. Même patron que `DiagnosticVueIntegrationTest`.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class AuditVueIntegrationTest {
 
     private ServiceAuditCoherence service;
