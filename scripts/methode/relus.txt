@@ -2037,8 +2037,10 @@ a8f5b54b21d0  src/test/java/fr/univ_amu/iut/passage/viewmodel/VerificationDuTrai
 49766a118987  src/test/java/fr/univ_amu/iut/perf/JeuDuBancTest.java
 cc8de687adcd  src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO3Test.java
 eace6174d00f  src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO5Test.java
-a17c85a7e693  src/test/java/fr/univ_amu/iut/perf/outils/EcranDuBanc.java
-cb3f28ff0588  src/test/java/fr/univ_amu/iut/perf/outils/InstrumentsDuBanc.java
+96fe3f217372  src/test/java/fr/univ_amu/iut/perf/outils/EchelleDuRendu.java
+8c8958cd2741  src/test/java/fr/univ_amu/iut/perf/outils/EchelleDuRenduTest.java
+c22e11027e0e  src/test/java/fr/univ_amu/iut/perf/outils/EcranDuBanc.java
+0394a08bd9a4  src/test/java/fr/univ_amu/iut/perf/outils/InstrumentsDuBanc.java
 a915ebf9d263  src/test/java/fr/univ_amu/iut/qualification/AgregationVerdictTest.java
 134e5d009078  src/test/java/fr/univ_amu/iut/qualification/FenetreDeCouvertureTest.java
 7dfaa00febe4  src/test/java/fr/univ_amu/iut/qualification/GenerateurSelectionTest.java

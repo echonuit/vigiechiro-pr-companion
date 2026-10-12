@@ -79,7 +79,7 @@ class BancIhmO3Test {
     @DisplayName("O3 : plusieurs nuits importées dans le même processus, sonde posée, heap après GC")
     void o3_nuits_successives() throws Exception {
         ecran.monter(EcranDuBanc.espace("o3-nuits"), BancIhmO3Test::semerUnCarre);
-        Releve releve = new Releve(RACINE, "O3 nuits successives (" + WAV_PAR_NUIT + " WAV de 5 s par nuit)");
+        Releve releve = ecran.releve("O3 nuits successives (" + WAV_PAR_NUIT + " WAV de 5 s par nuit)");
         releve.noterHeap("avant la première nuit", heapApresGc());
 
         for (int nuit = 1; nuit <= NUITS; nuit++) {
