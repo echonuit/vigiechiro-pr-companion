@@ -63,12 +63,14 @@ Le pas a été choisi par le porteur entre trois mesurés, qui tiennent tous à 
 
 ## Conséquences
 
-- les planchers se remesurent depuis zéro (`repartir_de_zero`), sur huit tournages du même commit.
-  Ceux d'avant mesuraient surtout ce bruit, et la règle du pire observé ne les aurait jamais fait
-  redescendre seuls ;
+- les planchers se sont remesurés depuis zéro (`repartir_de_zero`), le 12 octobre 2026, sur six
+  tournages du même commit et deux témoins. Ceux d'avant mesuraient surtout ce bruit, et la règle du
+  pire observé ne les aurait jamais fait redescendre seuls. Sur les 95 clips ordinaires, la médiane
+  est passée de 0,167 % à 0,000 %, les clips à plancher nul de 3 à 73, et le pire de 1,033 % à
+  0,297 % ;
 - un plancher ne vaut que pour la chaîne qui l'a mesuré. Le banc de `lance-test-filme.sh` encode
   autrement et garde ce bruit ; qu'il soit jugé contre ces planchers est l'objet de #6150 ;
-- un clip est plus long et plus lourd. Un tournage de cent clips passe d'environ 17 à 55 Mo.
+- un clip est plus long et plus lourd. L'artefact de clips d'un tournage est passé de 21 à 65 Mo.
 
 ## Vérification
 

@@ -11,6 +11,7 @@ enforced_by:
 verification_note: "l auto-test tient qu un clip nommé est mesuré et affiché sans être écrit, qu il n entre pas dans le plancher le plus haut, que sa ligne quitte le fichier et que la comparaison l annonce avec son issue, quatre mutants tués. Rien ne tient le choix des clips nommés : c est la dernière image, regardée, et le contrôle ne sait pas regarder"
 relations:
   complete: ["5885-un-plancher-appartient-a-l-instrument-qui-l-a-pris", "4287-un-ecart-se-lit-contre-le-plancher-de-son-cas"]
+  amendee_par: ["6135-la-derniere-image-d-un-clip-ne-depend-plus-d-une-image-cle"]
 verified:
   - by: machine:ci
     at: 2026-10-05
