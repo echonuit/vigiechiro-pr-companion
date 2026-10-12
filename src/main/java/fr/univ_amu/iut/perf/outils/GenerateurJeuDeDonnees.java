@@ -50,18 +50,21 @@ import java.util.List;
 ///  - `vigiechiro.workspace` : dossier de la base (défaut : `<tmp>/vigiechiro-bench`) ;
 ///  - `perf.passages` : nombre de passages (défaut 1000) ;
 ///  - `perf.observations` : nombre d'observations (défaut 4031) ;
-///  - `perf.sites` : nombre de **carrés** (défaut 40), chacun portant [#NB_POINTS] points. C'est la
-///    dimension qui porte les lectures répétées : la garder à 1 rend le banc aveugle.
+///  - `perf.sites` : nombre de **carrés** (défaut 40). C'est la dimension qui porte les lectures
+///    répétées : la garder à 1 rend le banc aveugle ;
+///  - `perf.points` : points **par carré** (défaut 10) ; la topologie d'O5 est `150` carrés de `2` (#105).
 ///
 /// La base du workspace est **réécrite à neuf** au lancement, pour garantir la reproductibilité.
 public final class GenerateurJeuDeDonnees {
 
     private static final String ID_UTILISATEUR = "bench-enseignant";
     private static final String ENREGISTREUR = "9999999";
-    private static final String TAXON = "Pippip"; // taxon pré-semé (V02__seed_taxons.sql)
+    /// Taxons pré-semés (`V02__seed_taxons.sql`), attribués à tour de rôle. Un seul taxon rendait le
+    /// filtrage par espèce sans objet : il gardait tout ou rien, et l'écran n'avait rien à filtrer (#105).
+    private static final String[] TAXONS = {"Pippip", "Nyclei", "Tadten", "Rhihip"};
     private static final int PASSAGES_DEFAUT = 1000;
     private static final int OBSERVATIONS_DEFAUT = 4031;
-    private static final int NB_POINTS = 10; // points PAR SITE ; les passages s'y répartissent
+    private static final int POINTS_DEFAUT = 10; // points PAR SITE ; les passages s'y répartissent
 
     /// Nombre de **carrés** du jeu par défaut.
     ///
@@ -118,7 +121,8 @@ public final class GenerateurJeuDeDonnees {
     }
 
     /// Peuple `source` avec `nbPassages` passages et `nbObservations` observations sur un socle de
-    /// clés étrangères minimal (un utilisateur, un enregistreur, un site, [#NB_POINTS] points).
+    /// clés étrangères minimal (un utilisateur, un enregistreur, `perf.sites` carrés de `perf.points`
+    /// points).
     public static Bilan peupler(SourceDeDonnees source, int nbPassages, int nbObservations) {
         new UtilisateurDao(source).insert(new Utilisateur(ID_UTILISATEUR, "Banc de mesure (demo)"));
         new EnregistreurDao(source).insert(new Enregistreur(ENREGISTREUR, "V1.01", null));
@@ -132,12 +136,13 @@ public final class GenerateurJeuDeDonnees {
         return new Bilan(passages, observations);
     }
 
-    /// `perf.sites` carrés de [#NB_POINTS] points chacun ; renvoie les identifiants des points.
+    /// `perf.sites` carrés de `perf.points` points chacun ; renvoie les identifiants des points.
     private static List<Long> creerPoints(SourceDeDonnees source) {
         int nbSites = Integer.getInteger("perf.sites", NB_SITES_DEFAUT);
+        int nbPoints = Math.max(1, Integer.getInteger("perf.points", POINTS_DEFAUT));
         SiteDao siteDao = new SiteDao(source);
         PointDao pointDao = new PointDao(source);
-        List<Long> points = new ArrayList<>(nbSites * NB_POINTS);
+        List<Long> points = new ArrayList<>(nbSites * nbPoints);
         for (int s = 0; s < nbSites; s++) {
             Site site = siteDao.insert(new Site(
                     null,
@@ -147,7 +152,7 @@ public final class GenerateurJeuDeDonnees {
                     null,
                     "2026-01-01",
                     ID_UTILISATEUR));
-            for (int i = 0; i < NB_POINTS; i++) {
+            for (int i = 0; i < nbPoints; i++) {
                 points.add(pointDao.insert(new PointDEcoute(
                                 null, "P" + i, 43.5 + s * 0.01 + i * 0.001, 5.4 + i * 0.001, null, site.id()))
                         .id());
@@ -231,7 +236,7 @@ public final class GenerateurJeuDeDonnees {
                     debut,
                     debut + 0.5,
                     18 + i % 100,
-                    TAXON,
+                    TAXONS[i % TAXONS.length],
                     0.5 + (i % 50) / 100.0,
                     null,
                     null,

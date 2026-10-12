@@ -1083,9 +1083,9 @@ e827f307792b  src/main/java/fr/univ_amu/iut/passage/viewmodel/SaisieOpportuniste
 952d4ddb6079  src/main/java/fr/univ_amu/iut/passage/viewmodel/SaisiePassageConditions.java
 ebc7965c702c  src/main/java/fr/univ_amu/iut/passage/viewmodel/SelectionCampagne.java
 9e30cc6f7ce1  src/main/java/fr/univ_amu/iut/passage/viewmodel/VerificationDuTraitement.java
-6795baade7dd  src/main/java/fr/univ_amu/iut/perf/outils/BancImport.java
+8d897d3f7089  src/main/java/fr/univ_amu/iut/perf/outils/BancImport.java
 d8df481f824d  src/main/java/fr/univ_amu/iut/perf/outils/BancMesure.java
-6a9aa62cbaf1  src/main/java/fr/univ_amu/iut/perf/outils/GenerateurJeuDeDonnees.java
+767df64caea1  src/main/java/fr/univ_amu/iut/perf/outils/GenerateurJeuDeDonnees.java
 a7a734f95bd5  src/main/java/fr/univ_amu/iut/qualification/di/QualificationModule.java
 73b492e3e943  src/main/java/fr/univ_amu/iut/qualification/model/AgregationVerdict.java
 f11933af8c2b  src/main/java/fr/univ_amu/iut/qualification/model/AvisRevenu.java
@@ -1636,6 +1636,7 @@ ec72219f5edb  src/test/java/fr/univ_amu/iut/commun/view/ColonneBadgeTest.java
 eb6056fc0c6f  src/test/java/fr/univ_amu/iut/commun/view/ColonneDateTest.java
 fc74dffd0f51  src/test/java/fr/univ_amu/iut/commun/view/ConfirmateurModifiableTest.java
 9b0105a2ce55  src/test/java/fr/univ_amu/iut/commun/view/ConfirmationNavigationTest.java
+17ab3f5812c3  src/test/java/fr/univ_amu/iut/commun/view/ConfirmationsDuBanc.java
 95dc87ab8cdc  src/test/java/fr/univ_amu/iut/commun/view/ConstructeurMenuOutilsTest.java
 7004879317c8  src/test/java/fr/univ_amu/iut/commun/view/ContenuChoixSauvegardeTest.java
 a6ee7f2897b6  src/test/java/fr/univ_amu/iut/commun/view/ContenuDesignationTest.java
@@ -1836,6 +1837,7 @@ afd5f044b9f8  src/test/java/fr/univ_amu/iut/importation/model/FiltreThLogNuitTes
 2ba1019f10d3  src/test/java/fr/univ_amu/iut/importation/outils/DossierDeFixtureTest.java
 c89585d931b9  src/test/java/fr/univ_amu/iut/importation/view/ActionImportTransformesTest.java
 d49c5a1ab907  src/test/java/fr/univ_amu/iut/importation/view/ConfirmationsImportTest.java
+50febce6c78f  src/test/java/fr/univ_amu/iut/importation/view/DesignationDuBanc.java
 9175c9a0fc4d  src/test/java/fr/univ_amu/iut/importation/view/DetailInspectionTest.java
 1f88ba526bef  src/test/java/fr/univ_amu/iut/importation/view/FormatsImportTest.java
 859907610dfd  src/test/java/fr/univ_amu/iut/importation/view/ImportationClicImporterTest.java
@@ -2032,6 +2034,10 @@ ab70d6f6344b  src/test/java/fr/univ_amu/iut/passage/viewmodel/MemesMotsQueLEcran
 59c6503e55be  src/test/java/fr/univ_amu/iut/passage/viewmodel/SaisieHorairesNuitTest.java
 a8f5b54b21d0  src/test/java/fr/univ_amu/iut/passage/viewmodel/VerificationDuTraitementTest.java
 49766a118987  src/test/java/fr/univ_amu/iut/perf/JeuDuBancTest.java
+cc8de687adcd  src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO3Test.java
+eace6174d00f  src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO5Test.java
+a17c85a7e693  src/test/java/fr/univ_amu/iut/perf/outils/EcranDuBanc.java
+cb3f28ff0588  src/test/java/fr/univ_amu/iut/perf/outils/InstrumentsDuBanc.java
 a915ebf9d263  src/test/java/fr/univ_amu/iut/qualification/AgregationVerdictTest.java
 134e5d009078  src/test/java/fr/univ_amu/iut/qualification/FenetreDeCouvertureTest.java
 7dfaa00febe4  src/test/java/fr/univ_amu/iut/qualification/GenerateurSelectionTest.java
