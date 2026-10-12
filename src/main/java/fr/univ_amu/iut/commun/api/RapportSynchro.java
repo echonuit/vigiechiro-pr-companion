@@ -12,6 +12,12 @@ package fr.univ_amu.iut.commun.api;
 /// @param precision ce que le seul `nombre` tairait (#2557), ou `null` s'il se suffit
 public record RapportSynchro(String libelle, int nombre, String souci, String precision) {
 
+    /// Souci d'un appel qui n'est pas parti, faute de jeton valide (#6151).
+    public static final String JETON_ABSENT = "jeton absent ou expiré";
+
+    /// Souci d'un appel que l'API a refusé en `401` : le jeton n'est plus reconnu (#6151).
+    public static final String JETON_REFUSE = "jeton refusé par Vigie-Chiro";
+
     /// Un rapport de synchronisation **effectuée** (souci absent).
     public RapportSynchro(String libelle, int nombre) {
         this(libelle, nombre, null, null);
@@ -35,6 +41,13 @@ public record RapportSynchro(String libelle, int nombre, String souci, String pr
     /// fait doit le dire dans le même souffle, sinon elle se présente en succès (ADR 0008).
     public RapportSynchro avecPrecision(String precision) {
         return new RapportSynchro(libelle, nombre, souci, precision);
+    }
+
+    /// Cet empêchement se lève-t-il en se reconnectant ? Vrai pour un jeton absent ou refusé (#6151) :
+    /// l'écran ajoute alors le geste et l'endroit, que [#enClair()] ne dit pas puisqu'il sert aussi à la
+    /// ligne de commande.
+    public boolean demandeUneReconnexion() {
+        return JETON_ABSENT.equals(souci) || JETON_REFUSE.equals(souci);
     }
 
     /// Rendu unique pour le bandeau de connexion, M-Sites et la CLI : « 385 taxons », « 12 nuit(s)

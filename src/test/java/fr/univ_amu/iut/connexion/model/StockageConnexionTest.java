@@ -92,4 +92,29 @@ class StockageConnexionTest {
         Set<PosixFilePermission> perms = Files.getPosixFilePermissions(workspace.resolve("connexion.json"));
         assertThat(perms).containsExactlyInAnyOrder(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE);
     }
+
+    @Test
+    @DisplayName("#6151 : un jeton refusé est oublié s'il est celui qui est enregistré, et seulement alors")
+    void un_jeton_refuse_est_oublie_s_il_est_le_notre() {
+        StockageConnexion stockage = stockage(JOUR);
+        stockage.enregistrer("TOK123", PROFIL);
+
+        stockage.jetonRefuse("UN-AUTRE");
+        assertThat(stockage.token())
+                .as("un jeton ponctuel, ou celui d'avant une reconnexion : le nôtre ne bouge pas")
+                .contains("TOK123");
+
+        stockage.jetonRefuse("TOK123");
+        assertThat(workspace.resolve("connexion.json")).doesNotExist();
+    }
+
+    @Test
+    @DisplayName("#6151 : un jeton périmé mais encore écrit, refusé, est oublié aussi")
+    void un_jeton_perime_refuse_est_oublie() {
+        stockage(JOUR).enregistrer("TOK123", PROFIL);
+
+        stockage(JOUR.plusDays(20)).oublierSi("TOK123");
+
+        assertThat(workspace.resolve("connexion.json")).doesNotExist();
+    }
 }

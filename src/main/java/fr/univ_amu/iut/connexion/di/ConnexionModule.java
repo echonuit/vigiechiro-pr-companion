@@ -80,7 +80,19 @@ public class ConnexionModule extends ModuleDeFeature {
     @Provides
     @Singleton
     FournisseurToken fournirFournisseurToken(StockageConnexion stockage) {
-        return () -> jetonPonctuel().or(stockage::token);
+        return new FournisseurToken() {
+            @Override
+            public Optional<String> token() {
+                return jetonPonctuel().or(stockage::token);
+            }
+
+            /// Un `401` sur le jeton ENREGISTRÉ le fait oublier (#6151) ; sur un jeton ponctuel, le
+            /// stockage le reconnaît comme étranger et ne touche à rien.
+            @Override
+            public void jetonRefuse(String jeton) {
+                stockage.oublierSi(jeton);
+            }
+        };
     }
 
     /// Reflet observable du jeton (#4205), partagé : les écrans qui ferment un geste faute de jeton

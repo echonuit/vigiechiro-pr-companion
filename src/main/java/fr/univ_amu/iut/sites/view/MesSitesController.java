@@ -207,9 +207,27 @@ public class MesSitesController implements ResumeStatut, RafraichirAuRetour, Sui
                         listeCartes.getScene().getWindow(),
                         "Synchronisation Vigie-Chiro",
                         viewModel::synchroniserEtRecharger,
-                        viewModel::appliquerSynchro,
-                        viewModel::signalerAnnulationSynchro,
-                        viewModel::signalerErreurSynchro);
+                        resultat -> {
+                            viewModel.appliquerSynchro(resultat);
+                            relireLaConnexion();
+                        },
+                        () -> {
+                            viewModel.signalerAnnulationSynchro();
+                            relireLaConnexion();
+                        },
+                        erreur -> {
+                            viewModel.signalerErreurSynchro(erreur);
+                            relireLaConnexion();
+                        });
+    }
+
+    /// Au retour d'un geste de plateforme, sur le fil JavaFX : l'état de connexion se relit (#6151).
+    ///
+    /// C'est le moment où l'écran apprend qu'un jeton a expiré ou vient d'être refusé. Sans cette
+    /// relecture, le bouton restait ouvert, et chaque clic renvoyait le jeton mort pour un refus de plus.
+    /// Jamais dans la tâche : `relire()` publie une propriété liée à un bouton.
+    private void relireLaConnexion() {
+        etatConnexion.ifPresent(EtatConnexion::relire);
     }
 
     /// Action des boutons « + Nouveau site » (bandeau et état vide).

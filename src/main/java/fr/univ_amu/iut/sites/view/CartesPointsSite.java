@@ -55,6 +55,10 @@ final class CartesPointsSite {
     /// rien pendant plusieurs secondes (#1014). Synchrone en test, donc déterministe.
     private final ExecuteurTache executeur;
 
+    /// Ce qu'on fait au retour d'une publication, sur le fil JavaFX : relire l'état de connexion (#6151).
+    /// Un jeton expiré ou refusé se découvre là, et le lien doit alors se fermer.
+    private final Runnable apresUnGesteDePlateforme;
+
     private CartesPointsSite(
             FlowPane cartesPoints,
             SiteDetailViewModel viewModel,
@@ -62,7 +66,8 @@ final class CartesPointsSite {
             OuvrirMultisite ouvrirMultisite,
             ConfirmateurModifiable confirmateur,
             NotificateurModifiable notificateur,
-            ExecuteurTache executeur) {
+            ExecuteurTache executeur,
+            Runnable apresUnGesteDePlateforme) {
         this.cartesPoints = cartesPoints;
         this.viewModel = viewModel;
         this.navigation = navigation;
@@ -70,6 +75,7 @@ final class CartesPointsSite {
         this.confirmateur = confirmateur;
         this.notificateur = notificateur;
         this.executeur = executeur;
+        this.apresUnGesteDePlateforme = apresUnGesteDePlateforme;
     }
 
     /// Installe le rendu des cartes sur `cartesPoints` : repli d'état vide lié à `lblAucunPoint` (#791,
@@ -86,12 +92,20 @@ final class CartesPointsSite {
             OuvrirMultisite ouvrirMultisite,
             ConfirmateurModifiable confirmateur,
             NotificateurModifiable notificateur,
-            ExecuteurTache executeur) {
+            ExecuteurTache executeur,
+            Runnable apresUnGesteDePlateforme) {
         var aucunPoint = Bindings.isEmpty(cartesPoints.getChildren());
         lblAucunPoint.visibleProperty().bind(aucunPoint);
         lblAucunPoint.managedProperty().bind(aucunPoint);
         CartesPointsSite cartes = new CartesPointsSite(
-                cartesPoints, viewModel, navigation, ouvrirMultisite, confirmateur, notificateur, executeur);
+                cartesPoints,
+                viewModel,
+                navigation,
+                ouvrirMultisite,
+                confirmateur,
+                notificateur,
+                executeur,
+                apresUnGesteDePlateforme);
         viewModel.points().addListener((ListChangeListener<CartePoint>) changement -> cartes.reconstruire());
         cartes.reconstruire();
         return cartes;
@@ -304,9 +318,11 @@ final class CartesPointsSite {
                 resultat -> {
                     rendreCompte(carte, resultat);
                     viewModel.rafraichir();
+                    apresUnGesteDePlateforme.run();
                 },
                 erreur -> {
                     siEchecTechnique.run();
+                    apresUnGesteDePlateforme.run();
                     viewModel
                             .compteRendu()
                             .rendre(RetourOperation.erreur("La publication du point « "

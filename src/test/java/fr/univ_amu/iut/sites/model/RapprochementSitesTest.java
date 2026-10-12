@@ -207,10 +207,29 @@ class RapprochementSitesTest {
                         .contains("injoignable"));
         assertThat(siteDao.findByUtilisateur(ID_USER)).isEmpty();
 
+        // Depuis #6151 le « non connecté » se dit : c'est un jeton périmé, ou celui qu'un 401 vient
+        // d'effacer, et l'écran doit pouvoir nommer la reconnexion.
         when(client.mesSites()).thenReturn(ReponseApi.nonConnecte());
         assertThat(rapprochement.synchroniser(client))
-                .as("non connecté : silence légitime")
-                .isEmpty();
+                .get()
+                .satisfies(
+                        rapport -> assertThat(rapport.demandeUneReconnexion()).isTrue())
+                .satisfies(rapport ->
+                        assertThat(rapport.enClair()).isEqualTo("sites non récupérés (jeton absent ou expiré)"));
+        assertThat(siteDao.findByUtilisateur(ID_USER)).isEmpty();
+
+        when(client.mesSites()).thenReturn(ReponseApi.refuse(401, ""));
+        assertThat(rapprochement.synchroniser(client))
+                .get()
+                .satisfies(rapport ->
+                        assertThat(rapport.enClair()).isEqualTo("sites non récupérés (jeton refusé par Vigie-Chiro)"));
+
+        when(client.mesSites()).thenReturn(ReponseApi.refuse(403, ""));
+        assertThat(rapprochement.synchroniser(client))
+                .get()
+                .satisfies(rapport -> assertThat(rapport.demandeUneReconnexion())
+                        .as("un 403 n'est pas un jeton mort")
+                        .isFalse());
     }
 
     // --- #2525 : propriété du carré dérivée de `site.observateur` ---

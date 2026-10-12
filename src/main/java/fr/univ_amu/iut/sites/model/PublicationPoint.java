@@ -3,6 +3,7 @@ package fr.univ_amu.iut.sites.model;
 import com.google.gson.JsonArray;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.FournisseurToken;
+import fr.univ_amu.iut.commun.api.GesteDeReconnexion;
 import fr.univ_amu.iut.commun.api.LocalitesDuSite;
 import fr.univ_amu.iut.commun.api.PointVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
@@ -169,6 +170,14 @@ public class PublicationPoint {
     /// envoyait vérifier une inscription qui n'y était pour rien. Les deux causes sont donc nommées, la
     /// plus probable d'abord.
     private static Resultat refus(ReponseApi<?> reponse, String pendant) {
+        // Jeton absent, expiré, ou refusé en `401` (#6151) : « vérifiez votre connexion » se lisait comme
+        // une panne de réseau, et faisait réessayer un geste voué au même refus.
+        if (reponse instanceof ReponseApi.NonConnecte<?>
+                || (reponse instanceof ReponseApi.Refuse<?> jetonRefuse && jetonRefuse.statut() == 401)) {
+            return new Resultat.Refuse(
+                    "Impossible de " + pendant + " : votre jeton Vigie-Chiro est absent, expiré ou refusé.",
+                    GesteDeReconnexion.A_L_ECRAN + " Rien n'a été modifié sur la plateforme.");
+        }
         if (reponse instanceof ReponseApi.Refuse<?> refuse && refuse.statut() == 403) {
             return new Resultat.Refuse(
                     "La plateforme refuse d'écrire les points de ce carré.",

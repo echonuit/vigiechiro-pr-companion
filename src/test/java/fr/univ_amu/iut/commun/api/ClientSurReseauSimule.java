@@ -14,7 +14,13 @@ public final class ClientSurReseauSimule {
     private ClientSurReseauSimule() {}
 
     public static ClientVigieChiro sur(HttpClient reseau) {
+        return sur(reseau, () -> Optional.of("abc"));
+    }
+
+    /// Le même, sur une **source de jeton fournie** (#6151) : celle de l'application, pour qu'un banc voie
+    /// un jeton périmé ne plus partir, et un `401` effacer le jeton enregistré.
+    public static ClientVigieChiro sur(HttpClient reseau, FournisseurToken jetons) {
         return new ClientVigieChiro(new TransportVigieChiro(
-                "http://api.exemple/v1", () -> Optional.of("abc"), reseau, new PolitiqueReessai(d -> {}, () -> 0.0)));
+                "http://api.exemple/v1", jetons, reseau, new PolitiqueReessai(d -> {}, () -> 0.0)));
     }
 }

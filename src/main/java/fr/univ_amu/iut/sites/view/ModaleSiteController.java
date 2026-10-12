@@ -188,6 +188,7 @@ public class ModaleSiteController {
                             .carre()
                             .appliquer(resultat, viewModel.numeroCarreProperty().get());
                     rechercheEnCours.set(false);
+                    relireLaConnexion();
                 },
                 echec -> {
                     rechercheEnCours.set(false);
@@ -196,7 +197,14 @@ public class ModaleSiteController {
                             .appliquer(
                                     CarreExistantViewModel.ResultatRechercheCarre.indisponible(demande),
                                     viewModel.numeroCarreProperty().get());
+                    relireLaConnexion();
                 });
+    }
+
+    /// Au retour d'un geste de plateforme, sur le fil JavaFX : l'état de connexion se relit (#6151), et
+    /// « Vérifier » se ferme si le jeton a expiré ou vient d'être refusé. Jamais dans la tâche.
+    private void relireLaConnexion() {
+        etatConnexion.ifPresent(EtatConnexion::relire);
     }
 
     /// Récupère le carré **hors du fil JavaFX**, puis conclut.
@@ -211,6 +219,7 @@ public class ModaleSiteController {
                 viewModel::rapatrierCarre,
                 resultat -> {
                     btnRecupererCarre.setDisable(false);
+                    relireLaConnexion();
                     if (resultat instanceof RapatriementCarre.Resultat.Rapatrie rapatrie) {
                         apresRapatriement.accept(rapatrie);
                         fermer();
@@ -220,6 +229,7 @@ public class ModaleSiteController {
                 },
                 echec -> {
                     btnRecupererCarre.setDisable(false);
+                    relireLaConnexion();
                     viewModel
                             .carre()
                             .appliquerRapatriement(new RapatriementCarre.Resultat.Indisponible(
@@ -413,6 +423,7 @@ public class ModaleSiteController {
                     viewModel
                             .carre()
                             .appliquer(resultat, viewModel.numeroCarreProperty().get());
+                    relireLaConnexion();
                     conclureLaCreation();
                 },
                 echec -> {
@@ -422,6 +433,7 @@ public class ModaleSiteController {
                             .appliquer(
                                     CarreExistantViewModel.ResultatRechercheCarre.indisponible(demande),
                                     viewModel.numeroCarreProperty().get());
+                    relireLaConnexion();
                     conclureLaCreation();
                 });
     }

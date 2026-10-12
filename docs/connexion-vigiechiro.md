@@ -46,9 +46,17 @@ Cette synchronisation est ensuite **rejouable à la demande**, sans se reconnect
 
 ## Jeton expiré ou absent
 
-Hors connexion (ou jeton expiré), l'application **se dégrade proprement** : les actions liées à la
-plateforme sont grisées avec une explication, tout le reste fonctionne normalement. Rouvrez
-simplement **☰ → Se connecter à Vigie-Chiro…** et recollez un jeton frais.
+Hors connexion, l'application **se dégrade proprement** : les actions liées à la plateforme sont
+grisées avec une explication, tout le reste fonctionne normalement. Rouvrez simplement **☰ → Se
+connecter à Vigie-Chiro…** et recollez un jeton frais.
+
+Un jeton qui **expire pendant que l'application est ouverte**, ou que la plateforme **refuse** en cours
+de travail, se découvre au premier geste qui en a besoin : ce geste vous dit de vous reconnecter et où
+(« Reconnectez-vous depuis le menu principal, entrée « Se connecter à Vigie-Chiro… » »), puis il se
+grise, comme les autres actions de plateforme. Un jeton refusé est **oublié** : il ne repart plus, et
+la fenêtre de connexion affiche « Non connecté ». Ouvrir cette fenêtre suffit aussi à griser les actions
+d'un jeton expiré. Les envois d'un dépôt refusés pour cette raison redeviennent reprenables dès que
+vous vous reconnectez.
 
 Lors de la vérification d'un jeton, la modale distingue désormais les causes d'échec : **« Token
 invalide ou expiré »** signifie que la plateforme a réellement refusé le jeton (recollez-en un frais),

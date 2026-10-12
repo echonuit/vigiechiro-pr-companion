@@ -271,7 +271,8 @@ ead5f91ebcf9  src/main/java/fr/univ_amu/iut/commun/api/CorpsFichierAvecProgressi
 3ec0247b85b9  src/main/java/fr/univ_amu/iut/commun/api/DonneesVigieChiro.java
 ae6b14bd1665  src/main/java/fr/univ_amu/iut/commun/api/EtatTraitement.java
 761bd8fdf66d  src/main/java/fr/univ_amu/iut/commun/api/FichierSigne.java
-e31e1c8d01c4  src/main/java/fr/univ_amu/iut/commun/api/FournisseurToken.java
+d691b5a62f65  src/main/java/fr/univ_amu/iut/commun/api/FournisseurToken.java
+17f905d1d042  src/main/java/fr/univ_amu/iut/commun/api/GesteDeReconnexion.java
 5508e00430dc  src/main/java/fr/univ_amu/iut/commun/api/IssueDeDepot.java
 b2a1026ad557  src/main/java/fr/univ_amu/iut/commun/api/IssueLancement.java
 f9cae524b20e  src/main/java/fr/univ_amu/iut/commun/api/JournalEchange.java
@@ -295,7 +296,7 @@ f88e99f1c20a  src/main/java/fr/univ_amu/iut/commun/api/PiecesJointesVigieChiro.j
 6cc2da14496c  src/main/java/fr/univ_amu/iut/commun/api/PolitiqueReessai.java
 6ea875c793f5  src/main/java/fr/univ_amu/iut/commun/api/ProfilVigieChiro.java
 a92430a50d9a  src/main/java/fr/univ_amu/iut/commun/api/Provenance.java
-21c04a1d1c8d  src/main/java/fr/univ_amu/iut/commun/api/RapportSynchro.java
+2c8498ae8153  src/main/java/fr/univ_amu/iut/commun/api/RapportSynchro.java
 330cebbb90e4  src/main/java/fr/univ_amu/iut/commun/api/RapprochementVigieChiro.java
 8a5ab9c7b954  src/main/java/fr/univ_amu/iut/commun/api/ReponseApi.java
 d7cdd493d80f  src/main/java/fr/univ_amu/iut/commun/api/ReponsesGrilleStoc.java
@@ -311,7 +312,7 @@ bfe826020e84  src/main/java/fr/univ_amu/iut/commun/api/SitesVigieChiro.java
 61da48b5dcb0  src/main/java/fr/univ_amu/iut/commun/api/TaxonVigieChiro.java
 bfb175689fb6  src/main/java/fr/univ_amu/iut/commun/api/Traitement.java
 4717693095cd  src/main/java/fr/univ_amu/iut/commun/api/TraitementVigieChiro.java
-c6d9fe551511  src/main/java/fr/univ_amu/iut/commun/api/TransportVigieChiro.java
+867a992e9872  src/main/java/fr/univ_amu/iut/commun/api/TransportVigieChiro.java
 97edde32559d  src/main/java/fr/univ_amu/iut/commun/api/TypePieceJointe.java
 4ef3206718d8  src/main/java/fr/univ_amu/iut/commun/api/UrlSigneeAdmise.java
 5660bdb6fe35  src/main/java/fr/univ_amu/iut/commun/di/Amorcage.java
@@ -674,7 +675,7 @@ a8110967e13c  src/main/java/fr/univ_amu/iut/commun/viewmodel/CompteRenduChiffre.
 205f1da6fbf1  src/main/java/fr/univ_amu/iut/commun/viewmodel/CompteRenduEcran.java
 fefc133b779a  src/main/java/fr/univ_amu/iut/commun/viewmodel/ContextePassage.java
 09d45065864b  src/main/java/fr/univ_amu/iut/commun/viewmodel/ContexteSite.java
-ef1d5352df14  src/main/java/fr/univ_amu/iut/commun/viewmodel/EtatConnexion.java
+876a747ecd7c  src/main/java/fr/univ_amu/iut/commun/viewmodel/EtatConnexion.java
 833d8b98efcd  src/main/java/fr/univ_amu/iut/commun/viewmodel/EtatEtape.java
 04aafb3a7bea  src/main/java/fr/univ_amu/iut/commun/viewmodel/EtatUnite.java
 36d6a673cb8b  src/main/java/fr/univ_amu/iut/commun/viewmodel/Filtres.java
@@ -696,8 +697,8 @@ fc14a869c97a  src/main/java/fr/univ_amu/iut/commun/viewmodel/ResteDeRestauration
 9083ed7eac94  src/main/java/fr/univ_amu/iut/commun/viewmodel/TexteCompteRendu.java
 6907576ebc88  src/main/java/fr/univ_amu/iut/commun/viewmodel/TexteCompteRenduChiffre.java
 bad9350fb0c2  src/main/java/fr/univ_amu/iut/commun/viewmodel/ZonesStatut.java
-261c87360c6b  src/main/java/fr/univ_amu/iut/connexion/di/ConnexionModule.java
-3ac15a4e2841  src/main/java/fr/univ_amu/iut/connexion/model/StockageConnexion.java
+56cbf866c0aa  src/main/java/fr/univ_amu/iut/connexion/di/ConnexionModule.java
+19669510c9f1  src/main/java/fr/univ_amu/iut/connexion/model/StockageConnexion.java
 2937864a851a  src/main/java/fr/univ_amu/iut/connexion/outils/CaptureConnexion.java
 b55149f4aea1  src/main/java/fr/univ_amu/iut/connexion/view/ActionConnexion.java
 190d561f798e  src/main/java/fr/univ_amu/iut/connexion/view/ConnexionModaleController.java
@@ -827,7 +828,7 @@ e5b954ad709d  src/main/java/fr/univ_amu/iut/importation/viewmodel/PreferenceCons
 c6a9df8dba67  src/main/java/fr/univ_amu/iut/lot/model/ArchivePlanifiee.java
 6e4db13d669d  src/main/java/fr/univ_amu/iut/lot/model/BilanDepot.java
 16d0a50e02ad  src/main/java/fr/univ_amu/iut/lot/model/BilanVerification.java
-307ad3eb152c  src/main/java/fr/univ_amu/iut/lot/model/CauseRefus.java
+b53415774f04  src/main/java/fr/univ_amu/iut/lot/model/CauseRefus.java
 ac1bc00d1b9e  src/main/java/fr/univ_amu/iut/lot/model/ChoixSourceDepot.java
 d4116335de13  src/main/java/fr/univ_amu/iut/lot/model/CompacteurDepot.java
 2f7519ebd64e  src/main/java/fr/univ_amu/iut/lot/model/ControleCoherence.java
@@ -1163,7 +1164,7 @@ da30c90666bf  src/main/java/fr/univ_amu/iut/sites/model/PointLocalParLocalite.ja
 78d6cdc5a89a  src/main/java/fr/univ_amu/iut/sites/model/RapatriementCarre.java
 0c989e27531c  src/main/java/fr/univ_amu/iut/sites/model/RapprochementNuitsOpportunistes.java
 c8955f4791ef  src/main/java/fr/univ_amu/iut/sites/model/RapprochementSites.java
-45e570815dda  src/main/java/fr/univ_amu/iut/sites/model/RechercheCarreExistant.java
+4cb2a9337f53  src/main/java/fr/univ_amu/iut/sites/model/RechercheCarreExistant.java
 19469c2e151d  src/main/java/fr/univ_amu/iut/sites/model/ServiceCommunes.java
 ad987ffaf7de  src/main/java/fr/univ_amu/iut/sites/model/ServiceSites.java
 933d829945fa  src/main/java/fr/univ_amu/iut/sites/model/Site.java
@@ -1179,10 +1180,10 @@ d81f9a8bdbc3  src/main/java/fr/univ_amu/iut/sites/model/dao/PointPublieDao.java
 a89f383b46f5  src/main/java/fr/univ_amu/iut/sites/outils/CaptureEcrans.java
 0fb685befe5e  src/main/java/fr/univ_amu/iut/sites/view/ActiviteMesSites.java
 6b007295b015  src/main/java/fr/univ_amu/iut/sites/view/BadgeStatutPlateforme.java
-000f2d64bcd8  src/main/java/fr/univ_amu/iut/sites/view/CartesPointsSite.java
-64c970f1990c  src/main/java/fr/univ_amu/iut/sites/view/MesSitesController.java
+146671bc3219  src/main/java/fr/univ_amu/iut/sites/view/CartesPointsSite.java
+110ee533484b  src/main/java/fr/univ_amu/iut/sites/view/MesSitesController.java
 a46876a7fccb  src/main/java/fr/univ_amu/iut/sites/view/ModalePointController.java
-847ee6362ff4  src/main/java/fr/univ_amu/iut/sites/view/ModaleSiteController.java
+4bed0d08d847  src/main/java/fr/univ_amu/iut/sites/view/ModaleSiteController.java
 09d1c5c08d5a  src/main/java/fr/univ_amu/iut/sites/view/NavigationSites.java
 77cd257dfe2f  src/main/java/fr/univ_amu/iut/sites/view/SiteDetailController.java
 7b8d5007d8a2  src/main/java/fr/univ_amu/iut/sites/viewmodel/CarreExistantViewModel.java
@@ -1459,7 +1460,7 @@ ffd3c4583804  src/test/java/fr/univ_amu/iut/cliquet/CliquetFixturePassageTest.ja
 662d57b062f5  src/test/java/fr/univ_amu/iut/commun/api/CatalogueApiTest.java
 bfa1642021af  src/test/java/fr/univ_amu/iut/commun/api/ChaineDuCarreStocTest.java
 80a2127fd522  src/test/java/fr/univ_amu/iut/commun/api/ClientGbifTest.java
-d40353c406b2  src/test/java/fr/univ_amu/iut/commun/api/ClientSurReseauSimule.java
+2571dc146994  src/test/java/fr/univ_amu/iut/commun/api/ClientSurReseauSimule.java
 33342c8afcaa  src/test/java/fr/univ_amu/iut/commun/api/ClientVigieChiroTest.java
 c3f19600dfb9  src/test/java/fr/univ_amu/iut/commun/api/ContratApiVigieChiroLiveTest.java
 3031abb0adaf  src/test/java/fr/univ_amu/iut/commun/api/CorpsFichierAvecProgressionTest.java
@@ -1481,6 +1482,7 @@ b3aaf034461c  src/test/java/fr/univ_amu/iut/commun/api/ReponsesGrilleStocTest.ja
 2707471520ac  src/test/java/fr/univ_amu/iut/commun/api/SignatureS3DepotTest.java
 0d3d255f3ada  src/test/java/fr/univ_amu/iut/commun/api/SitesVigieChiroTest.java
 07fb601235e0  src/test/java/fr/univ_amu/iut/commun/api/TraitementVigieChiroTest.java
+786c937de1ba  src/test/java/fr/univ_amu/iut/commun/api/TransportSignaleUnJetonRefuseTest.java
 39defdc92f7f  src/test/java/fr/univ_amu/iut/commun/api/TransportVigieChiroTest.java
 efdb83418f82  src/test/java/fr/univ_amu/iut/commun/api/UrlSigneeAdmiseTest.java
 a1e593d0ca8a  src/test/java/fr/univ_amu/iut/commun/api/plateforme/ArchiveDuRepliSurLaPlateformeDeTestTest.java
@@ -1730,6 +1732,7 @@ bd0cc6d88783  src/test/java/fr/univ_amu/iut/commun/viewmodel/RevisionDonneesTest
 fb28e8a30b95  src/test/java/fr/univ_amu/iut/commun/viewmodel/SuiviLignesTest.java
 7d04f4616e8e  src/test/java/fr/univ_amu/iut/commun/viewmodel/TexteCompteRenduChiffreTest.java
 d1becfa86dd7  src/test/java/fr/univ_amu/iut/commun/viewmodel/ZonesStatutTest.java
+a67529901217  src/test/java/fr/univ_amu/iut/connexion/di/SourceDuJetonTest.java
 061fd5ed7b7c  src/test/java/fr/univ_amu/iut/connexion/model/StockageConnexionTest.java
 ae3d35e4b4ed  src/test/java/fr/univ_amu/iut/connexion/view/ConnexionModaleConnecteeViewTest.java
 8a18fae2d477  src/test/java/fr/univ_amu/iut/connexion/view/ConnexionModaleJetonNonVerifieViewTest.java
@@ -1865,6 +1868,7 @@ d5f0438815d0  src/test/java/fr/univ_amu/iut/importation/viewmodel/NuitsDeLaCarte
 5856a70ce966  src/test/java/fr/univ_amu/iut/importation/viewmodel/RattachementImportViewModelTest.java
 25fecdcaf3fa  src/test/java/fr/univ_amu/iut/importation/viewmodel/SuiviLignesFichiersTest.java
 fa53eeacc796  src/test/java/fr/univ_amu/iut/lot/CompacteurDepotTest.java
+1d4cfc3b2c00  src/test/java/fr/univ_amu/iut/lot/DepotApresUnJetonRefuseTest.java
 115776f65ad4  src/test/java/fr/univ_amu/iut/lot/DepotPlanDaoTest.java
 cc02b2cd91a1  src/test/java/fr/univ_amu/iut/lot/DepotUniteDaoTest.java
 3c8d6535f9a9  src/test/java/fr/univ_amu/iut/lot/DepotVigieChiroTest.java
@@ -2184,6 +2188,7 @@ dbadf15443b0  src/test/java/fr/univ_amu/iut/sites/model/RapatriementCarreTest.ja
 72a97a17785d  src/test/java/fr/univ_amu/iut/sites/model/ServiceCommunesTest.java
 a40ae01d17ca  src/test/java/fr/univ_amu/iut/sites/model/SynchronisationSitesTest.java
 6a705714b034  src/test/java/fr/univ_amu/iut/sites/model/dao/PointPublieDaoTest.java
+642f1456138d  src/test/java/fr/univ_amu/iut/sites/view/JetonPerimeOuRefuseViewTest.java
 2b637c8df5ba  src/test/java/fr/univ_amu/iut/sites/view/LibelleProximiteTest.java
 be40f4ceca19  src/test/java/fr/univ_amu/iut/sites/view/MesSitesEtatVideViewTest.java
 429bc97351c6  src/test/java/fr/univ_amu/iut/sites/view/MesSitesFraicheurViewTest.java

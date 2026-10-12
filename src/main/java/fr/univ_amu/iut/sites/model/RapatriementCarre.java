@@ -151,8 +151,13 @@ public class RapatriementCarre {
             }
             case ReponseApi.Refuse<List<SiteVigieChiro>>(int statut, String corps) -> {
                 LOG.log(Level.FINE, () -> "Rapatriement du carré ignoré (refus HTTP " + statut + ")");
+                // Un `401` dit le geste, et non « vérifiez votre jeton » (#6151) : le transport vient de
+                // l'oublier, il n'y a plus rien à vérifier. Sans endroit : la ligne de commande lit aussi
+                // ce message.
                 yield new Resultat.Indisponible(
-                        "Vigie-Chiro a refusé la demande (HTTP " + statut + "). Vérifiez votre jeton.");
+                        statut == 401
+                                ? "Vigie-Chiro a refusé votre jeton : reconnectez-vous, puis réessayez."
+                                : "Vigie-Chiro a refusé la demande (HTTP " + statut + "). Vérifiez votre jeton.");
             }
         };
     }

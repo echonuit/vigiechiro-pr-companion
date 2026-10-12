@@ -33,6 +33,14 @@ class CauseRefusTest {
         }
 
         @Test
+        @DisplayName("#6151 : sans jeton, l'appel n'est pas parti ; seule une reconnexion le fera partir")
+        void sans_jeton() {
+            // Le cas courant : le reste d'un dépôt dont le premier 401 vient d'effacer le jeton. Ses unités
+            // doivent se réarmer comme celles qui ont reçu le 401, et non passer pour un contenu refusé.
+            assertThat(CauseRefus.de(ReponseApi.nonConnecte(), Provenance.API)).isEqualTo(CauseRefus.AUTHENTIFICATION);
+        }
+
+        @Test
         @DisplayName("403 : les droits manquent, une reconnexion peut les rendre")
         void droits_manquants() {
             assertThat(CauseRefus.de(ReponseApi.refuse(403, "forbidden"), Provenance.API))
@@ -119,12 +127,11 @@ class CauseRefusTest {
         }
 
         @Test
-        @DisplayName("un succès, un injoignable et un non-connecté ne sont pas des refus")
+        @DisplayName("un succès et un injoignable ne sont pas des refus")
         void pas_un_refus() {
             assertThat(CauseRefus.de(ReponseApi.succes("ok"), Provenance.API)).isNull();
             assertThat(CauseRefus.de(ReponseApi.injoignable("réseau coupé"), Provenance.API))
                     .isNull();
-            assertThat(CauseRefus.de(ReponseApi.nonConnecte(), Provenance.API)).isNull();
         }
     }
 }

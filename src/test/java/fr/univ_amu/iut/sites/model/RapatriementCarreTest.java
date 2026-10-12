@@ -275,7 +275,8 @@ class RapatriementCarreTest {
         // connexion qui était bonne, et laissait l'utilisateur trancher ce que le programme savait déjà.
         assertThat(sansJeton).contains("pas connecté").doesNotContain("injoignable");
         assertThat(injoignable).contains("injoignable").doesNotContain("pas connecté");
-        assertThat(refuse).contains("refusé").contains("401");
+        // Un 401 nomme la reconnexion, et non plus le statut (#6151) : le transport vient d'oublier le jeton.
+        assertThat(refuse).contains("refusé").contains("reconnectez-vous");
 
         // Et les trois disent le geste qui répare, chacun le sien.
         assertThat(sansJeton).contains("Connectez-vous");

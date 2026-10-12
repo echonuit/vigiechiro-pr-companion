@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.sites.viewmodel;
 
+import fr.univ_amu.iut.commun.api.GesteDeReconnexion;
 import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
@@ -156,7 +157,9 @@ public class SitesViewModel {
 
     private static String messageDe(List<RapportSynchro> rapports) {
         if (rapports.isEmpty()) {
-            return "Aucun site distant récupéré (non connecté, ou aucun site sur Vigie-Chiro).";
+            // « Non connecté » n'arrive plus ici depuis #6151 : il se dit par son propre rapport, avec le
+            // geste qui répare. Le nommer encore ferait douter d'une connexion qui marche.
+            return "Aucun site distant récupéré (aucun site sur Vigie-Chiro).";
         }
         // Chaque nature dit son issue, à côté des autres (#2655). Une synchronisation empêchée se dit
         // telle quelle (#1284) sans écraser le reste : un message unique faisait disparaître les
@@ -165,6 +168,10 @@ public class SitesViewModel {
         // `RapportSynchro.enClair()` sait déjà dire « nuit(s) non récupérées (cause) » rapport par
         // rapport ; il suffit de ne pas l'écraser.
         String corps = rapports.stream().map(SitesViewModel::segmentSynchro).collect(Collectors.joining(", "));
+        if (rapports.stream().anyMatch(RapportSynchro::demandeUneReconnexion)) {
+            // Le geste qui répare, et où (#6151) : la cause seule laissait chercher quoi faire.
+            return corps + ". " + GesteDeReconnexion.A_L_ECRAN;
+        }
         return rapports.stream().anyMatch(rapport -> rapport.souci() != null)
                 ? corps + "."
                 : corps + " depuis Vigie-Chiro.";
