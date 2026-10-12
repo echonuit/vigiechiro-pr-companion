@@ -1489,9 +1489,10 @@ a1e593d0ca8a  src/test/java/fr/univ_amu/iut/commun/api/plateforme/ArchiveDuRepli
 720ef0063de2  src/test/java/fr/univ_amu/iut/commun/api/plateforme/CibleLive.java
 eb4b2f869205  src/test/java/fr/univ_amu/iut/commun/api/plateforme/CibleLiveTest.java
 306bdc2a1902  src/test/java/fr/univ_amu/iut/commun/api/plateforme/DepotSurLaPlateformeDeTestTest.java
+fe078d5e5570  src/test/java/fr/univ_amu/iut/commun/api/plateforme/FicheWebDUneParticipationTest.java
 cdd0f8a1fa2f  src/test/java/fr/univ_amu/iut/commun/api/plateforme/FrontWebSurLaPlateformeDeTestTest.java
 df1637e55f07  src/test/java/fr/univ_amu/iut/commun/api/plateforme/ImageDeLApiSansRevisionTest.java
-4f17a7d9ae4f  src/test/java/fr/univ_amu/iut/commun/api/plateforme/PlateformeDeTest.java
+8010b3bc64fd  src/test/java/fr/univ_amu/iut/commun/api/plateforme/PlateformeDeTest.java
 7292391074af  src/test/java/fr/univ_amu/iut/commun/api/plateforme/WorkerDeLaPlateformeDeTest.java
 08562833df8b  src/test/java/fr/univ_amu/iut/commun/di/AmorcageTest.java
 9ceb8cd1b78e  src/test/java/fr/univ_amu/iut/commun/di/DecouverteModulesTest.java
@@ -2086,7 +2087,7 @@ dd0bd72a760f  src/test/java/fr/univ_amu/iut/recette/CarteDeRecette.java
 dc61d71a4d14  src/test/java/fr/univ_amu/iut/recette/CasDeRecette.java
 b5e7288906d9  src/test/java/fr/univ_amu/iut/recette/ClipDeModaleTest.java
 03f3d8fd682d  src/test/java/fr/univ_amu/iut/recette/CorrespondanceRecetteTest.java
-430d522b9848  src/test/java/fr/univ_amu/iut/recette/DeclarationDeLaPlateformeTest.java
+4a5bee0529f1  src/test/java/fr/univ_amu/iut/recette/DeclarationDeLaPlateformeTest.java
 9e81f5097238  src/test/java/fr/univ_amu/iut/recette/DialoguesALImage.java
 fb2f197b3036  src/test/java/fr/univ_amu/iut/recette/DispositionDesBrutsTest.java
 fe6c381571ea  src/test/java/fr/univ_amu/iut/recette/EcrituresHorsDuFil.java

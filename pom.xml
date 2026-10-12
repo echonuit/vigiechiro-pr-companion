@@ -89,6 +89,9 @@
              VigieChiro réelle et valide les réponses contre les JSON Schema de src/test/resources. -->
         <restassured.version>6.0.1</restassured.version>
         <testcontainers.version>2.0.5</testcontainers.version>
+        <!-- La version de Selenium que testcontainers-selenium tire lui-même : le navigateur de la
+             plateforme de test se pilote avec elle (#6061). -->
+        <selenium.version>4.10.0</selenium.version>
 
         <!-- Lecture des specs YAML du générateur de cartes SD de recette (scope test uniquement,
              cf. recette/fixtures/spec/ ; jamais embarqué dans le binaire distribué). -->
@@ -425,6 +428,43 @@
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
             <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Un navigateur dans un conteneur, pour lire la fiche web que sert la plateforme de test
+             (#6061, sous-chantier #5645). Le module rend l'adresse du navigateur ; le pilote se
+             construit avec les modules de Selenium que les tests emploient, déclarés pour le
+             contrôle des dépendances de la phase `verify`. -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-selenium</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-api</artifactId>
+            <version>${selenium.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-remote-driver</artifactId>
+            <version>${selenium.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-chrome-driver</artifactId>
+            <version>${selenium.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- `ChromeOptions` hérite de `ChromiumOptions`, qui vit ici : le contrôle des dépendances
+             compte la classe parente comme employée. -->
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-chromium-driver</artifactId>
+            <version>${selenium.version}</version>
             <scope>test</scope>
         </dependency>
 

@@ -55,6 +55,27 @@ RUN mkdir /front \
     && grunt build \
     && rm -rf node_modules bower_components /root/.npm /root/.cache
 
+# Ce que `index.html` charge de cdnjs, rapatrié à la construction et servi par l'API elle-même (#6061).
+# Sans le sélecteur de dates, l'application ne démarre pas (mesuré : le retirer fait rougir la fiche ; la
+# locale et Font Awesome, eux, ne font que manquer). Un test qui ouvre la fiche dépendait sinon d'Internet
+# à chaque exécution, et le navigateur des tests coupe désormais tout hôte extérieur. Une adresse cdnjs restée dans la page fait échouer la construction.
+RUN CDNJS=https://cdnjs.cloudflare.com/ajax/libs \
+    && cd /front/dist \
+    && for f in \
+        angular-bootstrap-datetimepicker/1.1.2/css/datetimepicker.min.css \
+        angular-bootstrap-datetimepicker/1.1.2/js/datetimepicker.min.js \
+        angular-bootstrap-datetimepicker/1.1.2/js/datetimepicker.templates.min.js \
+        angular-i18n/1.2.15/angular-locale_fr-fr.js \
+        font-awesome/4.6.3/css/font-awesome.min.css \
+        font-awesome/4.6.3/fonts/fontawesome-webfont.eot \
+        font-awesome/4.6.3/fonts/fontawesome-webfont.woff2 \
+        font-awesome/4.6.3/fonts/fontawesome-webfont.woff \
+        font-awesome/4.6.3/fonts/fontawesome-webfont.ttf \
+        font-awesome/4.6.3/fonts/fontawesome-webfont.svg; \
+       do curl -fsSL --create-dirs -o "cdnjs/$f" "$CDNJS/$f" || exit 1; done \
+    && sed -i "s#https://cdnjs.cloudflare.com/ajax/libs/#cdnjs/#g" index.html \
+    && ! grep -q "cdnjs.cloudflare.com" index.html
+
 FROM python:3.12-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f
 
 ARG REVISION

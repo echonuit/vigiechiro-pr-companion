@@ -94,6 +94,11 @@ class DeclarationDeLaPlateformeTest {
     /// job `plateforme-de-test` ne la jouerait jamais, et rien ne le dirait.
     private static final String DECLARE_SA_CIBLE = "CibleLive.declaree()";
 
+    /// La quatrième (#6061) : un test qui APPELLE `PlateformeDeTest.acces()` monte la plateforme au premier
+    /// appel. `FrontWebSurLaPlateformeDeTestTest` est écrit ainsi depuis #6060, et le relevé ne le voyait
+    /// pas. Seules les classes de test comptent : `CibleLive` l'appelle aussi, et c'est une aide.
+    private static final String APPELLE_LA_PLATEFORME_DE_TEST = "PlateformeDeTest.acces()";
+
     /// Ce qui sort une classe du build par défaut et la met dans le job `plateforme-de-test`.
     private static final String TAG_PLATEFORME_DE_TEST = "@Tag(\"plateforme-de-test\")";
 
@@ -149,6 +154,25 @@ class DeclarationDeLaPlateformeTest {
                         Ces classes déclarent leur cible par `CibleLive` sans porter
                         `@Tag("plateforme-de-test")`. Le job du même nom ne les joue donc jamais, et leur
                         cible de test reste lettre morte sans que rien ne le dise (#5643).""")
+                .isEmpty();
+
+        List<Path> appelants = javaSous(SOURCES)
+                .filter(fichier -> fichier.getFileName().toString().endsWith("Test.java"))
+                .filter(fichier -> !fichier.endsWith("DeclarationDeLaPlateformeTest.java"))
+                .filter(fichier -> contient(fichier, APPELLE_LA_PLATEFORME_DE_TEST))
+                .toList();
+        assertThat(appelants)
+                .as(
+                        "Aucun test n'appelle la plateforme de test : le relevé cherche `%s` sous `%s`.",
+                        APPELLE_LA_PLATEFORME_DE_TEST, SOURCES)
+                .isNotEmpty();
+        assertThat(appelants.stream()
+                        .filter(fichier -> !commenceUneLigne(fichier, TAG_PLATEFORME_DE_TEST))
+                        .toList())
+                .as("""
+                        Ces classes de test appellent `PlateformeDeTest.acces()`, qui monte la plateforme,
+                        donc Docker, sans porter `@Tag("plateforme-de-test")`. Elles tourneraient sous
+                        `./mvnw test`, sur des runners sans Docker utilisable (#6061).""")
                 .isEmpty();
     }
 

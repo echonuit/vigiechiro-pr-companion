@@ -6,7 +6,8 @@
       "cle": "observatrice",
       "role": "Observateur",
       "pseudo": "Observatrice",
-      "email": "observatrice@plateforme-de-test.invalid"
+      "email": "observatrice@plateforme-de-test.invalid",
+      "charte_acceptee": true
     },
     {
       "cle": "validatrice",

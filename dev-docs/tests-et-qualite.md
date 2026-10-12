@@ -521,6 +521,14 @@ fork, ce que garantit le profil, qui ne joue que ce tag.
 - Le front web : `acces().urlDuFront()` rend l'adresse de sa page d'entrée, dérivée de celle de l'API
   puisqu'ils partagent leur origine. Exemple :
   [`FrontWebSurLaPlateformeDeTestTest`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/test/java/fr/univ_amu/iut/commun/api/plateforme/FrontWebSurLaPlateformeDeTestTest.java).
+- La fiche web dans un navigateur : un `BrowserWebDriverContainer` à l'image `navigateur.image` des
+  épingles, qui rejoint `PlateformeDeTest.reseau()` et ouvre `urlDuFrontDansLeReseau()`. La connexion
+  passe par `?token=` et le jeton de l'utilisatrice, que la directive de connexion du front lit ; la
+  connexion de `DEV_FAKE_AUTH` ouvrirait une session « John Doe », qui ne possède rien. L'observatrice
+  a la charte acceptée dans l'état de départ, sans quoi sa modale couvrirait la fiche. Le navigateur ne
+  résout que l'alias de l'API (`--host-resolver-rules`) : ce que le front chargeait de cdnjs est servi
+  par l'image, et un test ne dépend plus d'Internet. Exemple :
+  [`FicheWebDUneParticipationTest`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/test/java/fr/univ_amu/iut/commun/api/plateforme/FicheWebDUneParticipationTest.java).
 - Un scénario d'écran : `BancDeRecette.surLaPlateformeDeTest("observatrice")`, exclusive des autres
   déclarations du banc. Le banc vise la plateforme et dépose le jeton sans profil ; la modale le
   revérifie seule. Exemple :
@@ -543,8 +551,8 @@ au suivant (#5644). Un scénario qui n'existe que sur la plateforme de test port
 
 ### Ses épingles
 
-`epingles.properties` est le **seul** endroit qui porte la révision de l'API, celle du front et le
-digest de Mongo. `api.Dockerfile` ne donne donc aucune valeur par défaut à `REVISION` ni à
+`epingles.properties` est le **seul** endroit qui porte la révision de l'API, celle du front, et les
+digests de Mongo et du navigateur. `api.Dockerfile` ne donne donc aucune valeur par défaut à `REVISION` ni à
 `FRONT_REVISION`, et `ImageDeLApiSansRevisionTest` exige qu'il refuse de se construire sans l'une ou
 l'autre. Chacun de ses deux cas vise le nom de son épingle : un refus qui ne nommerait
 qu'`epingles.properties` laisserait un cas passer sur le refus de l'autre. Les deux épingles se
@@ -568,9 +576,9 @@ décision, qui se dit dans la demande qui la porte.
   (`WorkerDeLaPlateformeDeTest.jouerLExtraction`,
   [ADR 5970](decisions/5970-la-plateforme-de-test-joue-l-extraction-d-une-archive-par-le-code-du-serveur.md)).
   C'est elle qui dit ce que le serveur fait d'un son qu'une archive lui rend alors qu'il l'a déjà.
-- **La lecture par la fiche web** des écritures de Companion : le front est servi, mais aucun
-  navigateur ne l'ouvre encore (#6061), et ce qu'il rend sans les ressources qu'il charge du dehors
-  (cdnjs, Google Maps) n'est pas mesuré. C'est la suite du sous-chantier #5645.
+- **La lecture par la fiche web** des écritures de Companion : un navigateur ouvre la fiche d'une
+  participation semée (#6061), mais aucun test n'y relit encore ce que Companion a écrit. C'est la
+  suite du sous-chantier #5645 (#6062 à #6064).
 - **Un transfert ou une durée** : sur un lien local, la latence est nulle (lot #5646).
 
 ## Les outils qualité
