@@ -22,7 +22,7 @@ export JAVA_HOME=~/.sdkman/candidates/java/25.0.2-open
 ./mvnw -q -DskipTests compile
 ./mvnw -q org.codehaus.mojo:exec-maven-plugin:exec \
   -Dexec.executable="$JAVA_HOME/bin/java" -Dexec.classpathScope=runtime \
-  -Dexec.args="-Dvigiechiro.workspace=/tmp/vigiechiro-bench -cp %classpath fr.univ_amu.iut.perf.outils.BancMesure"
+  -Dexec.args="-Dvigiechiro.workspace=$HOME/vigiechiro-bench -cp %classpath fr.univ_amu.iut.perf.outils.BancMesure"
 ```
 
 Volumes paramétrables : `-Dperf.sites=...`, `-Dperf.passages=...`, `-Dperf.observations=...` (à ajouter
@@ -41,7 +41,7 @@ import et mesure temps / débit / mémoire :
 ```bash
 ./mvnw -q org.codehaus.mojo:exec-maven-plugin:exec \
   -Dexec.executable="$JAVA_HOME/bin/java" -Dexec.classpathScope=runtime \
-  -Dexec.args="--enable-native-access=ALL-UNNAMED -Dvigiechiro.workspace=/tmp/vigiechiro-bench-import \
+  -Dexec.args="--enable-native-access=ALL-UNNAMED -Dvigiechiro.workspace=$HOME/vigiechiro-bench-import \
                -Dperf.import.go=20 -cp %classpath fr.univ_amu.iut.perf.outils.BancImport"
 ```
 
@@ -50,98 +50,101 @@ plus `-Dperf.import.secondes` (déf. 5.0) et `-Dperf.import.frequenceHz` (déf. 
 Sortie : taille, temps total décomposé en **copie (R9) / transformation (#12) / persistance (O7)**,
 débit, nb séquences, **mémoire crête**.
 
-> L'import recopie puis transforme : prévoir **2 à 3× la taille source** en espace disque. Pour viser
+> L'import recopie puis transforme : prévoir **3× la taille source** en espace disque (mesuré le
+> 2026-10-12 : 27,0 Gio de workspace pour 9 Gio de source). Pour viser
 > 20 Gio à 384 kHz / 5 s, c'est ~5500 fichiers ; commencer petit (`-Dperf.import.fichiers=100`) pour
 > calibrer le temps, puis monter. Le `vigiechiro.workspace` est un **dossier jetable, réinitialisé à
 > chaque lancement** (n'y pointez pas un vrai workspace).
 
 ## Protocole de mesure (à respecter pour des chiffres comparables)
 
-- **Machine IUT standard** (pas une machine de dev), **première utilisation du jour** : c'est la
-  mesure **« à froid »** (JIT non chauffé, cache disque vide) qui fait foi pour les cibles du brief.
-- La mesure **« à chaud »** (médiane après itérations) montre le régime établi, utile pour comparer
-  **avant / après index** (#28).
-- Relancer 2-3 fois et garder l'ordre de grandeur ; ne pas sur-interpréter quelques ms.
+- **Une machine standard, nommée** : le brief le dit (`O5.md`), et c'est la ligne `machine` de
+  `BancImport` qui la nomme. Le poste est au repos pendant la mesure, aucun autre build ni banc ne
+  tourne, et le workspace est sur un disque qui a la place (trois fois la taille de la source).
+- **Un appel jeté, puis les relevés** : la première mesure d'un processus Java coûte de l'ordre de
+  300 ms quelle que soit la taille des données (`O5.md`, « Ce que ce protocole disait de faux »).
+  Une mesure à froid mesure donc le démarrage de la JVM, pas la capacité. C'est la valeur à chaud qui
+  se compare aux seuils ; la valeur à froid se publie à part, sous son nom, comme l'attente du premier
+  écran du jour (ADR 0027).
+- **Trois lancements**, dont on publie les trois valeurs : un chiffre seul ne dit pas sa dispersion.
 
-## Relevés (machine de référence)
+## Relevés du 2026-10-12
 
-> **Machine de référence** : poste comparable à ceux de l'IUT, JDK 25 standard. Chiffres **mesurés**
-> (pas des placeholders) ; relancer 2-3 fois et garder l'ordre de grandeur. La 1ʳᵉ utilisation du jour
-> (JIT + cache disque froids) donne les valeurs « froid ».
+Tous les chiffres de cette section viennent du même poste, le même jour, sur `main` à `ea1415febb`
+(#104 livré : l'import lit chaque WAV par morceaux). En-tête imprimé par `BancImport` :
 
-!!! warning "Les relevés ci-dessous n'ont pas de machine nommée"
-    Cette section a porté des mois durant un « préciser CPU / RAM / SSD si besoin » que personne n'a
-    rempli, et le poste exact qui a produit ces chiffres n'a jamais été consigné : il est aujourd'hui
-    irrécupérable. Les relevés gardent donc leur valeur d'**ordre de grandeur** et perdent celle de
-    point de comparaison - on ne peut pas dire si une machine est plus lente que « la référence ».
+```text
+machine         : 11th Gen Intel(R) Core(TM) i5-1145G7 @ 2.60GHz · 8 cœurs · RAM 30.4 Gio
+exécution       : 25.0.3+9-LTS · Linux 7.0.0-38-generic · heap max 7788 Mo
+```
 
-    Un champ à remplir à la main reste vide : c'est **le banc** qui nomme désormais sa machine, et la
-    ligne voyage avec la mesure. `BancImport` ouvre sur :
+Disque : SSD NVMe interne, workspace et source sur la même partition `ext4`. Les bancs ont tourné l'un
+après l'autre, sans autre build sur le poste. Ce n'était pas la première utilisation du jour.
 
-    ```text
-    machine         : 11th Gen Intel(R) Core(TM) i5-1145G7 @ 2.60GHz · 8 cœurs · RAM 30.4 Gio
-    exécution       : 25.0.3+9-LTS · Linux 6.17.0-41-generic · heap max 7788 Mo
-    ```
-
-    Le processeur et la mémoire se lisent sous `/proc` ; ailleurs la ligne écrit « non lu sur cette
-    plateforme » plutôt que de laisser croire à une mesure. **Le prochain relevé complet remplace ce
-    tableau et lui rend sa machine** : il suffira de coller cette en-tête au-dessus.
+Les relevés de juin que cette section remplaçait n'avaient pas de machine nommée ; ils restent dans
+l'historique de #26 et #27, et ne se comparent pas à ceux-ci.
 
 ### O5 : couche données (`BancMesure`)
 
-| Opération | Cible | Plan d'exécution (après #28) | Froid | Chaud (méd.) |
-|---|---|---|---|---|
-| Sélection ~4031 observations (`findByResults`) | < 100 ms | `SEARCH observation USING INDEX idx_obs_results` (#28, était `SCAN`) | **~25 ms** ✅ | ~8-13 ms |
-| Tri/filtre ~1000 passages (multisite, verdict) | < 200 ms | `SEARCH passage USING INDEX sqlite_autoindex_passage_1 (point_id=?)` | **~18 ms** ✅ | ~7-9 ms |
+Jeu par défaut : 40 carrés de 10 points, 1000 passages, 4031 observations. Trois lancements, chacun
+dans une JVM neuve : le froid est le premier appel du processus, le chaud la médiane des 20 appels qui
+suivent.
 
-Les deux opérations sont **largement sous les cibles** (facteur ~4 à ~10). Rappel #28 : sans
-`idx_obs_results` la sélection faisait un `SCAN` (~75 ms froid sur cette machine) ; avec l'index,
-~25 ms.
+| Opération | Seuil | Froid (3 lancements) | Chaud, médiane de 20 (3 lancements) |
+|---|---|---|---|
+| Sélection des 4031 observations (`findByResults`) | < 100 ms | 30,7 · 38,1 · 33,7 ms | 11,0 · 12,5 · 18,7 ms |
+| Tri et filtre des 1000 passages (`ServiceMultisite`, verdict OK, 250 lignes rendues) | < 200 ms | 47,8 · 41,6 · 32,7 ms | 10,3 · 11,2 · 12,3 ms |
 
-### O3 : import d'une nuit (`BancImport`, WAV de 2 s @ 384 kHz)
+Plans d'exécution : `SEARCH observation USING INDEX idx_obs_results` et `SEARCH passage USING INDEX
+sqlite_autoindex_passage_1`, sans `SCAN`.
 
-| Fichiers | Taille src | Temps total | copie (R9) | transfo (#12) | persist. (O7) | Débit | Mémoire crête | Séquences |
-|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 100 | 146 Mo | 0,55 s | 0,33 s | 0,18 s | 0,04 s | ~184 f/s · 269 Mo/s | 172 Mo | 100 |
-| 500 | 732 Mo | 2,38 s | 1,56 s | 0,75 s | 0,07 s | ~210 f/s · 308 Mo/s | 569 Mo | 500 |
-| 1000 | 1,43 Gio | 3,97 s | 2,77 s | 1,09 s | 0,11 s | ~252 f/s · 369 Mo/s | 626 Mo | 1000 |
+**Ce que ces chiffres ne mesurent pas.** Ils chronomètrent la couche données, pas l'écran.
+`findByResults` n'est pas la requête que charge l'écran des sons : il passe par
+`ProjectionsAudioDao` (`lignesAudioDuPassage`, `lignesAudioNonIdentifiees`), qu'aucun banc ne
+chronomètre. Le tri et le filtrage des observations, le clic sur une ligne, l'action de revue et la
+topologie de 150 carrés de 2 points ne sont pas mesurés ici : ils se mesurent dans l'IHM (#105).
 
-_Reproduire une ligne : `-Dperf.import.fichiers=<100|500|1000> -Dperf.import.secondes=2.0`
-(fréquence par défaut 384000). La commande d'exemple plus haut utilise la durée par défaut de 5 s :
-ajouter `-Dperf.import.secondes=2.0` pour retrouver exactement ces chiffres._
+### O3 : import d'une nuit (`BancImport`, WAV de 5 s à 384 kHz)
 
-!!! note "La colonne « Séquences » ne vient pas de la même mesure que les autres"
-    Les temps, débits et crêtes sont **datés** : ils valent pour la machine de référence, et les
-    rejouer ailleurs donnera autre chose. Le nombre de séquences, lui, ne dépend pas de la machine :
-    c'est `ceil(D / 5)` appliqué à des fichiers de 2 s, donc **une séquence par fichier**, partout.
+Heap par défaut de la JVM (7788 Mo sur ce poste), sauf la ligne `-Xmx128m`. « Après GC » est
+l'occupation la plus haute relevée juste après un GC dans le journal G1 (`-Xlog:gc`) : sans GC complet
+forcé, c'est une borne haute de ce que l'import tient vivant. La crête est échantillonnée par le banc.
 
-    Cette colonne annonçait 400 / 2000 / 4000 - quatre séquences pour un fichier de 2 s, ce qui est
-    `ceil(2 / 0,5)` : le découpage d'**avant #504**, qui tranchait à 5 s *au rythme de sortie* et
-    produisait donc des tranches de 0,5 s réelles. Le correctif a changé la règle sans que ce tableau
-    en soit averti. Vérifié en rejouant la première ligne : 100 fichiers → **100 séquences**.
+| Nuit | Taille source | Lancement | Temps total | copie | transfo (#12) | persist. (O7) | Débit | Crête | Après GC |
+|---|---:|---|---:|---:|---:|---:|---:|---:|---:|
+| 100 WAV (calibrage) | 0,36 Gio | 1 | 0,77 s | 0,37 s | 0,32 s | 0,07 s | 130 f/s · 478 Mo/s | 196 Mo | 56 Mo |
+| 1572 WAV (nuit standard) | 5,62 Gio | 1 | 48,9 s | 17,8 s | 30,4 s | 0,7 s | 32 f/s · 118 Mo/s | 332 Mo | 82 Mo |
+| 1572 WAV | 5,62 Gio | 2 | 40,3 s | 18,6 s | 21,0 s | 0,6 s | 39 f/s · 143 Mo/s | 1114 Mo | 81 Mo |
+| 1572 WAV | 5,62 Gio | 3 | 42,7 s | 19,9 s | 21,9 s | 0,9 s | 37 f/s · 135 Mo/s | 350 Mo | 81 Mo |
+| 1572 WAV, `-Xmx128m` | 5,62 Gio | 1 | 39,3 s | 17,8 s | 20,2 s | 1,2 s | 40 f/s · 147 Mo/s | 125 Mo (plafond) | passe |
+| 2517 WAV (`-Dperf.import.go=9`) | 9,00 Gio | 1 | 83,5 s | 34,3 s | 48,9 s | 0,4 s | 30 f/s · 110 Mo/s | 616 Mo | 84 Mo |
+| 2517 WAV | 9,00 Gio | 2 | 86,6 s | 37,8 s | 47,5 s | 1,4 s | 29 f/s · 106 Mo/s | 361 Mo | 85 Mo |
 
-**Lectures clés (O3)** :
-- Le temps **croît ~linéairement** avec la taille (débit ~stable 180-250 fichiers/s) → tenue dans la
-  durée confirmée. La **copie SD→workspace (I/O) domine** (~65-70 %), la transformation parallélisée
-  (#12) ~25-30 %, la persistance est négligeable (~3 %).
-- **Mémoire** : la crête plafonne (≈ 600-700 Mo pour ~1000-1500 fichiers), le découpage est borné aux
-  cœurs (#12) ; elle croît surtout avec le **nombre de séquences** d'**une** nuit (résultats agrégés
-  avant la transaction unique O7), puis est récupérée par le GC entre deux nuits → stable d'un import à
-  l'autre.
+Place occupée par le workspace en fin d'import : 1,07 Gio pour la nuit de 100 WAV, 16,9 Gio pour
+1572, 27,0 Gio pour 2517. C'est trois fois la source : la source, sa copie protégée et les séquences.
 
-!!! warning "600-700 Mo et 83 Mo décrivent la même chose"
-    Les deux chiffres circulent, et ils ne se contredisent pas : ils ne mesurent pas la même
-    grandeur. La **crête** de ce tableau est ce que la JVM a *occupé* sous un heap généreux ; le
-    **live set** de #104 est ce qu'elle avait *vivant* au même instant.
+**Lectures** :
 
-    Sous `-Xmx2g`, G1 laisse s'accumuler le déchet transitoire - les `byte[]` PCM déjà morts - et ne
-    déclenche qu'au seuil : la crête échantillonnée dit surtout où est ce seuil. Contraindre le heap
-    déplace le seuil sans gêner le travail : la même nuit s'importe sous **`-Xmx128m`** avec un live
-    set de **82-83 Mo**, au même débit (#104).
+- **Nuit standard, critère 1 d'O3 (« quelques minutes »)** : tenu. 40 à 49 s pour 5,62 Gio.
+- **Mémoire** : l'occupation après GC reste entre 81 et 85 Mo de 5,62 à 9 Gio, et la nuit passe sous
+  `-Xmx128m`. La crête, elle, va de 332 à 1114 Mo d'un lancement à l'autre de la même nuit : elle dit
+  où G1 a placé son seuil, pas ce dont l'import a besoin.
+- **Le débit baisse quand la nuit grandit**, sur la même machine (0,36 Gio : 478 Mo/s ; 5,62 Gio :
+  118 à 147 Mo/s ; 9 Gio : 106 à 110 Mo/s). Le temps n'est donc pas linéaire en dessous de quelques Gio.
+  La cause n'est pas établie ; le cache disque du système, qui contient une petite nuit en entier et
+  pas une grande, est l'hypothèse la plus simple, et elle n'a pas été vérifiée.
+- **Les séquences** : une par WAV, ces WAV durant 5 s. Une vraie nuit de 1572 bruts en donne 2109,
+  parce que ses durées varient : ce relevé ne le reproduit pas.
 
-    Conséquence pratique : **la crête de ce tableau ne dimensionne pas la RAM nécessaire**. Elle dit
-    ce que l'import prend quand on le laisse faire, pas ce dont il a besoin. C'est le second chiffre
-    qu'il faut regarder pour savoir si une machine tient.
+**Ce que ces chiffres ne mesurent pas** :
+
+- La lecture d'une vraie carte SD. La source vient d'être écrite par le banc sur le SSD, et elle est
+  probablement encore dans le cache disque : la copie lit donc plus vite qu'elle ne lirait sur une
+  carte.
+- L'IHM : `BancImport` n'a pas de fil JavaFX. Le freeze pendant et après un import, et le heap sur
+  plusieurs nuits dans un même processus, se mesurent dans l'application (#105).
+- **Les 20 Go du test de charge** : non mesurés sur ce poste, faute de disque. Il en faut environ
+  60 Gio, et le poste en avait 40 de libres. La nuit de 9 Gio est la plus grosse qu'il pouvait tenir.
 
 ### La lecture par morceaux (#104) : la mémoire ne suit plus la durée d'un WAV
 
@@ -167,11 +170,10 @@ collés au plafond : ce régime dit si l'import tient, pas combien il garde. Ava
 60 s n'y tenait pas, l'erreur partant de `DecoupageParallele`. Un WAV de plus de 2 Gio, qui faisait
 tomber l'import, se transforme comme les autres.
 
-**Ordre de grandeur de référence** : une **vraie nuit** (1572 fichiers) s'importe en
-**~6-8 s** (~200 fichiers/s), produit **2109 séquences**, avec une empreinte ~600-700 Mo. _(Le temps et
-l'empreinte sont ceux de la machine de référence ; un poste plus modeste sera plus lent. Le nombre de
-séquences, lui, est un **fait de la nuit** : `Car640380-2026-Pass2-Z1` porte 1572 bruts et 2109
-transformés, et notre import les reproduit au bit près - c'est ce que #504 a vérifié.)_
+**Le nombre de séquences d'une vraie nuit** est un fait de la nuit, pas de la machine :
+`Car640380-2026-Pass2-Z1` porte 1572 bruts et 2109 transformés, et notre import les reproduit au bit
+près, ce que #504 a vérifié. Le temps et la mémoire d'une nuit de cette taille sont ceux du tableau
+O3 plus haut, pour la machine qu'il nomme.
 
 ## Réactivité IHM (freeze > 200 ms) : procédure semi-manuelle
 
@@ -222,7 +224,13 @@ Pour la **stabilité dans la durée** (O3), mesurer **dans un seul processus** :
 
 ## Bilan du cluster perf
 
-- **O5 (#105, qui regroupe #26)** : cibles tenues largement (sélection ~25 ms < 100 ms ; tri/filtre ~18 ms < 200 ms),
-  index `#28` en place et verrouillé par un test CI.
-- **O3 (#105, qui regroupe #27)** : import linéaire et borné en mémoire ; nuit réelle ~6-8 s, crête ~600-700 Mo.
+Relevés du 2026-10-12, machine nommée plus haut. La campagne est portée par #105, qui regroupe #26
+(O5) et #27 (O3), et elle n'est pas finie.
+
+- **O5, couche données** : sélection des 4031 observations de 11 à 19 ms à chaud (seuil 100 ms) ; tri
+  et filtre des 1000 passages de 10 à 12 ms à chaud (seuil 200 ms). Index `#28` en place et verrouillé
+  par un test CI. **Dans l'IHM : non mesuré.**
+- **O3** : nuit standard de 5,62 Gio en 40 à 49 s ; 9 Gio en 84 à 87 s ; occupation après GC de 81
+  à 85 Mo, la nuit standard passant sous `-Xmx128m`. **20 Go, freeze IHM et heap sur plusieurs nuits
+  dans l'application : non mesurés.**
 - Outillage réutilisable en **non-régression** : `GenerateurJeuDeDonnees`, `BancMesure`, `BancImport`.

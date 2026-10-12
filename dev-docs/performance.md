@@ -33,13 +33,18 @@ complètes (avec les propriétés `-Dperf.*` de dimensionnement) sont dans le RE
 Les deux opérations critiques sont **largement sous les cibles** (facteur ~4 à ~10), grâce à l'index
 `idx_obs_results` posé en réponse au point #28 :
 
-Relevé du 24/08/2026, sur la topologie par défaut : **40 carrés de 10 points**, 1000 passages,
-4031 observations.
+Relevé du 2026-10-12, sur la topologie par défaut (**40 carrés de 10 points**, 1000 passages, 4031
+observations), sur la machine que nomme `docs/benchmarks/README.md` (i5-1145G7, 8 cœurs, 30,4 Gio,
+JDK 25.0.3). Trois lancements :
 
 | Opération | Cible | Froid (1ᵉʳ appel) | Chaud (médiane de 20) |
 |---|---|---|---|
-| Sélection ~4031 observations (`findByResults`) | < 100 ms | 34,4 ms ✅ | 9,5 ms |
-| Tri/filtre ~1000 passages (multisite) | < 200 ms | 26,2 ms ✅ | 8,2 ms |
+| Sélection ~4031 observations (`findByResults`) | < 100 ms | 30,7 · 38,1 · 33,7 ms | 11,0 · 12,5 · 18,7 ms |
+| Tri/filtre ~1000 passages (multisite) | < 200 ms | 47,8 · 41,6 · 32,7 ms | 10,3 · 11,2 · 12,3 ms |
+
+Le relevé du 24/08/2026, sans machine nommée, donnait 34,4 et 26,2 ms à froid, 9,5 et 8,2 ms à chaud.
+Ces chiffres sont ceux de la couche données : `findByResults` n'est pas la requête que charge l'écran
+des sons, et l'IHM n'est pas mesurée (#105).
 
 !!! note "Les deux colonnes, et laquelle regarder"
     Le **froid** dit ce que coûte le premier geste du jour, démarrage de la JVM compris. Le **chaud** dit
@@ -66,25 +71,27 @@ Sans l'index, la sélection faisait un `SCAN` (~75 ms froid) ; l'index la ramèn
 
 ### O3 : import d'une nuit
 
-Le temps d'import **croît linéairement** avec la taille (débit ~stable 180-250 fichiers/s), la
-**mémoire plafonne** (~600-700 Mo pour ~1000-1500 fichiers) :
+Relevé du 2026-10-12, même machine, WAV de 5 s à 384 kHz, heap par défaut :
 
-| Fichiers | Taille src | Temps total | Débit | Mémoire crête |
+| Fichiers | Taille src | Temps total (lancements) | Débit | Après GC |
 |---:|---:|---:|---:|---:|
-| 100 | 146 Mo | 0,55 s | ~184 f/s | 172 Mo |
-| 500 | 732 Mo | 2,38 s | ~210 f/s | 569 Mo |
-| 1000 | 1,43 Gio | 3,97 s | ~252 f/s | 626 Mo |
+| 100 | 0,36 Gio | 0,77 s | ~478 Mo/s | 56 Mo |
+| 1572 | 5,62 Gio | 48,9 · 40,3 · 42,7 s | ~118-147 Mo/s | 81-82 Mo |
+| 2517 | 9,00 Gio | 83,5 · 86,6 s | ~106-110 Mo/s | 84-85 Mo |
 
-**Lectures clés** : la **copie SD→workspace (I/O) domine** (~65-70 %), la transformation parallélisée
-(#12) ~25-30 %, la persistance est négligeable (~3 %). Ordre de grandeur de référence : une **vraie
-nuit** (1572 fichiers) s'importe en **~6-8 s**, **2109 séquences** (découpage à 5 s réelles,
-`ceil(D/5)` par enregistrement), empreinte ~600-700 Mo.
+**Lectures clés** : la nuit standard tient en moins d'une minute ; l'occupation après GC ne croît pas
+avec la nuit ; le **débit baisse** quand la nuit grandit, sur la même machine, et la cause n'est pas
+établie (le cache disque est l'hypothèse la plus simple, non vérifiée). La copie prend 36 à 47 % du
+temps, la transformation 51 à 62 %, la persistance moins de 3 %. Une **vraie nuit** de 1572 bruts
+produit **2109 séquences** (découpage à 5 s réelles, `ceil(D/5)` par enregistrement) ; la nuit du banc,
+à WAV de 5 s, en produit une par fichier. Le test de charge à 20 Go n'a pas été tiré, faute de disque
+(#105).
 
 !!! warning "L'empreinte annoncée n'est pas le besoin en RAM"
-    Les ~600-700 Mo sont une **crête sous heap généreux** : G1 laisse s'accumuler le déchet
-    transitoire jusqu'à son seuil. Le **live set** est bien plus petit - la même nuit passe sous
-    `-Xmx128m` avec 82-83 Mo vifs, au même débit (#104). Pour dimensionner une machine, c'est ce
-    second chiffre qui compte.
+    La **crête sous heap généreux** échantillonnée par le banc va de 332 à 1114 Mo d'un lancement à
+    l'autre de la même nuit de 1572 WAV : G1 laisse s'accumuler le déchet transitoire jusqu'à son seuil.
+    L'occupation **après GC** reste à 81-82 Mo, et la même nuit passe sous `-Xmx128m` au même débit.
+    Pour dimensionner une machine, c'est ce second chiffre qui compte.
 
 **La mémoire ne suit plus la durée d'un WAV (#104).** La transformation lit l'original par morceaux
 (`FichierWav.ouvrirPcm`), une tranche de 5 s en mémoire par original en vol, au lieu de le charger
@@ -93,9 +100,9 @@ entier. Mesuré le 2026-10-12 sur 16 WAV de 120 s : l'occupation après GC passe
 complet est dans `docs/benchmarks/README.md`.
 
 !!! warning "Des ordres de grandeur, pas des garanties"
-    Ces chiffres viennent d'une **machine de référence**. Sur un poste plus modeste, refaire la mesure.
-    La règle du banc : **première utilisation du jour** (JIT + cache disque froids) pour la valeur
-    « à froid » qui fait foi, puis relancer 2-3 fois et garder l'ordre de grandeur.
+    Ces chiffres valent pour la machine qu'ils nomment. Sur un autre poste, refaire la mesure. La règle
+    du banc suit `O5.md` : un appel jeté, puis trois relevés dont on publie les trois valeurs ; la valeur
+    à froid se publie à part, parce qu'elle mesure le démarrage de la JVM et non la capacité.
 
 ### Choisir un mécanisme de parallélisme
 
