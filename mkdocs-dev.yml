@@ -454,6 +454,7 @@ nav:
     - 6069 · Le dernier geste d'un clip pose une position: decisions/6069-le-dernier-geste-d-un-clip-pose-une-position.md
     - 6135 · La dernière image d'un clip ne dépend plus d'une image clé: decisions/6135-la-derniere-image-d-un-clip-ne-depend-plus-d-une-image-cle.md
     - 6002 · Une attente de fin attend un état que son étape seule produit: decisions/6002-une-attente-de-fin-attend-un-etat-que-son-etape-seule-produit.md
+    - 6060 · Le front web de la plateforme de test a la même origine que son API: decisions/6060-le-front-web-de-la-plateforme-de-test-a-la-meme-origine-que-son-api.md
     - 6022 · Un avertissement de qualité ne se tait pas, et un garde le refuse: decisions/6022-un-avertissement-ne-se-tait-pas-et-un-garde-le-refuse.md
     - 4462 · Une cible cliquable tient vingt-quatre pixels: decisions/4462-une-cible-cliquable-tient-vingt-quatre-pixels.md
     - 6142 · Une tâche de fond rend une valeur et n'écrit pas la scène, et un espion de test le relève: decisions/6142-une-tache-de-fond-rend-une-valeur-et-n-ecrit-pas-la-scene.md
