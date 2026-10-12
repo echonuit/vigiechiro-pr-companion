@@ -22,7 +22,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 /// Le transport dit à la source du jeton qu'un `401` de l'API l'a refusé, et à elle seule (#6151).
 ///
-/// C'est le lieu UNIQUE où un jeton mort se découvre : les deux émissions qui le portent. Ce banc tient
+/// C'est le seul endroit où un `401` atteint la source du jeton : les deux émissions qui le portent. Ce banc tient
 /// les deux moitiés de la règle : un `401` de l'API se signale, avec le jeton qui est parti ; un refus
 /// du stockage S3, qui refuse une URL signée et non le jeton, ne se signale pas, ni aucun autre statut.
 class TransportSignaleUnJetonRefuseTest {
