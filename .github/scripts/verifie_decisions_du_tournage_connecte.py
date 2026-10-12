@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Onze decisions des ateliers de tournage tiennent dans le YAML (#5221, porte du bash).
+"""Douze decisions des ateliers de tournage tiennent dans le YAML (#5221, porte du bash).
 
 Elles ne se tiennent pas par un test : elles vivent dans la forme de trois ateliers, et rien ne les
 relisait. Chacune a un cout connu si elle lache. Les cinq premieres sont celles du tournage connecte,
 qui a donne son nom au fichier ; les quatre suivantes sont celles de la mesure des planchers (#5885) ;
 la dixieme est celle de la comparaison d une execution (#5930) ; la onzieme est celle du resume de
-la mesure (#5979).
+la mesure (#5979) ; la douzieme est celle du versement de la plateforme de test (#6155).
 
 1. **`comparer-tournages.yml` REFUSE la source `clips-connectes`.** Comparer un tournage connecte a
    un autre mesure la plateforme au lieu du produit, et rend un chiffre qui a l air juste (#4306).
@@ -57,6 +57,11 @@ la mesure (#5979).
    signal a montrer : le premier signal reel aurait ete son premier essai. Il se LANCE donc ici face
    a deux journaux, et la ligne du signal vient de l OUTIL, pas d une copie : si l outil change sa
    phrase, le filtre de l atelier ne trouve plus rien et ce garde rougit.
+12. **La pre-version de la plateforme de test ne recoit que `main`, un versement a la fois.** Le
+   12 octobre 2026, six tournages lances ensemble sur une branche ont laisse les deux pre-versions
+   porter des clips de cette branche, et l un d eux a echoue sur un HTTP 404 en se disputant la
+   precedente avec un autre (#6155). La condition de branche ne s ouvre a rien d autre, et le
+   groupe de concurrence est fixe et n annule pas le versement en cours, qui n est pas atomique.
 
 ## Le leurre pour `gh`, et pourquoi le verdict se prend sur le MESSAGE
 
@@ -690,8 +695,51 @@ def le_resume_montre_les_planchers_a_relire(flux: pathlib.Path) -> bool:
     return tiennent
 
 
+DEPUIS_MAIN = re.compile(r"github\.ref\s*==\s*'refs/heads/main'")
+
+
+def versement_depuis_main_un_par_un(flux: pathlib.Path) -> bool:
+    """La douzieme : la pre-version de la plateforme de test ne recoit que `main`, un versement a la fois.
+
+    Deux proprietes, deux defauts vecus le meme jour (#6155). Sans la condition de branche, un
+    tournage de branche remplace la reference que la comparaison lance par defaut. Sans groupe, deux
+    versements simultanes se disputent la pre-version precedente. Le groupe doit etre FIXE : un nom
+    qui porte une expression (le ref, l execution) ne mettrait jamais deux versements dans le meme
+    groupe. Et il n annule pas le versement en cours, qui n est pas atomique.
+    """
+    job = _charge(flux / "tournage-recette.yml")["jobs"].get("publier-plateforme-de-test")
+    if job is None:
+        # La deuxieme le dit deja, avec sa raison.
+        return False
+    tiennent = True
+    condition = str(job.get("if", ""))
+    if not DEPUIS_MAIN.search(condition) or "||" in condition:
+        print("❌ `publier-plateforme-de-test` ne se borne plus à `main` :")
+        print(f"     if: {condition or '(absente)'}")
+        print(
+            "   Un tournage de branche écraserait la référence que la comparaison lance par défaut."
+        )
+        tiennent = False
+    groupe = job.get("concurrency")
+    annule = False
+    if isinstance(groupe, dict):
+        annule = groupe.get("cancel-in-progress", False) is not False
+        groupe = groupe.get("group")
+    if not groupe or "${{" in str(groupe):
+        print("❌ `publier-plateforme-de-test` n'a plus de groupe de concurrence fixe :")
+        print(f"     group: {groupe or '(absent)'}")
+        print("   Deux versements simultanés se disputeraient la pré-version précédente.")
+        tiennent = False
+    if annule:
+        print("❌ Le groupe de `publier-plateforme-de-test` annule le versement en cours.")
+        print("   Interrompu entre le retrait des pièces de la précédente et leur dépôt, il la")
+        print("   laisserait vide.")
+        tiennent = False
+    return tiennent
+
+
 def verdict(flux: pathlib.Path) -> bool:
-    """Les onze, et le verdict d ensemble. Chacune s exprime, meme si une precedente a lache."""
+    """Les douze, et le verdict d ensemble. Chacune s exprime, meme si une precedente a lache."""
     tiennent = [
         refus_de_la_source_connectee(flux),
         versement_conditionne(flux),
@@ -704,6 +752,7 @@ def verdict(flux: pathlib.Path) -> bool:
         un_seul_artefact_de_clips(flux),
         une_execution_se_compare(flux),
         le_resume_montre_les_planchers_a_relire(flux),
+        versement_depuis_main_un_par_un(flux),
     ]
     return all(tiennent)
 
@@ -752,8 +801,8 @@ def _casse_la_fonction_d_etat_de_test(dossier: pathlib.Path) -> None:
     t = p.read_text(encoding="utf-8")
     p.write_text(
         t.replace(
-            "    if: ${{ success() && inputs.plateforme_de_test }}",
-            "    if: ${{ inputs.plateforme_de_test }}",
+            "    if: ${{ success() && inputs.plateforme_de_test && github.ref == 'refs/heads/main' }}",
+            "    if: ${{ inputs.plateforme_de_test && github.ref == 'refs/heads/main' }}",
             1,
         ),
         encoding="utf-8",
@@ -867,6 +916,48 @@ def _remplace_dans(dossier: pathlib.Path, atelier: str, avant: str, apres: str) 
 
 def _remplace_dans_la_mesure(dossier: pathlib.Path, avant: str, apres: str) -> None:
     _remplace_dans(dossier, MESURE, avant, apres)
+
+
+def _verse_depuis_toute_branche(dossier: pathlib.Path) -> None:
+    _remplace_dans(dossier, "tournage-recette.yml", " && github.ref == 'refs/heads/main' }}", " }}")
+
+
+def _verse_depuis_main_ou_ailleurs(dossier: pathlib.Path) -> None:
+    _remplace_dans(
+        dossier,
+        "tournage-recette.yml",
+        "github.ref == 'refs/heads/main' }}",
+        "(github.ref == 'refs/heads/main' || inputs.session != '') }}",
+    )
+
+
+GROUPE_DU_VERSEMENT = (
+    "    concurrency:\n"
+    "      group: versement-clips-plateforme-de-test\n"
+    "      cancel-in-progress: false\n"
+)
+
+
+def _verse_sans_groupe(dossier: pathlib.Path) -> None:
+    _remplace_dans(dossier, "tournage-recette.yml", GROUPE_DU_VERSEMENT, "")
+
+
+def _groupe_par_execution(dossier: pathlib.Path) -> None:
+    _remplace_dans(
+        dossier,
+        "tournage-recette.yml",
+        "group: versement-clips-plateforme-de-test\n",
+        "group: versement-clips-plateforme-de-test-${{ github.run_id }}\n",
+    )
+
+
+def _groupe_qui_annule(dossier: pathlib.Path) -> None:
+    _remplace_dans(
+        dossier,
+        "tournage-recette.yml",
+        GROUPE_DU_VERSEMENT,
+        GROUPE_DU_VERSEMENT.replace("cancel-in-progress: false", "cancel-in-progress: true"),
+    )
 
 
 def _mesure_entre_deux_commits(dossier: pathlib.Path) -> None:
@@ -1030,6 +1121,11 @@ CASSURES = (
     (_la_comparaison_tait_le_delai, "comparaison qui tait le délai de garde des artefacts"),
     (_le_resume_ne_recopie_plus_les_signaux, "résumé qui ne recopie plus les planchers à relire"),
     (_le_resume_tait_l_absence_de_signal, "résumé muet quand aucun plancher n est à relire"),
+    (_verse_depuis_toute_branche, "versement de la plateforme de test depuis toute branche"),
+    (_verse_depuis_main_ou_ailleurs, "versement depuis main OU une autre condition"),
+    (_verse_sans_groupe, "versements de la plateforme de test sans groupe de concurrence"),
+    (_groupe_par_execution, "groupe de concurrence propre à chaque exécution"),
+    (_groupe_qui_annule, "groupe de concurrence qui annule le versement en cours"),
 )
 
 
@@ -1085,14 +1181,15 @@ if __name__ == "__main__":
     flux = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else RACINE / ".github" / "workflows"
     if verdict(flux):
         print(
-            "✓ Les onze décisions des ateliers de tournage tiennent : refus de clips-connectes,"
+            "✓ Les douze décisions des ateliers de tournage tiennent : refus de clips-connectes,"
             " versement"
         )
         print("  conditionné, contrôle du jeton avant le tournage, artefact nommé par le tournage,")
         print("  tournage précédent gardé avant l'écrasement, planchers d'un seul commit, témoins")
         print("  hors de la mesure, mesure sans écriture, un seul artefact de clips par exécution,")
         print("  une exécution comparée avec les refus de la mesure, un résumé de la mesure qui")
-        print("  montre les planchers à relire.")
+        print("  montre les planchers à relire, un versement de la plateforme de test depuis main")
+        print("  seul et un à la fois.")
         sys.exit(0)
     print(
         "::error::Une décision des ateliers de tournage n est plus tenue par le YAML, cf. ci-dessus."

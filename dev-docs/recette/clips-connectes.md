@@ -32,10 +32,18 @@ pas de plus de 0,503 %, sur quinze paires par clip. Leurs planchers sont dans
 `planchers-tournages.tsv`, et
 [la page de la comparaison](comparer-deux-tournages.md) dit comment les lire.
 
-Cette pré-version est écrasée à chaque tournage, et la comparaison veut deux côtés. Le tournage
-d'avant est donc **gardé** : avant de verser, le job de publication
+Cette pré-version est écrasée à chaque tournage de `main`, et la comparaison veut deux côtés. Le
+tournage d'avant est donc **gardé** : avant de verser, le job de publication
 recopie la pré-version sur `clips-plateforme-de-test-precedent` (#5854). La comparaison se lance de
 l'une à l'autre, `avant` = `clips-plateforme-de-test-precedent`, `apres` = `clips-plateforme-de-test`.
+
+**Seul `main` y verse, et un versement à la fois** (#6155). Un tournage lancé sur une branche garde
+ses clips dans l'artefact de son exécution et ne touche à aucune des deux pré-versions : son job de
+versement est sauté. Elle se compare à `main` par numéros d'exécution
+([la page de la comparaison](comparer-deux-tournages.md)).
+Deux tournages de `main` lancés ensemble versent l'un après l'autre. À trois, GitHub ne garde qu'un
+versement en attente : celui qui attendait est annulé, sans rien écrire, et ses clips restent dans
+son artefact.
 
 Les notes de chaque pré-version disent l'exécution et le commit qui l'ont tournée. Elles se lisent
 **avant** le rapport : deux tournages du même commit mesurent du bruit, deux commits différents
