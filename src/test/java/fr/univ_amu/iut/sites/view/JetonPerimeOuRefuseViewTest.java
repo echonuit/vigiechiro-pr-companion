@@ -24,6 +24,7 @@ import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
 import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.GesteVisible;
+import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -67,7 +68,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// source de jeton du banc, et l'horloge est pilotée. La péremption se voit donc au transport, qui
 /// n'émet plus rien, et le `401` efface le jeton par le chemin de production. Toutes les lectures
 /// d'état passent par le fil JavaFX.
-@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
+@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class, SansEcritureHorsDuFil.class})
 class JetonPerimeOuRefuseViewTest {
 
     private static final String ID_USER = "u-test";
