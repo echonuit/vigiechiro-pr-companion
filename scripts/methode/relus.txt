@@ -360,7 +360,7 @@ da8bbd79c5a0  src/main/java/fr/univ_amu/iut/commun/model/EcrivainZip.java
 32b3c3f11097  src/main/java/fr/univ_amu/iut/commun/model/EspaceDisque.java
 fbf8674b7459  src/main/java/fr/univ_amu/iut/commun/model/EspeceIdentifiee.java
 ed7d066b9cef  src/main/java/fr/univ_amu/iut/commun/model/ExecutionParallele.java
-d0bdf35964ee  src/main/java/fr/univ_amu/iut/commun/model/FichierWav.java
+c0c3d884ee51  src/main/java/fr/univ_amu/iut/commun/model/FichierWav.java
 16f00976d038  src/main/java/fr/univ_amu/iut/commun/model/FuseauDuPoint.java
 2698c31d6a4d  src/main/java/fr/univ_amu/iut/commun/model/FuseauDuSite.java
 495fbc5da8d8  src/main/java/fr/univ_amu/iut/commun/model/Horloge.java
@@ -732,7 +732,7 @@ d525e43a76d0  src/main/java/fr/univ_amu/iut/importation/model/ApercuEcrasement.j
 823d92804f93  src/main/java/fr/univ_amu/iut/importation/model/CopieProtegee.java
 a2cbd2949853  src/main/java/fr/univ_amu/iut/importation/model/CycleAcquisition.java
 10bf0233bbe1  src/main/java/fr/univ_amu/iut/importation/model/CyclesJournal.java
-7742654afffc  src/main/java/fr/univ_amu/iut/importation/model/DecoupageParallele.java
+2441d4f05c70  src/main/java/fr/univ_amu/iut/importation/model/DecoupageParallele.java
 a30713b524a5  src/main/java/fr/univ_amu/iut/importation/model/EtatNommage.java
 5ea2bb553bf6  src/main/java/fr/univ_amu/iut/importation/model/ExtracteurZip.java
 6cbcdd465f08  src/main/java/fr/univ_amu/iut/importation/model/FabriqueEntitesImport.java
@@ -772,7 +772,7 @@ fae582809663  src/main/java/fr/univ_amu/iut/importation/model/ServiceImportRefer
 1bdab3570fc9  src/main/java/fr/univ_amu/iut/importation/model/SourceOriginal.java
 a7127d869bc7  src/main/java/fr/univ_amu/iut/importation/model/StatutImportFichier.java
 3d74e22ec680  src/main/java/fr/univ_amu/iut/importation/model/SuiviFichiers.java
-70b5db406e08  src/main/java/fr/univ_amu/iut/importation/model/TransformationAudio.java
+cd51a3c31b75  src/main/java/fr/univ_amu/iut/importation/model/TransformationAudio.java
 cb04d6bf7a47  src/main/java/fr/univ_amu/iut/importation/model/TransformationOriginal.java
 0c9b9c704f4c  src/main/java/fr/univ_amu/iut/importation/model/TriParSerie.java
 9fd77773393c  src/main/java/fr/univ_amu/iut/importation/model/VolumesImport.java
@@ -1083,7 +1083,7 @@ e827f307792b  src/main/java/fr/univ_amu/iut/passage/viewmodel/SaisieOpportuniste
 952d4ddb6079  src/main/java/fr/univ_amu/iut/passage/viewmodel/SaisiePassageConditions.java
 ebc7965c702c  src/main/java/fr/univ_amu/iut/passage/viewmodel/SelectionCampagne.java
 9e30cc6f7ce1  src/main/java/fr/univ_amu/iut/passage/viewmodel/VerificationDuTraitement.java
-25e89bb43a5d  src/main/java/fr/univ_amu/iut/perf/outils/BancImport.java
+6795baade7dd  src/main/java/fr/univ_amu/iut/perf/outils/BancImport.java
 d8df481f824d  src/main/java/fr/univ_amu/iut/perf/outils/BancMesure.java
 6a9aa62cbaf1  src/main/java/fr/univ_amu/iut/perf/outils/GenerateurJeuDeDonnees.java
 a7a734f95bd5  src/main/java/fr/univ_amu/iut/qualification/di/QualificationModule.java
@@ -1519,7 +1519,7 @@ e3b0c44298fc  src/test/java/fr/univ_amu/iut/commun/model/EcrivainCsvTest.java
 5521b3797089  src/test/java/fr/univ_amu/iut/commun/model/EmpreintesTest.java
 41bd090bce47  src/test/java/fr/univ_amu/iut/commun/model/EphemerideSolaireTest.java
 8a5cab67c4f5  src/test/java/fr/univ_amu/iut/commun/model/ExecutionParalleleTest.java
-2243151a8a36  src/test/java/fr/univ_amu/iut/commun/model/FichierWavTest.java
+9363a252e8e3  src/test/java/fr/univ_amu/iut/commun/model/FichierWavTest.java
 5ce1f37e49dc  src/test/java/fr/univ_amu/iut/commun/model/FuseauDExecutionTest.java
 2761ff51003c  src/test/java/fr/univ_amu/iut/commun/model/FuseauDuPointTest.java
 3b38045ac886  src/test/java/fr/univ_amu/iut/commun/model/FuseauDuSiteTest.java
@@ -1828,6 +1828,7 @@ afd5f044b9f8  src/test/java/fr/univ_amu/iut/importation/model/FiltreThLogNuitTes
 5ca222636db7  src/test/java/fr/univ_amu/iut/importation/model/PartitionNuitsIndicesTest.java
 11a7825bd7fe  src/test/java/fr/univ_amu/iut/importation/model/PassageDeLaNuitTest.java
 50b557b7db7a  src/test/java/fr/univ_amu/iut/importation/model/ReconciliationNomsTest.java
+f1240e0b85cb  src/test/java/fr/univ_amu/iut/importation/model/TransformationParMorceauxTest.java
 10c02946b42a  src/test/java/fr/univ_amu/iut/importation/model/TriParSerieTest.java
 04fe5d9ec232  src/test/java/fr/univ_amu/iut/importation/model/VolumesImportTest.java
 9b89b83b0f50  src/test/java/fr/univ_amu/iut/importation/outils/CaptureConfirmationsImportTest.java
