@@ -3,7 +3,9 @@ package fr.univ_amu.iut.commun.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -103,6 +105,61 @@ class FichierWavTest {
     }
 
     @Test
+    @DisplayName("#104 : la lecture par morceaux rend le même signal que la lecture complète, chunk annexe compris")
+    void lecture_par_morceaux_concorde_avec_la_lecture_complete() throws IOException {
+        // Un chunk annexe de taille impaire (padding d'un octet) et plus grand que la fenêtre d'en-tête, puis
+        // un PCM de longueur impaire : les trois endroits où une position se décale d'un octet.
+        byte[] pcm = new byte[4001];
+        for (int i = 0; i < pcm.length; i++) {
+            pcm[i] = (byte) (i * 31 + 7);
+        }
+        Path fichier = ecrire("annexe.wav", avecChunkAnnexe(10_001, pcm));
+        FichierWav complet = FichierWav.lire(fichier);
+
+        ByteArrayOutputStream parMorceaux = new ByteArrayOutputStream();
+        try (FichierWav.LecturePcm lecture = FichierWav.ouvrirPcm(fichier)) {
+            assertThat(lecture.entete().octetsDonnees()).isEqualTo(pcm.length);
+            byte[] tampon = new byte[7];
+            int lus;
+            while ((lus = lecture.lire(tampon)) > 0) {
+                parMorceaux.write(tampon, 0, lus);
+            }
+        }
+
+        assertThat(complet.donneesPcm()).isEqualTo(pcm);
+        assertThat(parMorceaux.toByteArray()).isEqualTo(pcm);
+    }
+
+    @Test
+    @DisplayName("#104 : un WAV de plus de 2 Gio s'ouvre, et sa longueur ne déborde pas")
+    void plus_de_deux_gio_ne_deborde_pas() throws IOException {
+        // Fichiers creux : la taille est posée sans écrire les octets, aucun disque n'est consommé. Deux
+        // formes : une taille annoncée de 2,5 Gio, et la taille inconnue d'un enregistreur en flux.
+        long annoncee = 2_500_000_000L;
+        Path declare = creux("declare.wav", construire(annoncee, new byte[0]), 44 + annoncee);
+        long disponible = 3L * 1024 * 1024 * 1024;
+        Path inconnue = creux("inconnue.wav", construire(0xFFFFFFFFL, new byte[0]), 44 + disponible);
+
+        assertThat(FichierWav.lireEntete(declare).octetsDonnees()).isEqualTo(annoncee);
+        assertThat(FichierWav.lireEntete(inconnue).octetsDonnees()).isEqualTo(disponible);
+        try (FichierWav.LecturePcm lecture = FichierWav.ouvrirPcm(inconnue)) {
+            assertThat(lecture.entete().octetsDonnees()).isEqualTo(disponible);
+            byte[] tampon = new byte[16];
+            assertThat(lecture.lire(tampon)).isEqualTo(tampon.length);
+        }
+    }
+
+    @Test
+    @DisplayName("#104 : la lecture par morceaux refuse ce que la lecture complète refuse")
+    void lecture_par_morceaux_refuse_un_wav_tronque() throws IOException {
+        Path fichier = ecrire("tronque-flux.wav", construire(4096, new byte[] {1, 2, 3, 4}));
+
+        assertThatThrownBy(() -> FichierWav.ouvrirPcm(fichier).close())
+                .isInstanceOf(IOException.class)
+                .hasMessageContaining("tronqué");
+    }
+
+    @Test
     @DisplayName("Un fichier sans en-tête RIFF/WAVE est refusé")
     void riff_absent_est_refuse() throws IOException {
         Path fichier = ecrire("pasunwav.wav", "ceci n'est pas un WAV".getBytes(StandardCharsets.UTF_8));
@@ -172,6 +229,33 @@ class FichierWavTest {
         buf.putInt(FREQUENCE * octetsParTrame); // byte rate
         buf.putShort((short) octetsParTrame); // block align
         buf.putShort((short) BITS);
+    }
+
+    /// Un WAV dont un chunk annexe `LIST` de `tailleAnnexe` octets précède `data`.
+    private static byte[] avecChunkAnnexe(int tailleAnnexe, byte[] pcm) {
+        int padding = tailleAnnexe % 2;
+        ByteBuffer buf = ByteBuffer.allocate(12 + 24 + 8 + tailleAnnexe + padding + 8 + pcm.length)
+                .order(ByteOrder.LITTLE_ENDIAN);
+        buf.put("RIFF".getBytes(StandardCharsets.US_ASCII));
+        buf.putInt(buf.capacity() - 8);
+        buf.put("WAVE".getBytes(StandardCharsets.US_ASCII));
+        ecrireFmt(buf, FORMAT_PCM_TEST);
+        buf.put("LIST".getBytes(StandardCharsets.US_ASCII));
+        buf.putInt(tailleAnnexe);
+        buf.put(new byte[tailleAnnexe + padding]);
+        buf.put("data".getBytes(StandardCharsets.US_ASCII));
+        buf.putInt(pcm.length);
+        buf.put(pcm);
+        return buf.array();
+    }
+
+    /// Écrit `debut` puis étend le fichier à `taille` octets sans les écrire (fichier creux).
+    private Path creux(String nom, byte[] debut, long taille) throws IOException {
+        Path fichier = ecrire(nom, debut);
+        try (RandomAccessFile acces = new RandomAccessFile(fichier.toFile(), "rw")) {
+            acces.setLength(taille);
+        }
+        return fichier;
     }
 
     private Path ecrire(String nom, byte[] octets) throws IOException {
