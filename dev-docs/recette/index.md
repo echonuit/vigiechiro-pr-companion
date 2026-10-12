@@ -193,6 +193,36 @@ regarde pas.
 `ScenarioModaleCarreTest` sert de modèle : il part de « Mes sites », ouvre la déclaration par son
 bouton et laisse la fenêtre derrière la modale.
 
+### Un clip finit sur son verdict, posé (#5933)
+
+Deux tournages du même commit se comparent par leur **dernière image** ([comparer deux
+tournages](comparer-deux-tournages.md)). Elle doit donc montrer le verdict du cas, au même endroit,
+à chaque tournage. Le chantier #5933 a sorti neuf clips qui ne le faisaient pas, et les causes
+rencontrées se répètent :
+
+| Ce que montre la dernière image | La cause | Le geste |
+|---|---|---|
+| l'opération encore en vol | l'attente avant la fin ne peut pas expirer : un libellé jamais vide, un nœud que le FXML déclare | attendre un état que l'étape seule produit ([ADR 6002](../decisions/6002-une-attente-de-fin-attend-un-etat-que-son-etape-seule-produit.md)) |
+| tantôt avant, tantôt après la conclusion | le cas finit sitôt l'état arrivé | caler la page, puis `Respiration.surLeMomentCle` et `Respiration.leTempsDeLire` |
+| un écran délavé, une fois sur quatre | la fin tombe dans le fondu d'entrée de l'écran | attendre l'opacité à 1 (`ScenarioAccueilTest` en fait le produit sur les ancêtres) |
+| la page défilée à deux endroits | le dernier geste accepte plusieurs positions | `GesteVisible.allerAuBasDeLaPage` si le verdict est le dernier élément de sa page, sinon `GesteVisible.poserDansLeCadre` ([ADR 5870](../decisions/5870-un-verdict-au-bas-de-sa-page-s-y-cale.md), [ADR 6069](../decisions/6069-le-dernier-geste-d-un-clip-pose-une-position.md)) |
+
+Une cinquième cause n'était pas dans le scénario mais dans l'encodeur : la place de la dernière image
+clé faisait varier la dernière image de 0,3 à 0,9 %. Elle est réglée une fois pour toutes ([ADR
+6135](../decisions/6135-la-derniere-image-d-un-clip-ne-depend-plus-d-une-image-cle.md)), et ne demande
+rien au scénario.
+
+**L'assertion de fin s'écrit par `CadreVisible.contient(noeud)`**, qui juge contre le cadre et non
+contre la scène : un nœud caché derrière la barre d'état reste visible pour la scène. Et elle se
+demande : resterait-elle verte si la page était ailleurs ? Une assertion vraie dans les deux positions
+ne tient pas le calage.
+
+**Un clip se juge sur plusieurs tournages, pas sur une paire.** Six tournages du même commit, et la
+dernière image de chacun regardée, montrent un second mode qui sort une fois sur quatre. Un mode plus
+rare demande davantage : un clip est revenu dans la table des clips sans plancher après six tournages
+d'un seul mode (#6069), et il en a fallu douze pour l'en sortir. La comparaison contre un tournage du
+commit d'avant montre aussi ce qu'un lot a changé hors de son périmètre.
+
 ## La fiche d'évaluation : six axes
 
 Chaque écran est noté sur **six axes**, verdict trivalué (**OK / remarque / bloquant**). Les axes **P**
