@@ -89,12 +89,23 @@ class FicheWebDUneParticipationTest {
                 .as("la charte s'ouvre tant que l'utilisatrice ne l'a pas acceptée : l'état de départ la"
                         + " déclare acceptée pour l'observatrice, sans quoi elle couvrirait la fiche")
                 .isEmpty();
-        assertThat(pilote.findElement(By.cssSelector("nav")).getText())
+        assertThat(texteDe("nav"))
                 .as("la barre de navigation nomme l'utilisatrice connectée")
                 .contains("Observatrice");
     }
 
     private static String texteDeLaPage() {
-        return pilote.findElement(By.tagName("body")).getText();
+        return texteDe("body");
+    }
+
+    /// Le texte visible du premier élément que le sélecteur désigne, lu en une seule commande (#6183).
+    ///
+    /// Trouver l'élément puis lire son texte en deux commandes laissait au front le temps de le
+    /// remplacer entre les deux : le second appel sortait alors en `StaleElementReferenceException`,
+    /// et le job rougissait sans défaut. Une lecture par le script ne garde aucune référence.
+    private static String texteDe(String selecteur) {
+        Object texte = pilote.executeScript(
+                "const e = document.querySelector(arguments[0]); return e === null ? '' : e.innerText;", selecteur);
+        return String.valueOf(texte);
     }
 }
