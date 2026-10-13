@@ -106,7 +106,8 @@ final class ControleursReglages {
         Spinner<Integer> spinner = new Spinner<>(entier.min(), entier.max(), valeur.get());
         SpinnerValueFactory<Integer> fabrique = spinner.getValueFactory();
         fabrique.valueProperty().addListener((observable, ancien, nouveau) -> valeur.set(nouveau));
-        valeur.addListener((observable, ancien, nouveau) -> fabrique.setValue(nouveau.intValue()));
+        // Le réglage vit autant que l'application : son écoute est faible, tenue par le contrôle (#6184).
+        EcouteFaible.poser(spinner, valeur, (observable, ancien, nouveau) -> fabrique.setValue(nouveau.intValue()));
         return spinner;
     }
 
@@ -131,8 +132,11 @@ final class ControleursReglages {
                 valeur.set(nouveau.valeur());
             }
         });
-        valeur.addListener((observable, ancien, nouveau) ->
-                optionPour(enumeration, nouveau).ifPresent(combo.getSelectionModel()::select));
+        EcouteFaible.poser(
+                combo,
+                valeur,
+                (observable, ancien, nouveau) ->
+                        optionPour(enumeration, nouveau).ifPresent(combo.getSelectionModel()::select));
         return combo;
     }
 
