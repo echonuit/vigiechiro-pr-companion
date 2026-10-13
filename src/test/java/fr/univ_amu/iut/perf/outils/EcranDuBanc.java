@@ -34,6 +34,7 @@ import fr.univ_amu.iut.sites.view.NavigationSites;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalTime;
 import java.util.function.BooleanSupplier;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -203,12 +204,15 @@ final class EcranDuBanc {
     }
 
     /// Ouvre un écran depuis un écran neutre : un geste jeté, puis [#RELEVES] relevés, la première
-    /// ouverture (à froid pour cet écran dans ce processus) restant à part sous son nom.
+    /// ouverture (à froid pour cet écran dans ce processus) restant à part sous son nom. Chaque
+    /// ouverture porte l'heure du poste à son départ, qui la retrouve dans un enregistrement de la JVM
+    /// (#6207).
     void mesurerOuverture(Releve releve, String geste, Runnable neutre, Runnable ouvrir, BooleanSupplier ouvert)
             throws Exception {
         for (int i = 0; i <= RELEVES; i++) {
             ouvrirEtAttendre(neutre, () -> true);
-            releve.noter(geste, i, chrono(ouvrir, ouvert));
+            LocalTime depart = LocalTime.now();
+            releve.noter(geste, i, chrono(ouvrir, ouvert), depart);
         }
     }
 

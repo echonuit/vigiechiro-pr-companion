@@ -32,6 +32,7 @@ import fr.univ_amu.iut.sites.view.NavigationSites;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -88,6 +89,9 @@ class BancIhmO3Test {
 
     private EcranDuBanc ecran;
 
+    /// L'heure du poste à la première ouverture de la navigation en cours, écrite sur le fil JavaFX.
+    private LocalTime premiereOuverture;
+
     @Start
     void start(Stage stage) {
         ecran = new EcranDuBanc(stage);
@@ -116,7 +120,7 @@ class BancIhmO3Test {
             attendreLesImages(ecran.sonde(), ecran.sonde().relever().images() + IMAGES_DE_GARDE);
             Gel enNavigation = ecran.sonde().relever();
             releve.noterNavigation(nuit, enNavigation);
-            releve.noterNavigationDatee(nuit, navigation, durees, enNavigation);
+            releve.noterNavigationDatee(nuit, navigation, durees, enNavigation, premiereOuverture);
             if (nuit == 1) {
                 releve.noterPremieresOuvertures(durees.subList(0, ECRANS_PAR_TOUR));
             }
@@ -231,6 +235,7 @@ class BancIhmO3Test {
         SourceObservations sons = new SourceObservations.ParPassage(
                 new ContextePassage(importe.id(), importe.numeroPassage(), new ContexteSite(CARRE, "A1", null)));
         List<String> durees = new ArrayList<>();
+        premiereOuverture = null;
         for (int tour = 1; tour <= 3; tour++) {
             durees.add(ouvrir(datation, "Mes sites " + tour, ecran::ouvrirMesSites, () -> ecran.cartesSites() == 1));
             durees.add(ouvrir(
@@ -253,6 +258,9 @@ class BancIhmO3Test {
             throws Exception {
         double ms = ecran.chrono(
                 () -> {
+                    if (premiereOuverture == null) {
+                        premiereOuverture = LocalTime.now();
+                    }
                     datation.marquer("ouvre " + nom, System.nanoTime());
                     ouverture.run();
                 },
