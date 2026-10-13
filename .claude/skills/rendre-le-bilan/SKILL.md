@@ -26,7 +26,9 @@ dépôt n'en portaient aucune.
 ## Fonction de garde
 
 ```
-1. ECRIRE    la synthese : livre, dette restante, decisions et leur pourquoi.
+1. ECRIRE    la synthese : livre, sort de chaque dette, decisions et leur pourquoi.
+1b. SORTIR   chaque dette de l EPIC : instruite, puis abandonnee avec sa justification,
+             transferee a un EPIC ouvert, ou engagee a une date. Aucune n y reste.
 2. RENVOYER  aux ADR de la passe 11 plutot que de rederouler leur raisonnement.
 3. PRODUIRE  l artefact avant/apres, une entree par consequence du chantier.
 4. SOUMETTRE l artefact et OBTENIR un assentiment, AVANT de clore.
@@ -36,13 +38,14 @@ dépôt n'en portaient aucune.
 
 ## Le bilan renvoie, il ne redéroule pas
 
-Une synthèse courte : ce qui a été livré, la dette restante, les décisions prises et leur pourquoi.
+Une synthèse courte : ce qui a été livré, le sort de chaque dette, les décisions prises et leur pourquoi.
 Elle se dépose sur l'EPIC, et se répercute dans `AGENTS.md` ou `CONTRIBUTING.md` si elle change une
 règle du dépôt.
 
-**La dette restante est l'endroit où vont les suites qu'on ne traite pas**, et elles n'ont pas
-d'issue. Le bilan reprend, fait par fait, la dette que le corps de l'EPIC a nommée en chemin, et y
-ajoute ce que la clôture a révélé. Une issue ne s'ouvre que pour un défaut mesuré qui toucherait un
+**La dette est l'endroit où vont les suites qu'on ne traite pas**, et elles n'ont pas
+d'issue. Le bilan reprend, fait par fait, la dette que le corps de l'EPIC a nommée en chemin, y
+ajoute ce que la clôture a révélé, et dit par quelle porte chacune sort : aucune n'y reste telle
+quelle, et la section suivante dit le geste. Une issue ne s'ouvre que pour un défaut mesuré qui toucherait un
 utilisateur ou ferait mentir un garde. La règle et sa raison vivent dans le
 [cycle de chantier](../../../dev-docs/cycle-de-chantier.md), section « Une trouvaille s'écrit au
 moment où on la fait ».
@@ -50,9 +53,37 @@ moment où on la fait ».
 Elle **renvoie** aux ADR écrites en passe 11 : c'est la raison pour laquelle elle vient après elles.
 Redérouler leur raisonnement produit deux textes qui divergeront.
 
-**Un bilan est une hypothèse, pas un verdict.** Sa section « dette restante » décrit ce qu'on croyait
+**Un bilan est une hypothèse, pas un verdict.** Ce qu'il dit de chaque dette décrit ce qu'on croyait
 comprendre au moment de l'écrire. Quand une suite est traitée, relire ce que le bilan en disait et le
 corriger s'il s'est trompé : une analyse fausse laissée en place oriente le chantier suivant.
+
+## Aucune dette ne reste dans l'EPIC qui se ferme
+
+Personne ne relit un EPIC clos, et une suite non traitée n'a pas d'issue : une dette reprise telle quelle dans le
+bilan n'est plus due par personne. Avant de fermer, chaque dette est donc **instruite**, puis elle
+**sort** de l'EPIC.
+
+```
+Pour CHAQUE dette nommee dans le corps de l EPIC, ou revelee par la cloture :
+1. MESURER   aujourd hui, ou ecrire pourquoi on ne peut pas. Une mesure prise en chemin se rejoue.
+2. CHIFFRER  ce que la laisser coute, et a qui.
+3. DECIDER   l une des trois portes, et l ECRIRE :
+     abandonnee  -> sa justification, parmi les decisions du bilan (ADR si elle est structurante)
+     transferee  -> ecrite D ABORD dans le corps de l EPIC OUVERT qui la recoit, avec sa mesure
+                    et sa provenance ; le bilan dit ou elle est partie
+     engagee     -> une date, dans une issue qui la garde
+4. RECRIRE   la section « Dette nommee » du corps de l EPIC : une ligne par dette, qui dit par
+             quelle porte elle est sortie et ou la lire.
+5. REFUSER   de fermer tant qu une seule dette n a pris aucune porte.
+```
+
+« À voir plus tard » et « jamais mesuré » ne sont ni une porte ni une instruction : une dette qui en
+reste là bloque la fermeture. Le remède, lui, peut rester ouvert quand la dette est transférée : c'est
+l'EPIC qui la reçoit qui tranchera. Le sas des suites (#4562) n'est pas une destination, et l'EPIC qui
+reçoit une dette la devra à son tour à sa clôture. Le sort de chaque dette fait partie de ce que le
+bilan soumet au porteur avant de clore. La règle et sa raison vivent dans le
+[cycle de chantier](../../../dev-docs/cycle-de-chantier.md), section
+« Une dette ne reste pas dans un EPIC qui se ferme ».
 
 ## Ce qu'un bilan DIFFÈRE se renvoie aussi, et son classement dit sa portée
 
@@ -185,6 +216,9 @@ une case qui porte « sans objet : aucun écran touché » est une décision, et
 | « Je publierai l'artefact après avoir clos » | Son objet est d'obtenir un assentiment, pas de documenter l'acquis |
 | « Je réexplique la décision dans le bilan » | Il renvoie aux ADR. Deux textes sur la même décision divergent |
 | « Cette passe n'avait pas lieu d'être, je laisse la case vide » | Une case vide se lit comme un oubli. On la coche en disant pourquoi |
-| « La dette restante est claire » | Un bilan est une hypothèse. Quand la suite est traitée, on relit ce qu'il en disait |
+| « Le sort de cette dette est clair » | Un bilan est une hypothèse. Quand la suite est traitée, on relit ce qu'il en disait |
+| « Je la laisse en dette, le prochain chantier la verra » | Personne ne relit un EPIC clos. Elle sort par une porte, ou l'EPIC ne se ferme pas |
+| « Elle est transférée, je l'ai écrit dans le bilan » | Un transfert s'écrit d'abord à l'arrivée, dans le corps d'un EPIC ouvert. Annoncée partie et reçue nulle part, elle est perdue |
+| « Le choix du remède reste à faire, je le note et je ferme » | Noter n'est pas une porte. Elle en prend une, par exemple un EPIC ouvert qui tranchera, ou l'EPIC ne se ferme pas |
 | « Cette dette mérite une issue, pour ne pas l'oublier » | Une suite qu'on ne traite pas reste en dette. L'issue est pour un défaut mesuré qui toucherait un utilisateur ou ferait mentir un garde |
 | « J'ai fermé la dernière issue, l'EPIC est clos » | Fermer les issues n'est pas clore. Les quatorze passes portent sur le delta |

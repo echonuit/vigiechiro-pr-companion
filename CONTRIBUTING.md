@@ -308,7 +308,7 @@ python3 .github/scripts/verifie_titre_pr.py "$TITRE" && gh pr create --title "$T
 
 Un **chantier** est une évolution d'ampleur **EPIC**, répartie sur **plusieurs PR** (le §4 décrit
 _une_ PR ; ici on décrit l'ensemble). Il **s'ouvre** par une analyse et **se clôt** par 14 passes,
-numérotées **0 à 11** (les passes 1 à 9 gardent leur numéro : des dizaines d'ADR **immuables** les citent).
+numérotées **0 à 12** plus la **6b** (les passes 1 à 9 gardent leur numéro : des dizaines d'ADR **immuables** les citent).
 
 **À l'ouverture**, dans cet ordre : **trier et regrouper les issues existantes** (balayage **par
 concept** et non par mot-clé, recherche des EPIC vivants et des issues « différées de #N », décision des
@@ -363,8 +363,8 @@ raison que prévu** est une **trouvaille** : lire le message avant de corriger. 
 plus de quelques minutes, le pas était trop gros : revenir au dernier vert et le couper en deux.
 
 **Une trouvaille s'écrit au moment où on la fait**, pas à la clôture et pas en commentaire. Une
-suite qu'on ne traite pas se nomme **en dette dans le corps de l'EPIC**, que le bilan de la passe 12
-reprend, et **n'ouvre pas d'issue**. Une issue ne s'ouvre que pour un **défaut mesuré qui toucherait
+suite qu'on ne traite pas se nomme **en dette dans le corps de l'EPIC**, que la passe 12
+instruit et ne laisse pas dans l'EPIC qui se ferme, et **n'ouvre pas d'issue**. Une issue ne s'ouvre que pour un **défaut mesuré qui toucherait
 un utilisateur, ou qui ferait mentir un garde** ; elle se rattache alors en sous-issue
 (`gh issue create --parent <EPIC>`) à l'EPIC du chantier qui traite sa cause, sinon à l'**EPIC des
 suites** ([#4562](https://github.com/echonuit/vigiechiro-pr-companion/issues/4562)). Un engagement
@@ -405,7 +405,7 @@ l'issue se lisent-ils dans six mois **sans** le fil de discussion ?
    seulement ce qu'il y a à ajouter : une page qui décrit fidèlement un mécanisme **remplacé** ne rougit
    nulle part et se lit comme vraie. Partir des **fichiers touchés** et chercher qui les **cite** dans
    `docs/`, `dev-docs/` et `brief/`, plutôt que de partir de sa mémoire. Les **ADR s'écrivent en passe
-   10**, pas ici.
+   11**, pas ici.
 4. **Doc utilisateur** (site `docs/`) + **captures** autant que nécessaire.
 5. **Brief projet** (`brief/`, dans ce dépôt) : répercuter dans le **brief projet** (document de
    conception vivant : besoin, parcours utilisateurs, maquettes, MCD - **pas** un sujet pédagogique) les
@@ -449,7 +449,7 @@ l'issue se lisent-ils dans six mois **sans** le fil de discussion ?
    coupé, un glyphe absent ou une régression de style ne font rougir aucun test. C'est la passe
    précédente (CSS, socle) qui est la plus à même de casser un écran sans casser un test, d'où cette
    relecture **juste après** elle.
-9. **Suites consolidées** : l'EPIC des suites relu, regroupé, les rattachements tranchés. Ce que la clôture a elle-même révélé se nomme en dette pour le bilan, et n'ouvre une issue que si c'est un défaut mesuré qui toucherait un utilisateur ou ferait mentir un garde.
+9. **Suites consolidées** : l'EPIC des suites relu, regroupé, les rattachements tranchés. Ce que la clôture a elle-même révélé se nomme en dette pour le bilan, et n'ouvre une issue que si c'est un défaut mesuré qui toucherait un utilisateur ou ferait mentir un garde. Chaque dette nommée y est instruite et prend sa porte, avant la passe 11 qui doit voir les abandons.
 10. **Changement OpenSpec archivé** : les delta specs fusionnent d'abord dans `openspec/specs/`, toutes les
     capacités sont re-comparées, **puis** le dossier passe sous `openspec/changes/archive/`. L'ordre inverse
     laisse le changement archivé et la spécification jamais mise à jour, sans que rien ne le dise.
@@ -462,7 +462,7 @@ l'issue se lisent-ils dans six mois **sans** le fil de discussion ?
     décisions : sur le chantier #3151, les cinq ADR sont nées après la passe 3, aucune à l'endroit prévu.
     Une décision **de ne pas faire** est une décision, et c'est celle qu'on oublie : elle ne laisse pas
     de code derrière elle.
-12. **Bilan** : ce qui a été livré, dette restante (celle que le corps de l'EPIC a nommée en chemin), décisions (qui **renvoient aux ADR** de la passe 11).
+12. **Bilan** : ce qui a été livré, le sort de chaque dette que le corps de l'EPIC a nommée en chemin (**aucune ne reste dans l'EPIC qui se ferme** : instruite, puis abandonnée avec sa justification, transférée à un EPIC ouvert ou engagée à une date), décisions (qui **renvoient aux ADR** de la passe 11).
     **Et il se montre** : la passe 12 produit un **artefact visuel avant / après**, une ligne par
     conséquence visible, soumis **avant** de clore l'EPIC. Un chantier d'IHM se juge sur ce qu'il change
     à l'écran, et un bilan écrit demande qu'on le croie là où une capture le montre. Ce qui n'a **pas**

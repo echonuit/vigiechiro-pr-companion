@@ -16,8 +16,10 @@ est cadrée.
     Les passes **1 à 9 ne changent pas de numéro**, et c'est délibéré. Le dépôt compte **42 citations**
     de passes numérotées, dont **35 dans `dev-docs/decisions/`**, des documents que la règle déclare
     **immuables**. Décaler la série rendrait fausses 35 références qu'on s'interdit d'éditer, sans que
-    rien ne rougisse. Les deux passes ajoutées se placent donc aux extrémités : la 0 en tête, la 10
-    et la 11 en queue.
+    rien ne rougisse. Les passes ajoutées alors se sont donc placées aux extrémités : la 0 en tête, les
+    deux dernières en queue. L'archivage OpenSpec s'est inséré depuis en 10 (#4518), parce que son
+    effet devait précéder l'écriture des ADR : les deux dernières ont glissé d'un cran, et la série va
+    de 0 à 12.
 
     Le « 0 » n'est pas un pis-aller : l'ouverture d'un chantier a déjà son étape 0, et c'est déjà
     *relire l'existant avant d'agir*. La même figure aux deux bouts.
@@ -289,7 +291,8 @@ lot ou à la clôture du chantier, elle s'écrit à deux endroits successifs :
 - tant que le chantier court, dans le **corps de son EPIC**, fait par fait, avec le fichier, la ligne
   et le chiffre ;
 - à la clôture, dans le **bilan** de la passe 12 ([`rendre-le-bilan`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.agents/skills/rendre-le-bilan/SKILL.md)),
-  qui la reprend en « dette restante ».
+  qui dit par quelle porte chacune est sortie : **aucune ne reste dans l'EPIC qui se ferme**. La
+  règle est plus bas, [Une dette ne reste pas dans un EPIC qui se ferme](#une-dette-ne-reste-pas-dans-un-epic-qui-se-ferme).
 
 **Une issue ne s'ouvre que pour un défaut mesuré qui toucherait un utilisateur, ou qui ferait mentir
 un garde.** Les deux conditions comptent. Mesuré veut dire qu'on tient le chiffre, le message
@@ -335,7 +338,7 @@ Une liste d'issues tenue à la main dans un corps d'EPIC se périme sans bruit, 
 Le lien natif se lit par `gh issue view <EPIC> --json parent,subIssues,subIssuesSummary` : chaque issue
 porte son chantier, et la taille d'un EPIC est un nombre plutôt qu'un décompte à l'œil. La dette, elle,
 n'est pas une liste d'issues : c'est la description de ce qu'on laisse, et elle a sa place dans le
-corps.
+corps tant que l'EPIC est ouvert.
 
 **La dispense, et elle est étroite** : une trouvaille **corrigée dans la pull request en cours** ne
 s'écrit ni en dette ni en issue. Le corps de la PR la porte, et rien ne peut se perdre entre la
@@ -358,7 +361,7 @@ la formule qui fait disparaître les trouvailles quand elle se révèle fausse u
     qu'après réclamation explicite, alors qu'elles avaient été décrites dès leur découverte. Le
     signalement ne manquait pas ; il n'avait aucun support qui survive.
 
-**Ce n'est pas une charge nouvelle.** Le bilan de la passe 12 devait déjà nommer la dette restante ;
+**Ce n'est pas une charge nouvelle.** Le bilan de la passe 12 devait déjà nommer la dette ;
 l'écrire en chemin, c'est le faire au moment où le contexte est frais plutôt que reconstitué. Ce qui
 change est le coût : quelques minutes pendant qu'on a le message d'erreur sous les yeux, contre une
 demi-heure d'archéologie trois jours plus tard, pour un résultat moins juste.
@@ -578,10 +581,72 @@ La procédure vit dans la compétence [`ecrire-une-adr`](https://github.com/echo
 
 La procédure vit dans la compétence [`rendre-le-bilan`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.agents/skills/rendre-le-bilan/SKILL.md), qui est ce qu'un agent lit au moment du geste.
 
+## Une dette ne reste pas dans un EPIC qui se ferme
+
+Nommer une dette dans le corps de l'EPIC la garde en vue tant que le chantier court. Le jour où
+l'EPIC se ferme, plus personne ne relit ce corps, et depuis #6203 une suite non traitée n'a pas
+d'issue qui la rappelle : une dette qu'on y laisse n'est plus due par personne. **À la clôture, aucune
+dette ne reste donc dans l'EPIC.** Chacune est d'abord instruite, puis elle sort par l'une de trois
+portes.
+
+**Instruite** veut dire qu'elle porte trois choses, écrites :
+
+- sa **mesure du jour**, rejouée à la clôture avec la commande ou le relevé qui la produit, ou la
+  raison pour laquelle on ne peut pas la mesurer. Une mesure prise en chemin se rejoue, puisque le
+  chantier a pu la déplacer ;
+- **ce que la laisser coûte**, et à qui ;
+- une **décision**, qui est l'une des trois portes.
+
+Instruite ne veut pas dire traitée, ni même que son remède soit choisi : la décision demandée est
+celle de la porte. Une dette peut partir vers un autre EPIC avec deux remèdes encore ouverts, pourvu
+qu'elle parte avec sa mesure et son coût.
+
+Deux choses **bloquent la fermeture**. Une dette qui n'est pas instruite : celle dont on écrit
+« jamais mesuré » sans dire pourquoi. Et une dette qui n'a pris aucune porte : celle dont on écrit
+« à voir plus tard », ou « le choix reste à faire » sans dire quel EPIC le fera.
+
+Les trois portes :
+
+| Porte | Ce qui s'écrit | Où |
+| --- | --- | --- |
+| **Abandonnée avec sa justification** | la raison pour laquelle on ne le fera pas, qui dit ce que l'abandon coûte et à qui. C'est une décision de ne pas faire, et ce n'est plus une dette | parmi les décisions du bilan, et en ADR quand elle est structurante (passe 11) |
+| **Transférée à un EPIC ouvert** | la dette entière, avec sa mesure et sa provenance | dans la section « Dette nommée » du corps de l'EPIC qui la reçoit ; le bilan dit où elle est partie |
+| **Engagée à une date** | l'engagement, sa date, et l'unité dans laquelle il se vérifiera | dans une issue, qu'un engagement daté garde ([ADR 5539](decisions/5539-un-engagement-date-se-lit-par-un-dispositif.md)) |
+
+Il n'y a pas de quatrième porte. Une dette qui n'en a pris aucune est une dette abandonnée sans
+justification, et c'est ce que la règle interdit.
+
+**Le corps de l'EPIC ne garde aucune dette due.** Avant de fermer, sa section « Dette nommée » se
+réécrit : chaque dette y devient une ligne qui dit par quelle porte elle est sortie, et où la lire
+(le bilan, l'EPIC qui l'a reçue, ou l'issue qui porte la date). Le sort de chaque dette fait partie
+de ce que le bilan soumet au porteur avant de clore.
+
+**La porte se choisit en passe 9, et le bilan de la passe 12 la rapporte.** Un abandon est une
+décision de ne pas faire : la passe 11 doit l'avoir sous les yeux pour dire s'il lui faut une ADR.
+Une dette révélée après la passe 9 fait rejouer ce choix pour elle, puis la passe 11.
+
+**L'EPIC qui reçoit une dette la devra à son tour.** Une dette transférée retrouve la même question à
+la clôture suivante, et elle ne quitte cette chaîne que par une justification ou par une date. L'EPIC
+d'accueil est celui qui traite sa cause, ou un EPIC ouvert pour les suites de ce chantier (« Les
+suites de #N »). Il est **ouvert** au moment du transfert, et le transfert s'écrit **à l'arrivée
+d'abord** : une dette annoncée partie vers un EPIC qui ne la porte pas est une dette perdue.
+
+**Le sas des suites (#4562) n'est pas une destination.** Il n'a ni périmètre ni clôture : rien ne s'y
+traite, et personne n'y instruirait une dette. Cette page l'appelle aussi « l'EPIC des suites » : ce
+n'est pas de lui qu'il s'agit au paragraphe précédent.
+
+**Un EPIC ouvert pour ne porter que des dettes est un chantier comme un autre.** Son travail est de
+les instruire. Il ne se ferme pas avant, et il se clôt par les mêmes passes.
+
+La règle a été décidée par le porteur le 2026-10-13 (#6210). Ce jour-là, trois dettes venaient d'être
+écrites dans trois EPIC sous la règle de #6203 : l'une disait elle-même que son défaut n'avait jamais
+été mesuré, les deux autres laissaient leur choix ouvert. Aucune surface de la méthode ne disait ce
+qu'elles devaient devenir, et 66 EPIC clos portaient déjà les mots « dette restante ».
+
 ## Les suites d'une clôture se closent aussi
 
-La passe 9 consolide les issues ouvertes en chemin pour des défauts mesurés ; la passe 12 reprend la
-dette nommée dans le corps de l'EPIC en « dette restante », et clôt l'EPIC. Ces issues, une fois livrées, forment un **nouveau delta**, et rien ne les rattrape si l'on
+La passe 9 consolide les issues ouvertes en chemin pour des défauts mesurés ; la passe 12 instruit la
+dette nommée dans le corps de l'EPIC, la fait sortir par l'une de ses trois portes, et clôt l'EPIC. Ces issues, une fois livrées, forment un **nouveau delta**, et rien ne les rattrape si l'on
 considère que le chantier est fini.
 
 Le dépôt l'a vécu trois fois : les suites de l'EPIC #1662 ont formé l'EPIC #1863, dont les suites
@@ -599,7 +664,7 @@ Cette page a longtemps écrit ici « filtré sur les commits du chantier », et 
 de #4671 a trouvé son défaut le plus coûteux dans un plancher **posé par une autre session** pendant
 qu'elle courait. Un delta filtré ne l'aurait pas montré.
 
-**Un bilan est une hypothèse, pas un verdict.** Sa section « dette restante » décrit ce qu'on croyait
+**Un bilan est une hypothèse, pas un verdict.** Ce qu'il dit de chaque dette décrit ce qu'on croyait
 comprendre au moment de l'écrire. Le bilan de #1864 affirmait d'un défaut d'horodatage qu'« une
 troncature de fuseau est confirmée, mais elle n'explique pas tout - au moins deux facteurs, dont un qui
 détruit la fin de nuit ». C'était faux : il n'y avait qu'un facteur, mais il **composait** à chaque
@@ -628,10 +693,10 @@ trompé : une analyse fausse laissée en place oriente le chantier suivant.
 - [ ] 6b. Recette **préparée** : chaque capacité ajoutée a sa case `Sxx-NN` dans sa **session propriétaire** (geste + observation attendue), la **fixture** existe ou la spec du générateur est étendue, session manquante ou jamais jouée **nommée en dette dans l'EPIC**
 - [ ] 7. Harmonisation : **audit global** (ce qui ressemble / bénéficierait, exhaustif) puis **refactoring de conceptualisation** (lisibilité ; duplication et abstraction = outils) ; **choix, doutes, conséquences discutés avec l'utilisateur**
 - [ ] 8. Revue visuelle : **toute conséquence visible** couverte par une capture (captures **ajoutées** si besoin), régénérées et ouvertes une par une
-- [ ] 9. Sas vidé de ce qui relève du chantier ; suites non traitées nommées en dette, issue seulement pour un défaut mesuré
+- [ ] 9. Sas vidé de ce qui relève du chantier ; suites non traitées nommées en dette, issue seulement pour un défaut mesuré ; **chaque dette instruite, et sa porte choisie**
 - [ ] 10. Changement OpenSpec archivé : delta specs **fusionnées d'abord** dans `openspec/specs/`, toutes les capacités re-comparées, **puis** le dossier déplacé sous `archive/`
 - [ ] 11. ADR du chantier écrites (balayer les passes 0 à 10 ; une décision **de ne pas faire** en est une)
-- [ ] 12. Bilan (livré / dette / décisions) **+ artefact visuel avant/après soumis avant de clore**
+- [ ] 12. Bilan (livré / sort de chaque dette / décisions) : **aucune dette ne reste dans l'EPIC**, chacune est instruite, puis abandonnée avec sa justification, transférée à un EPIC ouvert (#N) ou engagée à une date ; **+ artefact visuel avant/après soumis avant de clore**
 ```
 
 ## Modèle de cycle d'une issue (rouge, vert, refactor)

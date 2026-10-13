@@ -77,7 +77,7 @@ l'[ADR 5414](../../../dev-docs/decisions/5414-une-regle-que-rien-ne-peut-garder-
 | 9 | Suites consolidées | l'EPIC des suites vidé de tout ce qui relève du chantier clos | `vider-le-sas` |
 | 10 | Archivage OpenSpec | les delta specs fusionnées, **puis** le changement sous `archive/` | `openspec-archive-change` |
 | 11 | ADR du chantier | une décision structurante, une ADR | `ecrire-une-adr` |
-| 12 | Bilan | livré, dette restante, décisions et leur pourquoi, **et la trace collée dans l'EPIC** | `rendre-le-bilan`, `humaniser` en appui |
+| 12 | Bilan | livré, sort de chaque dette (**aucune ne reste dans l'EPIC**), décisions et leur pourquoi, **et la trace collée dans l'EPIC** | `rendre-le-bilan`, `humaniser` en appui |
 
 Quatre passes ne produisent que de la prose, et c'est pourquoi elles nomment `humaniser` : ce
 qu'elles écrivent est lu hors de l'échange qui l'a produit, donc l'article A31 s'y applique.
@@ -187,9 +187,10 @@ mêmes quatorze passes**, appliquées à leur seul delta. Le dépôt l'a appris 
 La passe 9 ne les **découvre** pas : chacune a été ouverte au moment où elle a été trouvée, parce
 qu'elle était un défaut mesuré qui toucherait un utilisateur ou ferait mentir un garde, et rattachée à
 l'EPIC du chantier ou à celui des suites (#4562). Une suite qu'on ne traite pas n'a pas d'issue : elle
-est nommée en dette dans le corps de l'EPIC, et la passe 12 la reprend dans le bilan. La règle vit dans
-le [cycle de chantier](../../../dev-docs/cycle-de-chantier.md), section « Une trouvaille s'écrit au
-moment où on la fait ». Ce que la passe 9 fait des issues, et comment elle lit une page blanche, vit
+est nommée en dette dans le corps de l'EPIC, et la passe 12 l'instruit puis la fait sortir de l'EPIC
+avant de le fermer : aucune dette ne reste dans un EPIC clos. La règle vit dans
+le [cycle de chantier](../../../dev-docs/cycle-de-chantier.md), sections « Une trouvaille s'écrit au
+moment où on la fait » et « Une dette ne reste pas dans un EPIC qui se ferme ». Ce que la passe 9 fait des issues, et comment elle lit une page blanche, vit
 dans [`vider-le-sas`](../vider-le-sas/SKILL.md).
 
 **Ce qu'on y trouve n'est plus une prédiction.** L'EPIC #4671 - les quatre suites de #4573 - a été
