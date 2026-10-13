@@ -16,8 +16,10 @@ est cadrée.
     Les passes **1 à 9 ne changent pas de numéro**, et c'est délibéré. Le dépôt compte **42 citations**
     de passes numérotées, dont **35 dans `dev-docs/decisions/`**, des documents que la règle déclare
     **immuables**. Décaler la série rendrait fausses 35 références qu'on s'interdit d'éditer, sans que
-    rien ne rougisse. Les deux passes ajoutées se placent donc aux extrémités : la 0 en tête, la 10
-    et la 11 en queue.
+    rien ne rougisse. Les passes ajoutées alors se sont donc placées aux extrémités : la 0 en tête, les
+    deux dernières en queue. L'archivage OpenSpec s'est inséré depuis en 10 (#4518), parce que son
+    effet devait précéder l'écriture des ADR : les deux dernières ont glissé d'un cran, et la série va
+    de 0 à 12.
 
     Le « 0 » n'est pas un pis-aller : l'ouverture d'un chantier a déjà son étape 0, et c'est déjà
     *relire l'existant avant d'agir*. La même figure aux deux bouts.

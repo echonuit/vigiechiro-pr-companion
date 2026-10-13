@@ -308,7 +308,7 @@ python3 .github/scripts/verifie_titre_pr.py "$TITRE" && gh pr create --title "$T
 
 Un **chantier** est une évolution d'ampleur **EPIC**, répartie sur **plusieurs PR** (le §4 décrit
 _une_ PR ; ici on décrit l'ensemble). Il **s'ouvre** par une analyse et **se clôt** par 14 passes,
-numérotées **0 à 11** (les passes 1 à 9 gardent leur numéro : des dizaines d'ADR **immuables** les citent).
+numérotées **0 à 12** plus la **6b** (les passes 1 à 9 gardent leur numéro : des dizaines d'ADR **immuables** les citent).
 
 **À l'ouverture**, dans cet ordre : **trier et regrouper les issues existantes** (balayage **par
 concept** et non par mot-clé, recherche des EPIC vivants et des issues « différées de #N », décision des
@@ -405,7 +405,7 @@ l'issue se lisent-ils dans six mois **sans** le fil de discussion ?
    seulement ce qu'il y a à ajouter : une page qui décrit fidèlement un mécanisme **remplacé** ne rougit
    nulle part et se lit comme vraie. Partir des **fichiers touchés** et chercher qui les **cite** dans
    `docs/`, `dev-docs/` et `brief/`, plutôt que de partir de sa mémoire. Les **ADR s'écrivent en passe
-   10**, pas ici.
+   11**, pas ici.
 4. **Doc utilisateur** (site `docs/`) + **captures** autant que nécessaire.
 5. **Brief projet** (`brief/`, dans ce dépôt) : répercuter dans le **brief projet** (document de
    conception vivant : besoin, parcours utilisateurs, maquettes, MCD - **pas** un sujet pédagogique) les
