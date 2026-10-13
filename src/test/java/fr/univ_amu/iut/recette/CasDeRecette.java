@@ -54,6 +54,7 @@ public @interface CasDeRecette {
     /// Ce que le clip **ne prouve pas**, en une phrase, pour qui le regarde.
     ///
     /// Exigée si et seulement si la portée est [Portee#HORS_APPLICATION] : ailleurs elle serait du
-    /// bruit, et une page qui met une réserve partout n'en fait lire aucune.
+    /// bruit, et une page qui met une réserve partout n'en fait lire aucune. Un verdict lu sur la
+    /// plateforme de test n'en porte pas non plus : le test ne bouchonne pas ce qu'il lit (#6219).
     String reserve() default "";
 }
