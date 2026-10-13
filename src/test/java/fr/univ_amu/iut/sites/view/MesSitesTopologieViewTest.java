@@ -3,17 +3,11 @@ package fr.univ_amu.iut.sites.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Injector;
-import fr.univ_amu.iut.commun.model.Protocole;
-import fr.univ_amu.iut.commun.model.Utilisateur;
-import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
 import java.util.Locale;
 import javafx.scene.control.ListView;
@@ -52,11 +46,7 @@ class MesSitesTopologieViewTest {
         injector = BancDeRecette.surLeChrome()
                 .taille(1180, 900)
                 .executeur(BancDeRecette.Executeur.SYNCHRONE)
-                .semer(inj -> {
-                    new UtilisateurDao(inj.getInstance(SourceDeDonnees.class))
-                            .insert(new Utilisateur(ID_USER, "Testeur"));
-                    semerDesCarres(inj, 0, PEU);
-                })
+                .semer(inj -> semerDesCarres(inj, 0, PEU))
                 .ouvrir(inj -> inj.getInstance(NavigationSites.class).ouvrirAccueil())
                 .montrer(stage);
     }
@@ -92,18 +82,20 @@ class MesSitesTopologieViewTest {
         return robot.lookup(".carte-site").queryAll().size();
     }
 
-    /// Par les DAO et non par `ServiceSites` : le service annonce chaque création, et l'écran
-    /// ouvert se relirait trois fois par carré. Le test rouvre l'écran lui-même, comme le banc.
+    /// Par la fixture et non par `ServiceSites` : le service annonce chaque création, et l'écran
+    /// ouvert se relirait à chaque carré. La fixture écrit sans rien annoncer, et le test rouvre
+    /// l'écran lui-même, comme le banc.
     private static void semerDesCarres(Injector inj, int depuis, int jusqua) {
         SourceDeDonnees source = inj.getInstance(SourceDeDonnees.class);
-        SiteDao sites = new SiteDao(source);
-        PointDao points = new PointDao(source);
         for (int i = depuis; i < jusqua; i++) {
             String numero = String.format(Locale.ROOT, "%06d", 640380 + i);
-            Site site =
-                    sites.insert(new Site(null, numero, "Carré " + i, Protocole.STANDARD, null, "2026-01-01", ID_USER));
             for (String code : new String[] {"A1", "A2"}) {
-                points.insert(new PointDEcoute(null, code, null, null, null, site.id()));
+                JeuDeDonneesPassage.dans(source)
+                        .utilisateur(ID_USER)
+                        .carre(numero)
+                        .nomSite("Carré " + i)
+                        .point(code)
+                        .semerSiteEtPoint();
             }
         }
     }
