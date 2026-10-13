@@ -125,7 +125,7 @@ EXPOSE 8080
 # le serveur de développement de Flask (#6183). Celui-ci laissait par intermittence une écriture sans
 # réponse : la requête manquait au journal de l'API, qui n'avait ni redémarré ni planté, et la JVM
 # lisait « header parser received no bytes ». Les workers synchrones ne gardent aucune connexion
-# ouverte, donc aucune ne peut être réutilisée après que le serveur l'a fermée. Quatre, pour qu'un
-# navigateur qui charge la fiche et une écriture ne s'attendent pas. Le journal d'accès va sur la
-# sortie : le journal de l'API garde une ligne par requête (`JournauxDeLaPlateformeDeTestTest`).
-CMD ["gunicorn", "vigiechiro:app", "--bind", "0.0.0.0:8080", "--workers", "4", "--access-logfile", "-", "--log-file", "-"]
+# ouverte, donc aucune ne peut être réutilisée après que le serveur l'a fermée. Le réglage, et ce qui
+# garde au journal de l'API une ligne par requête, sont dans `gunicorn.conf.py`.
+COPY gunicorn.conf.py /plateforme/gunicorn.conf.py
+CMD ["gunicorn", "--config", "/plateforme/gunicorn.conf.py", "vigiechiro:app"]
