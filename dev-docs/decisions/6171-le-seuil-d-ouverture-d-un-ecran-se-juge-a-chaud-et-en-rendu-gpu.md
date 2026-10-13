@@ -12,12 +12,19 @@ verification_note: "le test tient la moitié mécanique : le relevé nomme le de
 verified:
   - by: machine:ci
     at: 2026-10-13
+relations:
+  completee_par: ["6197-l-image-du-plan-etabli-se-juge-au-premier-import-et-tient-o3-sans-remede"]
 generated:
   by: "process:assistance-par-agents"
   at: 2026-10-13
 ---
 
 # Le seuil d'ouverture d'un écran se juge à chaud et en rendu GPU, et un relevé de l'IHM dit par quoi il a été dessiné
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-13** : **complétée** par
+    [6197](6197-l-image-du-plan-etabli-se-juge-au-premier-import-et-tient-o3-sans-remede.md) : la
+    première image d'un import, elle, se juge à froid.
 
 ## Contexte
 
