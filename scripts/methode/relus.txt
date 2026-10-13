@@ -1492,11 +1492,13 @@ a1e593d0ca8a  src/test/java/fr/univ_amu/iut/commun/api/plateforme/ArchiveDuRepli
 720ef0063de2  src/test/java/fr/univ_amu/iut/commun/api/plateforme/CibleLive.java
 eb4b2f869205  src/test/java/fr/univ_amu/iut/commun/api/plateforme/CibleLiveTest.java
 306bdc2a1902  src/test/java/fr/univ_amu/iut/commun/api/plateforme/DepotSurLaPlateformeDeTestTest.java
-b7e498c88c32  src/test/java/fr/univ_amu/iut/commun/api/plateforme/FicheWebDUneParticipationTest.java
+8d1e8b15a855  src/test/java/fr/univ_amu/iut/commun/api/plateforme/EnvoiDesMetadonneesReluSurLaFicheWebTest.java
+2c739528bc87  src/test/java/fr/univ_amu/iut/commun/api/plateforme/FicheWebDUneParticipationTest.java
 cdd0f8a1fa2f  src/test/java/fr/univ_amu/iut/commun/api/plateforme/FrontWebSurLaPlateformeDeTestTest.java
 df1637e55f07  src/test/java/fr/univ_amu/iut/commun/api/plateforme/ImageDeLApiSansRevisionTest.java
 657be5eb9837  src/test/java/fr/univ_amu/iut/commun/api/plateforme/JournauxDeLaPlateformeDeTestTest.java
 7a6bd35f05b9  src/test/java/fr/univ_amu/iut/commun/api/plateforme/JournauxDesConteneurs.java
+d2586600dc84  src/test/java/fr/univ_amu/iut/commun/api/plateforme/NavigateurDeLaPlateforme.java
 8010b3bc64fd  src/test/java/fr/univ_amu/iut/commun/api/plateforme/PlateformeDeTest.java
 7292391074af  src/test/java/fr/univ_amu/iut/commun/api/plateforme/WorkerDeLaPlateformeDeTest.java
 08562833df8b  src/test/java/fr/univ_amu/iut/commun/di/AmorcageTest.java

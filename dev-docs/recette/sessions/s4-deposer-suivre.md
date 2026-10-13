@@ -219,9 +219,9 @@ participation », puis le suivi du traitement. S4 est la première session qui *
   fichiers de la nuit (`LogPR…` / `PaRecPR…`).
 - **S4-68** · *geste: saisir-l-enregistreur-d-un-passage* · Saisir « INCONNU » est **refusé** (ce n'est pas une valeur, c'est un aveu d'ignorance).
 - **S4-69** · *geste: envoyer-les-metadonnees-et-lire-le-compte-rendu* · « Envoyer vers Vigie-Chiro » affiche un compte rendu, succès **comme** échec.
-- **S4-70** · *hors-portée: la fiche WEB de la plateforme, dans un navigateur. Aucun carton n'y peut rien : il remplace une ÉTAPE muette, pas l'observable lui-même* · Sur la **fiche web** rechargée : le n° de série **apparaît** dans le champ du formulaire (et pas
+- **S4-70** · *hors-portée: la fiche WEB de la plateforme, dans un navigateur. Aucun carton n'y peut rien : il remplace une ÉTAPE muette, pas l'observable lui-même ; un test la lit sur la plateforme de test, EnvoiDesMetadonneesReluSurLaFicheWebTest* · Sur la **fiche web** rechargée : le n° de série **apparaît** dans le champ du formulaire (et pas
   seulement dans le JSON) - c'est le défaut de clé de #1844.
-- **S4-71** · *hors-portée: la fiche WEB de la plateforme, dans un navigateur. Aucun carton n'y peut rien : il remplace une ÉTAPE muette, pas l'observable lui-même* · Sur la **fiche web** : les **températures** de début et de fin de nuit apparaissent.
+- **S4-71** · *hors-portée: la fiche WEB de la plateforme, dans un navigateur. Aucun carton n'y peut rien : il remplace une ÉTAPE muette, pas l'observable lui-même ; un test la lit sur la plateforme de test, EnvoiDesMetadonneesReluSurLaFicheWebTest* · Sur la **fiche web** : les **températures** de début et de fin de nuit apparaissent.
 - **S4-72** · *hors-portée: la fiche WEB de la plateforme, dans un navigateur. Aucun carton n'y peut rien : il remplace une ÉTAPE muette, pas l'observable lui-même* · Sur la **fiche web** : `micro0_numero_serie` et le canal renseignés au préalable sont **toujours là**
   (l'envoi n'efface pas ce que l'application ne modélise pas).
 - **S4-73** · *geste: saisir-l-enregistreur-d-un-passage* · Sur une nuit dont l'enregistreur est inconnu, un envoi **ne publie pas** « INCONNU » : le champ reste
