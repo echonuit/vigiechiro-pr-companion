@@ -32,15 +32,5 @@ public enum Portee {
     /// Un clip reste utile - montrer le geste côté produit a de la valeur - mais il faut dire ce
     /// qu'il laisse dehors. `S4-33` le fait de lui-même depuis #4126, et c'est le modèle : « il ne
     /// prouve pas que l'écran **atteint** cet état ».
-    HORS_APPLICATION,
-
-    /// Le verdict se lit **hors de l'application**, et le test le lit **pour de bon**, sur la plateforme
-    /// de test (ADR 6219) : un navigateur y ouvre la fiche web de Vigie-Chiro, que rien ne bouchonne.
-    ///
-    /// **Aucune réserve**, donc. Ce que la valeur ne dit pas s'écrit dans le test : par quelle surface
-    /// l'écriture est partie, l'écran ou le service.
-    ///
-    /// Permise seulement à une classe taguée `plateforme-de-test`, ce que `CorrespondanceRecetteTest`
-    /// vérifie : sans cela, un test bouchonné pourrait se dire lu sur la plateforme.
-    SUR_LA_PLATEFORME_DE_TEST
+    HORS_APPLICATION
 }

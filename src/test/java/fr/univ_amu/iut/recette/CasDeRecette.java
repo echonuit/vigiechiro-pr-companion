@@ -22,6 +22,9 @@ import java.lang.annotation.Target;
 /// lui un garde silencieux est indiscernable d'un garde qui ne lit rien. S'y ajoute la confrontation du
 /// juge, le script marquant `*perceptif*` les cas qu'aucune assertion ne tranchera.
 ///
+/// **Citer un cas, c'est être filmé** (#6219) : le tournage tourne toute classe qui cite et attend un clip
+/// par cas cité. Un test sans scène de l'application ne cite donc pas, même s'il vérifie ce que le cas dit.
+///
 /// ```java
 /// @Test
 /// @CasDeRecette(value = "S1-02", portee = Portee.A_L_ECRAN)
@@ -54,7 +57,6 @@ public @interface CasDeRecette {
     /// Ce que le clip **ne prouve pas**, en une phrase, pour qui le regarde.
     ///
     /// Exigée si et seulement si la portée est [Portee#HORS_APPLICATION] : ailleurs elle serait du
-    /// bruit, et une page qui met une réserve partout n'en fait lire aucune. Un verdict lu sur la
-    /// plateforme de test n'en porte pas non plus : le test ne bouchonne pas ce qu'il lit (#6219).
+    /// bruit, et une page qui met une réserve partout n'en fait lire aucune.
     String reserve() default "";
 }
