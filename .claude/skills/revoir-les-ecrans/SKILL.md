@@ -47,7 +47,8 @@ qui est la plus à même de casser un écran sans casser un test. On regarde don
                Perceptif : le verdict revient a qui regarde. Asserte : verifier
                qu il joue ce que son nom annonce.
 8. CORRIGER    ce qui se corrige ; le reste s ecrit tout de suite, en issue s il
-               toucherait un utilisateur, en dette dans l EPIC sinon.
+               est un defaut MESURE qui toucherait un utilisateur, en dette
+               dans l EPIC sinon.
 ```
 
 ## Ce qu'on cherche, par ordre de fréquence constatée
