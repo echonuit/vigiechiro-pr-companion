@@ -537,7 +537,7 @@ Charge du poste sur 1 minute au départ des tirs : de 1,5 à 7,4, chaque tir hé
 - **Une autre image coûte, à tout parallélisme** (#6197) : celle qui suit le plan établi, quand la
   table de suivi s'affiche, dure de 100 à 255 ms. Ce sont les 255 ms de la ligne à 8 et les 244 ms du
   remède à 1572 WAV. L'image de fin, qui porte `TERMINE` et le compte rendu, reste entre 100 et
-  185 ms.
+  185 ms. Mesurée à part depuis : voir « La première image de la table de suivi ».
 - **Trois lectures écartées** : les relais vers le fil JavaFX (bornée à 8, la transformation émet
   encore 91 % des événements par seconde, sans plus d'écart) ; un point de sûreté de la JVM (aucun de
   plus de 30 ms pendant un import, dans un journal `-Xlog:gc*,safepoint` horodaté) ; l'échauffement.
@@ -619,6 +619,89 @@ locale du pom, puis une seconde, alternée, avec le réglage livré (`-Drecette.
 **Le relancer** : la commande du test de charge, avec `-Dperf.ihm.nuits=4 -Dperf.ihm.wav=300`, et
 `-Drecette.prism.order=es2` pour le rendu GPU. Le relevé doit alors porter `dessin=ES2Pipeline` : s'il
 porte `SWPipeline`, le poste a refusé la carte et les chiffres sont ceux du logiciel.
+
+### La première image de la table de suivi (#6197)
+
+Au début d'un import, l'image qui suit le « plan établi » est celle où la table de suivi reçoit ses
+lignes et s'affiche. Les relevés de #6175 la donnaient de 100 à 255 ms en rendu logiciel, sur trente
+et un tirs.
+
+Mesuré le 2026-10-13 sur le second poste (Core Ultra 7 255H, 16 cœurs, 30,3 Gio, carte Intel,
+JDK 25.0.3, Linux 7.0.0), `main` à `cb9ed7676`, donc après #6191. `BancIhmO3Test` sur l'affichage réel
+(XWayland, profil `recette-filmee`), à l'échelle 1 écrite par le banc, fenêtre de 1280 × 860, une nuit
+de 1572 WAV par tir. Le relevé écrit son dessin : `dessin=ES2Pipeline` en rendu GPU,
+`dessin=SWPipeline` en logiciel.
+
+L'écart « du plan établi » est celui que le banc date après ce jalon et avant la fin du premier
+fichier. Le banc ne date que les écarts de plus de 100 ms : en dessous, la ligne « écart max » porte
+le plus long écart de tout l'import, qui borne celui-là.
+
+Vingt tirs alternés, dix par dessin, de 15 h 55 à 16 h 02. Charge du poste sur 1 minute au départ des
+tirs : de 0,4 à 7,9, celle que la série produit elle-même. Le blocage témoin de 300 ms est daté de
+303 à 313 ms dans chaque tir, commencé de 3 à 13 ms avant.
+
+| Tir | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | Seuil |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Rendu GPU, écart du plan établi | 114 ms | < 100 | 162 ms | < 100 | < 100 | < 100 | < 100 | < 100 | < 100 | 147 ms | 200 ms |
+| Rendu GPU, écart max de l'import | 115 | 89 | 162 | 63 | 97 | 80 | 97 | 73 | 67 | 147 | |
+| Rendu logiciel, écart du plan établi | < 100 | < 100 | < 100 | < 100 | < 100 | 107 ms | < 100 | < 100 | < 100 | < 100 | 200 ms |
+| Rendu logiciel, écart max de l'import | 61 | 87 | 78 | 53 | 133 | 107 | 96 | 78 | 47 | 69 | |
+
+Les 133 ms du cinquième tir logiciel sont l'image de fin, qui porte `TERMINE` et le compte rendu.
+
+**Le premier import d'un processus contre les suivants.** Quinze tirs de trois ou quatre nuits dans un
+même processus, tirés ce jour-là de 13 h 32 à 16 h 16 : douze de quatre nuits de 300 WAV, sur des
+codes d'avant et d'après #6191, et trois de trois nuits de 1572 WAV sur `cb9ed7676`.
+
+| Écart du plan établi | Premier import | Imports suivants |
+|---|---|---|
+| imports relevés | 15 | 42 |
+| de plus de 100 ms | 8 : de 102 à 291 ms | 2 : 106 et 129 ms |
+| au-delà de 200 ms | 1 : 291 ms, en rendu logiciel, avant #6191 | aucun |
+
+**Le témoin d'avant #6191.** Dix tirs sur `d7eddd457`, le dernier commit avant la police à 12 px, de
+16 h 08 à 16 h 11, puis trois tirs de retour sur `cb9ed7676`. Entre les deux codes, `src/main` ne
+diffère que par `base.css` et par l'écoute des réglages de #6184.
+
+| Écart du plan établi | Rendu GPU | Rendu logiciel |
+|---|---|---|
+| `d7eddd457`, avant #6191 | < 100 · **235** · < 100 · 125 ms | 140 · < 100 · < 100 · < 100 · 119 · < 100 ms |
+| `cb9ed7676`, retour | 131 ms | < 100 · < 100 |
+
+**Le profil.** Quatre tirs de plus sous JFR, deux par dessin, échantillonnés à la milliseconde. Dans
+la fenêtre qui va du plan établi à la fin du premier fichier, de 78 à 111 ms, le fil JavaFX rend 65
+échantillons en tout : 25 dans la passe de mise en page du pulse sur le CSS de nœuds neufs, 10 dans
+le reste de cette passe, 11 dans le code du projet (la pose des lignes, les cellules de progression),
+7 dans le reste du pulse, 1 dans le banc et 11 ailleurs. Dans la même fenêtre il attend le rendu de
+6 à 63 ms, et le ramasse-miettes s'arrête de 0 à 20 ms.
+
+**Lectures** :
+
+- **L'image tient O3 dans les deux dessins**, à 162 ms au plus sur les vingt tirs, et sur trente-trois
+  premiers imports relevés ce jour-là sur ce code, en comptant les trois tirs de retour, les quatre
+  tirs profilés, ceux de trois nuits et trois tirs de #6207.
+- **C'est le coût d'une première mise en page.** Le premier import d'un processus construit et style
+  les cellules de la table ; les suivants ne le paient presque plus. C'est pourtant lui qui se juge :
+  on lance l'application pour importer une nuit (ADR 6197).
+- **Ce n'est pas le dessin.** Les deux tiennent, et le rendu logiciel n'est pas le plus lent ici.
+- **Aucun remède n'est engagé.** Construire la table avant le clic changerait l'écran pour une image
+  qu'aucun relevé ne montre au-delà du seuil sur ce code.
+
+**Ce que ces chiffres ne mesurent pas** :
+
+- **La queue.** Quatre premiers imports sur quarante-neuf ont dépassé 200 ms sur les codes d'avant
+  #6191 : 255 et 244 ms dans les relevés de #6175, 291 ms dans ceux de #6171, 235 ms dans le témoin
+  ci-dessus. Aucun sur trente-trois après. Que #6191 l'ait retirée n'est pas établi : le témoin n'en
+  rend qu'un sur dix, et les autres relevés d'avant datent d'heures où la charge du poste était
+  autre.
+- **Des durées par travail.** JFR n'échantillonne que quelques fils par milliseconde : pendant un
+  import, où huit transformations tournent, le fil JavaFX reçoit de 9 à 22 échantillons par fenêtre.
+  Le profil donne une répartition.
+- **Un autre poste.** Tout vient du second poste de mesure.
+
+**Le relancer** : la commande du test de charge, avec `-Dperf.ihm.nuits=1 -Dperf.ihm.wav=1572`, et
+`-Drecette.prism.order=es2` pour le rendu GPU. L'écart se lit dans `releve.tsv`, sur la ligne « écart
+daté, import de la nuit 1 » qui commence « après « plan établi » ».
 
 ### La lecture par morceaux (#104) : la mémoire ne suit plus la durée d'un WAV
 
@@ -832,7 +915,8 @@ critère a son relevé, et chaque seuil non tenu son issue.
   carré que le produit retenait est corrigée (#6170). **20 Gio, sur le second poste** : import en 20 à 21 s, 108 à 115 Mo après GC ; dans
   l'IHM, l'import gelait le fil jusqu'à 472 ms parce qu'il menait de front autant de transformations
   que de cœurs ; à la moitié des cœurs, 76 et 134 ms à 20 Gio, pour 15 % de durée en plus (#6175).
-  La première image de la table de suivi coûte encore de 100 à 255 ms (#6197).
+  La première image de la table de suivi, de 100 à 255 ms dans ces relevés, tient le seuil sur le
+  `main` d'après #6191 : 162 ms au plus sur dix tirs par dessin (#6197, ADR 6197).
 - **Réactivation** (#6174) : sur une nuit hydratée de bruts de 20 min, les temporaires de
   régénération occupaient 7031 Mo à la fois dans `java.io.tmpdir`, de la mémoire vive quand c'est un
   tmpfs. Ils naissent désormais sous l'espace de travail, et la mémoire du poste ne monte plus que d'un
