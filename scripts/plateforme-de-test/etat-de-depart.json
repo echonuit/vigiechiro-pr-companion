@@ -106,6 +106,22 @@
       "date_debut": "2026-06-16T21:00:00",
       "date_fin": "2026-06-17T06:00:00",
       "point": "Z1"
+    },
+    {
+      "cle": "nuit-a-ecrire",
+      "site": "carre-130711",
+      "observateur": "observatrice",
+      "date_debut": "2026-06-17T21:00:00",
+      "date_fin": "2026-06-18T06:00:00",
+      "point": "Z1"
+    },
+    {
+      "cle": "nuit-sans-enregistreur",
+      "site": "carre-130711",
+      "observateur": "observatrice",
+      "date_debut": "2026-06-18T21:00:00",
+      "date_fin": "2026-06-19T06:00:00",
+      "point": "Z1"
     }
   ],
   "donnees": [

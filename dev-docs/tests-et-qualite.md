@@ -521,17 +521,26 @@ fork, ce que garantit le profil, qui ne joue que ce tag.
 - Le front web : `acces().urlDuFront()` rend l'adresse de sa page d'entrée, dérivée de celle de l'API
   puisqu'ils partagent leur origine. Exemple :
   [`FrontWebSurLaPlateformeDeTestTest`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/test/java/fr/univ_amu/iut/commun/api/plateforme/FrontWebSurLaPlateformeDeTestTest.java).
-- La fiche web dans un navigateur : un `BrowserWebDriverContainer` à l'image `navigateur.image` des
-  épingles, qui rejoint `PlateformeDeTest.reseau()` et ouvre `urlDuFrontDansLeReseau()`. La connexion
-  range le jeton de l'utilisatrice dans le stockage du navigateur (`auth-session-token`) depuis une
-  page de la même origine qui ne lance aucun script, puis ouvre la fiche. Le front efface le jeton
-  quand une requête partie sans lui reçoit son 401 : rangé pendant que le front tournait, il était
-  effacé par une requête encore en vol (#6183). La connexion de `DEV_FAKE_AUTH` ouvrirait une session
-  « John Doe », qui ne possède rien. L'observatrice
-  a la charte acceptée dans l'état de départ, sans quoi sa modale couvrirait la fiche. Le navigateur ne
-  résout que l'alias de l'API (`--host-resolver-rules`) : ce que le front chargeait de cdnjs est servi
-  par l'image, et un test ne dépend plus d'Internet. Exemple :
+- La fiche web dans un navigateur : `NavigateurDeLaPlateforme.connecteComme("observatrice")` démarre un
+  `BrowserWebDriverContainer` à l'image `navigateur.image` des épingles, qui rejoint le réseau de la
+  plateforme, puis `ouvrir(route)` charge une page du front. La connexion range le jeton de
+  l'utilisatrice dans le stockage du navigateur (`auth-session-token`) depuis une page de la même
+  origine qui ne lance aucun script. Le front efface le jeton quand une requête partie sans lui reçoit
+  son 401 : rangé pendant que le front tournait, il était effacé par une requête encore en vol (#6183).
+  Un texte ou la valeur d'un champ se lit en une seule commande (`texteDe`, `valeurDuChamp`), parce que
+  le front remplace ses éléments en se dessinant. La connexion de `DEV_FAKE_AUTH` ouvrirait une session
+  « John Doe », qui ne possède rien. L'observatrice a la charte acceptée dans l'état de départ, sans
+  quoi sa modale couvrirait la fiche. Le navigateur ne résout que l'alias de l'API
+  (`--host-resolver-rules`) : ce que le front chargeait de cdnjs est servi par l'image, et un test ne
+  dépend plus d'Internet. Exemple :
   [`FicheWebDUneParticipationTest`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/test/java/fr/univ_amu/iut/commun/api/plateforme/FicheWebDUneParticipationTest.java).
+- Une écriture de Companion relue sur la fiche web : le test appelle le service de production avec un
+  `ClientVigieChiro` pointé sur `acces().urlDeBase()`, le côté local bouchonné, puis relit la fiche par
+  le navigateur. Il écrit sur une participation à lui, déclarée dans l'état de départ : deux classes
+  qui écriraient la même se disputeraient son `_etag`. Exemple :
+  [`EnvoiDesMetadonneesReluSurLaFicheWebTest`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/test/java/fr/univ_amu/iut/commun/api/plateforme/EnvoiDesMetadonneesReluSurLaFicheWebTest.java),
+  qui relit le numéro de série dans le champ du formulaire et les températures sur la fiche (S4-70,
+  S4-71).
 - Un scénario d'écran : `BancDeRecette.surLaPlateformeDeTest("observatrice")`, exclusive des autres
   déclarations du banc. Le banc vise la plateforme et dépose le jeton sans profil ; la modale le
   revérifie seule. Exemple :
