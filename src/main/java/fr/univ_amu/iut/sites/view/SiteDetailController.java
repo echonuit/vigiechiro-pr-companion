@@ -465,9 +465,6 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
         }
     }
 
-    /// Ouvre la boîte d'édition pré-remplie ; à la validation, applique la modification via le
-    /// ViewModel (qui recharge la fiche). Un refus métier (carré déjà pris) ou un format invalide
-    /// (R1) est rapporté sans quitter l'écran.
     /// Ouvre la page du site sur le portail Vigie-Chiro (#1124) : vérification visuelle du rattachement.
     @FXML
     private void ouvrirSurVigieChiro() {
@@ -477,6 +474,9 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
         }
     }
 
+    /// Ouvre la modale d'édition pré-remplie (#1431), qui porte la saisie, la validation en direct et le
+    /// refus métier (carré déjà pris, format invalide) sans quitter l'écran. Quand elle a écrit, la fiche
+    /// relit son site et relibelle son étape de navigation ([#rechargerApresModification()]).
     @FXML
     private void modifierSite() {
         // La modale porte la saisie, la validation en direct et le refus métier (#1431). Le Dialog bâti
