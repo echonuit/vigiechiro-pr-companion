@@ -53,15 +53,21 @@ final class HydratationDepuisBruts {
     /// jeton honoré : cf. [ExecutionParallele].
     private final ExecutionParallele executionParallele;
 
+    /// Où naissent les temporaires de régénération : l'espace de travail, jamais `java.io.tmpdir`, parce
+    /// que plusieurs bruts y sont régénérés à la fois (#6174, [DossierTemporaire]).
+    private final Path baseTemporaires;
+
     HydratationDepuisBruts(
             Optional<InventaireBrutsSource> inventaire,
             Optional<RegenerationSequences> regeneration,
             RebranchementSequences rebranchement,
-            ExecutionParallele executionParallele) {
+            ExecutionParallele executionParallele,
+            Path baseTemporaires) {
         this.inventaire = Objects.requireNonNull(inventaire, "inventaire");
         this.regeneration = Objects.requireNonNull(regeneration, "regeneration");
         this.rebranchement = Objects.requireNonNull(rebranchement, "rebranchement");
         this.executionParallele = Objects.requireNonNull(executionParallele, "executionParallele");
+        this.baseTemporaires = Objects.requireNonNull(baseTemporaires, "baseTemporaires");
     }
 
     /// Tente d'hydrater le passage depuis `dossierSource`.
@@ -167,7 +173,7 @@ final class HydratationDepuisBruts {
             Set<String> restantes,
             Map<String, List<String>> nomsArbitres) {
         RegenerationSequences moteur = regeneration.orElseThrow();
-        Path temporaire = DossierTemporaire.creer("vc-hydrate-");
+        Path temporaire = DossierTemporaire.creer(baseTemporaires, DossierTemporaire.PREFIXE_HYDRATATION);
         try {
             // Aucun arbitrage de collisions ici, faute de pouvoir le rejouer : l'hydratation part d'un
             // passage reconstruit, dont la base ne connaît aucun original réel (ni durée, donc ni nombre

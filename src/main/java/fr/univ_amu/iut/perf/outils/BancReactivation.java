@@ -29,8 +29,9 @@ import java.util.stream.Stream;
 /// Banc de la **réactivation** d'une nuit archivée (#6174, O3) : il fabrique une nuit avec le
 /// générateur de [BancImport], l'importe, efface ses séquences et ses bruts de l'espace de travail, puis
 /// la réactive depuis la carte par le vrai [ServiceReactivationPassage]. Il relève le temps, les
-/// temporaires de régénération sous `java.io.tmpdir` au plus haut, la mémoire du poste et `Shmem` lues
-/// dans `/proc/meminfo`, le heap au plus haut et après un GC, et les temporaires restés.
+/// temporaires de régénération au plus haut, sous `java.io.tmpdir` et sous l'espace de travail, la
+/// mémoire du poste et `Shmem` lues dans `/proc/meminfo`, le heap au plus haut et après un GC, et les
+/// temporaires restés.
 ///
 /// `perf.reactivation.voie` vaut `bruts` (défaut), où un original se régénère à la fois, ou
 /// `hydratation`, où les originaux réduits à des placeholders font une nuit reconstruite dont les bruts
@@ -96,7 +97,7 @@ public final class BancReactivation {
             oublierLesOriginaux(injecteur.getInstance(EnregistrementOriginalDao.class), idSession);
         }
 
-        Echantillonneur mesure = Echantillonneur.demarrer(temporaires);
+        Echantillonneur mesure = Echantillonneur.demarrer(temporaires, racine);
         long debut = System.nanoTime();
         RapportReactivation rapport = injecteur
                 .getInstance(ServiceReactivationPassage.class)
@@ -119,6 +120,11 @@ public final class BancReactivation {
                 "  temporaires     : %d Mo au plus haut sous java.io.tmpdir, %d dossier(s) resté(s)%n",
                 mesure.picTemporaires.get() / MIO,
                 temporairesRestants(temporaires));
+        System.out.printf(
+                Locale.ROOT,
+                "                    %d Mo au plus haut sous l'espace de travail, %d dossier(s) resté(s)%n",
+                mesure.picEspaceDeTravail.get() / MIO,
+                temporairesRestants(racine));
         System.out.printf(
                 Locale.ROOT,
                 "  poste           : %d Mo utilisés au plus haut (%d au départ), Shmem %d Mo au plus haut"
@@ -260,8 +266,10 @@ public final class BancReactivation {
     /// Relève, sur un fil démon, les pics du heap, des temporaires et de la mémoire du poste.
     private static final class Echantillonneur {
         private final Path temporaires;
+        private final Path espaceDeTravail;
         private final AtomicLong picHeap = new AtomicLong(0);
         private final AtomicLong picTemporaires = new AtomicLong(0);
+        private final AtomicLong picEspaceDeTravail = new AtomicLong(0);
         private final AtomicLong picPoste = new AtomicLong(0);
         private final AtomicLong picShmem = new AtomicLong(0);
         private final AtomicBoolean actif = new AtomicBoolean(true);
@@ -269,12 +277,13 @@ public final class BancReactivation {
         private final long shmemDepart = meminfo("Shmem");
         private Thread fil;
 
-        private Echantillonneur(Path temporaires) {
+        private Echantillonneur(Path temporaires, Path espaceDeTravail) {
             this.temporaires = temporaires;
+            this.espaceDeTravail = espaceDeTravail;
         }
 
-        private static Echantillonneur demarrer(Path temporaires) {
-            Echantillonneur e = new Echantillonneur(temporaires);
+        private static Echantillonneur demarrer(Path temporaires, Path espaceDeTravail) {
+            Echantillonneur e = new Echantillonneur(temporaires, espaceDeTravail);
             e.fil = Thread.ofPlatform().daemon(true).name("banc-reactivation").start(e::boucle);
             return e;
         }
@@ -294,6 +303,7 @@ public final class BancReactivation {
         private void relever() {
             picHeap.accumulateAndGet(heapUtilise(), Math::max);
             picTemporaires.accumulateAndGet(octetsDeRegeneration(temporaires), Math::max);
+            picEspaceDeTravail.accumulateAndGet(octetsDeRegeneration(espaceDeTravail), Math::max);
             picPoste.accumulateAndGet(posteUtilise(), Math::max);
             picShmem.accumulateAndGet(meminfo("Shmem"), Math::max);
         }

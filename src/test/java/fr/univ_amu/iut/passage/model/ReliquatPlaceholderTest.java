@@ -34,6 +34,10 @@ import org.junit.jupiter.api.io.TempDir;
 /// Constaté sur une nuit réelle : 163 séquences, portant 417 observations, muettes à chaque réactivation.
 class ReliquatPlaceholderTest {
 
+    /// L'espace de travail sous lequel naissent les temporaires de régénération (#6174).
+    @TempDir
+    Path espaceDeTravail;
+
     private static final int FREQUENCE_ACQUISITION = 2000;
     private static final int CANAUX = 1;
     private static final int BITS = 16;
@@ -137,12 +141,13 @@ class ReliquatPlaceholderTest {
                 .isZero();
     }
 
-    private static ReactivationDepuisBruts reactivation() {
+    private ReactivationDepuisBruts reactivation() {
         VerificationIdentiteAudio verification = new VerificationIdentiteAudio();
         return new ReactivationDepuisBruts(
                 verification,
                 new RebranchementSequences(verification, Optional.empty()),
-                Optional.of(new RegenerationParTransformationAudio(new TransformationAudio())));
+                Optional.of(new RegenerationParTransformationAudio(new TransformationAudio())),
+                espaceDeTravail);
     }
 
     /// Régénère les tranches d'un brut sous leurs noms arbitrés et en fait des lignes de base, telles que

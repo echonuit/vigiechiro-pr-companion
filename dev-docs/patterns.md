@@ -1834,8 +1834,8 @@ patron d'un simple `try`/`finally` de nettoyage.
 | Où | Matérialise | Libère | Ce qui borne le pic |
 |---|---|---|---|
 | [`DecoupageParallele`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/importation/model/DecoupageParallele.java) | un sous-dossier `.tmp-decoupage/<i>` par original | après le nommage définitif | le `Semaphore` de la campagne |
-| [`ReactivationDepuisBruts`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/passage/model/ReactivationDepuisBruts.java) | `DossierTemporaire.creer("vc-regen-…")` | en `finally`, après rebranchement | **un brut à la fois** |
-| [`HydratationDepuisBruts`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/passage/model/HydratationDepuisBruts.java) | un temporaire par brut, sur un fil d'`ExecutionParallele` | en `finally` | le `Semaphore` d'`ExecutionParallele` |
+| [`ReactivationDepuisBruts`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/passage/model/ReactivationDepuisBruts.java) | `DossierTemporaire.creer(<espace de travail>, "vc-regen-…")` | en `finally`, après rebranchement | **un brut à la fois** |
+| [`HydratationDepuisBruts`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/passage/model/HydratationDepuisBruts.java) | un temporaire par brut sous l'espace de travail, sur un fil d'`ExecutionParallele` | en `finally` | le `Semaphore` d'`ExecutionParallele` |
 | [`SourceArchivesRegenerables`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/lot/model/SourceArchivesRegenerables.java) | une archive ZIP à la résolution | après le commit `DEPOSE` | la fenêtre 2, relayée par `parallelismeMax()` |
 
 ```mermaid
@@ -1859,6 +1859,11 @@ sequenceDiagram
 *après* le commit qui marque l'unité `DEPOSE`, jamais avant : une coupure entre les deux laisserait une
 unité ni en ligne ni sur le disque. La reprise la régénérerait, mais on aurait perdu la preuve de
 l'envoi.
+
+**Où matérialiser compte autant que quand.** Les temporaires de régénération naissent sous l'espace de
+travail, comme l'extraction d'une archive (`ExtracteurZip`), et jamais dans `java.io.tmpdir` : ce dossier
+est souvent un *tmpfs*, où le pic borné devient de la mémoire vive que la JVM ne voit pas. Une nuit de
+huit bruts de 20 min, hydratée en parallèle, y prenait 7031 Mo au poste (#6174).
 
 **Principes.** **SRP** (qui produit la ressource sait la libérer) ; borne le pic disque, objectif O3.
 

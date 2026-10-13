@@ -39,13 +39,18 @@ final class ReactivationDepuisBruts {
     /// Le moteur de régénération, **optionnel** : il vit dans la feature « Importation », désactivable.
     private final Optional<RegenerationSequences> regeneration;
 
+    /// Où naissent les temporaires de régénération : l'espace de travail ([DossierTemporaire]).
+    private final Path baseTemporaires;
+
     ReactivationDepuisBruts(
             VerificationIdentiteAudio verification,
             RebranchementSequences rebranchement,
-            Optional<RegenerationSequences> regeneration) {
+            Optional<RegenerationSequences> regeneration,
+            Path baseTemporaires) {
         this.verification = Objects.requireNonNull(verification, "verification");
         this.rebranchement = Objects.requireNonNull(rebranchement, "rebranchement");
         this.regeneration = Objects.requireNonNull(regeneration, "regeneration");
+        this.baseTemporaires = Objects.requireNonNull(baseTemporaires, "baseTemporaires");
     }
 
     /// Régénère et rebranche, **original par original**.
@@ -157,7 +162,8 @@ final class ReactivationDepuisBruts {
             Path brut,
             Prefixe prefixe,
             List<String> nomsArbitres) {
-        Path temporaire = DossierTemporaire.creer("vc-regen-" + original.id() + "-");
+        Path temporaire =
+                DossierTemporaire.creer(baseTemporaires, DossierTemporaire.PREFIXE_REGENERATION + original.id() + "-");
         try {
             moteur.regenerer(
                     brut, original.nomFichier(), prefixe, frequenceAcquisition(original), temporaire, nomsArbitres);

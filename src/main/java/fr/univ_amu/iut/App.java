@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.view.TailleOuverture;
 import fr.univ_amu.iut.commun.view.Typographie;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import fr.univ_amu.iut.passage.model.BackfillHorodatageCapture;
+import fr.univ_amu.iut.passage.model.DossierTemporaire;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Level;
@@ -94,6 +95,11 @@ public class App extends Application {
         // de dossier ne le déclenchait jamais, laissant un résidu de plusieurs Go saturer le disque et
         // faire échouer l'import suivant (« disque plein »). Best-effort.
         ExtracteurZip.nettoyerTemporairesResiduels(
+                injector.getInstance(Workspace.class).racine());
+
+        // Même filet pour les temporaires de régénération d'une réactivation interrompue (#6174) : ils
+        // naissent sous l'espace de travail, et pas dans `/tmp` que le redémarrage du poste vide.
+        DossierTemporaire.nettoyerResiduels(
                 injector.getInstance(Workspace.class).racine());
 
         // Branche le navigateur web (coordonnées GPS -> OpenStreetMap, etc.) sur le HostServices
