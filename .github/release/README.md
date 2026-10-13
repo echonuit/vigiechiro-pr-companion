@@ -124,6 +124,16 @@ même jour après la montée des deux greffons d'écriture (#6099) : les mêmes 
 gravités.** La montée n'en retire aucun et n'en ajoute aucun. Ces vulnérabilités **existaient déjà** avec `npx --yes` ;
 la différence est qu'elles sont désormais **visibles**, et c'était l'objet du lockfile.
 
+**Refait le 2026-10-13 : 18 paquets, dont 1 critique.** Trois paquets transitifs que la publication
+exécute avaient un correctif dans la plage que leur parent déclare, et #6193 les a montés sans
+`overrides` : `handlebars` 4.7.9 → 4.7.10 (tiré par `conventional-changelog-writer`, qui rend les notes
+de version), `undici` 7.29.0 → 7.30.0 (tiré par `@semantic-release/github`) et `js-yaml` 4.3.1 → 4.3.2
+(tiré par `cosmiconfig`), plus la copie de `undici` sous `@actions/http-client`, 6.28.0 → 6.29.0.
+**Après la montée : 16 paquets, 15 hautes et 1 moyenne, aucune critique.** Ceux qui portent un avis en
+propre vivent tous sous `node_modules/npm/`, sauf `braces`, tiré par `micromatch` sous
+`@semantic-release/git`, qu'aucune version amont ne corrige et dont GitHub a écarté l'alerte de
+lui-même (#46). Les autres sont nommés par cascade, parce qu'ils contiennent un paquet touché.
+
 Ce qui reste **ne se corrige pas ici**, à aucune version de `semantic-release` : les deux hautes
 (`brace-expansion`, `ip-address`) vivent dans le `npm` que `semantic-release` **embarque**
 (`node_modules/npm`, aujourd'hui 11.19.0). `npm audit` les annonce « corrigeables sans majeure », mais
@@ -138,10 +148,11 @@ passer `npm audit` de 18 paquets à 7, **sans changer le compte d'alertes** (6 a
 la composition et la gravité avaient bougé (4 hautes → 1). C'est `npm audit` qui fait foi ici, pas le
 compteur.
 
-## Les alertes de cet arbre sont écartées, et c'est vérifiable (#3390)
+## Les alertes de cet arbre sont écartées, et c'est vérifiable (#3390, #6193)
 
-Les six alertes Dependabot restantes (`undici` ×3, `ip-address` ×3) ont été **écartées** au motif
-`not_used` - « le code vulnérable n'est pas réellement utilisé ». Ce n'est pas une commodité, c'est un
+Les six alertes Dependabot restantes en août (`undici` ×3, `ip-address` ×3) ont été **écartées** au
+motif `not_used` - « le code vulnérable n'est pas réellement utilisé » - et sept autres le 2026-10-13
+(#6193), au même motif et pour la même raison. Ce n'est pas une commodité, c'est un
 fait qui se vérifie en trois points :
 
 - `.releaserc.json` liste **cinq** greffons, et `@semantic-release/npm` n'en fait pas partie ;
@@ -155,6 +166,24 @@ Le CLI `npm` que `semantic-release` embarque est donc **installé et jamais invo
 Écarter n'est pas ignorer : un avis **futur** sur ces paquets ouvrira une alerte neuve. Et si
 `@semantic-release/npm` entrait un jour dans la configuration, la justification tomberait avec - c'est
 la première chose à rouvrir dans ce cas.
+
+### Ce qui s'écarte, et ce qui se monte
+
+**Le motif ne couvre que le sous-arbre de `@semantic-release/npm`.** Une alerte s'écarte si chaque
+chemin qui mène au paquet passe par lui, et seulement alors :
+
+```bash
+npm ls <paquet> --package-lock-only --all      # dans .github/release
+```
+
+Un paquet atteint par un autre greffon s'exécute, et il se monte. C'était le cas de `handlebars`,
+de `undici` 7 et de `js-yaml` le 2026-10-13 (#6193) : montés, pas écartés.
+
+Les sept alertes écartées ce jour-là, toutes atteintes par `@semantic-release/npm` seul : #25, #27 et
+#44 (`ip-address`, dans `npm`), #37 (`undici` 6.27.0, dans `npm` ; la copie sous
+`@actions/http-client` a été montée), #42
+(`brace-expansion`, dans `npm`), #47 (`http-cache-semantics`, dans `npm`, sans version corrigée) et #48
+(`postcss-selector-parser`, dans `npm`).
 
 ### Les deux pistes qui ne marchent pas, mesurées plutôt que supposées
 
