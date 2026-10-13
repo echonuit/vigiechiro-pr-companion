@@ -560,6 +560,7 @@ b697a9c2a756  src/main/java/fr/univ_amu/iut/commun/view/DescripteurVue.java
 ee1e1c25231f  src/main/java/fr/univ_amu/iut/commun/view/DescripteurVueJson.java
 e4601d936d6d  src/main/java/fr/univ_amu/iut/commun/view/DialogueProgression.java
 2371b5b1a843  src/main/java/fr/univ_amu/iut/commun/view/DoubleClicLigne.java
+a9b38be6a896  src/main/java/fr/univ_amu/iut/commun/view/EcouteFaible.java
 6625b7d2d02b  src/main/java/fr/univ_amu/iut/commun/view/EcranReglagesController.java
 f01699c08b1d  src/main/java/fr/univ_amu/iut/commun/view/EmplacementNavigation.java
 0acc75f3592e  src/main/java/fr/univ_amu/iut/commun/view/EmplacementPassage.java
@@ -1664,6 +1665,7 @@ a43937072547  src/test/java/fr/univ_amu/iut/commun/view/DialoguesHabillesTest.ja
 6ddd52fdd7c0  src/test/java/fr/univ_amu/iut/commun/view/DoubleClicDeterministe.java
 a910b8995309  src/test/java/fr/univ_amu/iut/commun/view/DoubleClicDeterministeTest.java
 737e4218b3dc  src/test/java/fr/univ_amu/iut/commun/view/DoublonsFeuillesDeStyleTest.java
+0053cea8d45e  src/test/java/fr/univ_amu/iut/commun/view/EcouteFaibleTest.java
 55dddc071aa7  src/test/java/fr/univ_amu/iut/commun/view/EmplacementPassageTest.java
 f2ba2ec08bd4  src/test/java/fr/univ_amu/iut/commun/view/ExecuteurTacheAsynchroneTest.java
 8cd975500fbf  src/test/java/fr/univ_amu/iut/commun/view/ExecuteurTacheSynchroneTest.java
@@ -1775,6 +1777,8 @@ e55e224b4323  src/test/java/fr/univ_amu/iut/documentation/NomDeLApplicationTest.
 9e14ebf40997  src/test/java/fr/univ_amu/iut/e2e/AttenteAvantClic.java
 e93a95bddc5b  src/test/java/fr/univ_amu/iut/e2e/AttenteAvantClicTest.java
 f6aeb13a6f09  src/test/java/fr/univ_amu/iut/e2e/CarteHorsCadreAccueilTest.java
+a8fd5f587ce3  src/test/java/fr/univ_amu/iut/e2e/EcranQuitteEstRenduTest.java
+58f5398b324a  src/test/java/fr/univ_amu/iut/e2e/EcransSuivantUnSingleton.java
 4766f0f39999  src/test/java/fr/univ_amu/iut/e2e/ParcoursAnalyseVersValidationE2ETest.java
 603d24248ae4  src/test/java/fr/univ_amu/iut/e2e/ParcoursDeclarerSiteE2ETest.java
 ec0931d84305  src/test/java/fr/univ_amu/iut/e2e/ParcoursDepotE2ETest.java

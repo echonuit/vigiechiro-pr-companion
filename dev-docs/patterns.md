@@ -2122,6 +2122,40 @@ réinterroge.
 
 ---
 
+### Un écran n'écoute pas à mains nues ce qui lui survit
+
+**Le problème.** Un singleton vit autant que l'application, un écran le temps d'être affiché. Un
+`addListener` posé par l'écran sur une propriété du singleton inscrit l'écouteur dans la liste du
+singleton : elle le tient, il tient le contrôle qu'il met à jour, et par lui tout l'écran, jusqu'à la
+fermeture. Rien ne se voit à l'usage. La fiche d'un carré le faisait sur l'état de connexion (#6170),
+l'écran des réglages sur les réglages réactifs (#6184).
+
+**La règle.** Dans l'ordre :
+
+1. **lier** (`bind`, `bindBidirectional`) : une liaison ne retient rien ;
+2. sinon, **une écoute faible tenue par son porteur** :
+
+```java
+// le réglage vit autant que l'application, le spinner le temps de l'écran
+EcouteFaible.poser(spinner, valeur, (observable, ancien, nouveau) -> fabrique.setValue(nouveau.intValue()));
+```
+
+`EcouteFaible` inscrit l'écouteur faible auprès de la source et le range dans les propriétés du nœud
+qu'il met à jour. Les deux moitiés comptent : un écouteur faible que rien ne tient tombe au premier
+ramasse-miettes, et l'écran cesse de suivre sans rien dire.
+
+Un écouteur posé par la vue sur **son propre** modèle de vue n'est pas concerné : ils partent ensemble.
+
+**Ce qui la tient.** `EcranQuitteEstRenduTest` ouvre chaque écran qui reçoit un singleton observable,
+le quitte et refuse qu'il soit retenu. Un nouvel écran de ce genre s'ajoute à l'inventaire
+`EcransSuivantUnSingleton` avec le geste qui l'ouvre : le test le réclame. Ce qu'il ne couvre pas est
+écrit dans l'[ADR 6184](decisions/6184-un-ecran-n-ecoute-ce-qui-lui-survit-que-par-une-ecoute-faible.md).
+
+**Principes.** **Observer**, et un cycle de vie qu'on peut oublier est mal placé
+([ADR 3651](decisions/3651-un-cycle-de-vie-qu-on-peut-oublier-est-mal-place.md)).
+
+---
+
 !!! note "API fluente (le « builder » le plus proche)"
     Les liaisons s'écrivent souvent avec l'**API fluente** de JavaFX :
     `Bindings.when(cond).then(a).otherwise(b)`, `Bindings.createStringBinding(...)`. C'est un
