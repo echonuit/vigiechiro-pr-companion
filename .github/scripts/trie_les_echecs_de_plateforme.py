@@ -34,7 +34,10 @@ import pathlib
 import re
 import sys
 
-ANNOTATION = "@ExtendWith(ApplicationExtension.class)"
+# `ApplicationExtension.class` parmi les extensions d un `@ExtendWith`, seule ou avec d autres, sur
+# une ligne ou sur plusieurs. La chaine exacte `@ExtendWith(ApplicationExtension.class)` ne voit que
+# l ecriture sans accolades, portee par une seule classe du depot le 2026-10-13 (#6190).
+EXTENSION_TESTFX = re.compile(r"@ExtendWith\([^)]*\bApplicationExtension\.class")
 ECHECS = re.compile(r'failures="([0-9]+)"')
 ERREURS = re.compile(r'errors="([0-9]+)"')
 FAUTIVE = re.compile(r'failures="[1-9]|errors="[1-9]')
@@ -47,7 +50,7 @@ def classes_testfx(sources: pathlib.Path) -> set[str]:
     return {
         p.stem
         for p in sources.rglob("*.java")
-        if ANNOTATION in p.read_text(encoding="utf-8", errors="ignore")
+        if EXTENSION_TESTFX.search(p.read_text(encoding="utf-8", errors="ignore"))
     }
 
 
@@ -168,6 +171,37 @@ def trier(
     return 0
 
 
+# (classe, source, TestFX attendu). Les trois ecritures de l extension que le depot porte, et une
+# classe qui cite `ApplicationExtension.class` hors de son `@ExtendWith` : elle doit rester dans
+# « le reste », sans quoi reconnaitre plus large reviendrait a tout reconnaitre.
+ECRITURES = (
+    ("UneVueTest", "@ExtendWith(ApplicationExtension.class)\nclass UneVueTest {}\n", True),
+    (
+        "UneVueEspionneeTest",
+        (
+            "@ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})\n"
+            "class UneVueEspionneeTest {}\n"
+        ),
+        True,
+    ),
+    (
+        "UneVueSurDeuxLignesTest",
+        (
+            "@ExtendWith({\n    SansEcritureHorsDuFil.class,\n    ApplicationExtension.class\n})\n"
+            "class UneVueSurDeuxLignesTest {}\n"
+        ),
+        True,
+    ),
+    (
+        "UnModeleTest",
+        (
+            "@ExtendWith(MockitoExtension.class)\n"
+            "class UnModeleTest {\n    Class<?> extension = ApplicationExtension.class;\n}\n"
+        ),
+        False,
+    ),
+)
+
 # (nom, motif attendu, code attendu, marqueur, classes)
 CAS = (
     # Le defaut de #4544, dans les deux sens. Sans marqueur, les memes rapports sans un seul echec
@@ -208,9 +242,10 @@ def _auto_test() -> int:
         bac = pathlib.Path(tmp)
         sources = bac / "sources"
         sources.mkdir()
-        # Une classe TestFX et une autre, pour que le tri des deux familles soit exerce.
-        (sources / "UneVueTest.java").write_text(ANNOTATION + "\n", encoding="utf-8")
-        (sources / "UnModeleTest.java").write_text("class UnModeleTest {}\n", encoding="utf-8")
+        # Des classes TestFX et une autre, pour que le tri des deux familles soit exerce. Les
+        # rapports plus bas ne portent que `UneVueTest` et `UnModeleTest`.
+        for classe, source, _ in ECRITURES:
+            (sources / f"{classe}.java").write_text(source, encoding="utf-8")
 
         for nom, motif, code_attendu, marqueur, classes in CAS:
             rapports = bac / "rapports"
@@ -240,6 +275,18 @@ def _auto_test() -> int:
                 extrait = lignes[-2] if len(lignes) >= 2 else ""
                 print(f"  [ÉCHEC] {nom:<58} -> code {code} : {extrait}")
                 echecs += 1
+
+        nom = "l'extension se reconnaît sous ses trois écritures"
+        attendues = {classe for classe, _, testfx in ECRITURES if testfx}
+        reconnues = set(classes_testfx(sources))
+        total += 1
+        if reconnues == attendues:
+            print(f"  [OK   ] {nom:<58} -> {len(reconnues)} classes")
+        else:
+            manquees = ", ".join(sorted(attendues - reconnues)) or "aucune"
+            en_trop = ", ".join(sorted(reconnues - attendues)) or "aucune"
+            print(f"  [ÉCHEC] {nom:<58} -> manquées : {manquees} ; en trop : {en_trop}")
+            echecs += 1
 
     print()
     print(f"{total} cas, dont 4 contrôles négatifs.")
