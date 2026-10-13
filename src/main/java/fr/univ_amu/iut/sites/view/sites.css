@@ -21,17 +21,23 @@
     -fx-padding: 0 0 4 0;
 }
 
-/* ----- Liste de cartes (M-Sites) ----- */
-.zone-liste {
+/* ----- Liste de cartes (M-Sites) -----
+   Une liste virtualisée (#6172) qui ne doit pas en avoir l'air : ni fond, ni cadre, ni ligne
+   sélectionnée en couleur. Chaque cellule porte sa carte, et l'espace entre deux cartes est le bas
+   de la cellule. La marge reprend celle de l'ancienne liste, 4 2 plus le pixel du ScrollPane qui
+   l'entourait : les cartes restent au pixel où elles étaient. */
+.liste-cartes,
+.liste-cartes:focused {
     -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 5 3 5 3;
 }
 
-.zone-liste > .viewport {
+.liste-cartes .list-cell,
+.liste-cartes .list-cell:filled:selected,
+.liste-cartes .list-cell:filled:hover {
     -fx-background-color: transparent;
-}
-
-.liste-cartes {
-    -fx-padding: 4 2 4 2;
+    -fx-padding: 0 0 12 0;
 }
 
 .carte-site {
@@ -49,8 +55,9 @@
     -fx-background-color: #f6f8fa;
 }
 
-/* Focus clavier : anneau visible pour l'utilisateur qui navigue au Tab (a11y). */
-.carte-site:focused {
+/* Focus clavier : anneau visible sur la carte que les flèches ont atteinte (a11y). La cellule porte
+   le focus de la liste, la carte en montre l'anneau. */
+.liste-cartes:focused .list-cell:focused .carte-site {
     -fx-border-color: -couleur-primaire;
     -fx-border-width: 2;
     -fx-background-color: #f6f8fa;

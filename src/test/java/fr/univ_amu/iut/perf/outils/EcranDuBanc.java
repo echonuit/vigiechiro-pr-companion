@@ -40,8 +40,8 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TableView;
-import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.testfx.util.WaitForAsyncUtils;
@@ -272,9 +272,13 @@ final class EcranDuBanc {
                 : -1;
     }
 
+    /// Les sites que « Mes sites » montre : ceux de sa liste, dès qu'une carte au moins est construite.
+    /// La liste est virtualisée (#6172) et ne bâtit que les cartes visibles : compter ses nœuds ne
+    /// dirait plus combien de sites elle porte.
     int cartesSites() {
-        return stage.getScene().lookup("#listeCartes") instanceof Pane liste
-                ? liste.getChildren().size()
+        Scene scene = stage.getScene();
+        return scene.lookup("#listeCartes") instanceof ListView<?> liste && scene.lookup(".carte-site") != null
+                ? liste.getItems().size()
                 : -1;
     }
 

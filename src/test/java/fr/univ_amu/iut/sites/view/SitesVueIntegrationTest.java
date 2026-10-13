@@ -26,7 +26,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -126,12 +126,12 @@ class SitesVueIntegrationTest {
     @Test
     @DisplayName("Avec des sites, #etatVide est masqué et #listeCartes est peuplée (état = ViewModel)")
     void liste_affichee_et_etat_vide_masque(FxRobot robot) {
-        ScrollPane zoneListe = robot.lookup("#zoneListe").queryAs(ScrollPane.class);
-        VBox listeCartes = robot.lookup("#listeCartes").queryAs(VBox.class);
+        ListView<?> listeCartes = robot.lookup("#listeCartes").queryAs(ListView.class);
         VBox etatVide = robot.lookup("#etatVide").queryAs(VBox.class);
 
-        assertThat(zoneListe.isVisible()).isTrue();
-        assertThat(listeCartes.getChildren()).hasSize(2);
+        assertThat(listeCartes.isVisible()).isTrue();
+        assertThat(listeCartes.getItems()).hasSize(2);
+        assertThat(robot.lookup(".carte-site").queryAll()).hasSize(2);
         assertThat(etatVide.isVisible()).isFalse();
         assertThat(etatVide.isManaged()).isFalse();
     }
@@ -198,8 +198,8 @@ class SitesVueIntegrationTest {
         robot.interact(retour::fire);
 
         // #listeCartes est la liste M-Sites : sa présence (avec ses 2 cartes) prouve le retour à la liste.
-        VBox listeCartes = robot.lookup("#listeCartes").queryAs(VBox.class);
-        assertThat(listeCartes.getChildren()).hasSize(2);
+        ListView<?> listeCartes = robot.lookup("#listeCartes").queryAs(ListView.class);
+        assertThat(listeCartes.getItems()).hasSize(2);
     }
 
     // ----- Modale d'ajout de point -------------------------------------------------------------

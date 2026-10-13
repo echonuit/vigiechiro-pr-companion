@@ -16,6 +16,10 @@ disponibles : ceux qui marchent partout, puis ceux propres aux écrans de valida
 Sur les écrans organisés en cartes (l'accueil, « Mes sites »), <kbd>Entrée</kbd> ou <kbd>Espace</kbd>
 ouvre la carte qui a le focus.
 
+Dans « Mes sites », <kbd>Tab</kbd> donne le focus à la liste des sites, puis les flèches
+<kbd>↑</kbd> et <kbd>↓</kbd> passent d'une carte à l'autre. La liste reste aussi rapide à ouvrir avec
+cent cinquante carrés qu'avec quinze, parce qu'elle ne construit que les cartes visibles.
+
 ## Recherche globale
 
 Le champ de recherche, en haut à droite de la barre de navigation, est accessible depuis n'importe quel
