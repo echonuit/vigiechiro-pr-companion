@@ -460,6 +460,7 @@ nav:
     - 6142 · Une tâche de fond rend une valeur et n'écrit pas la scène, et un espion de test le relève: decisions/6142-une-tache-de-fond-rend-une-valeur-et-n-ecrit-pas-la-scene.md
     - 6175 · Une tâche de fond qui calcule mène de front la moitié des cœurs, et laisse l'autre à l'interface: decisions/6175-une-tache-de-fond-qui-calcule-laisse-la-moitie-des-coeurs-a-l-interface.md
     - 6171 · Le seuil d'ouverture d'un écran se juge à chaud et en rendu GPU, et un relevé de l'IHM dit par quoi il a été dessiné: decisions/6171-le-seuil-d-ouverture-d-un-ecran-se-juge-a-chaud-et-en-rendu-gpu.md
+    - 6191 · La taille de police se déclare sur la racine, comme la famille: decisions/6191-la-taille-de-police-se-declare-sur-la-racine.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Retour de terrain de la 2.189.0: retours/2189-ce-que-ton-retour-a-produit.md

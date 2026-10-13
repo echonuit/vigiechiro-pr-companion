@@ -9,6 +9,10 @@
      * identique sur toutes les machines. Les suivantes ne sont qu'un filet si le chargement échoue -
      * et elles ne servaient jamais, aucune n'étant installée ni sur un poste Linux ni sur le runner. */
     -fx-font-family: "Noto Sans", "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
+    /* La TAILLE se déclare comme la famille (#6191). Sans elle, un texte sans taille propre prend
+     * celle du système, 12 px sous Windows et 13 px sous Linux et macOS : un même libellé tient
+     * sur un poste et se coupe sur l'autre. */
+    -fx-font-size: 12px;
     -fx-background-color: -couleur-fond;
 }
 
