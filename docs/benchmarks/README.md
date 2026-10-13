@@ -76,7 +76,9 @@ débit, nb séquences, **mémoire crête**.
   (mesuré le 2026-10-12, « Le test de charge à 20 Gio »). Le banc lit l'échelle de rendu de sa
   fenêtre une fois affichée, l'écrit en tête de chaque relevé (sortie et `releve.tsv`) avec celle que
   l'écran demande et les réglages `glass.platform`, `prism.order` et `glass.gtk.uiScale`, et s'arrête
-  avant toute mesure si elle n'est pas 1. Sur un écran dense, l'échelle se force à 1 par
+  avant toute mesure si elle n'est pas 1. La même ligne écrit `dessin=`, le pipeline que Prism a
+  réellement pris : le banc dessine en logiciel par défaut, et en rendu GPU par
+  `-Drecette.prism.order=es2` sur la ligne de Maven (ADR 6171). Sur un écran dense, l'échelle se force à 1 par
   `-Dglass.gtk.uiScale=1`, posé par `JAVA_TOOL_OPTIONS` (voir « Le relancer »). Mesurer à l'échelle de
   l'écran reste possible par `-Dperf.ihm.echelle=ecran`, et le relevé écrit alors cette dérogation à
   côté de ses chiffres.
@@ -207,8 +209,8 @@ chiffre ci-dessous.
 | O5, topologie : ouverture | 15 carrés de 2 points | 150 carrés de 2 points | Seuil | Verdict |
 |---|---|---|---|---|
 | Mes sites | 41,9 · 41,4 · 54,1 ms | 346,8 · 360,7 · 339,0 ms | < 50 ms, sans croître | **non tenu** ; ne croît plus depuis #6172, voir « Mes sites ne croît plus avec les carrés » |
-| vue multisite | 352,2 · 75,8 · 303,5 ms | 174,1 · 170,8 · 151,3 ms | < 50 ms | **non tenu** (#6171) |
-| écran des sons | 270,0 · 251,7 · 229,5 ms | 106,3 · 113,5 · 119,5 ms | < 50 ms | **non tenu** (#6171) |
+| vue multisite | 352,2 · 75,8 · 303,5 ms | 174,1 · 170,8 · 151,3 ms | < 50 ms | **non tenu** (#6207) |
+| écran des sons | 270,0 · 251,7 · 229,5 ms | 106,3 · 113,5 · 119,5 ms | < 50 ms | **non tenu** (#6207) |
 
 | O3, quatre nuits distinctes de 300 WAV de 5 s, un seul processus | Nuit 1 | Nuit 2 | Nuit 3 | Nuit 4 |
 |---|---|---|---|---|
@@ -225,7 +227,8 @@ chiffre ci-dessous.
   que l'import laisse des cœurs à l'interface : « L'import ne gèle plus le fil JavaFX » (#6175).
 - **En navigation après l'import, le seuil n'est pas tenu** (#6171) : les écarts tombent à l'ouverture
   des écrans, à chaque nuit, et pas seulement à la première ouverture. Ils ne grandissent pas avec le
-  nombre de nuits en base.
+  nombre de nuits en base. Ce relevé est en rendu logiciel : à chaud et en rendu GPU, le seuil tient
+  (« L'ouverture d'un écran après un import », plus bas, et ADR 6171).
 - **Le heap après GC grandissait de 57 à 98 Mo par nuit** dans ce tir. Ce chiffre mesurait surtout le
   harnais et des caches que la JVM rend sous pression, pas l'application : la cause est établie, et le
   palier tenu, dans « Le heap de nuit en nuit » plus bas (#6170).
@@ -395,7 +398,7 @@ haut, le banc compris. À 20 Gio : 1,59 et 7,15 à l'échelle par défaut, 1,67 
 | images vues par la sonde pendant l'import | 343 | 461 | | |
 | écart max entre deux images pendant l'import | 472 ms | 465 ms | 200 ms | **non tenu** (#6175) |
 | écarts de plus de 200 ms pendant l'import | 253, 472, 225 ms | 268, 441, 465 ms | aucun | **non tenu** (#6175) |
-| écart max en navigation après l'import | 1310 ms | 377 ms | 200 ms | **non tenu** (#6171) |
+| écart max en navigation après l'import | 1310 ms | 377 ms | 200 ms | **non tenu** en rendu logiciel (#6171) |
 | heap après GC complet, avant puis après la nuit | 68 puis 247 Mo | 51 puis 160 Mo | palier stable | voir #6170 |
 | journal G1 : au plus haut après une pause jeune, et crête | 234 et 2323 Mo | 188 et 2176 Mo | | |
 
@@ -432,7 +435,7 @@ déjà importée ».
   mesurent le dessin en rendu logiciel, pas l'application : ils ont motivé la règle du protocole.
 - **En navigation, le seuil n'est pas tenu à l'échelle 1 non plus** (#6171) : de 197 à 384 ms, l'ordre
   de grandeur du premier poste, et 377 ms après la nuit de 20 Gio. L'écart ne suit pas la taille de la
-  nuit.
+  nuit. C'est le dessin logiciel du banc : voir « L'ouverture d'un écran après un import ».
 - **Le heap après GC, à l'échelle 1, est celui du premier poste à quelques Mo près** (#6170) : de 57 à
   59 Mo de plus par nuit. Deux faits nouveaux : la nuit de 20 Gio laisse 160 Mo, 13 de plus qu'une
   nuit de 300 WAV pour dix-neuf fois plus de séquences ; et l'échelle par défaut porte le gain à 98 Mo
@@ -554,6 +557,68 @@ Charge du poste sur 1 minute au départ des tirs : de 1,5 à 7,4, chaque tir hé
 **Le relancer** : la commande de la section précédente, avec `-Dperf.ihm.wav` à la taille voulue. Pour
 recouper les écarts datés avec la JVM, ajouter `-Xlog:gc*,safepoint:file=<fichier>:time,uptime` à
 `JAVA_TOOL_OPTIONS` : le relevé écrit l'heure du clic.
+
+### L'ouverture d'un écran après un import (#6171)
+
+Mesuré le 2026-10-13 sur le second poste (Core Ultra 7 255H, 16 cœurs, 30,3 Gio, carte Intel,
+JDK 25.0.3, Linux 7.0.0), `main` à `c6056ba35` plus la branche de #6171, donc après #6175 et avant
+#6191. `BancIhmO3Test` sur l'affichage réel (XWayland, profil `recette-filmee`), à l'échelle 1 écrite
+par le banc, fenêtre de 1280 × 860, quatre nuits de 300 WAV par tir. Après chaque nuit, trois tours de
+Mes sites, de la vue multisite et de l'écran des sons : neuf ouvertures.
+
+**Le banc date chaque ouverture** : le début du geste, puis le premier pulse après mise en page où
+l'écran montre ses données, et chaque écart de plus de 100 ms se situe parmi ces jalons. La durée
+d'ouverture est celle du fil JavaFX, du geste à l'écran prêt. Le relevé écrit le dessin que Prism a
+réellement pris : `dessin=SWPipeline` en logiciel, `dessin=ES2Pipeline` en rendu GPU.
+
+Huit tirs, quatre par dessin : une première série où le rendu GPU était posé par une modification
+locale du pom, puis une seconde, alternée, avec le réglage livré (`-Drecette.prism.order=es2`), de
+14 h 16 à 14 h 18. Charge du poste sur 1 minute au départ des tirs : de 1,6 à 6,2.
+
+| À chaud, après les nuits 2 à 4 (vingt-sept ouvertures par tir) | Rendu logiciel | Rendu GPU | Seuil |
+|---|---|---|---|
+| écart max entre deux images | 182 à 240 ms | 52 à 122 ms | 200 ms |
+| écarts de plus de 200 ms, par tir | 2 · 0 · 2 · 2 | aucun | aucun |
+| écarts de plus de 100 ms, par tir | 20 · 20 · 21 · 19 | 0 · 0 · 1 · 0 | |
+| ouverture de Mes sites | 26 à 98 ms | 26 à 77 ms | |
+| ouverture de la vue multisite | 68 à 233 ms | 61 à 212 ms | |
+| ouverture de l'écran des sons | 59 à 225 ms | 56 à 158 ms | |
+
+| À froid, première ouverture de chaque écran dans le processus | Rendu logiciel | Rendu GPU |
+|---|---|---|
+| Mes sites | 90 · 92 · 122 · 142 ms | 95 · 120 · 123 · 129 ms |
+| vue multisite | 259 · 291 · 412 · 465 ms | 269 · 287 · 438 · 465 ms |
+| écran des sons | 375 · 409 · 460 · 464 ms | 352 · 402 · 417 · 527 ms |
+| écart max entre deux images, après la nuit 1 | 277 · 282 · 344 · 346 ms | 260 · 271 · 285 · 398 ms |
+
+**Lectures** :
+
+- **À chaud, le gel est le dessin logiciel du banc.** Le fil JavaFX fait le même travail dans les deux
+  dessins. En logiciel, presque chaque ouverture de la vue multisite et de l'écran des sons est suivie
+  d'un écart de 176 à 193 ms, daté sur le jalon « prêt » ou juste après lui. En rendu GPU il n'existe
+  pas.
+- **Le seuil se juge à chaud et en rendu GPU, et il est tenu** (ADR 6171) : 122 ms au plus sur cent
+  huit ouvertures. Le rendu logiciel reste publié : c'est ce que voit un poste sans accélération
+  graphique.
+- **La première ouverture d'un écran se publie à part.** Elle coûte dans les deux dessins : c'est le
+  chargement d'un écran jamais ouvert, sur le fil JavaFX.
+- **Le seuil de 50 ms d'O5 n'est tenu par aucun des deux écrans** (#6207), à chaud et sur un seul
+  carré : c'est la durée d'ouverture elle-même, pas le nombre de carrés ni le dessin.
+- En rendu GPU, le heap après GC des mêmes tirs est de 28 à 29 Mo avant la première nuit et de 63 à
+  65 Mo après chacune ; en logiciel, de 51 à 52 Mo et de 107 à 110 Mo.
+
+**Ce que ces chiffres ne mesurent pas** :
+
+- La part de chaque travail dans une ouverture. Le journal des pulses de JavaFX
+  (`-Djavafx.pulseLogger=true`) fait tomber le processus, sur une `NullPointerException` de
+  `PrintLogger` : le tir qui le portait n'a rien rendu.
+- Ce qui coûte au dessin logiciel. Les journaux de Prism montrent des shaders d'ombre portée : une
+  piste, non mesurée.
+- Un autre poste, et une autre carte. Le premier poste n'a de relevés qu'en rendu logiciel.
+
+**Le relancer** : la commande du test de charge, avec `-Dperf.ihm.nuits=4 -Dperf.ihm.wav=300`, et
+`-Drecette.prism.order=es2` pour le rendu GPU. Le relevé doit alors porter `dessin=ES2Pipeline` : s'il
+porte `SWPipeline`, le poste a refusé la carte et les chiffres sont ceux du logiciel.
 
 ### La lecture par morceaux (#104) : la mémoire ne suit plus la durée d'un WAV
 
@@ -756,12 +821,13 @@ critère a son relevé, et chaque seuil non tenu son issue.
 
 - **O5, couche données** : sélection des 4031 observations de 11 à 19 ms à chaud (seuil 100 ms) ; tri
   et filtre des 1000 passages de 10 à 12 ms à chaud (seuil 200 ms). Index `#28` en place et verrouillé
-  par un test CI. **Dans l'IHM** : tri, filtre et clic tenus (au plus 66 ms) ; à 150 carrés, aucun écran ne
-  s'ouvre sous 50 ms (#6171) ; Mes sites croissait avec les carrés, et ne croît plus depuis sa liste
+  par un test CI. **Dans l'IHM** : tri, filtre et clic tenus (au plus 66 ms) ; à 150 carrés, ni la vue
+  multisite ni l'écran des sons ne s'ouvrent sous 50 ms (#6207) ; Mes sites croissait avec les carrés, et ne croît plus depuis sa liste
   virtualisée (#6172).
 - **O3** : nuit standard de 5,62 Gio en 40 à 49 s ; 9 Gio en 84 à 87 s ; occupation après GC de 81
   à 85 Mo, la nuit standard passant sous `-Xmx128m`. **Dans l'IHM** : pas d'écart de plus de 200 ms pendant l'import ; des écarts de 203 à 758 ms à
-  l'ouverture des écrans après import (#6171) ; un heap après GC qui tient son palier sur quatre nuits
+  l'ouverture des écrans après import, en rendu logiciel, et de 122 ms au plus à chaud en rendu GPU,
+  où le seuil se juge (#6171, ADR 6171) ; un heap après GC qui tient son palier sur quatre nuits
   (de 89 à 93 Mo), une fois mis à part le harnais TestFX et les caches doux de JavaFX ; une fiche de
   carré que le produit retenait est corrigée (#6170). **20 Gio, sur le second poste** : import en 20 à 21 s, 108 à 115 Mo après GC ; dans
   l'IHM, l'import gelait le fil jusqu'à 472 ms parce qu'il menait de front autant de transformations

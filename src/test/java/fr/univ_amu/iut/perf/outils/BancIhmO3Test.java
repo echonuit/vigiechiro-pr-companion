@@ -32,7 +32,11 @@ import fr.univ_amu.iut.sites.view.NavigationSites;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import java.util.function.BooleanSupplier;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
@@ -63,8 +67,9 @@ import org.testfx.util.WaitForAsyncUtils;
 /// elle ne les rend que sous pression. Le relevé publié se prend donc sous
 /// `-XX:SoftRefLRUPolicyMSPerMB=0`, posé par `JAVA_TOOL_OPTIONS` (voir `docs/benchmarks/README.md`).
 ///
-/// Chaque écart de plus de 100 ms pendant un import est daté et situé parmi les jalons de l'assistant
-/// (#6175, [JalonsDeLImport]). Le tir s'ouvre sur le témoin de cette datation : un blocage de 300 ms
+/// Les écarts de plus de 100 ms sont datés : pendant l'import, parmi les jalons de l'assistant (#6175,
+/// [JalonsDeLImport]) ; en navigation, parmi les ouvertures d'écran, dont la première de chaque écran
+/// se publie à part (#6171). Le tir s'ouvre sur le témoin de cette datation : un blocage de 300 ms
 /// posé à un instant connu, que la sonde doit dater à une image près.
 @Tag("banc-ihm")
 @ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
@@ -79,6 +84,7 @@ class BancIhmO3Test {
     private static final LocalDate PREMIERE_NUIT = LocalDate.of(2026, 4, 22);
     private static final String UTILISATEUR = "bench-ihm";
     private static final long BLOCAGE_TEMOIN_MS = 300;
+    private static final int ECRANS_PAR_TOUR = 3;
 
     private EcranDuBanc ecran;
 
@@ -105,8 +111,15 @@ class BancIhmO3Test {
             importerLaNuit(nuit, releve);
 
             ecran.reinitialiserLaSonde();
-            naviguer(nuit);
-            releve.noterNavigation(nuit, ecran.sonde().relever());
+            DatationDesEcarts navigation = new DatationDesEcarts();
+            List<String> durees = naviguer(nuit, navigation);
+            attendreLesImages(ecran.sonde(), ecran.sonde().relever().images() + IMAGES_DE_GARDE);
+            Gel enNavigation = ecran.sonde().relever();
+            releve.noterNavigation(nuit, enNavigation);
+            releve.noterNavigationDatee(nuit, navigation, durees, enNavigation);
+            if (nuit == 1) {
+                releve.noterPremieresOuvertures(durees.subList(0, ECRANS_PAR_TOUR));
+            }
             oublierLesEvenementsTires();
             releve.noterHeap("après la nuit " + nuit, heapApresGc());
         }
@@ -210,17 +223,48 @@ class BancIhmO3Test {
         return importer;
     }
 
-    /// Trois tours de Mes sites, la vue multisite et l'écran des sons de la nuit importée.
-    private void naviguer(int nuitsImportees) throws Exception {
+    /// Trois tours de Mes sites, la vue multisite et l'écran des sons de la nuit importée. Chaque
+    /// ouverture marque son début et l'instant où l'écran montre ses données (#6171), et rend sa durée.
+    private List<String> naviguer(int nuitsImportees, DatationDesEcarts datation) throws Exception {
         Passage importe = new PassageDao(ecran.injecteur().getInstance(SourceDeDonnees.class))
                 .findAll().stream().max(Comparator.comparing(Passage::id)).orElseThrow();
         SourceObservations sons = new SourceObservations.ParPassage(
                 new ContextePassage(importe.id(), importe.numeroPassage(), new ContexteSite(CARRE, "A1", null)));
-        for (int tour = 0; tour < 3; tour++) {
-            ecran.ouvrirEtAttendre(ecran::ouvrirMesSites, () -> ecran.cartesSites() == 1);
-            ecran.ouvrirEtAttendre(ecran::ouvrirMultisite, () -> ecran.lignes("#tableLignes") == nuitsImportees);
-            ecran.ouvrirEtAttendre(() -> ecran.ouvrirSons(sons), () -> ecran.lignes("#tableObservations") >= 0);
+        List<String> durees = new ArrayList<>();
+        for (int tour = 1; tour <= 3; tour++) {
+            durees.add(ouvrir(datation, "Mes sites " + tour, ecran::ouvrirMesSites, () -> ecran.cartesSites() == 1));
+            durees.add(ouvrir(
+                    datation,
+                    "multisite " + tour,
+                    ecran::ouvrirMultisite,
+                    () -> ecran.lignes("#tableLignes") == nuitsImportees));
+            durees.add(ouvrir(
+                    datation,
+                    "sons " + tour,
+                    () -> ecran.ouvrirSons(sons),
+                    () -> ecran.lignes("#tableObservations") >= 0));
         }
+        return durees;
+    }
+
+    /// Ouvre un écran et rend « nom durée », en marquant deux jalons sur le fil JavaFX : le début du
+    /// geste, et le premier pulse après mise en page où l'écran montre ses données.
+    private String ouvrir(DatationDesEcarts datation, String nom, Runnable ouverture, BooleanSupplier ouvert)
+            throws Exception {
+        double ms = ecran.chrono(
+                () -> {
+                    datation.marquer("ouvre " + nom, System.nanoTime());
+                    ouverture.run();
+                },
+                () -> {
+                    boolean pret = ouvert.getAsBoolean();
+                    if (pret) {
+                        datation.marquer(nom + " prêt", System.nanoTime());
+                    }
+                    return pret;
+                });
+        WaitForAsyncUtils.waitForFxEvents();
+        return String.format(Locale.ROOT, "%s %.0f ms", nom, ms);
     }
 
     /// Un observateur, un carré, un point : la base qu'un import attend.
