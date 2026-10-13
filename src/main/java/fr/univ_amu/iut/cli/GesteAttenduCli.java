@@ -14,10 +14,10 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 /// l'application, pas ici. Mieux vaut renvoyer à l'endroit qui existe que d'inventer une commande.
 ///
 /// Cette phrase était écrite ici, et ce fichier l'enfreignait. Le besoin de connexion conseillait
-/// « vigiechiro connexion --token <jeton> » : une commande qui **n'a jamais existé**, et dont la
-/// frappe répond « Commande inconnue ». Le vrai geste tient en trois voies, celles que décrit
-/// l'option `--token` de chaque commande réseau : l'option elle-même, la variable
-/// `VIGIECHIRO_TOKEN`, ou la connexion enregistrée dans l'application (#3963).
+/// « vigiechiro connexion --token <jeton> » : une commande qui **n'a jamais existé** (#3963). Le
+/// vrai geste tient en trois voies : la variable `VIGIECHIRO_TOKEN`, la connexion enregistrée dans
+/// l'application, et l'option `--token`. Il ne promet cette option à aucune commande en particulier :
+/// `metadonnees-passage`, `reconstruire-passage` et `reactiver` lèvent ce besoin sans la porter.
 ///
 /// Et « menu principal », pas le pictogramme ☰, pour la raison que l'ADR 3470 a fixée sur le
 /// message d'incident : l'application se désigne partout de la même façon.
@@ -38,9 +38,9 @@ public final class GesteAttenduCli {
     private static String quoiTaper(Besoin besoin) {
         return switch (besoin) {
             case Besoin.Connexion ignore ->
-                "Fournissez un jeton Vigie-Chiro, puis relancez : option « --token <jeton> » sur cette"
-                        + " commande, variable d'environnement VIGIECHIRO_TOKEN, ou connexion enregistrée"
-                        + " dans l'application.";
+                "Fournissez un jeton Vigie-Chiro, puis relancez : variable d'environnement VIGIECHIRO_TOKEN,"
+                        + " connexion enregistrée dans l'application, ou option « --token <jeton> » quand la"
+                        + " commande la propose.";
             case Besoin.Fonctionnalite fonctionnalite ->
                 "Réactivez « " + fonctionnalite.nom()
                         + " » dans l'application (menu principal > Fonctionnalités) : les fonctionnalités ne se"

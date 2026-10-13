@@ -51,7 +51,8 @@ public final class SuiviTraitement {
                     case ReponseApi.NonConnecte<Traitement> nonConnecte ->
                         throw new RegleMetierException(
                                 "Non connecté à Vigie-Chiro : impossible de relever l'état du traitement."
-                                        + " Le dernier état connu reste affiché.");
+                                        + " Le dernier état connu reste affiché.",
+                                new Besoin.Connexion());
                     case ReponseApi.Injoignable<Traitement>(String cause) ->
                         throw new RegleMetierException(
                                 "Vigie-Chiro est injoignable (" + cause

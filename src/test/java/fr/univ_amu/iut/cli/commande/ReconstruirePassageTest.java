@@ -7,6 +7,9 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Provider;
 import com.google.inject.util.Providers;
+import fr.univ_amu.iut.cli.GesteAttenduCli;
+import fr.univ_amu.iut.commun.model.Besoin;
+import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.passage.model.ParticipationOrpheline;
 import fr.univ_amu.iut.passage.model.RapportReconstruction;
 import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages;
@@ -14,6 +17,7 @@ import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages.BilanReconstr
 import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages.IssueNuit;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -99,5 +103,28 @@ class ReconstruirePassageTest {
 
         assertThat(code).isZero();
         assertThat(sortie.toString()).contains("Aucune participation orpheline");
+    }
+
+    @Test
+    @DisplayName("#2756 hors connexion : le refus dit ce qui manque, et la ligne de commande y ajoute son geste")
+    void hors_connexion_dit_ce_qui_manque() {
+        Provider<Optional<ServiceReconstructionPassages>> absent = Providers.of(Optional.empty());
+        CommandLine ligne = new CommandLine(new ReconstruirePassage(absent));
+        ligne.setOut(new PrintWriter(new StringWriter(), true));
+        List<Exception> remontees = new ArrayList<>();
+        ligne.setExecutionExceptionHandler((exception, commande, parse) -> {
+            remontees.add(exception);
+            return 1;
+        });
+
+        ligne.execute("--tout");
+
+        assertThat(remontees).hasSize(1);
+        assertThat(remontees.get(0)).isInstanceOfSatisfying(RegleMetierException.class, refus -> {
+            assertThat(refus.besoin()).contains(new Besoin.Connexion());
+            assertThat(refus).hasMessageContaining("connexion Vigie-Chiro");
+            assertThat(refus.getMessage()).doesNotContain("VIGIECHIRO_TOKEN");
+            assertThat(GesteAttenduCli.message(refus)).containsOnlyOnce("VIGIECHIRO_TOKEN");
+        });
     }
 }

@@ -107,7 +107,7 @@ class CliReactiverTest {
         assertThat(texteSortie())
                 .as("un refus qui ne dit pas quoi faire laisse l'utilisateur devant une nuit muette")
                 .contains("Non connecté à Vigie-Chiro")
-                .contains("Connectez-vous");
+                .contains("VIGIECHIRO_TOKEN");
         // Le refus ne parle NI d'un geste qu'on n'a pas demandé, NI d'une surface qui n'existe pas ici.
         // Avant #2554 passe 2, la CLI recevait « avant de reconstruire un passage (menu ☰ > …) » : un menu
         // dans un terminal, et « reconstruire » à qui réactive.

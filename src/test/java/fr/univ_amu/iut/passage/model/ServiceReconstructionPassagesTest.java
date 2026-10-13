@@ -25,6 +25,7 @@ import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SuiviPagination;
 import fr.univ_amu.iut.commun.api.Traitement;
+import fr.univ_amu.iut.commun.model.Besoin;
 import fr.univ_amu.iut.commun.model.FuseauDuPoint;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
@@ -297,7 +298,11 @@ class ServiceReconstructionPassagesTest {
         when(client.mesParticipations()).thenReturn(new ReponseApi.NonConnecte<>());
 
         assertThatThrownBy(() -> service.orphelines())
-                .isInstanceOf(RegleMetierException.class)
+                .isInstanceOfSatisfying(RegleMetierException.class, refus -> {
+                    // Le modèle ignore d'où on l'appelle : il porte le besoin, et aucune consigne (#2756).
+                    assertThat(refus.besoin()).contains(new Besoin.Connexion());
+                    assertThat(refus.getMessage()).doesNotContain("Connectez-vous");
+                })
                 .hasMessageContaining("Non connecté");
         assertThat(passageDao.findAll()).isEmpty();
     }

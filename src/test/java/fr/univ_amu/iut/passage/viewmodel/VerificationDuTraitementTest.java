@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.EtatTraitement;
 import fr.univ_amu.iut.commun.api.Traitement;
+import fr.univ_amu.iut.commun.model.Besoin;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.Severite;
@@ -119,7 +120,9 @@ class VerificationDuTraitementTest {
         assertThat(sansSuivi.disponible()).isFalse();
         assertThat(verification.disponible()).isTrue();
         assertThatThrownBy(() -> sansSuivi.verifier(ID_PASSAGE))
-                .isInstanceOf(RegleMetierException.class)
+                .isInstanceOfSatisfying(
+                        RegleMetierException.class,
+                        refus -> assertThat(refus.besoin()).contains(new Besoin.Connexion()))
                 .hasMessageContaining("Non connecté");
         verifyNoInteractions(importation);
     }

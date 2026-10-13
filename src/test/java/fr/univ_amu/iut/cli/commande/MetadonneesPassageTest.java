@@ -12,8 +12,10 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Provider;
 import com.google.inject.util.Providers;
+import fr.univ_amu.iut.cli.GesteAttenduCli;
 import fr.univ_amu.iut.cli.model.ErreurUsage;
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
+import fr.univ_amu.iut.commun.model.Besoin;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.passage.model.EnvoiParticipation;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -265,10 +267,33 @@ class MetadonneesPassageTest {
         ligne.execute("--passage", "1", "--recuperer");
 
         assertThat(remontees).hasSize(1);
-        assertThat(remontees.get(0))
-                .isInstanceOf(RegleMetierException.class)
-                .hasMessageContaining("connexion Vigie-Chiro")
-                .hasMessageContaining("VIGIECHIRO_TOKEN");
+        leRefusPorteLeBesoinDeConnexion(remontees.get(0));
+    }
+
+    @Test
+    @DisplayName("#2756 hors connexion, le rattrapage de toutes les nuits dit ce qui manque, pas quoi taper")
+    void hors_connexion_le_rattrapage_dit_ce_qui_manque() {
+        Provider<Optional<SynchronisationParticipation>> absente = Optional::empty;
+        Provider<Optional<RattrapageMetadonnees>> pasDeLot = Optional::empty;
+        CommandLine ligne = new CommandLine(new MetadonneesPassage(absente, pasDeLot, () -> conditions));
+        ligne.setOut(new PrintWriter(new StringWriter(), true));
+        List<Exception> remontees = capturerLesEchecs(ligne);
+
+        ligne.execute("--tout", "--envoyer");
+
+        assertThat(remontees).hasSize(1);
+        leRefusPorteLeBesoinDeConnexion(remontees.get(0));
+    }
+
+    /// Le refus dit ce qui manque et porte son besoin ; le geste vient de la surface. Un message qui
+    /// garderait sa propre consigne la dirait deux fois une fois rendu.
+    private static void leRefusPorteLeBesoinDeConnexion(Exception remontee) {
+        assertThat(remontee).isInstanceOfSatisfying(RegleMetierException.class, refus -> {
+            assertThat(refus.besoin()).contains(new Besoin.Connexion());
+            assertThat(refus).hasMessageContaining("connexion Vigie-Chiro");
+            assertThat(refus.getMessage()).doesNotContain("VIGIECHIRO_TOKEN");
+            assertThat(GesteAttenduCli.message(refus)).containsOnlyOnce("VIGIECHIRO_TOKEN");
+        });
     }
 
     @Test

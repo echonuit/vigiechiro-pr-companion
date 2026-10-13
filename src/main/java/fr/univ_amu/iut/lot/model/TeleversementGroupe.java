@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.lot.model;
 
 import fr.univ_amu.iut.commun.model.ActionGroupee;
+import fr.univ_amu.iut.commun.model.Besoin;
 import fr.univ_amu.iut.commun.model.CiblePassage;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -86,7 +87,7 @@ public class TeleversementGroupe implements ActionGroupee {
     /// permanence comme non couverte : c'est **assumé**, la couvrir demanderait un test creux.
     @Override
     public void executer(CiblePassage cible, JetonAnnulation jeton) {
-        depot.orElseThrow(() -> new RegleMetierException("Hors connexion à Vigie-Chiro."))
+        depot.orElseThrow(() -> new RegleMetierException("Hors connexion à Vigie-Chiro.", new Besoin.Connexion()))
                 .deposer(
                         cible.idPassage(),
                         service.sourceDepotParDefaut(cible.idPassage()),

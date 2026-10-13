@@ -3,6 +3,7 @@ package fr.univ_amu.iut.cli.commande;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.commun.model.Besoin;
 import fr.univ_amu.iut.commun.model.FuseauDuSite;
 import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
@@ -78,8 +79,8 @@ public final class ReconstruirePassage implements Callable<Integer> {
     public Integer call() {
         PrintWriter sortie = spec.commandLine().getOut();
         ServiceReconstructionPassages reconstruction = service.get()
-                .orElseThrow(() -> new RegleMetierException("La reconstruction a besoin de la connexion"
-                        + " Vigie-Chiro : renseignez un jeton (VIGIECHIRO_TOKEN) puis recommencez."));
+                .orElseThrow(() -> new RegleMetierException(
+                        "La reconstruction a besoin de la connexion Vigie-Chiro.", new Besoin.Connexion()));
         if (tout) {
             return reconstruireTout(sortie, reconstruction);
         }
