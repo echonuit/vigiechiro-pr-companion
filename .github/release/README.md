@@ -91,7 +91,8 @@ retiré de `node_modules` (`Cannot find module`), `assets` invalide (`EINVALIDAS
 invalide (`EINVALIDCHANGELOGFILE`).
 
 Ce banc ne joue pas le greffon `github`, ni le poste qui publie : ce qui juge ces deux-là reste la
-publication suivante.
+publication suivante. Celle du 2026-10-07 l'a fait : le run planifié 37580740353 a chargé les cinq
+greffons, conclu `prepare` pour `changelog` 7.0.0 et `git` 11.0.1, puis publié v2.198.0.
 
 **Cet arbre n'est pas posé par le crochet, et c'est une décision.** L'ADR 5407 range un prérequis
 selon qu'un garde en dépend : celui dont un garde dépend se **pose** à la création du worktree, celui
@@ -119,7 +120,9 @@ il reste à poser à la main, dans chaque arbre de travail où l'on veut vérifi
 `npm audit` signalait **7 paquets vulnérables** (2 hautes, 5 moyennes) au passage en
 `semantic-release@25` (#3264), contre **18** (15 hautes) avant lui. **Refait le 2026-10-06 sur le même
 lockfile : 17 paquets, 16 hautes et 1 moyenne.** La base des avis a grandi, l'arbre n'a pas bougé, et
-ce qui suit décrit l'état d'août : la relecture de ces dix-sept n'est pas faite (#5290). **Refait le
+la relecture de ces dix-sept n'était pas faite (#5290). Elle l'est en partie depuis #6193, qui a trié
+les paquets porteurs d'un avis selon qu'un greffon chargé les atteint ou non ; ce que l'avis de
+`braces` expose ici, lui que `@semantic-release/git` atteint, n'est pas évalué. **Refait le
 même jour après la montée des deux greffons d'écriture (#6099) : les mêmes 17 paquets, aux mêmes
 gravités.** La montée n'en retire aucun et n'en ajoute aucun. Ces vulnérabilités **existaient déjà** avec `npx --yes` ;
 la différence est qu'elles sont désormais **visibles**, et c'était l'objet du lockfile.
@@ -134,9 +137,11 @@ propre vivent tous sous `node_modules/npm/`, sauf `braces`, tiré par `micromatc
 `@semantic-release/git`, qu'aucune version amont ne corrige et dont GitHub a écarté l'alerte de
 lui-même (#46). Les autres sont nommés par cascade, parce qu'ils contiennent un paquet touché.
 
-Ce qui reste **ne se corrige pas ici**, à aucune version de `semantic-release` : les deux hautes
-(`brace-expansion`, `ip-address`) vivent dans le `npm` que `semantic-release` **embarque**
-(`node_modules/npm`, aujourd'hui 11.19.0). `npm audit` les annonce « corrigeables sans majeure », mais
+Ce qui reste **ne se corrige pas ici**, à aucune version de `semantic-release`. En août, c'étaient
+deux hautes, `brace-expansion` et `ip-address`. Au 2026-10-13, après la montée, six paquets portent
+un avis en propre dans le `npm` que `semantic-release` **embarque** (`node_modules/npm`, 11.19.0) :
+`brace-expansion`, `http-cache-semantics`, `ip-address`, `tar` et `undici` 6.27.0 au niveau élevé,
+`postcss-selector-parser` au niveau moyen. `npm audit` les annonce « corrigeables sans majeure », mais
 `npm audit fix` répond lui-même `is a bundled dependency of npm@… · It cannot be fixed
 automatically`. Elles partiront quand `npm` publiera une version qui les embarque corrigées, et que
 `semantic-release` la reprendra.
