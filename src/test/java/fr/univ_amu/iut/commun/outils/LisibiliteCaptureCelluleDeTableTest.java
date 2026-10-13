@@ -40,6 +40,14 @@ class LisibiliteCaptureCelluleDeTableTest {
     private static final String LIBELLE = "complétude inconnue";
 
     private static final double ETROITE = 130;
+
+    /// La largeur du cas de la colonne abrégeable (#6190).
+    ///
+    /// Sa cellule de texte simple prend la taille de police par défaut du système, 12 px sous
+    /// Windows et 13 px sous Linux et macOS, là où la cellule badge des autres cas fixe la sienne.
+    /// À 12 px le libellé mesure 123 px et tient dans [#ETROITE] ; cette largeur le coupe aux
+    /// deux tailles.
+    private static final double ETROITE_A_TOUTE_TAILLE = 90;
     private static final double LARGE = 260;
     private static final String COURT = "ok";
     private static final long DELAI_MS = 5_000L;
@@ -169,7 +177,12 @@ class LisibiliteCaptureCelluleDeTableTest {
     @Test
     @DisplayName("#5113 : une colonne qui assume l'abrègement ET le rend au survol reste exemptée")
     void une_colonne_abregeable_qui_se_relit_reste_exemptee() {
-        surLeFil(() -> ColonneAbregeable.assumer(colonne), "assumer l'abrègement de la colonne");
+        surLeFil(
+                () -> {
+                    ColonneAbregeable.assumer(colonne);
+                    colonne.setPrefWidth(ETROITE_A_TOUTE_TAILLE);
+                },
+                "assumer l'abrègement de la colonne, dans une largeur qui coupe à toute taille");
 
         Jugement rendu = juger();
 

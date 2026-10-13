@@ -3,6 +3,7 @@ package fr.univ_amu.iut.recette;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,6 +25,13 @@ class SansEcritureHorsDuFilEteintTest {
     private static final String REGISTRE = "fr.univ_amu.iut.recette.EcrituresHorsDuFil";
     private static final String FILM = "recette.film";
     private static final String BYTEBUDDY = "net.bytebuddy.agent.builder.AgentBuilder";
+
+    /// L'encodage dans lequel la JVM fille écrit, et dans lequel sa sortie se relit (#6190).
+    ///
+    /// Une sortie redirigée s'écrit dans l'encodage natif du système, Cp1252 sous Windows, et le
+    /// témoin imprime un refus accentué quand la pose échoue faute d'agent. La fille reçoit donc
+    /// son encodage sur sa ligne de commande, au lieu de le tenir de la machine.
+    private static final Charset ENCODAGE = StandardCharsets.UTF_8;
 
     @TempDir
     private Path dossier;
@@ -61,6 +69,8 @@ class SansEcritureHorsDuFilEteintTest {
                 "-cp",
                 System.getProperty("java.class.path"),
                 "-Xlog:class+load=info",
+                "-Dstdout.encoding=" + ENCODAGE.name(),
+                "-Dstderr.encoding=" + ENCODAGE.name(),
                 option,
                 EspionEteintTemoin.class.getName()));
         Process fille = new ProcessBuilder(commande)
@@ -70,6 +80,6 @@ class SansEcritureHorsDuFilEteintTest {
         assertThat(fille.waitFor(60, TimeUnit.SECONDS))
                 .as("la JVM fille doit rendre la main")
                 .isTrue();
-        return Files.readString(sortie, StandardCharsets.UTF_8);
+        return Files.readString(sortie, ENCODAGE);
     }
 }
