@@ -523,9 +523,10 @@ fork, ce que garantit le profil, qui ne joue que ce tag.
   [`FrontWebSurLaPlateformeDeTestTest`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/test/java/fr/univ_amu/iut/commun/api/plateforme/FrontWebSurLaPlateformeDeTestTest.java).
 - La fiche web dans un navigateur : un `BrowserWebDriverContainer` à l'image `navigateur.image` des
   épingles, qui rejoint `PlateformeDeTest.reseau()` et ouvre `urlDuFrontDansLeReseau()`. La connexion
-  range le jeton de l'utilisatrice dans le stockage du navigateur (`auth-session-token`), puis recharge
-  la fiche. Par `?token=`, une requête partie sans jeton pouvait recevoir son 401 après coup, et le
-  front effaçait alors le jeton (#6183). La connexion de `DEV_FAKE_AUTH` ouvrirait une session
+  range le jeton de l'utilisatrice dans le stockage du navigateur (`auth-session-token`) depuis une
+  page de la même origine qui ne lance aucun script, puis ouvre la fiche. Le front efface le jeton
+  quand une requête partie sans lui reçoit son 401 : rangé pendant que le front tournait, il était
+  effacé par une requête encore en vol (#6183). La connexion de `DEV_FAKE_AUTH` ouvrirait une session
   « John Doe », qui ne possède rien. L'observatrice
   a la charte acceptée dans l'état de départ, sans quoi sa modale couvrirait la fiche. Le navigateur ne
   résout que l'alias de l'API (`--host-resolver-rules`) : ce que le front chargeait de cdnjs est servi

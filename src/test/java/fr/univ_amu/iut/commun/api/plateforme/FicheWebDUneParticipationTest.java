@@ -49,15 +49,15 @@ class FicheWebDUneParticipationTest {
         ChromeOptions options = new ChromeOptions()
                 .addArguments("--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE " + PlateformeDeTest.ALIAS_DE_L_API);
         pilote = new RemoteWebDriver(navigateur.getSeleniumAddress(), options);
-        // Le jeton se range là où le front le lit, avant que la fiche ne démarre (#6183). Par `?token=`,
-        // le front le rangeait puis rechargeait la page, mais une requête partie avant sans jeton pouvait
-        // recevoir son 401 après coup : le front effaçait alors le jeton, et la fiche disait « Non trouvé ».
+        // Le jeton se range là où le front le lit, depuis une page de la même origine qui ne lance aucun
+        // script, puis la fiche démarre avec lui (#6183). Le front efface le jeton quand une requête partie
+        // sans lui reçoit son 401 : rangé pendant que le front tournait, par `?token=` puis depuis sa
+        // racine, il était effacé par le 401 d'une requête encore en vol, et la fiche disait « Non trouvé ».
         String front = PlateformeDeTest.urlDuFrontDansLeReseau();
-        pilote.get(front);
+        pilote.get(front + "favicon.ico");
         pilote.executeScript(
                 "window.localStorage.setItem('auth-session-token', arguments[0]);", acces.jeton("observatrice"));
         pilote.get(front + "#/participations/" + acces.id("participations:nuit-traitee"));
-        pilote.navigate().refresh();
     }
 
     @AfterAll
