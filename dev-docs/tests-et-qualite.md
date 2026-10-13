@@ -543,6 +543,13 @@ fork, ce que garantit le profil, qui ne joue que ce tag.
 Dans tous les cas la classe porte `@Tag("plateforme-de-test")`, et `DeclarationDeLaPlateformeTest`
 le refuse sinon.
 
+**Quand le job rougit, les conteneurs disent ce qu'ils faisaient** (#6183). L'API, le faux S3 et
+Mongo versent leur journal sous `target/plateforme-de-test/journaux/`, un fichier par conteneur et par
+fork, chaque ligne datée à sa réception par la JVM. Le job les dépose en artefact,
+`journaux-de-la-plateforme`, avec les rapports surefire. L'API y écrit une ligne par requête à
+laquelle elle répond : une écriture que la JVM dit sans réponse se cherche là, à l'instant de
+l'échec. `JournauxDeLaPlateformeDeTestTest` exige d'y relire une requête marquée.
+
 Un scénario d'écran peut aussi se **filmer** sur cette cible : `tournage-recette.yml` prend l'entrée
 `plateforme_de_test`, et ses clips vont sur leur propre pré-version, où ils se comparent d'un tournage
 au suivant (#5644). Un scénario qui n'existe que sur la plateforme de test porte en plus
