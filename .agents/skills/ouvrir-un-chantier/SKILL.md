@@ -114,6 +114,17 @@ s'écrivait de trois façons qu'aucune règle ne départageait (#4951).
 **Un critère se vérifie.** « Fini quand la loupe est écrite » ne dit rien de plus que le titre.
 « Fini quand elle rougit sur un lot neuf muet et reste verte sur #4845 » se joue.
 
+## Recevoir une dette transférée
+
+Un chantier qui se clôt ne garde aucune dette. Il peut la **transférer** à un EPIC ouvert, celui qui
+traite sa cause ou un EPIC ouvert pour ses suites, jamais le sas #4562. L'EPIC qui la reçoit l'écrit dans une section « Dette
+nommée » de son corps, avec sa mesure et sa provenance, et il la **devra** à sa propre clôture.
+
+Ouvrir un EPIC pour n'y loger que des dettes est permis, et ce n'est pas un rangement : son travail
+est de les instruire, et il ne se ferme pas avant. La règle vit dans le
+[cycle de chantier](../../../dev-docs/cycle-de-chantier.md), section
+« Une dette ne reste pas dans un EPIC qui se ferme ».
+
 ## Ce que l'ouverture laisse derrière elle
 
 Le corps de l'EPIC porte les lots, chacun disant ce qu'il **livre**. Leur critère de fin, lui, vit

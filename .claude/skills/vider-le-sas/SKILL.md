@@ -44,6 +44,9 @@ même endroit.
 6. NOMMER     ce que la cloture elle-meme a revele : en dette pour le bilan,
               en issue seulement pour un defaut MESURE qui toucherait un
               utilisateur ou ferait mentir un garde.
+6b. INSTRUIRE chaque dette du corps de l EPIC et CHOISIR sa porte : abandonnee avec sa
+              justification, transferee a un EPIC ouvert, ou engagee a une date. La passe 11
+              doit voir les abandons, et le bilan de la passe 12 rapporte chaque sortie.
 7. VERIFIER   la condition de sortie avant de passer a la 10.
 ```
 
@@ -53,7 +56,9 @@ Chaque trouvaille a **déjà** été écrite au moment où elle a été faite : 
 l'EPIC si c'est une suite qu'on ne traite pas, en issue si c'est un défaut mesuré qui toucherait un
 utilisateur ou ferait mentir un garde. La règle vit dans le [cycle de chantier](../../../dev-docs/cycle-de-chantier.md), section « Une trouvaille s'écrit au
 moment où on la fait ». Le sas ne reçoit donc que des défauts mesurés, et la dette ne passe pas par
-lui : la passe 12 la reprend depuis le corps de l'EPIC. Arriver ici avec un EPIC sans dette et un sas
+lui : la passe 12 la prend dans le corps de l'EPIC, l'instruit et la fait sortir par l'une de ses
+trois portes. Le sas n'en est pas une, même pour une dette transférée : il n'a ni périmètre ni
+clôture. Arriver ici avec un EPIC sans dette et un sas
 vide est le signe que la règle n'a pas été tenue, pas que le chantier n'a rien trouvé.
 
 **Relire l'EPIC des suites entier**, et pas seulement ce que ce chantier-ci y a déposé : une
