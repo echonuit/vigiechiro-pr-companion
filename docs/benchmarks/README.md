@@ -216,7 +216,7 @@ chiffre ci-dessous.
 | écart max entre deux images pendant l'import | 151 ms | 98 ms | 76 ms | 87 ms |
 | écart max en navigation après l'import | 758 ms | 224 ms | 255 ms | 244 ms |
 | écarts de plus de 200 ms en navigation (neuf ouvertures) | 5 | 4 | 4 | 5 |
-| heap après GC (50 Mo avant la nuit 1) | 148 Mo | 208 Mo | 265 Mo | 322 Mo |
+| heap après GC, harnais compris (50 Mo avant la nuit 1, voir #6170) | 148 Mo | 208 Mo | 265 Mo | 322 Mo |
 
 **Lectures** :
 
@@ -225,9 +225,9 @@ chiffre ci-dessous.
 - **En navigation après l'import, le seuil n'est pas tenu** (#6171) : les écarts tombent à l'ouverture
   des écrans, à chaque nuit, et pas seulement à la première ouverture. Ils ne grandissent pas avec le
   nombre de nuits en base.
-- **Le heap après GC grandit de 57 à 98 Mo par nuit** (#6170). Ce n'est pas une fuite établie : le
-  processus porte aussi TestFX et l'espion des écritures, et la base grandit. Un histogramme de classes
-  entre deux nuits, puis la même mesure dans l'application lancée hors des tests, départagera.
+- **Le heap après GC grandissait de 57 à 98 Mo par nuit** dans ce tir. Ce chiffre mesurait surtout le
+  harnais et des caches que la JVM rend sous pression, pas l'application : la cause est établie, et le
+  palier tenu, dans « Le heap de nuit en nuit » plus bas (#6170).
 - La durée d'import n'est pas le chiffre O3 de ce banc : c'est celui de `BancImport`, plus haut.
 
 **Ce que ces chiffres ne mesurent pas** : la latence d'entrée (souris et clavier contournés), le dessin
@@ -251,7 +251,60 @@ l'assistant ne recopiant pas les bruts par défaut). Le relevé s'ajoute à `rel
 `perf.ihm.racine`, chaque banc ouvrant sa part sur une ligne `échelle`. Sur un écran dont l'échelle
 n'est pas 1, le banc s'arrête dès la fenêtre affichée et dit quoi poser :
 `JAVA_TOOL_OPTIONS="-Dglass.gtk.uiScale=1"` devant la commande, ou `-Dperf.ihm.echelle=ecran` pour
-mesurer à l'échelle de l'écran.
+mesurer à l'échelle de l'écran. Le heap de `BancIhmO3Test` se relève sous
+`-XX:SoftRefLRUPolicyMSPerMB=0`, posé de la même façon : la section suivante dit pourquoi.
+
+### Le heap de nuit en nuit (#6170)
+
+Mesuré le 2026-10-13 sur le premier poste, en-tête imprimé par le banc :
+
+```text
+machine         : 11th Gen Intel(R) Core(TM) i5-1145G7 @ 2.60GHz · 8 cœurs · RAM 30.4 Gio
+exécution       : 25.0.3+9-LTS · Linux 7.0.0-38-generic · heap max 7788 Mo
+échelle         : rendu 1.00 × 1.00 · écran 1.00 × 1.00 · glass.platform=Headless · prism.order=sw
+```
+
+`BancIhmO3Test`, quatre nuits de 300 WAV de 5 s, en Headless, sur `main` à `f65822f95b` plus la
+branche de #6170. Les deux tirs ne diffèrent que par la correction de la fiche du carré.
+
+| Heap après GC complet, sous `-XX:SoftRefLRUPolicyMSPerMB=0` | Avant | Nuit 1 | Nuit 2 | Nuit 3 | Nuit 4 |
+|---|---|---|---|---|---|
+| fiche du carré non corrigée | 54 Mo | 90 Mo | 93 Mo | 96 Mo | 99 Mo |
+| fiche du carré corrigée | 54 Mo | 89 Mo | 89 Mo | 93 Mo | 90 Mo |
+
+Le seuil retenu, moins de 10 Mo gagnés par nuit de la nuit 2 à la nuit 4, est tenu : les écarts sont
+de 0, 4 et -3 Mo. La dérive de 57 Mo par nuit du premier relevé avait trois causes. Chacune a été nommée par le
+chemin qui la retenait jusqu'aux racines du ramasse-miettes, lu dans un vidage du heap, puis vue
+disparaître par une mesure :
+
+- **Le harnais.** TestFX garde dans un registre statique (`FxToolkitContext`, `FiredEvents`) tout
+  événement tiré sur la fenêtre, pour toute la durée du test. Chaque `fire()` du banc y laissait son
+  bouton, donc l'assistant d'import entier et la fiche d'où il s'ouvrait : une copie par nuit. Le banc
+  vide désormais ce registre avant chaque relevé, et le vérifie.
+- **Des caches que la JVM rend sous pression.** JavaFX garde en références douces les tampons de ses
+  effets, de la taille de la fenêtre. Un GC complet ne les rend pas tant que le heap est loin d'être
+  plein, et le banc les comptait. Ce sont eux qui faisaient suivre la dérive à l'échelle de l'écran :
+  à l'échelle 2, chaque tampon est quatre fois plus gros. Sous `-XX:SoftRefLRUPolicyMSPerMB=0`, la JVM
+  les rend à chaque GC. Ce n'est pas une fuite : sans ce réglage, la même mémoire revient dès que le
+  heap se remplit.
+- **Le produit.** La fiche d'un carré écoutait le jeton (#4219) par un écouteur fort posé sur un
+  singleton : chaque fiche ouverte restait vivante jusqu'à la fermeture de l'application, environ 3 Mo
+  chacune. L'écouteur est maintenant tenu par la fiche et inscrit faible, et
+  `SiteDetailEcouteDuJetonViewTest` garde les deux moitiés : la fiche quittée est rendue, la fiche
+  ouverte suit encore la connexion après un GC.
+
+**Ce que ce relevé ne mesure pas** : l'affichage réel. Le porteur a choisi de ne pas solliciter le poste
+pour un tir à l'écran, puisque le Headless à l'échelle 1 écrite par le banc tient le critère. Il ne
+mesure pas non plus l'application lancée hors des tests : le chemin jusqu'aux racines, pris dans le
+banc, a suffi à départager le produit du harnais.
+
+**Le relancer** :
+
+```bash
+JAVA_TOOL_OPTIONS="-XX:SoftRefLRUPolicyMSPerMB=0" env -u DISPLAY ./mvnw test \
+  -Dsurefire.groups=banc-ihm -Dsurefire.excludedGroups=api-live -Dtest=BancIhmO3Test \
+  -Dperf.ihm.racine=$HOME/banc-ihm
+```
 
 ### Le test de charge à 20 Gio, sur un second poste
 
@@ -338,7 +391,9 @@ déjà importée ».
 - **Le heap après GC, à l'échelle 1, est celui du premier poste à quelques Mo près** (#6170) : de 57 à
   59 Mo de plus par nuit. Deux faits nouveaux : la nuit de 20 Gio laisse 160 Mo, 13 de plus qu'une
   nuit de 300 WAV pour dix-neuf fois plus de séquences ; et l'échelle par défaut porte le gain à 98 Mo
-  par nuit. Ce qui grandit suit donc la surface dessinée plus que les données.
+  par nuit. Ce qui grandit suit donc la surface dessinée plus que les données : c'étaient des écrans
+  retenus par TestFX et des tampons de la taille de la fenêtre gardés par JavaFX, voir « Le heap de
+  nuit en nuit » plus haut.
 - **Ce ne sont pas des pauses du ramasse-miettes** : hors GC complet, la plus longue du journal dure
   72 ms sur les quatre tirs, et 20 ms dans le tir à 20 Gio à l'échelle 1. Les GC complets, que le
   banc demande lui-même, tombent hors des périodes sondées.
@@ -554,6 +609,11 @@ Pour la **stabilité dans la durée** (O3), mesurer **dans un seul processus** :
 3. relever le heap **après GC** après chaque nuit : il doit **revenir à un palier stable** (pas de
    dérive croissante) → pas de rétention d'état d'import entre les nuits.
 
+Lancer l'application sous `-XX:SoftRefLRUPolicyMSPerMB=0` : sans ce réglage, un GC complet garde ce
+que seules des références douces tiennent, dont les tampons des effets JavaFX, et le palier paraît
+dériver alors que rien ne fuit (#6170). Le banc de l'IHM (`BancIhmO3Test`) fait ce relevé sans
+manipulation : voir « Le heap de nuit en nuit ».
+
 `BancImport` reste l'outil pour la **crête d'une seule nuit** (pic mémoire pendant l'import).
 
 ## Bilan du cluster perf
@@ -568,8 +628,9 @@ critère a son relevé, et chaque seuil non tenu son issue.
   s'ouvre sous 50 ms, et Mes sites croît avec les carrés (#6172).
 - **O3** : nuit standard de 5,62 Gio en 40 à 49 s ; 9 Gio en 84 à 87 s ; occupation après GC de 81
   à 85 Mo, la nuit standard passant sous `-Xmx128m`. **Dans l'IHM** : pas d'écart de plus de 200 ms pendant l'import ; des écarts de 203 à 758 ms à
-  l'ouverture des écrans après import (#6171) ; un heap après GC qui grandit de nuit en nuit dans le
-  banc (#6170). **20 Gio, sur le second poste** : import en 20 à 21 s, 108 à 115 Mo après GC ; dans
+  l'ouverture des écrans après import (#6171) ; un heap après GC qui tient son palier sur quatre nuits
+  (de 89 à 93 Mo), une fois mis à part le harnais TestFX et les caches doux de JavaFX ; une fiche de
+  carré que le produit retenait est corrigée (#6170). **20 Gio, sur le second poste** : import en 20 à 21 s, 108 à 115 Mo après GC ; dans
   l'IHM, un écart de 465 à 472 ms entre deux images pendant l'import, là où les nuits de 300 WAV
   tiennent le seuil à échelle d'écran égale (#6175).
 - **Réactivation** (#6174) : sur une nuit hydratée de bruts de 20 min, les temporaires de

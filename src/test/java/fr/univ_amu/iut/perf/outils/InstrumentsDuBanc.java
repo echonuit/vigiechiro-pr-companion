@@ -96,7 +96,9 @@ final class InstrumentsDuBanc {
 
     /// Heap occupé juste après un GC complet, en Mo : ce que `jcmd <pid> GC.run` puis `GC.heap_info`
     /// rendraient. Sous G1, `System.gc()` est un GC complet tant que `ExplicitGCInvokesConcurrent`
-    /// n'est pas posé, et le banc ne le pose pas.
+    /// n'est pas posé, et le banc ne le pose pas. Un GC complet garde ce que seules des références douces
+    /// tiennent, tant que le heap est loin d'être plein : `-XX:SoftRefLRUPolicyMSPerMB=0` les fait rendre
+    /// à chaque GC (#6170).
     static long heapApresGc() {
         System.gc();
         System.gc();

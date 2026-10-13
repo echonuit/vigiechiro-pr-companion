@@ -42,6 +42,8 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.WeakChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
@@ -214,6 +216,12 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
 
     private final Optional<EtatConnexion> etatConnexion;
 
+    /// L'écoute du jeton, tenue ici et inscrite **faible** auprès de `EtatConnexion` (#6170). Le singleton
+    /// vit autant que l'application : un écouteur fort y retenait chaque fiche ouverte, avec son graphe de
+    /// scène, jusqu'à la fermeture. Le champ, lui, est indispensable : sans lui, l'écouteur faible serait
+    /// ramassé et la fiche ouverte cesserait de suivre la connexion.
+    private final ChangeListener<Boolean> suiviDuJeton = (obs, avant, apres) -> rafraichirDepuisLaDonnee();
+
     @Inject
     public SiteDetailController(
             SiteDetailViewModel viewModel,
@@ -307,8 +315,7 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
         // posé UNE FOIS, à la construction de la carte, et les cartes ne se reconstruisent que sur une
         // mutation de la base. Se connecter n'en est pas une : le lien restait fermé, à conseiller un
         // geste qu'on venait d'accomplir. Le même angle mort que #4205 sur « Mes sites ».
-        etatConnexion.ifPresent(
-                etat -> etat.connecteProperty().addListener((obs, avant, apres) -> rafraichirDepuisLaDonnee()));
+        etatConnexion.ifPresent(etat -> etat.connecteProperty().addListener(new WeakChangeListener<>(suiviDuJeton)));
 
         // Compte rendu d'opération au bandeau de l'écran (ADR 0023), et non dans une fenêtre qui bloque.
         BandeauRetour.installer(
@@ -458,9 +465,6 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
         }
     }
 
-    /// Ouvre la boîte d'édition pré-remplie ; à la validation, applique la modification via le
-    /// ViewModel (qui recharge la fiche). Un refus métier (carré déjà pris) ou un format invalide
-    /// (R1) est rapporté sans quitter l'écran.
     /// Ouvre la page du site sur le portail Vigie-Chiro (#1124) : vérification visuelle du rattachement.
     @FXML
     private void ouvrirSurVigieChiro() {
@@ -470,6 +474,9 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
         }
     }
 
+    /// Ouvre la modale d'édition pré-remplie (#1431), qui porte la saisie, la validation en direct et le
+    /// refus métier (carré déjà pris, format invalide) sans quitter l'écran. Quand elle a écrit, la fiche
+    /// relit son site et relibelle son étape de navigation ([#rechargerApresModification()]).
     @FXML
     private void modifierSite() {
         // La modale porte la saisie, la validation en direct et le refus métier (#1431). Le Dialog bâti

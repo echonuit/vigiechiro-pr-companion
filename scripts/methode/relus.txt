@@ -1186,7 +1186,7 @@ a89f383b46f5  src/main/java/fr/univ_amu/iut/sites/outils/CaptureEcrans.java
 a46876a7fccb  src/main/java/fr/univ_amu/iut/sites/view/ModalePointController.java
 4bed0d08d847  src/main/java/fr/univ_amu/iut/sites/view/ModaleSiteController.java
 09d1c5c08d5a  src/main/java/fr/univ_amu/iut/sites/view/NavigationSites.java
-77cd257dfe2f  src/main/java/fr/univ_amu/iut/sites/view/SiteDetailController.java
+a7886640e0c0  src/main/java/fr/univ_amu/iut/sites/view/SiteDetailController.java
 7b8d5007d8a2  src/main/java/fr/univ_amu/iut/sites/viewmodel/CarreExistantViewModel.java
 659a6625dee4  src/main/java/fr/univ_amu/iut/sites/viewmodel/CartePoint.java
 031bfb447c45  src/main/java/fr/univ_amu/iut/sites/viewmodel/CarteSite.java
@@ -2037,12 +2037,12 @@ ab70d6f6344b  src/test/java/fr/univ_amu/iut/passage/viewmodel/MemesMotsQueLEcran
 59c6503e55be  src/test/java/fr/univ_amu/iut/passage/viewmodel/SaisieHorairesNuitTest.java
 a8f5b54b21d0  src/test/java/fr/univ_amu/iut/passage/viewmodel/VerificationDuTraitementTest.java
 49766a118987  src/test/java/fr/univ_amu/iut/perf/JeuDuBancTest.java
-cc8de687adcd  src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO3Test.java
+c14cdbaa71c1  src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO3Test.java
 eace6174d00f  src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO5Test.java
 96fe3f217372  src/test/java/fr/univ_amu/iut/perf/outils/EchelleDuRendu.java
 8c8958cd2741  src/test/java/fr/univ_amu/iut/perf/outils/EchelleDuRenduTest.java
 c22e11027e0e  src/test/java/fr/univ_amu/iut/perf/outils/EcranDuBanc.java
-0394a08bd9a4  src/test/java/fr/univ_amu/iut/perf/outils/InstrumentsDuBanc.java
+b96d3a0b2ee4  src/test/java/fr/univ_amu/iut/perf/outils/InstrumentsDuBanc.java
 a915ebf9d263  src/test/java/fr/univ_amu/iut/qualification/AgregationVerdictTest.java
 134e5d009078  src/test/java/fr/univ_amu/iut/qualification/FenetreDeCouvertureTest.java
 7dfaa00febe4  src/test/java/fr/univ_amu/iut/qualification/GenerateurSelectionTest.java
@@ -2218,6 +2218,7 @@ c4fd0c174a99  src/test/java/fr/univ_amu/iut/sites/view/ScenarioFicheSiteTest.jav
 cf1149717245  src/test/java/fr/univ_amu/iut/sites/view/ScenarioModaleCarreTest.java
 536e7c3e61c8  src/test/java/fr/univ_amu/iut/sites/view/ScenarioPerceptifRecuperationCarreTest.java
 97956d5222da  src/test/java/fr/univ_amu/iut/sites/view/SiteDetailBadgePlateformeViewTest.java
+020b45b8d650  src/test/java/fr/univ_amu/iut/sites/view/SiteDetailEcouteDuJetonViewTest.java
 a31e1e09096e  src/test/java/fr/univ_amu/iut/sites/view/SiteDetailPublierPointViewTest.java
 9873d46aab3d  src/test/java/fr/univ_amu/iut/sites/view/SiteDetailRenommageViewTest.java
 a2510f138d4e  src/test/java/fr/univ_amu/iut/sites/view/SiteDetailSuppressionsViewTest.java

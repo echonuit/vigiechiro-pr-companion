@@ -25,6 +25,7 @@ import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.view.NavigationSites;
+import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.Comparator;
@@ -38,6 +39,8 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
+import org.testfx.api.FxToolkit;
+import org.testfx.api.FxToolkitContext;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
@@ -49,6 +52,12 @@ import org.testfx.util.WaitForAsyncUtils;
 ///
 /// Chaque nuit est une carte synthétique de `perf.ihm.wav` WAV de 5 s à 384 kHz (défaut 300), écrite par
 /// le générateur de [BancImport], puis retirée une fois importée, comme une carte qu'on ressort.
+///
+/// Le heap mesure l'application, pas le harnais (#6170) : le registre des événements de TestFX est vidé
+/// avant chaque relevé, et le bouton de la nuit ne vit plus au GC. Reste ce que la JVM garde par
+/// références douces, dont les tampons de l'ImagePool des effets JavaFX, de la taille de la fenêtre :
+/// elle ne les rend que sous pression. Le relevé publié se prend donc sous
+/// `-XX:SoftRefLRUPolicyMSPerMB=0`, posé par `JAVA_TOOL_OPTIONS` (voir `docs/benchmarks/README.md`).
 @Tag("banc-ihm")
 @ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class BancIhmO3Test {
@@ -83,35 +92,56 @@ class BancIhmO3Test {
         releve.noterHeap("avant la première nuit", heapApresGc());
 
         for (int nuit = 1; nuit <= NUITS; nuit++) {
-            Path carte = RACINE.resolve("carte-" + nuit);
-            supprimer(carte);
-            BancImport.genererNuit(carte, WAV_PAR_NUIT, 384_000, 5.0, PREMIERE_NUIT.plusDays(nuit - 1L));
-            Button importer = preparerLImport(carte, nuit);
-
-            ecran.reinitialiserLaSonde();
-            long debut = System.nanoTime();
-            surLeFil(() -> {
-                importer.fire();
-                return null;
-            });
-            Attente.queSurLeFil(
-                    () -> ecran.visible("#compteRenduChiffre") || ecran.intrus() != null,
-                    "l'import de la nuit " + nuit + " n'a pas fini",
-                    DELAI_IMPORT_MS);
-            assertThat(surLeFil(ecran::intrus))
-                    .as("l'import de la nuit %d ne doit rien demander à personne", nuit)
-                    .isNull();
-            double dureeS = (System.nanoTime() - debut) / 1e9;
-            Gel pendant = ecran.sonde().relever();
-            supprimer(carte);
-            releve.noterImport(nuit, dureeS, pendant);
+            importerLaNuit(nuit, releve);
 
             ecran.reinitialiserLaSonde();
             naviguer(nuit);
             releve.noterNavigation(nuit, ecran.sonde().relever());
+            oublierLesEvenementsTires();
             releve.noterHeap("après la nuit " + nuit, heapApresGc());
         }
         releve.ecrire();
+    }
+
+    /// Une nuit générée, désignée à l'assistant et importée ; la carte retirée ensuite. Dans sa propre
+    /// méthode, pour que le bouton « Importer » de la nuit ne vive plus au GC qui suit.
+    private void importerLaNuit(int nuit, Releve releve) throws Exception {
+        Path carte = RACINE.resolve("carte-" + nuit);
+        supprimer(carte);
+        BancImport.genererNuit(carte, WAV_PAR_NUIT, 384_000, 5.0, PREMIERE_NUIT.plusDays(nuit - 1L));
+        Button importer = preparerLImport(carte, nuit);
+
+        ecran.reinitialiserLaSonde();
+        long debut = System.nanoTime();
+        surLeFil(() -> {
+            importer.fire();
+            return null;
+        });
+        Attente.queSurLeFil(
+                () -> ecran.visible("#compteRenduChiffre") || ecran.intrus() != null,
+                "l'import de la nuit " + nuit + " n'a pas fini",
+                DELAI_IMPORT_MS);
+        assertThat(surLeFil(ecran::intrus))
+                .as("l'import de la nuit %d ne doit rien demander à personne", nuit)
+                .isNull();
+        double dureeS = (System.nanoTime() - debut) / 1e9;
+        Gel pendant = ecran.sonde().relever();
+        supprimer(carte);
+        releve.noterImport(nuit, dureeS, pendant);
+    }
+
+    /// TestFX garde dans `FiredEvents` tout événement tiré sur la fenêtre, pour toute la durée du test :
+    /// chaque `fire()` du banc y laisse son bouton, donc l'écran qui le porte. Vidé avant chaque
+    /// relevé du heap, pour mesurer l'application et non le harnais (#6170).
+    private static void oublierLesEvenementsTires() throws Exception {
+        // `getFiredEvents()` rend une vue non modifiable : on vide le registre lui-même.
+        Field champ = FxToolkitContext.class.getDeclaredField("firedEvents");
+        champ.setAccessible(true);
+        Object registre = champ.get(FxToolkit.toolkitContext());
+        surLeFil(() -> registre.getClass().getMethod("clearEvents").invoke(registre));
+        assertThat(surLeFil(() -> FxToolkit.toolkitContext().getFiredEvents()))
+                .as("le registre de TestFX doit être vide avant le relevé : sinon le heap compte ses écrans")
+                .isEmpty();
     }
 
     /// L'assistant ouvert depuis la fiche du carré, la carte désignée et inspectée, la nuit rattachée au
