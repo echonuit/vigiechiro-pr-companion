@@ -100,6 +100,7 @@ scénario truque.
 |---|---|---|
 | `A_L_ECRAN` | ce que le cas demande de constater est ce que la caméra enregistre | rien de plus |
 | `HORS_APPLICATION` | le geste côté produit, et lui seul | une **réserve**, disant ce que le clip ne prouve pas |
+| `SUR_LA_PLATEFORME_DE_TEST` | rien : il n'y a pas de clip, le test lit lui-même le verdict hors de l'application | que la classe porte le tag `plateforme-de-test` |
 
 Le second cas est celui des sessions dont l'objet est ailleurs : le dépôt reçu par Vigie-Chiro, la carte
 SD réelle, la nuit rapatriée du serveur, l'installeur sur un vrai poste, la commande dans un vrai
@@ -109,6 +110,11 @@ devient muet sur son propre objet, ce qui est pire parce qu'on le regarde en cro
 `CorrespondanceRecetteTest` garde les deux sens : la réserve est exigée si et seulement si la portée est
 `HORS_APPLICATION`, et elle doit **figurer sur la page du clip**. Une réserve qui ne vit que dans le code
 ne borne rien : personne ne lit une annotation en regardant une vidéo.
+
+La troisième valeur est venue avec la plateforme de test (ADR 6219). Un navigateur y ouvre la fiche
+web de Vigie-Chiro, et un test relit ce que Companion y a écrit : le verdict est hors de l'application,
+et il est lu pour de bon. Le garde refuse cette valeur à un test qui ne se joue pas sur la plateforme.
+Ce qu'elle ne dit pas s'écrit dans le test : par quelle surface l'écriture est partie.
 
 Un seul cas cité porte aujourd'hui `HORS_APPLICATION` : **S1-04**, « ouvrir le site sur la
 plateforme », dont le geste se termine dans un navigateur que le clip ne peut pas montrer. Sa réserve le

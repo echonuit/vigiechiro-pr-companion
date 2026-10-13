@@ -464,6 +464,7 @@ nav:
     - 6184 · Un écran n'écoute ce qui lui survit que par une liaison ou une écoute faible, et un test le veut rendu une fois quitté: decisions/6184-un-ecran-n-ecoute-ce-qui-lui-survit-que-par-une-ecoute-faible.md
     - 6183 · L'API de la plateforme de test est servie comme en production: decisions/6183-l-api-de-la-plateforme-de-test-est-servie-comme-en-production.md
     - 6197 · L'image du plan établi se juge au premier import d'un processus, et tient O3 sans remède: decisions/6197-l-image-du-plan-etabli-se-juge-au-premier-import-et-tient-o3-sans-remede.md
+    - 6219 · Un verdict lu sur la plateforme de test a sa portée, et le garde la confronte au tag: decisions/6219-un-verdict-lu-sur-la-plateforme-de-test-a-sa-portee.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Retour de terrain de la 2.189.0: retours/2189-ce-que-ton-retour-a-produit.md

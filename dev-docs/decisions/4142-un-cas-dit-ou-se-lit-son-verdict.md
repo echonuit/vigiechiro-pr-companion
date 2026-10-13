@@ -13,9 +13,15 @@ verified:
     at: 2026-08-22
 relations:
   prolonge: ["3764"]
+  completee_par: ["6219-un-verdict-lu-sur-la-plateforme-de-test-a-sa-portee"]
 ---
 
 # Un cas dit où se lit son verdict, et ce que son clip ne prouve pas
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-13** : cette décision donne deux portées, écrites avant qu'un test puisse lire ce qui se
+    passe hors de l'application. Elle est **complétée** par [6219](6219-un-verdict-lu-sur-la-plateforme-de-test-a-sa-portee.md), qui en ajoute une troisième
+    pour un verdict lu sur la plateforme de test.
 
 ## Contexte
 
