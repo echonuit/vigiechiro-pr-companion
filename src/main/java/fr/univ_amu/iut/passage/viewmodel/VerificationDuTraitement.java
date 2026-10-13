@@ -2,6 +2,7 @@ package fr.univ_amu.iut.passage.viewmodel;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.api.Traitement;
+import fr.univ_amu.iut.commun.model.Besoin;
 import fr.univ_amu.iut.commun.model.ImportApresReleve;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -47,8 +48,8 @@ public final class VerificationDuTraitement {
     /// @throws fr.univ_amu.iut.commun.model.RegleMetierException si la plateforme n'a pas pu être lue
     public RetourOperation verifier(Long idPassage) {
         Objects.requireNonNull(idPassage, "idPassage");
-        Traitement traitement = suivi.orElseThrow(() ->
-                        new RegleMetierException("Non connecté à Vigie-Chiro : impossible de vérifier le traitement."))
+        Traitement traitement = suivi.orElseThrow(() -> new RegleMetierException(
+                        "Non connecté à Vigie-Chiro : impossible de vérifier le traitement.", new Besoin.Connexion()))
                 .relever(idPassage);
         return enMots(traitement, ImportApresReleve.pour(importation, idPassage, traitement));
     }

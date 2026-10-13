@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.api.ParticipationDetail;
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SuiviPagination;
+import fr.univ_amu.iut.commun.model.Besoin;
 import fr.univ_amu.iut.commun.model.ExecutionParallele;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
@@ -164,10 +165,11 @@ final class PlateformeReconstruction {
             // disait « avant de reconstruire un passage (menu ☰ > Se connecter) » : depuis #2555 la
             // réactivation passe par ce même collaborateur, et depuis toujours la CLI aussi. On servait donc
             // « reconstruire » à qui réactive, et un menu ☰ à qui travaille dans un terminal. Un modèle ne
-            // sait pas d'où on l'appelle : il dit ce qui manque, pas où cliquer.
+            // sait pas d'où on l'appelle : il dit ce qui manque et porte son besoin, et chaque surface y
+            // ajoute son geste (#2756).
             case ReponseApi.NonConnecte<T> ignore ->
-                throw new RegleMetierException("Non connecté à Vigie-Chiro : " + quoi
-                        + " n'a pas pu être lu. Connectez-vous à" + " Vigie-Chiro, puis recommencez.");
+                throw new RegleMetierException(
+                        "Non connecté à Vigie-Chiro : " + quoi + " n'a pas pu être lu.", new Besoin.Connexion());
             case ReponseApi.Injoignable<T>(String cause) ->
                 throw new RegleMetierException(
                         "Vigie-Chiro est injoignable (" + cause + ") : " + quoi + " n'a pas pu être lu.");

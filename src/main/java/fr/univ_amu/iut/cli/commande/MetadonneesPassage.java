@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import fr.univ_amu.iut.cli.FormatJson;
 import fr.univ_amu.iut.cli.model.ErreurUsage;
+import fr.univ_amu.iut.commun.model.Besoin;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.passage.model.EnvoiParticipation;
 import fr.univ_amu.iut.passage.model.RattrapageMetadonnees;
@@ -231,8 +232,8 @@ public final class MetadonneesPassage implements Callable<Integer> {
     private int rattraperTout(PrintWriter sortie) {
         RattrapageMetadonnees lot = rattrapage
                 .get()
-                .orElseThrow(() -> new RegleMetierException("Le rattrapage a besoin de la connexion Vigie-Chiro :"
-                        + " renseignez un jeton (VIGIECHIRO_TOKEN) puis recommencez."));
+                .orElseThrow(() -> new RegleMetierException(
+                        "Le rattrapage a besoin de la connexion Vigie-Chiro.", new Besoin.Connexion()));
         List<Long> passages = lot.passagesLies();
         if (passages.isEmpty()) {
             sortie.println("Aucune nuit liée à une participation : rien à rattraper.");
@@ -324,8 +325,8 @@ public final class MetadonneesPassage implements Callable<Integer> {
     private SynchronisationParticipation passerelle() {
         return synchronisation
                 .get()
-                .orElseThrow(() -> new RegleMetierException("Ce geste a besoin de la connexion Vigie-Chiro :"
-                        + " renseignez un jeton (VIGIECHIRO_TOKEN) puis recommencez."));
+                .orElseThrow(() -> new RegleMetierException(
+                        "Ce geste a besoin de la connexion Vigie-Chiro.", new Besoin.Connexion()));
     }
 
     /// Note un fait dans les deux rendus à la fois : la ligne de texte n'est imprimée qu'en mode texte, la

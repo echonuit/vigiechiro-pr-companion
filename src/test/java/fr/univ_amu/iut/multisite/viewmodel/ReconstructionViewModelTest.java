@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.model.Besoin;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.Severite;
@@ -35,8 +36,27 @@ class ReconstructionViewModelTest {
 
         assertThat(viewModel.disponible()).isFalse();
         assertThatThrownBy(viewModel::charger)
-                .isInstanceOf(RegleMetierException.class)
+                .isInstanceOfSatisfying(
+                        RegleMetierException.class,
+                        refus -> assertThat(refus.besoin()).contains(new Besoin.Connexion()))
                 .hasMessageContaining("connexion");
+    }
+
+    @Test
+    @DisplayName("#2756 sans connexion, le bandeau dit où se connecter, et ne le dit qu'une fois")
+    void hors_connexion_le_bandeau_dit_ou_se_connecter() {
+        ReconstructionViewModel viewModel = new ReconstructionViewModel(Optional.empty());
+
+        try {
+            viewModel.charger();
+        } catch (RegleMetierException refus) {
+            viewModel.signalerErreur(refus);
+        }
+
+        assertThat(viewModel.retourProperty().get().texte())
+                .contains("Compléter une nuit demande la connexion")
+                .contains("depuis le menu principal > Se connecter à Vigie-Chiro")
+                .containsOnlyOnce("Se connecter à Vigie-Chiro");
     }
 
     @Test

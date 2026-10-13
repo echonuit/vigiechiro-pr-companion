@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
+import fr.univ_amu.iut.commun.model.Besoin;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -80,8 +81,7 @@ public final class RecupererVigieChiro implements Callable<Integer> {
                 switch (client.moi()) {
                     case ReponseApi.Succes<ProfilVigieChiro>(ProfilVigieChiro identite) -> identite;
                     case ReponseApi.NonConnecte<ProfilVigieChiro> nonConnecte ->
-                        throw new RegleMetierException("Aucun jeton Vigie-Chiro : fournissez --token, la variable"
-                                + " VIGIECHIRO_TOKEN, ou enregistrez une connexion dans l'application.");
+                        throw new RegleMetierException("Aucun jeton Vigie-Chiro.", new Besoin.Connexion());
                     case ReponseApi.Injoignable<ProfilVigieChiro>(String cause) ->
                         throw new RegleMetierException(
                                 "Vigie-Chiro est injoignable (" + cause + ") : vérifiez le réseau et réessayez.");

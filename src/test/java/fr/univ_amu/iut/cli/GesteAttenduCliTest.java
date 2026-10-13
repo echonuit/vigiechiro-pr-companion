@@ -61,6 +61,11 @@ class GesteAttenduCliTest {
 
         assertThat(message).contains("--token").contains("VIGIECHIRO_TOKEN").contains("dans l'application");
         assertThat(message)
+                .as("trois commandes qui lèvent ce besoin n'ont pas d'option --token : la leur promettre"
+                        + " mène à « Unknown option » (#2756)")
+                .doesNotContain("sur cette commande")
+                .contains("quand la commande la propose");
+        assertThat(message)
                 .as("la commande « connexion » n'existe pas : la conseiller mène à « Commande inconnue »")
                 .doesNotContain("vigiechiro connexion");
     }

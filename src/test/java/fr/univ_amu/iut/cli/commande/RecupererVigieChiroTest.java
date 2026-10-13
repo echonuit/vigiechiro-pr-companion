@@ -4,13 +4,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.cli.GesteAttenduCli;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
+import fr.univ_amu.iut.commun.model.Besoin;
+import fr.univ_amu.iut.commun.model.RegleMetierException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
@@ -118,6 +123,27 @@ class RecupererVigieChiroTest {
         assertThat(appele[0])
                 .as("aucun rapprocheur rejoué sans identité vérifiée")
                 .isFalse();
+    }
+
+    @Test
+    @DisplayName("#2756 sans jeton : le refus porte le besoin de connexion, et le geste vient de la surface")
+    void sans_jeton_le_refus_porte_son_besoin() {
+        when(client.moi()).thenReturn(ReponseApi.nonConnecte());
+        CommandLine ligne = ligne(Set.of(c -> Optional.empty()), new StringWriter());
+        List<Exception> remontees = new ArrayList<>();
+        ligne.setExecutionExceptionHandler((exception, commande, parse) -> {
+            remontees.add(exception);
+            return 1;
+        });
+
+        ligne.execute();
+
+        assertThat(remontees).hasSize(1);
+        assertThat(remontees.get(0)).isInstanceOfSatisfying(RegleMetierException.class, refus -> {
+            assertThat(refus.besoin()).contains(new Besoin.Connexion());
+            assertThat(refus.getMessage()).doesNotContain("VIGIECHIRO_TOKEN");
+            assertThat(GesteAttenduCli.message(refus)).containsOnlyOnce("VIGIECHIRO_TOKEN");
+        });
     }
 
     @Test

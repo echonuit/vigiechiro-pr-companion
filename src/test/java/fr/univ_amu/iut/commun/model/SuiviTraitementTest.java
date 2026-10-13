@@ -102,7 +102,9 @@ class SuiviTraitementTest {
 
         when(traitement.etat(PARTICIPATION)).thenReturn(ReponseApi.nonConnecte());
         assertThatThrownBy(() -> suivi.relever(ID_PASSAGE))
-                .isInstanceOf(RegleMetierException.class)
+                .isInstanceOfSatisfying(
+                        RegleMetierException.class,
+                        refus -> assertThat(refus.besoin()).contains(new Besoin.Connexion()))
                 .hasMessageContaining("Non connecté");
 
         verify(releves, never()).enregistrer(org.mockito.ArgumentMatchers.any());

@@ -172,7 +172,7 @@ a8621b6370d8  src/main/java/fr/univ_amu/iut/cli/Cli.java
 cef533cc30a1  src/main/java/fr/univ_amu/iut/cli/CouleurCli.java
 8931262df131  src/main/java/fr/univ_amu/iut/cli/FabriqueGuice.java
 4fa3471c5621  src/main/java/fr/univ_amu/iut/cli/FormatJson.java
-982f8b405ac9  src/main/java/fr/univ_amu/iut/cli/GesteAttenduCli.java
+1142dc264736  src/main/java/fr/univ_amu/iut/cli/GesteAttenduCli.java
 6917084a1c8d  src/main/java/fr/univ_amu/iut/cli/LectureSeule.java
 e3b0c44298fc  src/main/java/fr/univ_amu/iut/cli/StrategieExecutionCli.java
 b97f2eb85f2c  src/main/java/fr/univ_amu/iut/cli/VerdictCli.java
@@ -1436,7 +1436,7 @@ a81c090e58cd  src/test/java/fr/univ_amu/iut/cli/commande/EtatTraitementVigieChir
 4dfa662a5e3c  src/test/java/fr/univ_amu/iut/cli/commande/LancerTraitementVigieChiroTest.java
 ce3bf461fc41  src/test/java/fr/univ_amu/iut/cli/commande/ListerParticipationsVigieChiroTest.java
 ce970b3c71e4  src/test/java/fr/univ_amu/iut/cli/commande/ListerSitesVigieChiroTest.java
-124f870ee797  src/test/java/fr/univ_amu/iut/cli/commande/MetadonneesPassageTest.java
+63dc370a1ac6  src/test/java/fr/univ_amu/iut/cli/commande/MetadonneesPassageTest.java
 535c148316eb  src/test/java/fr/univ_amu/iut/cli/commande/PublierCorrectionsVigieChiroTest.java
 df5fbb5aeec1  src/test/java/fr/univ_amu/iut/cli/commande/QualifierFichierTest.java
 d4fb1b3e6813  src/test/java/fr/univ_amu/iut/cli/commande/QualifierTest.java

@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.multisite.viewmodel;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.model.Besoin;
 import fr.univ_amu.iut.commun.model.FuseauDuSite;
 import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
@@ -241,7 +242,7 @@ public class ReconstructionViewModel {
     /// nuit récupérée, et parler de « reconstruction » y désignait une opération que l'utilisateur ne
     /// demandait plus (#2554, passe 8).
     private ServiceReconstructionPassages exiger() {
-        return service.orElseThrow(() -> new RegleMetierException("Compléter une nuit demande la connexion"
-                + " Vigie-Chiro : connectez-vous (menu principal > Se connecter à Vigie-Chiro) puis recommencez."));
+        return service.orElseThrow(() -> new RegleMetierException(
+                "Compléter une nuit demande la connexion Vigie-Chiro.", new Besoin.Connexion()));
     }
 }
