@@ -92,8 +92,8 @@ graphify query "qui exerce <la méthode> ?" --budget 2500
 
 Sa sortie est elle aussi une hypothèse. Mais **deux hypothèses obtenues par des chemins différents
 valent mieux que la même deux fois**, et un « aucun test » sorti d'un grep n'est qu'une hypothèse : à
-confirmer en ouvrant les fichiers **avant** d'en faire une issue. Une issue fausse coûte plus cher que
-le trou qu'elle prétend signaler.
+confirmer en ouvrant les fichiers **avant** de le nommer en dette. Une dette fausse coûte plus cher
+que le trou qu'elle prétend signaler.
 
 **Et depuis #5532, une réponse RÉSOLUE existe pour cette question-là**, ce qui vaut mieux qu'une
 seconde hypothèse :
@@ -164,4 +164,4 @@ Les deux se rendent, et l'un sans l'autre ne conclut pas la passe.
 | « PIT n'a rien trouvé » | Il ne mute ni les annotations, ni le câblage, ni les FXML |
 | « J'ai ajouté six tests » | Et combien de survivants éliminés ? Un compte seul ne conclut pas |
 | « Il reste un survivant, tant pis » | Il se lit : test à écrire, ou mutation équivalente écartée **en le disant** |
-| « Ce trou, je le noterai » | Un trou assumé devient une issue immédiatement ; tacite, il devient une régression |
+| « Ce trou, je le noterai » | Un trou assumé se nomme immédiatement en dette dans l'EPIC ; tacite, il devient une régression |

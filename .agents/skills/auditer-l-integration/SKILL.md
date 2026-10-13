@@ -31,7 +31,8 @@ rapide à relire. Il juge un état qui n'a jamais existé : ce qui part en produ
 3. CHERCHER  les points d accroche apparus entre-temps qu il faudrait cabler.
 4. TRAQUER   les regressions, et les CONVENTIONS apparues depuis l ouverture.
 5. LIRE      ce que les gardes ECRIVENT, jamais leur seul code de sortie.
-6. CONSIGNER en issue ce qui deborde, au moment ou on le trouve.
+6. ECRIRE    ce qui deborde, au moment ou on le trouve : en dette dans l EPIC,
+             en issue seulement pour un defaut MESURE.
 ```
 
 ## Le delta, et pourquoi il ne se filtre pas
@@ -84,8 +85,11 @@ donc ce que les gardes écrivent, pour ce qu'un code ne dit pas.
 ## Ce qui déborde se consigne, au moment où on le trouve
 
 Cette passe est la première à lire le travail des autres, donc la première à trouver ce qui ne lui
-appartient pas. Une trouvaille s'ouvre en issue tout de suite, rattachée par `--parent` au chantier
-qui traite sa cause, ou au sas des suites. La passe 9 consolide ; elle ne découvre pas.
+appartient pas. Une trouvaille s'écrit tout de suite. Une suite qu'on ne traite pas se nomme en dette
+dans le corps de l'EPIC, que le bilan reprend, sans issue. Un défaut mesuré qui toucherait un
+utilisateur ou ferait mentir un garde ouvre son issue, rattachée par `--parent` au chantier qui traite
+sa cause, ou au sas des suites. La règle vit dans le [cycle de chantier](../../../dev-docs/cycle-de-chantier.md), section « Une trouvaille s'écrit au moment où
+on la fait ». La passe 9 consolide ; elle ne découvre pas.
 
 ## Signaux d'alerte : on s'arrête
 
@@ -97,4 +101,4 @@ qui traite sa cause, ou au sas des suites. La passe 9 consolide ; elle ne décou
 | « Le garde a rougi, j'ai cassé quelque chose » | Un plancher à relever rougit sur un **gain** non verrouillé |
 | « Rien n'a cassé, donc rien n'a changé » | Une convention apparue ne casse rien. C'est ce qui la rend invisible |
 | « Cette convention ressemble à mon travail » | Ouvrir son périmètre et le lire. La ressemblance n'établit rien |
-| « Je noterai cette trouvaille pour la passe 9 » | La 9 consolide, elle ne découvre pas. L'issue s'ouvre maintenant |
+| « Je noterai cette trouvaille pour la passe 9 » | La 9 consolide, elle ne découvre pas. La trouvaille s'écrit maintenant, en dette ou en issue |

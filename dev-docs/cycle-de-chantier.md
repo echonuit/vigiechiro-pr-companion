@@ -276,67 +276,92 @@ sur l'ancienne. La capture était juste par accident de séquence, et rien ne le
 rouge-là, la règle serait restée invisible jusqu'au jour où un outil aurait posé une fraction
 décroissante.
 
-### Une trouvaille se consigne en ISSUE, au moment où on la fait
+### Une trouvaille s'écrit au moment où on la fait, et la plupart ne deviennent pas des issues
 
-Le paragraphe ci-dessus dit de lire la trouvaille. Celui-ci dit ce qu'on en fait ensuite, et le
-geste est immédiat : **on ouvre l'issue tout de suite**, avant de revenir au travail en cours.
+Le paragraphe ci-dessus dit de lire la trouvaille. Celui-ci dit où elle s'écrit, et le geste est
+immédiat : **on l'écrit tout de suite**, avant de revenir au travail en cours. Ce qui dépend de la
+trouvaille est le support, et c'est ici seulement que la règle s'écrit ; les autres pages et les
+compétences y renvoient.
 
-Pas à la clôture, et pas en commentaire. Un commentaire n'a pas d'état, ne se filtre pas, ne remonte
-dans aucune liste, et sort de la vue dès que sa pull request est fusionnée. Une trouvaille qui n'existe
-que là est perdue à la fusion.
+**Une suite qu'on ne traite pas se nomme comme dette, sans issue.** Qu'elle soit trouvée pendant un
+lot ou à la clôture du chantier, elle s'écrit à deux endroits successifs :
+
+- tant que le chantier court, dans le **corps de son EPIC**, fait par fait, avec le fichier, la ligne
+  et le chiffre ;
+- à la clôture, dans le **bilan** de la passe 12 ([`rendre-le-bilan`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.agents/skills/rendre-le-bilan/SKILL.md)),
+  qui la reprend en « dette restante ».
+
+**Une issue ne s'ouvre que pour un défaut mesuré qui toucherait un utilisateur, ou qui ferait mentir
+un garde.** Les deux conditions comptent. Mesuré veut dire qu'on tient le chiffre, le message
+littéral ou la reproduction, et pas une impression ; et le défaut atteint quelqu'un qui se sert du
+produit, ou fait dire à un garde du dépôt une chose fausse.
+
+**Un engagement daté garde son issue.** Ce n'est pas une suite qu'on abandonne : il se tient à une
+date. La loupe de l'[ADR 5539](decisions/5539-un-engagement-date-se-lit-par-un-dispositif.md) ne lit les
+engagements que dans le titre et le corps des issues, et un engagement écrit dans un bilan lui serait
+invisible.
+
+La règle a été décidée par le porteur le 2026-10-06 et confirmée le 2026-10-13 (#6201). Elle
+remplace celle qui faisait de chaque trouvaille une issue, et ce qu'elle a coûté se mesure. Le
+2026-10-06, une journée de travail a fermé une quarantaine d'issues, et le stock n'a baissé que de
+179 à 168 : chaque suite devenait une issue. Le 2026-10-13, une session a ouvert trois issues de
+suite sous #6178, dont deux non mesurées, en appliquant à la lettre ce que cette page disait alors.
 
 **Ce qui se perd n'est pas la trouvaille, c'est son détail.** On se souvient trois jours plus tard
 qu'« il y avait un souci avec le tri des échecs ». On ne se souvient pas que le job avait été coupé à
 92 minutes sur un plafond de 90, que le tableau annonçait 618 classes sur 758, ni que le script rendait
-`0`. Ces trois nombres sont ce qui rend l'issue traitable, et ce sont exactement eux qui ne se
-retrouvent pas. Une issue de trois lignes écrite sur le coup vaut mieux qu'un paragraphe exact écrit de
-mémoire.
+`0`. Ces trois nombres sont ce qui rend la trouvaille traitable, et ce sont exactement eux qui ne se
+retrouvent pas. Trois lignes écrites sur le coup dans le corps de l'EPIC valent mieux qu'un paragraphe
+exact écrit de mémoire au moment du bilan.
 
-Elle se rattache alors à l'un des deux endroits, et le choix ne se discute pas longtemps :
+Quand l'issue s'ouvre, elle se rattache à l'un des deux endroits, et le choix ne se discute pas
+longtemps :
 
-- à l'**EPIC du chantier en cours**, si elle tombe dans son périmètre ;
+- à l'**EPIC du chantier qui traite sa cause**, s'il existe ;
 - sinon à l'**EPIC des suites** ([#4562](https://github.com/echonuit/vigiechiro-pr-companion/issues/4562)),
   qui est un **sas** : rien ne s'y traite directement, et la passe 9 le vide.
 
 En cas de doute, l'EPIC des suites. Un rattachement trop large se corrige en passe 9, qui est faite
-pour cela ; une trouvaille jamais écrite ne se corrige pas.
+pour cela.
 
 **Le rattachement est une sous-issue**, pas une ligne ajoutée au corps de l'EPIC :
 
 ```bash
-gh issue create --parent <EPIC> --title "..."   # à l'ouverture de la trouvaille
+gh issue create --parent <EPIC> --title "..."   # à l'ouverture du défaut mesuré
 gh issue edit <n> --parent <EPIC>               # pour la déplacer
 ```
 
-Une liste tenue à la main dans un corps d'EPIC se périme sans bruit, et elle ne se compte pas. Le
-lien natif se lit par `gh issue view <EPIC> --json parent,subIssues,subIssuesSummary` : chaque issue
-porte son chantier, et la taille d'un EPIC est un nombre plutôt qu'un décompte à l'œil.
+Une liste d'issues tenue à la main dans un corps d'EPIC se périme sans bruit, et elle ne se compte pas.
+Le lien natif se lit par `gh issue view <EPIC> --json parent,subIssues,subIssuesSummary` : chaque issue
+porte son chantier, et la taille d'un EPIC est un nombre plutôt qu'un décompte à l'œil. La dette, elle,
+n'est pas une liste d'issues : c'est la description de ce qu'on laisse, et elle a sa place dans le
+corps.
 
-**La seule dispense, et elle est étroite** : une trouvaille **corrigée dans la pull request en cours**
-n'a pas besoin d'issue. Le corps de la PR la porte, et rien ne peut se perdre entre la trouvaille et
-son remède puisqu'ils voyagent ensemble. C'est le cas de l'auto-test absent découvert en traitant
-#4544, corrigé dans la même PR et jamais consigné ailleurs.
+**La dispense, et elle est étroite** : une trouvaille **corrigée dans la pull request en cours** ne
+s'écrit ni en dette ni en issue. Le corps de la PR la porte, et rien ne peut se perdre entre la
+trouvaille et son remède puisqu'ils voyagent ensemble. C'est le cas de l'auto-test absent découvert en
+traitant #4544, corrigé dans la même PR et jamais consigné ailleurs.
 
 Elle cesse de s'appliquer dès que le remède sort de cette PR, pour quelque raison que ce soit :
-périmètre, taille, ou simplement le fait qu'on le remette à plus tard. À cet instant précis, l'issue
-s'ouvre. « Je le corrige tout de suite » est la formule qui fait disparaître les trouvailles quand
-elle se révèle fausse une heure après.
+périmètre, taille, ou simplement le fait qu'on le remette à plus tard. À cet instant précis, la
+trouvaille s'écrit, en dette ou en issue selon la règle ci-dessus. « Je le corrige tout de suite » est
+la formule qui fait disparaître les trouvailles quand elle se révèle fausse une heure après.
 
 !!! warning "Un compte rendu n'est pas une consignation"
     Signaler la trouvaille dans le corps d'une pull request, dans un commentaire ou dans un rapport de
     fin de tâche **ne compte pas**. Le signalement y est réel et il est pourtant perdu, parce qu'un
     rapport long enterre ses propres trouvailles : qui le lit en diagonale retient la conclusion, pas
-    les trois lignes du milieu.
+    les trois lignes du milieu. Le corps de l'EPIC, lui, se relit à la clôture, et le bilan le reprend.
 
-    Vécu sur #4522, qui en a produit trois. Une seule est devenue une issue sur le coup, #4544, et
-    c'est la seule qui n'a jamais risqué de disparaître. Les deux autres, #4553 et #4554, n'ont été
-    ouvertes qu'après réclamation explicite, alors qu'elles avaient été décrites dès leur
-    découverte. Le signalement ne manquait pas ; il n'avait aucun support qui survive.
+    Vécu sur #4522, qui en a produit trois. Une seule a été consignée sur le coup, #4544, et c'est la
+    seule qui n'a jamais risqué de disparaître. Les deux autres, #4553 et #4554, n'ont été consignées
+    qu'après réclamation explicite, alors qu'elles avaient été décrites dès leur découverte. Le
+    signalement ne manquait pas ; il n'avait aucun support qui survive.
 
-**Ce n'est pas une charge nouvelle.** C'est le même travail que la passe 9 demandait déjà, fait au
-moment où le contexte est frais plutôt que reconstitué. Ce qui change est le coût : quelques minutes
-pendant qu'on a le message d'erreur sous les yeux, contre une demi-heure d'archéologie trois jours plus
-tard, pour un résultat moins juste.
+**Ce n'est pas une charge nouvelle.** Le bilan de la passe 12 devait déjà nommer la dette restante ;
+l'écrire en chemin, c'est le faire au moment où le contexte est frais plutôt que reconstitué. Ce qui
+change est le coût : quelques minutes pendant qu'on a le message d'erreur sous les yeux, contre une
+demi-heure d'archéologie trois jours plus tard, pour un résultat moins juste.
 
 ### REFACTOR : à chaque tour, et à la bonne échelle
 
@@ -461,8 +486,9 @@ de cela ne doit rester uniquement en commentaire.
   trouvailles incidentes.
 
 Une trouvaille incidente s'écrit donc à deux endroits, et le commentaire n'est pas le second : elle a
-déjà son issue, ouverte au moment où on l'a faite (voir « Une trouvaille se consigne en ISSUE »
-ci-dessus). Le commentaire en garde la trace dans le fil ; c'est l'issue qui la porte.
+déjà été écrite au moment où on l'a faite, en dette dans le corps de l'EPIC ou, si c'est un défaut
+mesuré, dans sa propre issue (voir « Une trouvaille s'écrit au moment où on la fait » ci-dessus). Le
+commentaire en garde la trace dans le fil ; c'est l'EPIC ou l'issue qui la porte.
 
 D'où la règle : **tout commentaire qui change la lecture de l'issue est suivi d'une édition du corps.**
 Le commentaire reste comme trace, le corps porte la conclusion.
@@ -554,8 +580,8 @@ La procédure vit dans la compétence [`rendre-le-bilan`](https://github.com/ech
 
 ## Les suites d'une clôture se closent aussi
 
-La passe 9 consolide les issues ouvertes en chemin ; la passe 12 les nomme « dette restante » et clôt
-l'EPIC. Ces issues, une fois livrées, forment un **nouveau delta**, et rien ne les rattrape si l'on
+La passe 9 consolide les issues ouvertes en chemin pour des défauts mesurés ; la passe 12 reprend la
+dette nommée dans le corps de l'EPIC en « dette restante », et clôt l'EPIC. Ces issues, une fois livrées, forment un **nouveau delta**, et rien ne les rattrape si l'on
 considère que le chantier est fini.
 
 Le dépôt l'a vécu trois fois : les suites de l'EPIC #1662 ont formé l'EPIC #1863, dont les suites
@@ -599,10 +625,10 @@ trompé : une analyse fausse laissée en place oriente le chantier suivant.
 - [ ] 4. Doc utilisateur (docs/) + captures
 - [ ] 5. Brief projet (`brief/`, dans la PR du chantier) répercuté si un élément de conception change
 - [ ] 6. Tests : inventaire des usages **depuis le diff** (chemins non nominaux, parité CLI ↔ IHM), E2E qui **traversent les coutures**, **PIT ciblé** (survivants lus un par un) et **E2E `bats`** si la CLI bouge
-- [ ] 6b. Recette **préparée** : chaque capacité ajoutée a sa case `Sxx-NN` dans sa **session propriétaire** (geste + observation attendue), la **fixture** existe ou la spec du générateur est étendue, session manquante ou jamais jouée **signalée en issue**
+- [ ] 6b. Recette **préparée** : chaque capacité ajoutée a sa case `Sxx-NN` dans sa **session propriétaire** (geste + observation attendue), la **fixture** existe ou la spec du générateur est étendue, session manquante ou jamais jouée **nommée en dette dans l'EPIC**
 - [ ] 7. Harmonisation : **audit global** (ce qui ressemble / bénéficierait, exhaustif) puis **refactoring de conceptualisation** (lisibilité ; duplication et abstraction = outils) ; **choix, doutes, conséquences discutés avec l'utilisateur**
 - [ ] 8. Revue visuelle : **toute conséquence visible** couverte par une capture (captures **ajoutées** si besoin), régénérées et ouvertes une par une
-- [ ] 9. Nouveaux chantiers identifiés + issues créées
+- [ ] 9. Sas vidé de ce qui relève du chantier ; suites non traitées nommées en dette, issue seulement pour un défaut mesuré
 - [ ] 10. Changement OpenSpec archivé : delta specs **fusionnées d'abord** dans `openspec/specs/`, toutes les capacités re-comparées, **puis** le dossier déplacé sous `archive/`
 - [ ] 11. ADR du chantier écrites (balayer les passes 0 à 10 ; une décision **de ne pas faire** en est une)
 - [ ] 12. Bilan (livré / dette / décisions) **+ artefact visuel avant/après soumis avant de clore**

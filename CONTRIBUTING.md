@@ -362,15 +362,18 @@ faut réintroduire le défaut à la main pour obtenir le même rouge. Un test qu
 raison que prévu** est une **trouvaille** : lire le message avant de corriger. **Si le rouge dure**
 plus de quelques minutes, le pas était trop gros : revenir au dernier vert et le couper en deux.
 
-**Une trouvaille s'ouvre en issue au moment où on la fait**, pas à la clôture et pas en commentaire.
-Elle se rattache à l'**EPIC du chantier** si elle est dans son périmètre, sinon à l'**EPIC des
-suites** ([#4562](https://github.com/echonuit/vigiechiro-pr-companion/issues/4562)) ; en cas de doute,
-les suites, car la passe 9 est faite pour corriger un rattachement et ne peut rien pour une trouvaille
-jamais écrite. **Le rattachement est une sous-issue** (`gh issue create --parent <EPIC>`), pas une
-ligne ajoutée au corps de l'EPIC : une liste tenue à la main se périme sans bruit et ne se compte
-pas. Ce qui se perd n'est pas la trouvaille mais son **détail** : le chiffre, le numéro de
-run, le message littéral, c'est-à-dire ce qui la rend traitable. Un signalement en commentaire ou dans
-un compte rendu ne compte pas : il est réel, et il sort de la vue à la fusion.
+**Une trouvaille s'écrit au moment où on la fait**, pas à la clôture et pas en commentaire. Une
+suite qu'on ne traite pas se nomme **en dette dans le corps de l'EPIC**, que le bilan de la passe 12
+reprend, et **n'ouvre pas d'issue**. Une issue ne s'ouvre que pour un **défaut mesuré qui toucherait
+un utilisateur, ou qui ferait mentir un garde** ; elle se rattache alors en sous-issue
+(`gh issue create --parent <EPIC>`) à l'EPIC du chantier qui traite sa cause, sinon à l'**EPIC des
+suites** ([#4562](https://github.com/echonuit/vigiechiro-pr-companion/issues/4562)). Un engagement
+daté garde son issue, que la loupe de l'ADR 5539 surveille. Ce qui se perd n'est pas la trouvaille
+mais son **détail** : le chiffre, le numéro de run, le message littéral, c'est-à-dire ce qui la rend
+traitable. Un signalement en commentaire ou dans un compte rendu ne compte pas : il est réel, et il
+sort de la vue à la fusion. La règle et sa raison vivent dans la page du
+[cycle de chantier](dev-docs/cycle-de-chantier.md), section « Une trouvaille s'écrit au moment où on
+la fait ».
 
 **Le REFACTOR est la troisième phase de CHAQUE tour**, pas une étape de fin d'issue ni la seule passe 7 :
 le moment le moins cher pour retravailler un code est celui où l'on s'en souvient, et ce moment dure un
@@ -397,7 +400,7 @@ l'issue se lisent-ils dans six mois **sans** le fil de discussion ?
    rien laissé à rajouter (rebase, nouveaux points d'accroche à câbler, régressions).
 2. **Cohérence CLI ↔ UI** : quand le chantier ajoute/change une **capacité métier**, la **CLI**
    (`fr.univ_amu.iut.cli`) doit exposer l'équivalent (même comportement) ; aligner si petit, sinon
-   ouvrir une issue. « Sans objet » si le chantier est purement présentationnel.
+   ouvrir une issue : l'écart, relevé par les deux inventaires, prive un utilisateur d'une capacité. « Sans objet » si le chantier est purement présentationnel.
 3. **Doc développeur** (site `dev-docs/`) à jour. Chercher aussi **ce qui est devenu FAUX**, pas
    seulement ce qu'il y a à ajouter : une page qui décrit fidèlement un mécanisme **remplacé** ne rougit
    nulle part et se lit comme vraie. Partir des **fichiers touchés** et chercher qui les **cite** dans
@@ -414,7 +417,7 @@ l'issue se lisent-ils dans six mois **sans** le fil de discussion ?
    et le **cas réel**). Un « aucun test » sorti d'un `grep` n'est qu'une **hypothèse** : l'inventaire
    par motif se trompe dans les **deux sens** (homonymes, tests qui pilotent le service sans porter la
    clé de vue, commande invoquée en kebab-case vs classe instanciée). **Confirmer chaque zéro à la
-   main** avant d'en faire une issue. Un E2E vaut par ce qu'il **traverse** : **fusionner** deux scénarios quand le
+   main** avant de le nommer en dette. Un E2E vaut par ce qu'il **traverse** : **fusionner** deux scénarios quand le
    défaut probable est **entre** eux. **La recette se prépare, elle ne se remplit pas des restes** :
    **toute capacité ajoutée** a sa case `Sxx-NN` dans sa **session propriétaire**
    (`dev-docs/recette/sessions/`), parce qu'une capacité dont personne ne sait comment la vérifier à la
@@ -423,7 +426,7 @@ l'issue se lisent-ils dans six mois **sans** le fil de discussion ?
    Si aucune fixture ne porte le cas, **étendre la spec du générateur** fait partie de la passe - une
    donnée bricolée à la main ne revient pas à la campagne suivante. Une case = **un fait observable**,
    jamais un contrôle groupé. Session **partielle ou jamais jouée** (état dans
-   `dev-docs/recette/index.md`, seule source) : **le dire en issue**, sinon la capacité est réputée
+   `dev-docs/recette/index.md`, seule source) : **le nommer en dette dans l'EPIC**, sinon la capacité est réputée
    vérifiable par un script qui ne la couvre pas. Un **garde-fou de non-régression se vérifie en le voyant rouge** : **PIT ciblé**
    (`-Pmutation`, exhaustif sur une classe et rapide) pour le code Java, **mutation à la main** pour ce
    que PIT ne mute pas (attribut d'annotation, câblage, FXML, sonde réseau). Un test vert n'est qu'une
@@ -446,7 +449,7 @@ l'issue se lisent-ils dans six mois **sans** le fil de discussion ?
    coupé, un glyphe absent ou une régression de style ne font rougir aucun test. C'est la passe
    précédente (CSS, socle) qui est la plus à même de casser un écran sans casser un test, d'où cette
    relecture **juste après** elle.
-9. **Suites consolidées** : l'EPIC des suites relu, regroupé, les rattachements tranchés, et ce que la clôture a elle-même révélé ajouté.
+9. **Suites consolidées** : l'EPIC des suites relu, regroupé, les rattachements tranchés. Ce que la clôture a elle-même révélé se nomme en dette pour le bilan, et n'ouvre une issue que si c'est un défaut mesuré qui toucherait un utilisateur ou ferait mentir un garde.
 10. **Changement OpenSpec archivé** : les delta specs fusionnent d'abord dans `openspec/specs/`, toutes les
     capacités sont re-comparées, **puis** le dossier passe sous `openspec/changes/archive/`. L'ordre inverse
     laisse le changement archivé et la spécification jamais mise à jour, sans que rien ne le dise.
@@ -459,7 +462,7 @@ l'issue se lisent-ils dans six mois **sans** le fil de discussion ?
     décisions : sur le chantier #3151, les cinq ADR sont nées après la passe 3, aucune à l'endroit prévu.
     Une décision **de ne pas faire** est une décision, et c'est celle qu'on oublie : elle ne laisse pas
     de code derrière elle.
-12. **Bilan** : ce qui a été livré, dette restante, décisions (qui **renvoient aux ADR** de la passe 11).
+12. **Bilan** : ce qui a été livré, dette restante (celle que le corps de l'EPIC a nommée en chemin), décisions (qui **renvoient aux ADR** de la passe 11).
     **Et il se montre** : la passe 12 produit un **artefact visuel avant / après**, une ligne par
     conséquence visible, soumis **avant** de clore l'EPIC. Un chantier d'IHM se juge sur ce qu'il change
     à l'écran, et un bilan écrit demande qu'on le croie là où une capture le montre. Ce qui n'a **pas**

@@ -41,14 +41,20 @@ même endroit.
 4. RATTACHER  le reste au chantier qui traite sa CAUSE, en ouvrant l EPIC s il
               n existe pas : gh issue edit <n> --parent <EPIC>
 5. RECADRER   titre et corps de ce qui bouge.
-6. AJOUTER    ce que la cloture elle-meme a revele, en issue tout de suite.
+6. NOMMER     ce que la cloture elle-meme a revele : en dette pour le bilan,
+              en issue seulement pour un defaut MESURE qui toucherait un
+              utilisateur ou ferait mentir un garde.
 7. VERIFIER   la condition de sortie avant de passer a la 10.
 ```
 
 ## La passe ne découvre pas, elle héberge
 
-Chaque trouvaille a **déjà** son issue, ouverte au moment où elle a été faite. Arriver ici avec une
-page blanche est le signe que cette règle n'a pas été tenue, pas que le chantier n'a rien trouvé.
+Chaque trouvaille a **déjà** été écrite au moment où elle a été faite : en dette dans le corps de
+l'EPIC si c'est une suite qu'on ne traite pas, en issue si c'est un défaut mesuré qui toucherait un
+utilisateur ou ferait mentir un garde. La règle vit dans le [cycle de chantier](../../../dev-docs/cycle-de-chantier.md), section « Une trouvaille s'écrit au
+moment où on la fait ». Le sas ne reçoit donc que des défauts mesurés, et la dette ne passe pas par
+lui : la passe 12 la reprend depuis le corps de l'EPIC. Arriver ici avec un EPIC sans dette et un sas
+vide est le signe que la règle n'a pas été tenue, pas que le chantier n'a rien trouvé.
 
 **Relire l'EPIC des suites entier**, et pas seulement ce que ce chantier-ci y a déposé : une
 trouvaille d'un autre chantier peut avoir la même cause, et c'est ici qu'on s'en aperçoit. Vécu à la
@@ -92,7 +98,8 @@ gh issue list --state open --json number,title,parent \
 | « J'ai rangé les suites, la passe est faite » | Le verdict est « reste-t-il quelque chose », pas « ai-je rangé quelque chose » |
 | « Cette suite est dans le périmètre, je la note » | Elle se livre **avant** que la clôture conclue, et les passes balayées se rejouent |
 | « Je relis ce que mon chantier a déposé » | L'EPIC des suites se relit entier. Une trouvaille d'un autre peut avoir la même cause |
-| « Page blanche, ce chantier n'a rien trouvé » | C'est le signe qu'on n'a pas consigné en chemin, pas qu'il n'y avait rien |
-| « Je noterai cette trouvaille de clôture pour plus tard » | Une issue tout de suite. Les passes 0 à 8 trouvent, elles aussi |
+| « Page blanche, ce chantier n'a rien trouvé » | C'est le signe qu'on n'a pas écrit en chemin, pas qu'il n'y avait rien |
+| « Je noterai cette trouvaille de clôture pour plus tard » | Elle s'écrit tout de suite : en dette dans l'EPIC, ou en issue si c'est un défaut mesuré. Les passes 0 à 8 trouvent, elles aussi |
+| « Je ne la traite pas, je lui ouvre une issue au sas » | Une suite qu'on ne traite pas se nomme en dette, sans issue. Le sas ne reçoit qu'un défaut mesuré |
 | « Le rattachement était approximatif, tant pis » | C'est ici qu'il se corrige, et c'est le seul moment prévu |
 | « Le sas grossit, il y a trop de trouvailles » | Ce sont les passes 9 qui ne le lisent pas |

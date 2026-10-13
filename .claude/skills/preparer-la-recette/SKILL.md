@@ -49,8 +49,8 @@ redevienne une intention.
 ```
 1. DESIGNER  la session PROPRIETAIRE : un ecran se deroule en entier dans UNE
              seule session, ailleurs il n est qu ecran de transit.
-2. DIRE      en issue, et non en silence, quand la session est partielle ou
-             jamais jouee.
+2. DIRE      en dette dans l EPIC, et non en silence, quand la session est
+             partielle ou jamais jouee.
 3. ECRIRE    les cases a leur place, en points `Sxx-NN` groupes par etape.
              UNE CASE = UN FAIT OBSERVABLE.
 4. FOURNIR   de quoi les jouer : etendre la SPEC DU GENERATEUR si aucune
@@ -69,8 +69,10 @@ S7 ayant été écrite (#3517) le jour même où le paragraphe affirmait qu'elle
 **Un inventaire ne se duplique pas, il se cite.**
 
 Toutes les sessions ne sont pas au même état. Quand le chantier touche un écran d'une session
-partielle ou jamais jouée, cela se **dit en issue** : sinon la capacité est réputée vérifiable par un
-script qui ne la couvre pas.
+partielle ou jamais jouée, cela se **nomme en dette dans le corps de l'EPIC**, que le bilan reprend :
+sinon la capacité est réputée vérifiable par un script qui ne la couvre pas. Ce n'est pas un défaut
+mesuré, et la règle du [cycle de chantier](../../../dev-docs/cycle-de-chantier.md) le garde hors des
+issues.
 
 ## 3. Une case est un fait observable, écrit pour qui n'était pas là
 
@@ -114,6 +116,6 @@ qu'en passe 4 ([ADR 4903](../../../dev-docs/decisions/4903-la-place-d-un-clip-se
 | « Ce n'est pas automatisable, ça ira en recette » | C'est ainsi que « pas automatisable » devient « pas vérifié » |
 | « La case est écrite, la passe est faite » | Trois pièces. Sans la fixture, elle est écrite et injouable |
 | « Je note l'état des sessions ici » | Un inventaire ne se duplique pas, il se cite. Deux copies ont divergé en quelques heures |
-| « Cette session est partielle, tant pis » | Cela se dit en issue, sinon la capacité passe pour vérifiée |
+| « Cette session est partielle, tant pis » | Cela se nomme en dette dans l'EPIC, sinon la capacité passe pour vérifiée |
 | « Je fabrique la donnée pour l'occasion » | Elle ne reviendra pas à la campagne suivante. La spec du générateur s'étend |
 | « Une case pour vérifier que l'écran marche » | Une case, **un fait observable**, écrit pour qui n'était pas là |

@@ -44,8 +44,11 @@ clôture la relira. C'est la règle d'`AGENTS.md`, et la seule chose que le bloc
 qu'elle s'énonce avant de commencer.
 
 **Un numéro d'EPIC, pas un thème.** La première ligne porte le chantier auquel l'issue
-**appartient**, et le sas des suites n'en est pas un : on y consigne une trouvaille, on n'y prend rien.
-Une issue de suite n'a donc pas de chantier par construction, et le geste attendu est d'en ouvrir un.
+**appartient**, et le sas des suites n'en est pas un : on y rattache un défaut mesuré qui n'a pas encore
+de chantier, on n'y prend rien. Une issue de suite n'a donc pas de chantier par construction, et le
+geste attendu est d'en ouvrir un. Une suite qu'on ne traite pas, elle, ne va pas au sas : elle se nomme
+en dette dans l'EPIC, sans issue (`dev-docs/cycle-de-chantier.md`, « Une trouvaille s'écrit au moment
+où on la fait »).
 Vécu le 27 août : trois sessions ont pris des issues avec `Pris par : sas des suites #4562`, et il a
 fallu les reprendre. C'était moi pour trois d'entre elles. La compétence `ouvrir-une-issue` porte la
 règle et sa raison.
