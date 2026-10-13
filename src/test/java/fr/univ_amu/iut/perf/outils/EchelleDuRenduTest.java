@@ -67,6 +67,19 @@ class EchelleDuRenduTest {
     }
 
     @Test
+    void le_releve_dit_par_quoi_il_a_ete_dessine_et_non_ce_qu_on_a_demande(FxRobot robot) {
+        EchelleDuRendu[] lue = new EchelleDuRendu[1];
+        robot.interact(() -> lue[0] = EchelleDuRendu.lire(new Stage()));
+
+        // Les tests demandent le rendu logiciel par `prism.order=sw` : le relevé doit nommer le dessin
+        // que le processus a réellement pris, pas recopier la demande. Un rendu GPU demandé et refusé
+        // par le poste retombe sur le logiciel sans rien dire, et ses chiffres passeraient pour du GPU.
+        assertThat(lue[0].ligne())
+                .as("le dessin se lit dans le processus (#6171)")
+                .contains("dessin=SWPipeline");
+    }
+
+    @Test
     void une_echelle_de_1_passe() {
         assertThatCode(new EchelleDuRendu(1, 1, 2, 2, REGLAGES, false)::verifier)
                 .as("l'échelle de rendu compte, pas celle que l'écran demande")

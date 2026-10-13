@@ -2042,14 +2042,14 @@ ab70d6f6344b  src/test/java/fr/univ_amu/iut/passage/viewmodel/MemesMotsQueLEcran
 59c6503e55be  src/test/java/fr/univ_amu/iut/passage/viewmodel/SaisieHorairesNuitTest.java
 a8f5b54b21d0  src/test/java/fr/univ_amu/iut/passage/viewmodel/VerificationDuTraitementTest.java
 49766a118987  src/test/java/fr/univ_amu/iut/perf/JeuDuBancTest.java
-bc78503c25a8  src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO3Test.java
+f9e4c4b51ceb  src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO3Test.java
 eace6174d00f  src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO5Test.java
 0f83f49f3cdf  src/test/java/fr/univ_amu/iut/perf/outils/DatationDesEcarts.java
 8b1bdb842238  src/test/java/fr/univ_amu/iut/perf/outils/DatationDesEcartsTest.java
-96fe3f217372  src/test/java/fr/univ_amu/iut/perf/outils/EchelleDuRendu.java
+535fa25dfcc2  src/test/java/fr/univ_amu/iut/perf/outils/EchelleDuRendu.java
 8c8958cd2741  src/test/java/fr/univ_amu/iut/perf/outils/EchelleDuRenduTest.java
 f20d25e20b48  src/test/java/fr/univ_amu/iut/perf/outils/EcranDuBanc.java
-6d60c27b4da6  src/test/java/fr/univ_amu/iut/perf/outils/InstrumentsDuBanc.java
+5ea1701c1914  src/test/java/fr/univ_amu/iut/perf/outils/InstrumentsDuBanc.java
 83e308799b67  src/test/java/fr/univ_amu/iut/perf/outils/JalonsDeLImport.java
 a915ebf9d263  src/test/java/fr/univ_amu/iut/qualification/AgregationVerdictTest.java
 134e5d009078  src/test/java/fr/univ_amu/iut/qualification/FenetreDeCouvertureTest.java

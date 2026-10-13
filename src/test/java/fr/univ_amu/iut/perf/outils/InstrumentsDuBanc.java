@@ -328,6 +328,33 @@ final class InstrumentsDuBanc {
             }
         }
 
+        /// Les ouvertures d'écran d'une navigation, chacune avec son début et l'instant où l'écran est
+        /// prêt, puis une ligne par écart de plus de 100 ms, situé parmi elles (#6171).
+        void noterNavigationDatee(int nuit, DatationDesEcarts datation, List<String> durees, Gel gel) {
+            lignes.add(String.format(
+                    Locale.ROOT, "%s\touvertures après la nuit %d\t%s", titre, nuit, String.join(" · ", durees)));
+            lignes.add(String.format(
+                    Locale.ROOT, "%s\tjalons de la navigation après la nuit %d\t%s", titre, nuit, datation.jalons()));
+            for (EcartDate ecart : gel.dates()) {
+                lignes.add(String.format(
+                        Locale.ROOT,
+                        "%s\técart daté, navigation après la nuit %d\t%s",
+                        titre,
+                        nuit,
+                        datation.ligne(ecart)));
+            }
+        }
+
+        /// La première ouverture de chaque écran dans le processus, publiée à part sous son nom (#6171) :
+        /// elle charge le FXML, les classes et le CSS d'un écran jamais ouvert, ce qu'aucune autre ne paie.
+        void noterPremieresOuvertures(List<String> durees) {
+            lignes.add(String.format(
+                    Locale.ROOT,
+                    "%s\tpremières ouvertures du processus, à froid\t%s",
+                    titre,
+                    String.join(" · ", durees)));
+        }
+
         /// Le témoin de la datation : de combien l'écart daté déborde le blocage, de chaque côté.
         void noterTemoinDeDatation(long ms, BlocageDate temoin) {
             lignes.add(String.format(

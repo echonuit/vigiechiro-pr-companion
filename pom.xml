@@ -27,6 +27,11 @@
              `recette-filmee` les bascule ensemble ; les poser une par une est justement ce qu'il
              faut éviter, puisque deux d'entre elles échouent SANS RIEN DIRE (voir ce profil). -->
         <recette.glass.platform>Headless</recette.glass.platform>
+        <!-- Le dessin des tests : logiciel, pour ne dépendre d'aucune carte graphique. Le banc de l'IHM
+             se tire aussi en rendu GPU par -Drecette.prism.order=es2 : une ouverture d'écran y est
+             suivie d'une image de moins de 100 ms, contre 176 à 193 ms en logiciel (ADR 6171). Son relevé
+             écrit le dessin que le processus a réellement pris. -->
+        <recette.prism.order>sw</recette.prism.order>
         <recette.testfx.robot>glass</recette.testfx.robot>
         <recette.awt.headless>true</recette.awt.headless>
         <!-- Repères d'une séance filmée : où consigner l'instant de chaque cas joué (#3774).
@@ -827,7 +832,7 @@
                          glass.platform=Headless, pas de TestFX. -->
                     <systemPropertyVariables>
                         <glass.platform>${recette.glass.platform}</glass.platform>
-                        <prism.order>sw</prism.order>
+                        <prism.order>${recette.prism.order}</prism.order>
                         <java.awt.headless>${recette.awt.headless}</java.awt.headless>
                         <testfx.robot>${recette.testfx.robot}</testfx.robot>
                         <!-- Repères de séance filmée (#3774). Les deux vont ensemble : la détection
