@@ -3,6 +3,8 @@ package fr.univ_amu.iut.perf.outils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.view.Confirmateur;
+import fr.univ_amu.iut.perf.outils.DatationDesEcarts.EcartDate;
+import fr.univ_amu.iut.recette.Attente;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -36,6 +38,13 @@ final class InstrumentsDuBanc {
     static final long DELAI_GESTE_MS = 120_000;
     private static final long MIO = 1024L * 1024L;
     private static final double SEUIL_GEL_MS = 200;
+
+    /// Un écart se date dès 100 ms, la moitié du seuil : ce qui approche le seuil sans le franchir dit
+    /// déjà où le fil JavaFX peine, et un tir sur deux le franchira au même endroit.
+    private static final double SEUIL_DATATION_MS = 100;
+
+    /// Les images qu'on laisse passer après un travail du fil JavaFX avant de relever la sonde.
+    static final int IMAGES_DE_GARDE = 2;
 
     private InstrumentsDuBanc() {}
 
@@ -90,6 +99,48 @@ final class InstrumentsDuBanc {
         }
     }
 
+    /// Le témoin de la datation (#6175) : bloque le fil JavaFX `ms` millisecondes à un instant relevé, et
+    /// rend ce que la sonde en a daté. La sonde tourne déjà ; elle est remise à zéro, et le plus long
+    /// écart de trente images au calme donne la durée d'une image sur ce poste.
+    static BlocageDate bloquerEtDater(SondeImages sonde, long ms) throws Exception {
+        reinitialiser(sonde);
+        attendreLesImages(sonde, 30);
+        long uneImageNs = Math.round(sonde.relever().maxMs() * 1e6);
+        reinitialiser(sonde);
+        attendreLesImages(sonde, 3);
+        long[] bornes = new long[2];
+        surLeFil(() -> {
+            bornes[0] = System.nanoTime();
+            bloquerLeFil(ms);
+            bornes[1] = System.nanoTime();
+            return null;
+        });
+        attendreLesImages(sonde, sonde.relever().images() + IMAGES_DE_GARDE);
+        return new BlocageDate(bornes[0], bornes[1], uneImageNs, sonde.relever().dates());
+    }
+
+    /// Attend que la sonde ait vu `images` images depuis sa remise à zéro. Un écart ne se compte qu'à
+    /// l'image qui le ferme : relever juste après un travail du fil JavaFX, c'est ne pas voir le sien.
+    static void attendreLesImages(SondeImages sonde, long images) {
+        Attente.que(
+                () -> {
+                    try {
+                        return sonde.relever().images() >= images;
+                    } catch (Exception echec) {
+                        throw new IllegalStateException(echec);
+                    }
+                },
+                "la sonde n'a pas vu " + images + " images",
+                DELAI_GESTE_MS);
+    }
+
+    private static void reinitialiser(SondeImages sonde) throws Exception {
+        surLeFil(() -> {
+            sonde.reinitialiser();
+            return null;
+        });
+    }
+
     static <T> T surLeFil(Callable<T> lecture) throws Exception {
         return WaitForAsyncUtils.asyncFx(lecture).get(DELAI_GESTE_MS, TimeUnit.MILLISECONDS);
     }
@@ -140,12 +191,14 @@ final class InstrumentsDuBanc {
     }
 
     /// L'écart entre deux pulses, relevé à chaque image : l'extrait de `docs/benchmarks/README.md`,
-    /// qui garde ses chiffres au lieu de les imprimer.
+    /// qui garde ses chiffres au lieu de les imprimer. Chaque écart de plus de 100 ms garde aussi les
+    /// instants de ses deux images, pour se situer parmi les jalons d'un import (#6175).
     static final class SondeImages extends AnimationTimer {
         private long precedent;
         private long images;
         private long maxNs;
         private final List<Long> gels = new ArrayList<>();
+        private final List<EcartDate> dates = new ArrayList<>();
 
         @Override
         public void handle(long maintenant) {
@@ -154,6 +207,9 @@ final class InstrumentsDuBanc {
                 maxNs = Math.max(maxNs, ecart);
                 if (ecart > SEUIL_GEL_MS * 1e6) {
                     gels.add(ecart);
+                }
+                if (ecart > SEUIL_DATATION_MS * 1e6) {
+                    dates.add(new EcartDate(precedent, maintenant));
                 }
             }
             precedent = maintenant;
@@ -165,17 +221,37 @@ final class InstrumentsDuBanc {
             images = 0;
             maxNs = 0;
             gels.clear();
+            dates.clear();
         }
 
         Gel relever() throws Exception {
             return surLeFil(() ->
-                    new Gel(images, maxNs / 1e6, gels.stream().map(n -> n / 1e6).toList()));
+                    new Gel(images, maxNs / 1e6, gels.stream().map(n -> n / 1e6).toList(), List.copyOf(dates)));
         }
     }
 
     /// Ce que la sonde a vu sur une période : le nombre d'images, l'écart maximal, les écarts de plus
-    /// de 200 ms.
-    record Gel(long images, double maxMs, List<Double> gelsMs) {}
+    /// de 200 ms, et les écarts de plus de 100 ms avec leurs instants.
+    record Gel(long images, double maxMs, List<Double> gelsMs, List<EcartDate> dates) {}
+
+    /// Un blocage du fil JavaFX posé par le banc, et les écarts que la sonde a datés autour de lui.
+    ///
+    /// @param debutNs l'instant juste avant le blocage
+    /// @param finNs l'instant juste après
+    /// @param uneImageNs le plus long écart entre deux images au calme, juste avant
+    /// @param dates les écarts datés par la sonde
+    record BlocageDate(long debutNs, long finNs, long uneImageNs, List<EcartDate> dates) {
+
+        /// De combien l'écart daté commence avant le blocage, en ms : au plus une image.
+        double avanceMs() {
+            return (debutNs - dates.getFirst().debutNs()) / 1e6;
+        }
+
+        /// De combien l'écart daté finit après le blocage, en ms : au plus une image.
+        double retardMs() {
+            return (dates.getFirst().finNs() - finNs) / 1e6;
+        }
+    }
 
     /// Les lignes d'un banc, imprimées et ajoutées à `releve.tsv` sous la racine du banc.
     ///
@@ -230,6 +306,40 @@ final class InstrumentsDuBanc {
                     gel.images(),
                     gel.maxMs(),
                     enMs(gel.gelsMs())));
+        }
+
+        /// Les jalons de l'import de la nuit, puis une ligne par écart de plus de 100 ms, situé parmi
+        /// eux (#6175). La ligne des jalons finit sur l'heure du clic, qui recoupe le journal de la JVM.
+        void noterDatation(int nuit, JalonsDeLImport jalons, Gel gel) {
+            lignes.add(String.format(
+                    Locale.ROOT,
+                    "%s\tjalons de l'import de la nuit %d\t%s · %s",
+                    titre,
+                    nuit,
+                    jalons.datation().jalons(),
+                    jalons.contexte()));
+            for (EcartDate ecart : gel.dates()) {
+                lignes.add(String.format(
+                        Locale.ROOT,
+                        "%s\técart daté, import de la nuit %d\t%s",
+                        titre,
+                        nuit,
+                        jalons.datation().ligne(ecart)));
+            }
+        }
+
+        /// Le témoin de la datation : de combien l'écart daté déborde le blocage, de chaque côté.
+        void noterTemoinDeDatation(long ms, BlocageDate temoin) {
+            lignes.add(String.format(
+                    Locale.ROOT,
+                    "%s\tcontrôle : blocage de %d ms daté\t%.0f ms, commencé %.1f ms avant et fini %.1f ms après,"
+                            + " pour une image de %.1f ms",
+                    titre,
+                    ms,
+                    temoin.dates().getFirst().ms(),
+                    temoin.avanceMs(),
+                    temoin.retardMs(),
+                    temoin.uneImageNs() / 1e6));
         }
 
         void noterHeap(String moment, long mo) {
