@@ -24,14 +24,15 @@ import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.AccessibleRole;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -41,11 +42,13 @@ import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Controller de l'écran d'accueil **M-Sites** (`MesSites.fxml`).
 ///
-/// Rôle de pur câblage (patron CM4) : il lie l'état vide aux propriétés du [SitesViewModel] et
-/// reconstruit la liste de cartes à chaque changement de la liste observable. Les cartes sont bâties en
-/// code (et non en FXML) car leur nombre est dynamique ; chaque carte est cliquable et délègue
-/// l'ouverture du détail à [NavigationSites]. Aucun accès base de données ici : tout passe par le
-/// ViewModel (règle ArchUnit `view_sans_jdbc`).
+/// Rôle de pur câblage (patron CM4) : il lie l'état vide aux propriétés du [SitesViewModel] et pose la
+/// liste observable des cartes dans une liste **virtualisée** (#6172). Les cartes sont bâties en code
+/// (et non en FXML), une par cellule visible : à cent cinquante carrés, l'écran en construit autant
+/// qu'à quinze, là où il en bâtissait une par site et payait leur CSS et leur mise en page. Chaque
+/// carte est cliquable et délègue l'ouverture du détail à [NavigationSites] ; au clavier, on passe
+/// d'une carte à l'autre par les flèches, et Entrée ou Espace ouvre celle qui a le focus. Aucun accès
+/// base de données ici : tout passe par le ViewModel (règle ArchUnit `view_sans_jdbc`).
 ///
 /// Implémente [ResumeStatut] (#693) : le résumé de l'écran (« N sites déclarés · N passages ») est
 /// affiché dans la **barre de statut** plutôt qu'en sous-titre, le titre étant redondant avec le fil
@@ -73,10 +76,7 @@ public class MesSitesController implements ResumeStatut, RafraichirAuRetour, Sui
     private StackPane hoteOccupation;
 
     @FXML
-    private ScrollPane zoneListe;
-
-    @FXML
-    private VBox listeCartes;
+    private ListView<CarteSite> listeCartes;
 
     @FXML
     private VBox etatVide;
@@ -125,8 +125,8 @@ public class MesSitesController implements ResumeStatut, RafraichirAuRetour, Sui
         // Le résumé de l'écran occupe la zone centre de la barre de statut (#693), plus de sous-titre.
         zonesStatut.bind(Bindings.createObjectBinding(
                 () -> ZonesStatut.centre(viewModel.sousTitreProperty().get()), viewModel.sousTitreProperty()));
-        zoneListe.visibleProperty().bind(viewModel.videProperty().not());
-        zoneListe.managedProperty().bind(viewModel.videProperty().not());
+        listeCartes.visibleProperty().bind(viewModel.videProperty().not());
+        listeCartes.managedProperty().bind(viewModel.videProperty().not());
         etatVide.visibleProperty().bind(viewModel.videProperty());
         etatVide.managedProperty().bind(viewModel.videProperty());
         // Erreur de chargement (#795) : rendue visible seulement quand un message est présent.
@@ -145,7 +145,7 @@ public class MesSitesController implements ResumeStatut, RafraichirAuRetour, Sui
         lblSynchro.textProperty().bind(viewModel.messageSynchroProperty());
         lblSynchro.visibleProperty().bind(viewModel.messageSynchroProperty().isNotEmpty());
         lblSynchro.managedProperty().bind(viewModel.messageSynchroProperty().isNotEmpty());
-        viewModel.cartes().addListener((ListChangeListener<CarteSite>) changement -> reconstruire());
+        installerLaListe();
         occupation = new IndicateurOccupation(hoteOccupation, executeur);
         // Le bouton se ferme par LIAISON, sur l'occupation (#1254) et sur l'absence de jeton (#4194) :
         // empêcher plutôt qu'avertir après coup (#789). Une liaison et non une relecture au chargement,
@@ -269,11 +269,43 @@ public class MesSitesController implements ResumeStatut, RafraichirAuRetour, Sui
         viewModel.compteRendu().rendre(verdict);
     }
 
-    private void reconstruire() {
-        listeCartes.getChildren().clear();
-        for (CarteSite carte : viewModel.cartes()) {
-            listeCartes.getChildren().add(construireCarte(carte));
+    /// La liste porte toutes les cartes du ViewModel et n'en construit que les visibles (#6172).
+    ///
+    /// Entrée et Espace passent par un **filtre** et non par un gestionnaire : le comportement de la
+    /// liste a ses propres usages de ces touches (activation, sélection), et un filtre passe avant lui.
+    private void installerLaListe() {
+        listeCartes.setItems(viewModel.cartes());
+        listeCartes.setCellFactory(liste -> new CelluleCarte());
+        listeCartes.addEventFilter(KeyEvent.KEY_PRESSED, evenement -> {
+            CarteSite carte = listeCartes.getFocusModel().getFocusedItem();
+            if (carte != null && (evenement.getCode() == KeyCode.ENTER || evenement.getCode() == KeyCode.SPACE)) {
+                evenement.consume();
+                navigation.ouvrirDetail(carte.site());
+            }
+        });
+    }
+
+    /// Une cellule de la liste : la carte d'un site, rebâtie quand la cellule change de site.
+    ///
+    /// Le texte accessible est posé sur la cellule, parce que c'est elle qu'un lecteur d'écran annonce
+    /// quand les flèches la font prendre le focus ; la carte garde le sien et son rôle de bouton.
+    private final class CelluleCarte extends ListCell<CarteSite> {
+
+        @Override
+        protected void updateItem(CarteSite carte, boolean vide) {
+            super.updateItem(carte, vide);
+            if (vide || carte == null) {
+                setGraphic(null);
+                setAccessibleText(null);
+                return;
+            }
+            setGraphic(construireCarte(carte));
+            setAccessibleText(texteAccessible(carte));
         }
+    }
+
+    private static String texteAccessible(CarteSite carte) {
+        return "Site carré " + carte.site().numeroCarre() + ", ouvrir le détail";
     }
 
     private HBox construireCarte(CarteSite carte) {
@@ -289,17 +321,11 @@ public class MesSitesController implements ResumeStatut, RafraichirAuRetour, Sui
                         separateur(),
                         colonneActions());
         boite.setOnMouseClicked(evenement -> navigation.ouvrirDetail(carte.site()));
-        // Accessibilité clavier : la carte (HBox, pas un Control) doit être atteignable au Tab et
-        // activable à Entrée/Espace, comme un bouton (opérabilité ISO 25010).
-        boite.setFocusTraversable(true);
-        // Un lecteur d'écran doit l'annoncer comme un bouton et lire l'identité du site (#799).
+        // Le clavier passe par la liste (#6172) : les flèches donnent le focus à la cellule, et Entrée
+        // ou Espace l'ouvrent (`installerLaListe`). Un lecteur d'écran annonce toujours la carte comme
+        // un bouton, avec l'identité du site (#799).
         boite.setAccessibleRole(AccessibleRole.BUTTON);
-        boite.setAccessibleText("Site carré " + carte.site().numeroCarre() + ", ouvrir le détail");
-        boite.setOnKeyPressed(evenement -> {
-            if (evenement.getCode() == KeyCode.ENTER || evenement.getCode() == KeyCode.SPACE) {
-                navigation.ouvrirDetail(carte.site());
-            }
-        });
+        boite.setAccessibleText(texteAccessible(carte));
         return boite;
     }
 

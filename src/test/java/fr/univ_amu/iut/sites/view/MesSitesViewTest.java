@@ -28,6 +28,7 @@ import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.sites.viewmodel.CarteSite;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +37,7 @@ import javafx.scene.AccessibleRole;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -319,27 +321,29 @@ class MesSitesViewTest {
 
     @Test
     @CasDeRecette(value = "S1-15", portee = Portee.A_L_ECRAN)
-    @DisplayName("#799 : une carte est atteignable au Tab, et annoncée comme un bouton")
+    @DisplayName("#6172 : les flèches passent d'une carte à l'autre, et la carte reste annoncée comme un bouton")
     void une_carte_est_atteignable_au_clavier(FxRobot robot) {
-        // Le Tab lui-même n'est pas simulé : ce qui le rend possible est cette propriété, et c'est
-        // elle que le défaut ferait disparaître. Une HBox n'est PAS focalisable par défaut.
-        HBox carte = trouverCarte(robot, "Carré 640380");
-
-        assertThat(carte.isFocusTraversable())
-                .as("sans cela, aucun Tab n'atteint la carte et les deux tests suivants n'ont plus de sujet")
+        // Depuis #6172 la liste est virtualisée : c'est elle qui prend le focus, et les flèches le font
+        // passer d'une carte à l'autre (décision du porteur, à la place du Tab de #799). Une vraie
+        // frappe, pour que le clip montre le geste qui déplace le focus.
+        ListView<CarteSite> liste = listeDesCartes(robot);
+        assertThat(liste.isFocusTraversable())
+                .as("sans cela, aucun clavier n'atteint la liste et les deux tests suivants n'ont plus de sujet")
                 .isTrue();
-        assertThat(carte.getAccessibleRole()).isEqualTo(AccessibleRole.BUTTON);
+        assertThat(trouverCarte(robot, "Carré 640380").getAccessibleRole()).isEqualTo(AccessibleRole.BUTTON);
 
-        // Le clip montrait un écran immobile : une propriété ne se voit pas. Le focus, lui, se voit -
-        // c'est ce que cette propriété rend possible, et c'est ce qu'un utilisateur au clavier obtient.
-        CadreVisible.amener(carte, robot);
+        atteindreAuClavier(robot, "640380");
         Respiration.avantLeGeste(robot);
-        robot.interact(carte::requestFocus);
+        robot.push(KeyCode.DOWN);
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.surLeMomentCle(robot);
 
-        assertThat(carte.isFocused())
-                .as("la carte prend réellement le focus : « focalisable » n'est pas « focalisée »")
+        CarteSite atteinte = liste.getFocusModel().getFocusedItem();
+        assertThat(atteinte.site().numeroCarre())
+                .as("la flèche vers le bas fait passer le focus à la carte suivante")
+                .isEqualTo("752204");
+        assertThat(liste.isFocused())
+                .as("et la liste garde le focus du clavier")
                 .isTrue();
     }
 
@@ -347,15 +351,11 @@ class MesSitesViewTest {
     @CasDeRecette(value = "S1-15", portee = Portee.A_L_ECRAN)
     @DisplayName("#799 : Entrée sur une carte ouvre le détail, comme un clic")
     void entree_ouvre_le_detail(FxRobot robot) {
-        HBox carte = trouverCarte(robot, "Carré 640380");
-
-        // Une VRAIE frappe, sur une carte qui a le focus. Appeler `getOnKeyPressed().handle(...)`
+        // Une VRAIE frappe, sur une carte que le clavier a atteinte. Appeler un gestionnaire à la main
         // prouve le gestionnaire et saute tout le reste : le clip montrait l'écran changer sans qu'aucun
         // geste ne l'explique (#4149). Et l'assertion y gagne - un gestionnaire câblé sur un noeud que
         // le clavier n'atteint jamais ne sert personne.
-        CadreVisible.amener(carte, robot);
-        robot.interact(carte::requestFocus);
-        WaitForAsyncUtils.waitForFxEvents();
+        atteindreAuClavier(robot, "640380");
         Respiration.avantLeGeste(robot);
 
         robot.push(KeyCode.ENTER);
@@ -379,11 +379,7 @@ class MesSitesViewTest {
         // Les deux touches sont éprouvées séparément : le contrôleur les traite dans une seule
         // condition, et retirer une des deux branches ne ferait rougir aucun test qui n'essaie que
         // l'autre.
-        HBox carte = trouverCarte(robot, "Carré 752204");
-
-        CadreVisible.amener(carte, robot);
-        robot.interact(carte::requestFocus);
-        WaitForAsyncUtils.waitForFxEvents();
+        atteindreAuClavier(robot, "752204");
         Respiration.avantLeGeste(robot);
 
         robot.push(KeyCode.SPACE);
@@ -421,6 +417,32 @@ class MesSitesViewTest {
         });
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.surLeMomentCle(robot);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static ListView<CarteSite> listeDesCartes(FxRobot robot) {
+        return robot.lookup("#listeCartes").queryAs(ListView.class);
+    }
+
+    /// Donne le focus à la liste, puis la parcourt aux flèches jusqu'à la carte du carré `numero`,
+    /// comme le ferait quelqu'un au clavier. La carte atteinte est amenée dans le cadre du clip.
+    private static void atteindreAuClavier(FxRobot robot, String numero) {
+        ListView<CarteSite> liste = listeDesCartes(robot);
+        robot.interact(liste::requestFocus);
+        WaitForAsyncUtils.waitForFxEvents();
+        for (int pas = 0; pas <= liste.getItems().size() && !numero.equals(numeroFocalise(liste)); pas++) {
+            robot.push(KeyCode.DOWN);
+            WaitForAsyncUtils.waitForFxEvents();
+        }
+        assertThat(numeroFocalise(liste))
+                .as("les flèches n'atteignent pas la carte du carré %s", numero)
+                .isEqualTo(numero);
+        CadreVisible.amener(trouverCarte(robot, "Carré " + numero), robot);
+    }
+
+    private static String numeroFocalise(ListView<CarteSite> liste) {
+        CarteSite carte = liste.getFocusModel().getFocusedItem();
+        return carte == null ? null : carte.site().numeroCarre();
     }
 
     private static HBox trouverCarte(FxRobot robot, String titre) {

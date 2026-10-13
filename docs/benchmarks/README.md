@@ -206,9 +206,9 @@ chiffre ci-dessous.
 
 | O5, topologie : ouverture | 15 carrés de 2 points | 150 carrés de 2 points | Seuil | Verdict |
 |---|---|---|---|---|
-| Mes sites | 41,9 · 41,4 · 54,1 ms | 346,8 · 360,7 · 339,0 ms | < 50 ms, sans croître | **non tenu** (#6172) |
-| vue multisite | 352,2 · 75,8 · 303,5 ms | 174,1 · 170,8 · 151,3 ms | < 50 ms | **non tenu** (#6172) |
-| écran des sons | 270,0 · 251,7 · 229,5 ms | 106,3 · 113,5 · 119,5 ms | < 50 ms | **non tenu** (#6172) |
+| Mes sites | 41,9 · 41,4 · 54,1 ms | 346,8 · 360,7 · 339,0 ms | < 50 ms, sans croître | **non tenu** ; ne croît plus depuis #6172, voir « Mes sites ne croît plus avec les carrés » |
+| vue multisite | 352,2 · 75,8 · 303,5 ms | 174,1 · 170,8 · 151,3 ms | < 50 ms | **non tenu** (#6171) |
+| écran des sons | 270,0 · 251,7 · 229,5 ms | 106,3 · 113,5 · 119,5 ms | < 50 ms | **non tenu** (#6171) |
 
 | O3, quatre nuits distinctes de 300 WAV de 5 s, un seul processus | Nuit 1 | Nuit 2 | Nuit 3 | Nuit 4 |
 |---|---|---|---|---|
@@ -304,6 +304,49 @@ banc, a suffi à départager le produit du harnais.
 JAVA_TOOL_OPTIONS="-XX:SoftRefLRUPolicyMSPerMB=0" env -u DISPLAY ./mvnw test \
   -Dsurefire.groups=banc-ihm -Dsurefire.excludedGroups=api-live -Dtest=BancIhmO3Test \
   -Dperf.ihm.racine=$HOME/banc-ihm
+```
+
+### Mes sites ne croît plus avec les carrés (#6172)
+
+Mesuré le 2026-10-13 sur le premier poste, en Headless, en-tête imprimé par le banc :
+
+```text
+machine         : 11th Gen Intel(R) Core(TM) i5-1145G7 @ 2.60GHz · 8 cœurs · RAM 30.4 Gio
+exécution       : 25.0.3+9-LTS · Linux 7.0.0-38-generic · heap max 7788 Mo
+échelle         : rendu 1.00 × 1.00 · écran 1.00 × 1.00 · glass.platform=Headless · prism.order=sw · glass.gtk.uiScale=non posée
+```
+
+`BancIhmO5Test#o5_topologie`, un geste jeté puis trois relevés, aux mêmes réglages avant et après. Avant :
+`main` à `4a66871177`, charge du poste sur 1 minute de 1,43 au départ. Après : la même base plus la liste
+virtualisée de #6172, charge de 1,50 au départ et de 4,20 à la fin, la compilation du tir comprise.
+
+| Ouverture de Mes sites | 15 carrés de 2 points | 150 carrés de 2 points |
+|---|---|---|
+| avant | 99,5 · 89,1 · 78,5 ms (premier : 153,5) | 487,2 · 448,1 · 427,5 ms (premier : 618,3) |
+| après | 143,4 · 85,5 · 81,9 ms (premier : 260,2) | 81,8 · 69,0 · 59,4 ms (premier : 86,1) |
+
+Témoin à vide : de 15,1 à 16,0 ms dans les deux tirs.
+
+**Lectures** :
+
+- **La croissance a disparu.** Avant, l'ouverture était environ cinq fois plus lente à 150 carrés qu'à
+  15. Après, le plus haut relevé à 150 carrés vaut 57 % du plus haut à 15 : le critère de #6172, au plus
+  25 % au-dessus, est tenu.
+- **Ce qui croissait.** Une sonde locale, non versée, a décomposé l'ouverture avant le remède. À 150
+  carrés, la lecture en base restait plate (de 10 à 20 ms) et le FXML coûtait 3 à 4 ms. Ce qui suivait
+  les carrés était la construction des cartes, de 40 à 64 ms, puis surtout leur CSS et leur mise en
+  page, de 257 à 335 ms. L'écran bâtissait une carte par site, quand six ou sept tiennent dans la
+  fenêtre. La liste virtualisée ne construit que celles-là, et `MesSitesTopologieViewTest` le garde en
+  comptant des cartes, jamais des millisecondes (ADR 4251).
+- **Le seuil de 50 ms n'est pas tenu** en Headless, ni à 15 ni à 150 carrés. Il est publié tel quel.
+  En Headless, Mes sites à 15 carrés s'ouvre plus lentement que sur l'affichage réel du 2026-10-12
+  (de 41 à 54 ms) : les deux modes ne se comparent pas entre eux.
+
+**Le relancer** :
+
+```bash
+env -u DISPLAY ./mvnw test -Dsurefire.groups=banc-ihm -Dsurefire.excludedGroups=api-live \
+  '-Dtest=BancIhmO5Test#o5_topologie' -Dperf.ihm.racine=$HOME/banc-ihm
 ```
 
 ### Le test de charge à 20 Gio, sur un second poste
@@ -625,7 +668,8 @@ critère a son relevé, et chaque seuil non tenu son issue.
 - **O5, couche données** : sélection des 4031 observations de 11 à 19 ms à chaud (seuil 100 ms) ; tri
   et filtre des 1000 passages de 10 à 12 ms à chaud (seuil 200 ms). Index `#28` en place et verrouillé
   par un test CI. **Dans l'IHM** : tri, filtre et clic tenus (au plus 66 ms) ; à 150 carrés, aucun écran ne
-  s'ouvre sous 50 ms, et Mes sites croît avec les carrés (#6172).
+  s'ouvre sous 50 ms (#6171) ; Mes sites croissait avec les carrés, et ne croît plus depuis sa liste
+  virtualisée (#6172).
 - **O3** : nuit standard de 5,62 Gio en 40 à 49 s ; 9 Gio en 84 à 87 s ; occupation après GC de 81
   à 85 Mo, la nuit standard passant sous `-Xmx128m`. **Dans l'IHM** : pas d'écart de plus de 200 ms pendant l'import ; des écarts de 203 à 758 ms à
   l'ouverture des écrans après import (#6171) ; un heap après GC qui tient son palier sur quatre nuits

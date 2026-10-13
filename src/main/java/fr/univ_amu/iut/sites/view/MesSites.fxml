@@ -2,7 +2,7 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.ListView?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
@@ -12,8 +12,9 @@
 <!--
   M-Sites - « Mes sites de suivi » (écran d'accueil de la feature sites).
   Le bandeau (titre + sous-titre + bouton « + Nouveau site ») et l'ossature sont déclarés ici ;
-  les cartes de sites (nombre variable) sont bâties en code par MesSitesController, qui bascule
-  aussi entre la liste (zoneListe) et l'état vide (etatVide) selon SitesViewModel.videProperty().
+  les cartes de sites sont bâties en code par MesSitesController, une par cellule visible de la liste
+  (#6172), qui bascule aussi entre la liste (listeCartes) et l'état vide (etatVide) selon
+  SitesViewModel.videProperty().
 -->
 <StackPane xmlns="http://javafx.com/javafx"
            xmlns:fx="http://javafx.com/fxml"
@@ -54,9 +55,9 @@
   <!-- Résultat de la synchronisation à la demande (#1045), masqué tant qu'aucune n'a eu lieu. -->
   <Label fx:id="lblSynchro" styleClass="message-synchro" wrapText="true" visible="false" managed="false"/>
 
-  <ScrollPane fx:id="zoneListe" fitToWidth="true" styleClass="zone-liste" VBox.vgrow="ALWAYS">
-    <VBox fx:id="listeCartes" styleClass="liste-cartes" spacing="12.0"/>
-  </ScrollPane>
+  <!-- Liste virtualisée (#6172) : seules les cartes visibles sont construites, à quinze carrés comme à
+       cent cinquante. On passe d'une carte à l'autre par les flèches. -->
+  <ListView fx:id="listeCartes" styleClass="liste-cartes" VBox.vgrow="ALWAYS"/>
 
   <VBox fx:id="etatVide" styleClass="etat-vide" alignment="CENTER" spacing="10.0"
         VBox.vgrow="ALWAYS">

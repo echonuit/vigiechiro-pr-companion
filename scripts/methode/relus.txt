@@ -1182,7 +1182,7 @@ a89f383b46f5  src/main/java/fr/univ_amu/iut/sites/outils/CaptureEcrans.java
 0fb685befe5e  src/main/java/fr/univ_amu/iut/sites/view/ActiviteMesSites.java
 6b007295b015  src/main/java/fr/univ_amu/iut/sites/view/BadgeStatutPlateforme.java
 146671bc3219  src/main/java/fr/univ_amu/iut/sites/view/CartesPointsSite.java
-110ee533484b  src/main/java/fr/univ_amu/iut/sites/view/MesSitesController.java
+480a82c2b622  src/main/java/fr/univ_amu/iut/sites/view/MesSitesController.java
 a46876a7fccb  src/main/java/fr/univ_amu/iut/sites/view/ModalePointController.java
 4bed0d08d847  src/main/java/fr/univ_amu/iut/sites/view/ModaleSiteController.java
 09d1c5c08d5a  src/main/java/fr/univ_amu/iut/sites/view/NavigationSites.java
@@ -2043,7 +2043,7 @@ c14cdbaa71c1  src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO3Test.java
 eace6174d00f  src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO5Test.java
 96fe3f217372  src/test/java/fr/univ_amu/iut/perf/outils/EchelleDuRendu.java
 8c8958cd2741  src/test/java/fr/univ_amu/iut/perf/outils/EchelleDuRenduTest.java
-c22e11027e0e  src/test/java/fr/univ_amu/iut/perf/outils/EcranDuBanc.java
+f20d25e20b48  src/test/java/fr/univ_amu/iut/perf/outils/EcranDuBanc.java
 b96d3a0b2ee4  src/test/java/fr/univ_amu/iut/perf/outils/InstrumentsDuBanc.java
 a915ebf9d263  src/test/java/fr/univ_amu/iut/qualification/AgregationVerdictTest.java
 134e5d009078  src/test/java/fr/univ_amu/iut/qualification/FenetreDeCouvertureTest.java
@@ -2207,7 +2207,8 @@ a40ae01d17ca  src/test/java/fr/univ_amu/iut/sites/model/SynchronisationSitesTest
 2b637c8df5ba  src/test/java/fr/univ_amu/iut/sites/view/LibelleProximiteTest.java
 be40f4ceca19  src/test/java/fr/univ_amu/iut/sites/view/MesSitesEtatVideViewTest.java
 429bc97351c6  src/test/java/fr/univ_amu/iut/sites/view/MesSitesFraicheurViewTest.java
-77ca4a71e01e  src/test/java/fr/univ_amu/iut/sites/view/MesSitesViewTest.java
+074029793877  src/test/java/fr/univ_amu/iut/sites/view/MesSitesTopologieViewTest.java
+25832da5277e  src/test/java/fr/univ_amu/iut/sites/view/MesSitesViewTest.java
 0fe36f7ea18d  src/test/java/fr/univ_amu/iut/sites/view/ModalePointViewTest.java
 2b1b46ec4bf0  src/test/java/fr/univ_amu/iut/sites/view/ModaleSiteCreerSansVerifierTest.java
 d8a89dd5ca6b  src/test/java/fr/univ_amu/iut/sites/view/ModaleSiteVerifierCarreViewTest.java

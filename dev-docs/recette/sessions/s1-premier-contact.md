@@ -134,7 +134,8 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
   rien ne s'affiche (#5860).
 - **S1-14** · Carte de site complète : nom, points, passages, badge fraîcheur, badges « Enregistré / Verrouillé
   sur Vigie-Chiro », chevron ›.
-- **S1-15** · Navigation clavier (Tab / Entrée / Espace) sur les cartes.
+- **S1-15** · Navigation clavier sur les cartes : Tab donne le focus à la liste, les flèches passent
+  d'une carte à l'autre, Entrée ou Espace ouvre la carte atteinte (#6172).
 - **S1-16** · « Récupérer depuis Vigie-Chiro » est présent, et **fermé hors connexion** : grisé, avec un
   motif qui nomme le geste manquant - « Connectez-vous depuis le menu principal, entrée "Se connecter à
   Vigie-Chiro…" ». Se connecter le rouvre **sans quitter l'écran**, et la récupération rend compte dans
