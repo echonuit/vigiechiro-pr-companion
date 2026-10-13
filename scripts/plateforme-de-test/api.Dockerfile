@@ -121,7 +121,11 @@ ENV BACKEND_URL_PREFIX=/api/v1 \
 
 EXPOSE 8080
 
-# `runserver.py` fait `app.run()` sans hôte : Flask écouterait sur 127.0.0.1 DANS le conteneur, et le
-# port publié ne mènerait à rien. Le rechargeur est laissé de côté : une API qui redémarre au milieu
-# d'un test rend un verdict qu'on ne sait pas lire.
-CMD ["python", "-c", "from vigiechiro import app, settings; app.run(host='0.0.0.0', port=settings.PORT)"]
+# L'API est lancée par `gunicorn`, comme l'amont la lance en production (son `Procfile`), et non par
+# le serveur de développement de Flask (#6183). Celui-ci laissait par intermittence une écriture sans
+# réponse : la requête manquait au journal de l'API, qui n'avait ni redémarré ni planté, et la JVM
+# lisait « header parser received no bytes ». Les workers synchrones ne gardent aucune connexion
+# ouverte, donc aucune ne peut être réutilisée après que le serveur l'a fermée. Le réglage, et ce qui
+# garde au journal de l'API une ligne par requête, sont dans `gunicorn.conf.py`.
+COPY gunicorn.conf.py /plateforme/gunicorn.conf.py
+CMD ["gunicorn", "--config", "/plateforme/gunicorn.conf.py", "vigiechiro:app"]

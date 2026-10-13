@@ -550,6 +550,10 @@ fork, chaque ligne datée à sa réception par la JVM. Le job les dépose en art
 laquelle elle répond : une écriture que la JVM dit sans réponse se cherche là, à l'instant de
 l'échec. `JournauxDeLaPlateformeDeTestTest` exige d'y relire une requête marquée.
 
+L'API de la plateforme est lancée par `gunicorn`, comme l'amont la lance en production, et non par le
+serveur de développement de Flask. Celui-ci laissait par intermittence une écriture sans réponse, que
+ces journaux ont montrée absente du côté de l'API (#6183, #5818).
+
 Un scénario d'écran peut aussi se **filmer** sur cette cible : `tournage-recette.yml` prend l'entrée
 `plateforme_de_test`, et ses clips vont sur leur propre pré-version, où ils se comparent d'un tournage
 au suivant (#5644). Un scénario qui n'existe que sur la plateforme de test porte en plus
