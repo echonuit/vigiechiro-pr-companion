@@ -225,10 +225,12 @@ jobs:
       - name: "Verser les journaux de la plateforme quand le job rougit (#6183)"
         # La JVM ne voit d'un rouge que l'ecriture restee sans reponse. Les journaux de l'API, du faux
         # S3 et de Mongo disent ce qu'ils faisaient au meme instant, chaque ligne datee a sa reception.
+        # Le nom porte la tentative, comme les clips de `tournage-recette.yml` : la mesure de #6183
+        # relance ce job, et chaque tentative rouge garde ainsi ses propres journaux.
         if: ${{ failure() && steps.portee.outputs.concerne == 'oui' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: journaux-de-la-plateforme
+          name: journaux-de-la-plateforme-${{ github.run_attempt }}
           path: |
             target/plateforme-de-test/journaux/
             target/surefire-reports/
