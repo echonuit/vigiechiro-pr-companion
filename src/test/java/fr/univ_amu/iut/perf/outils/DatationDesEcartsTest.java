@@ -10,10 +10,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import fr.univ_amu.iut.perf.outils.DatationDesEcarts.EcartDate;
 import fr.univ_amu.iut.perf.outils.InstrumentsDuBanc.BlocageDate;
 import fr.univ_amu.iut.perf.outils.InstrumentsDuBanc.Gel;
+import fr.univ_amu.iut.perf.outils.InstrumentsDuBanc.Releve;
 import fr.univ_amu.iut.perf.outils.InstrumentsDuBanc.SondeImages;
 import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.testfx.framework.junit5.ApplicationExtension;
 
 /// Le banc de l'IHM date ses écarts : chacun porte son début et sa fin, et se situe parmi les jalons de
@@ -138,6 +144,27 @@ class DatationDesEcartsTest {
                 return null;
             });
         }
+    }
+
+    @Test
+    void le_releve_situe_un_ecart_de_navigation_parmi_les_ouvertures(@TempDir Path racine) throws Exception {
+        DatationDesEcarts navigation = new DatationDesEcarts();
+        navigation.marquer("ouvre sons 1", CLIC);
+        navigation.marquer("sons 1 prêt", CLIC + 120 * MS);
+        navigation.marquer("ouvre Mes sites 2", CLIC + 400 * MS);
+        Gel gel = new Gel(12, 185, List.of(), List.of(new EcartDate(CLIC + 110 * MS, CLIC + 295 * MS)));
+        Releve releve = new Releve(racine, "témoin", new EchelleDuRendu(1, 1, 1, 1, "réglages", false));
+
+        releve.noterNavigationDatee(2, navigation, List.of("sons 1 120 ms"), gel);
+        releve.noterPremieresOuvertures(List.of("Mes sites 1 122 ms", "multisite 1 465 ms"));
+        releve.ecrire();
+
+        assertThat(Files.readAllLines(racine.resolve("releve.tsv"), StandardCharsets.UTF_8))
+                .contains(
+                        "témoin\touvertures après la nuit 2\tsons 1 120 ms",
+                        "témoin\técart daté, navigation après la nuit 2\t185 ms, de +0.110 s à +0.295 s :"
+                                + " après « ouvre sons 1 », contient « sons 1 prêt », avant « ouvre Mes sites 2 »",
+                        "témoin\tpremières ouvertures du processus, à froid\tMes sites 1 122 ms · multisite 1 465 ms");
     }
 
     /// Un import daté comme le banc le date : le clic, puis ses cinq jalons.

@@ -3,7 +3,8 @@ package fr.univ_amu.iut.perf.outils;
 import java.util.Locale;
 import javafx.stage.Window;
 
-/// L'échelle à laquelle le banc de l'IHM a dessiné, lue dans le processus sur sa fenêtre (#6177).
+/// L'échelle à laquelle le banc de l'IHM a dessiné, lue dans le processus sur sa fenêtre (#6177), et le
+/// dessin qu'il a pris, lu dans le processus lui aussi (#6171).
 ///
 /// Le banc dessine en rendu logiciel (`prism.order=sw`, posé par le pom). Sur un écran que le système
 /// double, chaque image compte quatre fois plus de pixels : le 2026-10-12, sur un même poste, les écarts
@@ -15,6 +16,11 @@ import javafx.stage.Window;
 /// à une autre échelle que 1 ([#refus()]), sauf dérogation posée par `-Dperf.ihm.echelle=ecran`, que le
 /// relevé écrit alors à côté de ses chiffres : on peut vouloir mesurer ce qu'un écran dense coûte au
 /// dessin logiciel, mais jamais sans le dire.
+///
+/// Le dessin compte autant que l'échelle (#6171) : à l'échelle 1, une ouverture d'écran est suivie d'une
+/// image de 176 à 193 ms en rendu logiciel, et d'aucune de plus de 122 ms en rendu GPU. Le relevé écrit
+/// donc `dessin=`, le pipeline que Prism a réellement pris : un rendu GPU demandé par
+/// `-Drecette.prism.order=es2` et refusé par le poste retombe sur le logiciel sans rien dire.
 ///
 /// @param renduX l'échelle de rendu de la fenêtre (`Window#getRenderScaleX`), celle du dessin
 /// @param renduY la même, verticale
@@ -34,8 +40,12 @@ record EchelleDuRendu(double renduX, double renduY, double ecranX, double ecranY
     /// Lit l'échelle de `fenetre` et les réglages d'affichage de la JVM. Sur le fil JavaFX, la fenêtre
     /// affichée : avant `show()`, l'écran n'a encore rien demandé.
     static EchelleDuRendu lire(Window fenetre) {
-        String reglages =
-                String.join(" · ", reglage("glass.platform"), reglage("prism.order"), reglage("glass.gtk.uiScale"));
+        String reglages = String.join(
+                " · ",
+                reglage("glass.platform"),
+                reglage("prism.order"),
+                "dessin=" + dessin(),
+                reglage("glass.gtk.uiScale"));
         return new EchelleDuRendu(
                 fenetre.getRenderScaleX(),
                 fenetre.getRenderScaleY(),
@@ -43,6 +53,19 @@ record EchelleDuRendu(double renduX, double renduY, double ecranX, double ecranY
                 fenetre.getOutputScaleY(),
                 reglages,
                 DEROGATION.equals(System.getProperty(PROPRIETE_DEROGATION)));
+    }
+
+    /// Le pipeline que Prism a pris, par son nom de classe (`SWPipeline`, `ES2Pipeline`). Il se lit par
+    /// réflexion : `com.sun.prism` n'est pas exporté, et les tests tournent sur le chemin de classes.
+    private static String dessin() {
+        try {
+            Object pipeline = Class.forName("com.sun.prism.GraphicsPipeline")
+                    .getMethod("getPipeline")
+                    .invoke(null);
+            return pipeline == null ? "aucun" : pipeline.getClass().getSimpleName();
+        } catch (ReflectiveOperationException illisible) {
+            return "illisible (" + illisible.getClass().getSimpleName() + ")";
+        }
     }
 
     private static String reglage(String cle) {
