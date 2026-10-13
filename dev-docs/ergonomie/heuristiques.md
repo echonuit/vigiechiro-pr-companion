@@ -100,11 +100,11 @@ voisines de sujet sans être des doublons. Toute fusion se décide par paire, et
 
 Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-ergonomie.py`, et gardée par lui.
 
-**32 rattachement(s), portés par 21 décision(s).** Les deux nombres diffèrent dès qu'une décision sert plusieurs heuristiques : c'est le cas ordinaire, et les confondre ferait croire à une couverture qui n'existe pas.
+**33 rattachement(s), portés par 22 décision(s).** Les deux nombres diffèrent dès qu'une décision sert plusieurs heuristiques : c'est le cas ordinaire, et les confondre ferait croire à une couverture qui n'existe pas.
 
 | Clé | Heuristique | ADR | Lesquelles |
 |---|---|---:|---|
-| `nielsen-1` | Visibilité de l'état du système | 8 | [4984-le-protocole-est-un-plancher-et-ce-qu-on-ignore-ne-se-decide-pas](../decisions/4984-le-protocole-est-un-plancher-et-ce-qu-on-ignore-ne-se-decide-pas.md), [5065-un-verdict-dit-ce-qu-il-n-a-pas-juge](../decisions/5065-un-verdict-dit-ce-qu-il-n-a-pas-juge.md), [5093-la-couverture-et-la-completude-sont-deux-axes](../decisions/5093-la-couverture-et-la-completude-sont-deux-axes.md), et 5 autres |
+| `nielsen-1` | Visibilité de l'état du système | 9 | [4984-le-protocole-est-un-plancher-et-ce-qu-on-ignore-ne-se-decide-pas](../decisions/4984-le-protocole-est-un-plancher-et-ce-qu-on-ignore-ne-se-decide-pas.md), [5065-un-verdict-dit-ce-qu-il-n-a-pas-juge](../decisions/5065-un-verdict-dit-ce-qu-il-n-a-pas-juge.md), [5093-la-couverture-et-la-completude-sont-deux-axes](../decisions/5093-la-couverture-et-la-completude-sont-deux-axes.md), et 6 autres |
 | `nielsen-2` | Correspondance avec le monde réel | 3 | [4366-un-avertissement-se-dit-en-mots](../decisions/4366-un-avertissement-se-dit-en-mots.md), [5824-l-ecran-et-la-commande-n-offrent-et-ne-nomment-que-ce-qui-sert](../decisions/5824-l-ecran-et-la-commande-n-offrent-et-ne-nomment-que-ce-qui-sert.md), [5839-le-point-fixe-n-impose-aucune-distance-entre-deux-points](../decisions/5839-le-point-fixe-n-impose-aucune-distance-entre-deux-points.md) |
 | `nielsen-3` | Contrôle et liberté | 1 | [5867-le-repli-manuel-s-offre-apres-un-refus-sans-recours](../decisions/5867-le-repli-manuel-s-offre-apres-un-refus-sans-recours.md) |
 | `nielsen-4` | Cohérence et standards | 5 | [4368-l-apostrophe-d-un-libelle-est-droite](../decisions/4368-l-apostrophe-d-un-libelle-est-droite.md), [5676-un-geste-a-un-seul-point-d-action-et-son-resultat-se-lit-pres-de-lui](../decisions/5676-un-geste-a-un-seul-point-d-action-et-son-resultat-se-lit-pres-de-lui.md), [5688-une-position-se-saisit-d-une-seule-facon](../decisions/5688-une-position-se-saisit-d-une-seule-facon.md), et 2 autres |

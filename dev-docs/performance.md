@@ -112,7 +112,10 @@ Deux questions distinctes, qu'il est tentant de confondre :
   virtuel + `Semaphore`. Elle **calcule** (DEFLATE, transformation audio) → `newFixedThreadPool`
   dimensionné sur `availableProcessors()`, parce que des fils virtuels ne multiplient pas les cœurs.
 - **Quelle borne ?** Elle se chiffre sur **ce qu'elle protège**, pas sur le mécanisme : la politesse
-  envers la plateforme (5 ou 8), le pic disque (fenêtre 2), les cœurs, ou le débit du support source.
+  envers la plateforme (5 ou 8), le pic disque (fenêtre 2), les cœurs, ou la réactivité de l'interface.
+  Une tâche de fond qui calcule pendant qu'un écran est affiché mène de front la **moitié** des cœurs
+  (`ParallelismeDeFond`) : sur tous, l'import gelait l'écran jusqu'à 442 ms
+  ([ADR 6175](decisions/6175-une-tache-de-fond-qui-calcule-laisse-la-moitie-des-coeurs-a-l-interface.md)).
 
 Le socle est [`ExecutionParallele`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/model/ExecutionParallele.java) :
 fils virtuels bornés, ordre préservé, progression monotone, annulation coopérative. Le détail et la

@@ -221,7 +221,8 @@ chiffre ci-dessous.
 **Lectures** :
 
 - **Pendant l'import, aucun écart ne dépasse 200 ms** : tenu, sur des nuits de 300 WAV. L'import tourne hors
-  du fil JavaFX. À 20 Gio, sur un second poste, le seuil ne tient plus : voir plus bas (#6175).
+  du fil JavaFX. À 20 Gio, sur un second poste, le seuil ne tenait pas le 2026-10-12 ; il tient depuis
+  que l'import laisse des cœurs à l'interface : « L'import ne gèle plus le fil JavaFX » (#6175).
 - **En navigation après l'import, le seuil n'est pas tenu** (#6171) : les écarts tombent à l'ouverture
   des écrans, à chaque nuit, et pas seulement à la première ouverture. Ils ne grandissent pas avec le
   nombre de nuits en base.
@@ -422,8 +423,9 @@ déjà importée ».
   mémoire disponible, presque toute la source.
 - **À 20 Gio, le seuil de 200 ms n'est pas tenu pendant l'import** (#6175) : 472 puis 465 ms, trois
   écarts à chaque tir, quelle que soit l'échelle. À 300 WAV et à l'échelle 1, le même poste le tient
-  (de 99 à 114 ms), comme le premier (de 76 à 151 ms). À affichage égal, c'est donc la taille de la
-  nuit qui fait passer le seuil.
+  (de 99 à 114 ms), comme le premier (de 76 à 151 ms). La lecture du jour, « c'est la taille de la
+  nuit qui fait passer le seuil », a été démentie le lendemain par la datation des écarts : voir
+  « L'import ne gèle plus le fil JavaFX ».
 - **L'échelle de l'écran change tout le reste.** À l'échelle par défaut, la sonde voit de 14 à
   24 images par seconde pendant l'import, contre 23 à 41 à l'échelle 1 ; les nuits de 300 WAV
   dépassent le seuil (de 224 à 338 ms) et la navigation gèle de 1,2 à 1,3 s. Ces chiffres-là
@@ -465,6 +467,93 @@ JAVA_TOOL_OPTIONS="-Djava.io.tmpdir=$HOME/banc-20go/tmp -Dglass.gtk.uiScale=1 \
   ./mvnw test -Precette-filmee -Dsurefire.groups=banc-ihm -Dsurefire.excludedGroups=api-live \
   -Dtest=BancIhmO3Test -Dperf.ihm.racine=$HOME/banc-20go/ihm -Dperf.ihm.nuits=1 -Dperf.ihm.wav=5593
 ```
+
+### L'import ne gèle plus le fil JavaFX (#6175)
+
+Mesuré le 2026-10-13 sur le second poste, celui de la section précédente : Core Ultra 7 255H, 16 cœurs
+de trois familles (six à 5,1 GHz, huit à 4,4, deux à 2,5), 30,3 Gio, JDK 25.0.3, Linux 7.0.0.
+`BancIhmO3Test` sur l'affichage réel (XWayland, profil `recette-filmee`, rendu logiciel), à l'échelle 1
+écrite par le banc (`rendu 1.00 × 1.00`, `glass.gtk.uiScale=1`), fenêtre de 1280 × 860, une nuit par
+tir sauf mention.
+
+**Le banc date ses écarts.** La sonde garde l'instant de chaque écart de plus de 100 ms, et le banc
+marque six jalons lus sur les nœuds de l'assistant : le clic, le plan établi (la table de suivi reçoit
+ses lignes), le premier et le dernier fichier terminé à l'écran, le passage à `TERMINE` et le compte
+rendu. Chaque écart se situe parmi eux. Le tir s'ouvre sur son témoin, un blocage de 300 ms posé à un
+instant connu : sur les trente et un tirs de la journée il est daté de 3,2 à 15,2 ms avant son début
+et de 0,2 à 0,6 ms après sa fin, soit à moins d'une image à 60 par seconde. Les écouteurs du banc
+coûtent de 0,2 à 8,4 ms au plan établi, écrits dans chaque relevé.
+
+**La cause : le processeur pris par la transformation.** `main` à `09b3b2447` plus la datation, où
+l'import mène de front autant de transformations que le poste a de cœurs. Le nombre de traitements
+de front est émulé par celui des fils porteurs (`-Djdk.virtualThreadScheduler.parallelism` et
+`maxPoolSize`), en tirs alternés, de 10 h 58 à 11 h 17 :
+
+| Traitements de front | 1572 WAV, écart max | 5593 WAV (20 Gio), écart max | Écarts de plus de 100 ms dans la transformation, par tir | Durée à 20 Gio |
+|---|---|---|---|---|
+| 16, le défaut | 178 · 273 · 296 · 442 ms | 103 · 189 · 225 · 258 ms | de 1 à 14 | 12,9 à 13,2 s |
+| 14 | 276 · 387 ms | 93 · 318 ms | de 0 à 11 | 12,8 et 13,1 s |
+| 12 | 155 · 199,5 ms | 90 · 145 ms | de 0 à 11 | 13,2 et 13,5 s |
+| 10 | 125 · 134 ms | 104 · 144 ms | de 0 à 3 | 13,7 et 13,9 s |
+| 8 | 65 · 150 · 185 · 255 ms | 74 · 103 ms | 0 aux six tirs | 14,1 et 14,4 s |
+
+« Dans la transformation » : entre le premier et le dernier fichier terminé. Au défaut, la sonde voit
+de 16 à 42 images par seconde ; à 8, de 44 à 59.
+
+**Le remède : l'import mène de front la moitié des cœurs** (`ParallelismeDeFond`, ADR 6175). Sur le
+code qui le porte, sans option d'émulation, de 13 h 29 à 13 h 32 :
+
+| Nuit | Écart max pendant l'import | Images | Durée | Écarts de plus de 100 ms dans la transformation | Seuil de 200 ms |
+|---|---|---|---|---|---|
+| 5593 WAV (20,00 Gio), tir 1 | 76 ms | 906 | 15,0 s | 0 | tenu |
+| 5593 WAV (20,00 Gio), tir 2 | 134 ms | 891 | 15,1 s | 0 | tenu |
+| 1572 WAV, tir 1 | 244 ms | 185 | 4,0 s | 0 | non tenu, par l'image du plan établi (#6197) |
+| 1572 WAV, tir 2 | 105 ms | 212 | 3,8 s | 0 | tenu |
+| 300 WAV, quatre nuits d'un même processus | 170 · 106 · 52 · 70 ms | 47 · 47 · 44 · 42 | 1,0 · 0,9 · 0,8 · 0,8 s | 0 | tenu |
+
+Charge du poste sur 1 minute au départ des tirs : de 1,5 à 7,4, chaque tir héritant du précédent ;
+60 °C au plus haut sur la journée. Aucune fenêtre ni question pendant les trente et un tirs.
+
+`BancImport` à 20 Gio sur le même code, deux lancements, sans interface : 19,93 et 20,00 s, 1028 et
+1024 Mo/s, crête de 753 et 724 Mo, 77 et 87 Mo après GC. La veille, à seize traitements de front :
+20,75 et 19,73 s, crête de 1404 et 2396 Mo, 108 et 115 Mo après GC.
+
+**Lectures** :
+
+- **Le gel venait de la transformation, pas de la taille de la nuit.** Les écarts de plus de 200 ms
+  tombent entre le premier et le dernier fichier terminé, et disparaissent quand la transformation
+  laisse des cœurs. La nuit de 1572 WAV gelait plus que celle de 20 Gio.
+- **Le seuil tient à 20 Gio** : 76 et 134 ms, 59 à 60 images par seconde.
+- **Le coût se paie dans l'IHM seulement** : 15,0 s au lieu de 13,1 pour 20 Gio, soit 15 % de plus,
+  là où l'émulation en annonçait 9. `BancImport`, qui ne dessine rien, ne ralentit pas, et sa crête
+  mémoire baisse de moitié au moins.
+- **La dispersion est du même ordre que l'effet.** Au défaut, la même nuit de 1572 WAV rend 178 ms à
+  un tir et 442 au suivant ; les 465 et 472 ms relevés la veille à 20 Gio ne se sont pas reproduits
+  (de 103 à 258 ms sur quatre tirs), sans que le code de l'import ait changé. D'où le choix d'une
+  borne à marge : à 12, un tir rend 199,5 ms.
+- **Une autre image coûte, à tout parallélisme** (#6197) : celle qui suit le plan établi, quand la
+  table de suivi s'affiche, dure de 100 à 255 ms. Ce sont les 255 ms de la ligne à 8 et les 244 ms du
+  remède à 1572 WAV. L'image de fin, qui porte `TERMINE` et le compte rendu, reste entre 100 et
+  185 ms.
+- **Trois lectures écartées** : les relais vers le fil JavaFX (bornée à 8, la transformation émet
+  encore 91 % des événements par seconde, sans plus d'écart) ; un point de sûreté de la JVM (aucun de
+  plus de 30 ms pendant un import, dans un journal `-Xlog:gc*,safepoint` horodaté) ; l'échauffement.
+
+**Ce que ces chiffres ne mesurent pas** :
+
+- Un autre poste. La règle n'est mesurée dans l'IHM que sur seize cœurs de trois familles. Sur le
+  premier poste (i5-1145G7, 8 cœurs dont 4 physiques), `BancImport` a chiffré le même jour, sans
+  interface, la nuit standard à 8 puis 4 fils porteurs : 37,3 s contre 41,3 et 43,1 s, un tir à froid
+  écarté.
+- Le tableau de la cause émule la borne par les fils porteurs, pas par le sémaphore du produit : les
+  durées diffèrent (14,3 s émulés à 8, 15,0 s mesurés).
+- Un import avec copie des bruts dans l'IHM : l'assistant ne les recopie pas par défaut.
+- L'application lancée hors des tests, où le dessin passe par la carte graphique et charge moins le
+  processeur.
+
+**Le relancer** : la commande de la section précédente, avec `-Dperf.ihm.wav` à la taille voulue. Pour
+recouper les écarts datés avec la JVM, ajouter `-Xlog:gc*,safepoint:file=<fichier>:time,uptime` à
+`JAVA_TOOL_OPTIONS` : le relevé écrit l'heure du clic.
 
 ### La lecture par morceaux (#104) : la mémoire ne suit plus la durée d'un WAV
 
@@ -661,7 +750,7 @@ manipulation : voir « Le heap de nuit en nuit ».
 
 ## Bilan du cluster perf
 
-Relevés du 2026-10-12, chacun avec sa machine, nommée plus haut : un premier poste pour tout, un
+Relevés du 2026-10-12 et du 2026-10-13, chacun avec sa machine, nommée plus haut : un premier poste pour tout, un
 second pour les 20 Gio. La campagne est portée par #105, qui regroupe #26 (O5) et #27 (O3). Chaque
 critère a son relevé, et chaque seuil non tenu son issue.
 
@@ -675,8 +764,9 @@ critère a son relevé, et chaque seuil non tenu son issue.
   l'ouverture des écrans après import (#6171) ; un heap après GC qui tient son palier sur quatre nuits
   (de 89 à 93 Mo), une fois mis à part le harnais TestFX et les caches doux de JavaFX ; une fiche de
   carré que le produit retenait est corrigée (#6170). **20 Gio, sur le second poste** : import en 20 à 21 s, 108 à 115 Mo après GC ; dans
-  l'IHM, un écart de 465 à 472 ms entre deux images pendant l'import, là où les nuits de 300 WAV
-  tiennent le seuil à échelle d'écran égale (#6175).
+  l'IHM, l'import gelait le fil jusqu'à 472 ms parce qu'il menait de front autant de transformations
+  que de cœurs ; à la moitié des cœurs, 76 et 134 ms à 20 Gio, pour 15 % de durée en plus (#6175).
+  La première image de la table de suivi coûte encore de 100 à 255 ms (#6197).
 - **Réactivation** (#6174) : sur une nuit hydratée de bruts de 20 min, les temporaires de
   régénération occupaient 7031 Mo à la fois dans `java.io.tmpdir`, de la mémoire vive quand c'est un
   tmpfs. Ils naissent désormais sous l'espace de travail, et la mémoire du poste ne monte plus que d'un

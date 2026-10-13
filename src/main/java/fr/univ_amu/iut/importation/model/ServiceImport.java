@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.model.CompteurValidations;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.JournalMutations;
+import fr.univ_amu.iut.commun.model.ParallelismeDeFond;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -39,11 +40,13 @@ import java.util.function.Consumer;
 /// (R11), un réimport réécrit les mêmes fichiers, et la base reste la source de vérité.
 public class ServiceImport {
 
-    /// Plafond de traitements de fichiers **simultanés** (#12 découpage, #948 copie protégée) : les
-    /// threads virtuels sont bornés au nombre de cœurs disponibles. Côté découpage, chaque `transformer`
-    /// charge un WAV complet en mémoire (pic ≈ ce nombre de PCM en vol) ; côté copie, cela évite de
-    /// saturer le support source (SD) de lectures simultanées. Lu une fois au chargement.
-    private static final int PARALLELISME_FICHIERS = Runtime.getRuntime().availableProcessors();
+    /// Plafond de traitements de fichiers **simultanés** (#12 découpage, #948 copie protégée) : la borne
+    /// de [ParallelismeDeFond], la moitié des cœurs du poste. Elle protège d'abord l'interface (#6175) :
+    /// avec une transformation par cœur, le fil JavaFX attendait son tour et l'écran gelait pendant
+    /// l'import. Elle borne aussi la mémoire du découpage, chaque `transformer` tenant une tranche de 5 s
+    /// par original en vol (#104), et les lectures simultanées du support source côté copie. Lu une
+    /// fois au chargement.
+    private static final int PARALLELISME_FICHIERS = ParallelismeDeFond.duPoste();
 
     private final InspecteurDossier inspecteur;
     private final AgregatImportDao agregatDao;

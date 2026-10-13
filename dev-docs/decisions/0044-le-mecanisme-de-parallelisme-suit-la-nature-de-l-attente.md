@@ -9,12 +9,19 @@ verification: humaine
 loupe:
   - "scripts/adr/loupe-0044-mecanisme-parallelisme.py"
 verification_note: "le choix du mécanisme de parallélisme selon la nature de l'attente est un jugement de conception, non observable dans le code. Loupe : `scripts/adr/loupe-0044-mecanisme-parallelisme.py`"
+relations:
+  amendee_par: ["6175-une-tache-de-fond-qui-calcule-laisse-la-moitie-des-coeurs-a-l-interface"]
 verified:
   - by: human:nedseb
     at: 2026-07-20
 ---
 
 # Le mécanisme de parallélisme se choisit sur la nature de l'attente, la borne se chiffre sur autre chose
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-13** : la dernière ligne de la table du point 2 est **amendée** par
+    [6175](6175-une-tache-de-fond-qui-calcule-laisse-la-moitie-des-coeurs-a-l-interface.md). L'import ne mène plus de front `availableProcessors()` traitements mais leur moitié,
+    pour laisser des cœurs à l'interface.
 
 ## Contexte
 
