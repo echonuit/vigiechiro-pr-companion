@@ -157,6 +157,7 @@ public final class PlateformeDeTest implements BeforeAllCallback {
                         .asCompatibleSubstituteFor("mongo"))
                 .withNetwork(reseau)
                 .withNetworkAliases("mongo")
+                .withLogConsumer(JournauxDesConteneurs.pour("mongo"))
                 .withTmpFs(Map.of("/data/db", "rw"))
                 .waitingFor(Wait.forLogMessage(".*Waiting for connections.*", 1));
         mongo.start();
@@ -165,6 +166,8 @@ public final class PlateformeDeTest implements BeforeAllCallback {
                         new ImageFromDockerfile("vigiechiro-plateforme-faux-s3", false)
                                 .withDockerfile(dossier.resolve("faux-s3.Dockerfile")))
                 .withNetwork(reseau)
+                .withEnv("PYTHONUNBUFFERED", "1")
+                .withLogConsumer(JournauxDesConteneurs.pour("faux-s3"))
                 .withExposedPorts(8443)
                 .waitingFor(Wait.forListeningPort());
         String hote = fauxS3.getHost();
@@ -184,6 +187,8 @@ public final class PlateformeDeTest implements BeforeAllCallback {
                 .withNetworkAliases(ALIAS_DE_L_API)
                 .withEnv("MONGO_HOST", MONGO_DANS_LE_RESEAU)
                 .withEnv("DEV_FAKE_S3_URL", urlS3)
+                .withEnv("PYTHONUNBUFFERED", "1")
+                .withLogConsumer(JournauxDesConteneurs.pour("api"))
                 .withExposedPorts(8080)
                 .waitingFor(Wait.forListeningPort());
         api.start();

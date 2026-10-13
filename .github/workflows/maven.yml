@@ -222,6 +222,19 @@ jobs:
         if: ${{ always() && steps.portee.outputs.concerne == 'oui' }}
         run: python3 scripts/plateforme-de-test/releve_des_sautes.py
 
+      - name: "Verser les journaux de la plateforme quand le job rougit (#6183)"
+        # La JVM ne voit d'un rouge que l'ecriture restee sans reponse. Les journaux de l'API, du faux
+        # S3 et de Mongo disent ce qu'ils faisaient au meme instant, chaque ligne datee a sa reception.
+        if: ${{ failure() && steps.portee.outputs.concerne == 'oui' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: journaux-de-la-plateforme
+          path: |
+            target/plateforme-de-test/journaux/
+            target/surefire-reports/
+          retention-days: 7
+          if-no-files-found: warn
+
   # Rejoue TOUTE la suite dans UN SEUL fork, en ordre inverse (#1967). Ce n'est pas une redite du job
   # `build` : c'est le seul dispositif qui tienne la propriété « une classe de test rend le harnais
   # comme elle l'a trouvé ».

@@ -1493,6 +1493,8 @@ eb4b2f869205  src/test/java/fr/univ_amu/iut/commun/api/plateforme/CibleLiveTest.
 fe078d5e5570  src/test/java/fr/univ_amu/iut/commun/api/plateforme/FicheWebDUneParticipationTest.java
 cdd0f8a1fa2f  src/test/java/fr/univ_amu/iut/commun/api/plateforme/FrontWebSurLaPlateformeDeTestTest.java
 df1637e55f07  src/test/java/fr/univ_amu/iut/commun/api/plateforme/ImageDeLApiSansRevisionTest.java
+72919765f44e  src/test/java/fr/univ_amu/iut/commun/api/plateforme/JournauxDeLaPlateformeDeTestTest.java
+7a6bd35f05b9  src/test/java/fr/univ_amu/iut/commun/api/plateforme/JournauxDesConteneurs.java
 8010b3bc64fd  src/test/java/fr/univ_amu/iut/commun/api/plateforme/PlateformeDeTest.java
 7292391074af  src/test/java/fr/univ_amu/iut/commun/api/plateforme/WorkerDeLaPlateformeDeTest.java
 08562833df8b  src/test/java/fr/univ_amu/iut/commun/di/AmorcageTest.java
