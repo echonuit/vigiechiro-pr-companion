@@ -546,7 +546,7 @@ le refuse sinon.
 **Quand le job rougit, les conteneurs disent ce qu'ils faisaient** (#6183). L'API, le faux S3 et
 Mongo versent leur journal sous `target/plateforme-de-test/journaux/`, un fichier par conteneur et par
 fork, chaque ligne datée à sa réception par la JVM. Le job les dépose en artefact,
-`journaux-de-la-plateforme`, avec les rapports surefire. L'API y écrit une ligne par requête à
+`journaux-de-la-plateforme-<tentative>`, avec les rapports surefire. L'API y écrit une ligne par requête à
 laquelle elle répond : une écriture que la JVM dit sans réponse se cherche là, à l'instant de
 l'échec. `JournauxDeLaPlateformeDeTestTest` exige d'y relire une requête marquée.
 
