@@ -11,9 +11,15 @@ enforced_by:
 verified:
   - by: machine:ci
     at: 2026-08-05
+relations:
+  completee_par: ["6191-la-taille-de-police-se-declare-sur-la-racine"]
 ---
 
 # La typographie est **embarquée**, pas empruntée à la machine
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-13** : cette décision fixe la famille et laissait la **taille** au système. Elle est
+    **complétée** par [6191](6191-la-taille-de-police-se-declare-sur-la-racine.md), qui la déclare.
 
 ## Contexte
 

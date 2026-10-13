@@ -43,10 +43,9 @@ class LisibiliteCaptureCelluleDeTableTest {
 
     /// La largeur du cas de la colonne abrégeable (#6190).
     ///
-    /// Sa cellule de texte simple prend la taille de police par défaut du système, 12 px sous
-    /// Windows et 13 px sous Linux et macOS, là où la cellule badge des autres cas fixe la sienne.
-    /// À 12 px le libellé mesure 123 px et tient dans [#ETROITE] ; cette largeur le coupe aux
-    /// deux tailles.
+    /// Sa cellule de texte simple prend la taille que `base.css` déclare sur `.root`, 12 px
+    /// (#6191), là où la cellule badge des autres cas fixe la sienne. À 12 px le libellé mesure
+    /// 123 px et tient dans [#ETROITE] ; cette largeur le coupe.
     private static final double ETROITE_A_TOUTE_TAILLE = 90;
     private static final double LARGE = 260;
     private static final String COURT = "ok";

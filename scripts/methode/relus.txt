@@ -1588,7 +1588,7 @@ e5deda0b5314  src/test/java/fr/univ_amu/iut/commun/outils/ApercuFxTest.java
 a25ef3528c39  src/test/java/fr/univ_amu/iut/commun/outils/IndexDesAppels.java
 faa28982eefc  src/test/java/fr/univ_amu/iut/commun/outils/IndexDesChamps.java
 e387febb4bc2  src/test/java/fr/univ_amu/iut/commun/outils/IndexDesImplementations.java
-acc82e64c1e5  src/test/java/fr/univ_amu/iut/commun/outils/LisibiliteCaptureCelluleDeTableTest.java
+ebe2c08a30ea  src/test/java/fr/univ_amu/iut/commun/outils/LisibiliteCaptureCelluleDeTableTest.java
 32d617bbeea1  src/test/java/fr/univ_amu/iut/commun/outils/LisibiliteCaptureUnPixelTest.java
 9f83a27c5b4f  src/test/java/fr/univ_amu/iut/commun/outils/TypesDuModele.java
 140aa0ee17fc  src/test/java/fr/univ_amu/iut/commun/outils/ZoneCarteApercuTest.java
@@ -1715,7 +1715,7 @@ e43ce8b62861  src/test/java/fr/univ_amu/iut/commun/view/SignalementIncidentTest.
 0c2b648b93a5  src/test/java/fr/univ_amu/iut/commun/view/TableDonneesTest.java
 6d5ce8dfeaa0  src/test/java/fr/univ_amu/iut/commun/view/TailleOuvertureTest.java
 e5eec657ffbe  src/test/java/fr/univ_amu/iut/commun/view/TeintesDuCompteRenduTest.java
-27103577498f  src/test/java/fr/univ_amu/iut/commun/view/TypographieTest.java
+2511ddab0351  src/test/java/fr/univ_amu/iut/commun/view/TypographieTest.java
 ad1b9c615ecc  src/test/java/fr/univ_amu/iut/commun/view/ValeursPresentesTest.java
 3800b1c9aadd  src/test/java/fr/univ_amu/iut/commun/view/ValidationFormulaireTest.java
 c2418220ee08  src/test/java/fr/univ_amu/iut/commun/view/VueCompteRenduTest.java

@@ -2,8 +2,14 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.io.InputStream;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.layout.StackPane;
 import javafx.scene.text.Font;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,6 +32,11 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// filtrage de ressources, un `.gitattributes` qui abîme un binaire.
 @ExtendWith({ApplicationExtension.class, SansEcritureHorsDuFil.class})
 class TypographieTest {
+
+    /// La taille que `base.css` déclare sur `.root`, en pixels (#6191).
+    private static final int TAILLE_DE_BASE = 12;
+
+    private static final long DELAI_MS = 5_000L;
 
     @Test
     @DisplayName("#3361 : les deux fichiers de police sont dans les ressources, et ne sont pas vides")
@@ -102,6 +113,39 @@ class TypographieTest {
                             feuille)
                     .contains("\"" + Typographie.FAMILLE_MONO + "\"");
         }
+    }
+
+    @Test
+    @DisplayName("#6191 : base.css déclare la taille sur .root, à côté de la famille")
+    void la_taille_est_declaree_sur_la_racine() {
+        Matcher racine =
+                Pattern.compile("\\.root\\s*\\{([^}]*)\\}").matcher(lire("/fr/univ_amu/iut/commun/view/base.css"));
+
+        assertThat(racine.find()).as("base.css porte une règle `.root`").isTrue();
+        assertThat(racine.group(1))
+                .as("sans taille sur `.root`, un texte sans taille propre prend celle du système : "
+                        + "12 px sous Windows, 13 px sous Linux et macOS")
+                .contains("-fx-font-size: " + TAILLE_DE_BASE + "px;");
+    }
+
+    @Test
+    @DisplayName("#6191 : un libellé sans taille propre se rend à la taille déclarée, pas à celle du système")
+    void un_texte_sans_taille_propre_prend_la_taille_declaree() {
+        double rendue = Attente.surLeFil(
+                () -> {
+                    Label libelle = new Label("complétude inconnue");
+                    Scene scene = Habillage.scene(new StackPane(libelle));
+                    scene.getRoot().applyCss();
+                    return libelle.getFont().getSize();
+                },
+                "habiller une scène et lire la taille d'un libellé sans style",
+                DELAI_MS);
+
+        assertThat(rendue)
+                .as(
+                        "la taille par défaut du système vaut %.0f px sur cette machine",
+                        Font.getDefault().getSize())
+                .isEqualTo(TAILLE_DE_BASE);
     }
 
     @Test
