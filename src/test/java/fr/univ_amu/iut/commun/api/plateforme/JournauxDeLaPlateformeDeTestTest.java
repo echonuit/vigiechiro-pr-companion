@@ -19,6 +19,9 @@ import org.junit.jupiter.api.Test;
 /// Le job rougissait sur des écritures restées sans réponse, et rien ne disait ce que l'API faisait à
 /// ce moment-là. Ce banc envoie à l'API une requête marquée, et exige de la relire dans le journal que
 /// la plateforme a écrit : un journal qui ne serait plus versé le fait rougir.
+///
+/// Il exige aussi d'y lire le démarrage de `gunicorn` (ADR 6183) : servie par le serveur de
+/// développement de Flask, l'API laissait par intermittence une écriture sans réponse.
 @Tag("plateforme-de-test")
 class JournauxDeLaPlateformeDeTestTest {
 
@@ -35,6 +38,14 @@ class JournauxDeLaPlateformeDeTestTest {
             client.send(requete, HttpResponse.BodyHandlers.discarding());
         }
         attendreDansLeJournal("api", marque);
+    }
+
+    @Test
+    @DisplayName("#6183 : l'API est servie par gunicorn, comme l'amont la sert en production")
+    void l_api_est_servie_comme_en_production() {
+        PlateformeDeTest.acces();
+
+        attendreDansLeJournal("api", "Starting gunicorn");
     }
 
     @Test
