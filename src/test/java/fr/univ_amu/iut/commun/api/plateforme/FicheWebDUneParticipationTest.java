@@ -18,9 +18,9 @@ import org.testcontainers.utility.DockerImageName;
 /// (#6061, sous-chantier #5645).
 ///
 /// C'est sur cette fiche que les lots suivants reliront ce que Companion écrit. Le navigateur rejoint le
-/// réseau de la plateforme et ouvre le front à l'adresse que l'API sert (ADR 6060). Il se connecte par
-/// `?token=`, que la directive de connexion du front lit : le jeton est celui que l'état de départ frappe
-/// pour l'observatrice, et non la session « John Doe » de `DEV_FAKE_AUTH`, qui ne possède rien.
+/// réseau de la plateforme et ouvre le front à l'adresse que l'API sert (ADR 6060). Il se connecte en
+/// rangeant dans le stockage du navigateur le jeton que l'état de départ frappe pour l'observatrice, là
+/// où le front le lit, et non la session « John Doe » de `DEV_FAKE_AUTH`, qui ne possède rien.
 ///
 /// Les valeurs lues viennent de `etat-de-depart.json` : en changer une fait rougir ce banc. Le navigateur
 /// ne joint rien hors de la plateforme : sans cela, une lenteur de cdnjs le faisait rougir sans défaut.
@@ -49,8 +49,15 @@ class FicheWebDUneParticipationTest {
         ChromeOptions options = new ChromeOptions()
                 .addArguments("--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE " + PlateformeDeTest.ALIAS_DE_L_API);
         pilote = new RemoteWebDriver(navigateur.getSeleniumAddress(), options);
-        pilote.get(PlateformeDeTest.urlDuFrontDansLeReseau() + "#/participations/"
-                + acces.id("participations:nuit-traitee") + "?token=" + acces.jeton("observatrice"));
+        // Le jeton se range là où le front le lit, avant que la fiche ne démarre (#6183). Par `?token=`,
+        // le front le rangeait puis rechargeait la page, mais une requête partie avant sans jeton pouvait
+        // recevoir son 401 après coup : le front effaçait alors le jeton, et la fiche disait « Non trouvé ».
+        String front = PlateformeDeTest.urlDuFrontDansLeReseau();
+        pilote.get(front);
+        pilote.executeScript(
+                "window.localStorage.setItem('auth-session-token', arguments[0]);", acces.jeton("observatrice"));
+        pilote.get(front + "#/participations/" + acces.id("participations:nuit-traitee"));
+        pilote.navigate().refresh();
     }
 
     @AfterAll
