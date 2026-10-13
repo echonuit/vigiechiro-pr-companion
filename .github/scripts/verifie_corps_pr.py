@@ -156,8 +156,12 @@ REMEDES = {
 }
 
 
-def juger(corps: str) -> int:
-    """Les cinq refus, ligne par ligne, et le code de sortie qui va avec."""
+def releve(corps: str) -> list[tuple[int, str, str]]:
+    """Les fautes du corps, ligne par ligne : le numéro, le nom de la faute, et la ligne.
+
+    Séparé de `juger` pour que l'auto-test lise la faute rendue, et pas seulement le code de sortie :
+    un témoin refusé par une autre règle que la sienne sortait en 1 lui aussi (#6149).
+    """
     fautes = []
     dans_un_bloc = False
     for numero, ligne in enumerate(corps.splitlines(), 1):
@@ -181,7 +185,12 @@ def juger(corps: str) -> int:
             (numero, "trace d'outil", f"{trace} : {ligne.strip()}")
             for trace in traces(ligne.replace(MENTION_NEUTRALISEE, "@"))
         )
+    return fautes
 
+
+def juger(corps: str) -> int:
+    """Les cinq refus, ligne par ligne, et le code de sortie qui va avec."""
+    fautes = releve(corps)
     if not fautes:
         print("Corps conforme.")
         return 0
@@ -212,18 +221,38 @@ GABARIT = "[Votre " + "nom]"
 SANS_CHASSE = chr(0x200B)
 E_CYRILLIQUE = chr(0x0435)  # « e » cyrillique, sosie du latin
 
-# (attendu, corps, libelle)
+# (attendu, corps, libelle). `attendu` vaut 0 pour un corps conforme, et sinon le NOM de la faute que
+# le garde doit rendre, elle et elle seule : un cas qui rougit par une autre règle que la sienne
+# échoue (#6149).
 CAS = (
     (0, "Ce corps dit ce qui a ete fait, et pourquoi.", "un corps conforme passe"),
-    (1, f"Le seuil tient {CADRATIN} la mesure le dit.", "un cadratin de prose est refusé"),
-    (1, f"L{COURBE}apostrophe courbe est refusée.", "une apostrophe courbe est refusée"),
-    (1, "Le garde tient, l ADR le dit.", "une élision sans apostrophe est refusée"),
+    (
+        "tiret cadratin",
+        f"Le seuil tient {CADRATIN} la mesure le dit.",
+        "un cadratin de prose est refusé",
+    ),
+    (
+        "apostrophe courbe",
+        f"L{COURBE}apostrophe courbe est refusée.",
+        "une apostrophe courbe est refusée",
+    ),
+    (
+        "élision sans apostrophe",
+        "Le garde tient, l ADR le dit.",
+        "une élision sans apostrophe est refusée",
+    ),
     # #4546. La forge ne reconnait que `close`, `fix` et `resolve`.
-    (1, "Ce que ce lot fait. Ferme #4502.", "« Ferme #N » est refusé"),
+    ("fermeture en français", "Ce que ce lot fait. Ferme #4502.", "« Ferme #N » est refusé"),
     # ACCENTUE, et c est le cas qui eprouve le depliage : le motif est ecrit sans accent.
-    (1, "Clôt #4502.", "« Clôt #N » aussi, et il éprouve le dépliage des accents"),
-    (1, "Résout le #4502.", "et la forme avec article, accentuée elle aussi"),
-    (1, "Corrige l issue #4502.", "et celle qui nomme l issue"),
+    (
+        "fermeture en français",
+        "Clôt #4502.",
+        "« Clôt #N » aussi, et il éprouve le dépliage des accents",
+    ),
+    ("fermeture en français", "Résout le #4502.", "et la forme avec article, accentuée elle aussi"),
+    # Avec son apostrophe : écrit « l issue », ce témoin était refusé pour son élision, et la forme
+    # qu'on écrit vraiment n'était tenue par aucun cas (#6149).
+    ("fermeture en français", "Corrige l'issue #4502.", "et celle qui nomme l'issue"),
     # Les controles NEGATIFS, et ce sont eux qui rendent ce refus utilisable.
     (0, "Refs #4502", "« Refs #N » ne prétend rien et passe"),
     (0, "Rattache a #4502", "« Rattaché à #N » non plus"),
@@ -269,7 +298,7 @@ CAS = (
     (0, "Le seuil est -S info, et non warning.", "un drapeau de commande ne déclenche pas"),
     # La contrepartie : en TETE de phrase la majuscule reste vue.
     (
-        1,
+        "élision sans apostrophe",
         "Le garde tient. L amendement le dit.",
         "une élision majuscule en tête de phrase reste refusée",
     ),
@@ -283,29 +312,33 @@ CAS = (
     ),
     # Et la contrepartie du meme rejet : ce qui suit reste un MOT.
     (
-        1,
+        "élision sans apostrophe",
         "Le garde tient. L auto-test le prouve.",
         "une élision suivie d'un mot composé reste refusée",
     ),
-    (1, "Le garde tient. D abord, la mesure.", "une élision suivie d'une virgule reste refusée"),
+    (
+        "élision sans apostrophe",
+        "Le garde tient. D abord, la mesure.",
+        "une élision suivie d'une virgule reste refusée",
+    ),
     # #4786, second volet : la decoration Markdown ouverte entre la lettre et le mot.
     (
-        1,
+        "élision sans apostrophe",
         "Le garde tient. L **amendement** le dit.",
         "une élision devant un mot en gras est refusée",
     ),
     (
-        1,
+        "élision sans apostrophe",
         "Le garde tient. L « amendement » le dit.",
         "une élision devant des guillemets est refusée",
     ),
-    (1, "un truc l **ADR** dit", "la même règle vaut pour les minuscules"),
+    ("élision sans apostrophe", "un truc l **ADR** dit", "la même règle vaut pour les minuscules"),
     (0, "| **C** Conformité | à établir |", "un symbole DANS le gras ne déclenche pas"),
     (0, "- **N** saute à la prochaine observation.", "une touche en gras ne déclenche pas"),
     # #4837. Le temoin du PARTAGE : la classe d espaces remise en ASCII dans le garde du titre le
     # fait rougir ICI, et c est la seule preuve que ce garde lit le motif de l autre.
     (
-        1,
+        "élision sans apostrophe",
         f"Le garde tient, l amendement{INSECABLE}: il le dit.",
         "une élision devant une espace insécable est refusée",
     ),
@@ -313,26 +346,30 @@ CAS = (
     # et non ecrites : ce fichier est suivi, donc lu par `4783-traces-d-outil.py`, et une chaine
     # litterale y ferait rougir le depot entier. C est le detour de `verifie_scripts.py`.
     (
-        1,
+        "trace d'outil",
         f"La source le confirme {JETON} dans son rapport.",
         "T1, une marque de citation, est refusée",
     ),
     (
-        1,
+        "trace d'outil",
         f"Voir [la page](https://exemple.org/guide?{SUIVI}) pour le detail.",
         "T2, un lien marqué du nom de l'outil, est refusé",
     ),
     (
-        1,
+        "trace d'outil",
         f"Le mot coupe par un inv{SANS_CHASSE}isible se recopie sans se voir.",
         "T3, un caractère invisible, est refusé",
     ),
     (
-        1,
+        "trace d'outil",
         f"La relectur{E_CYRILLIQUE} porte une lettre qui n'est pas latine.",
         "T4, une lettre sosie dans un mot latin, est refusée",
     ),
-    (1, f"Redige par {GABARIT} un jour de relecture.", "T5, un gabarit non rempli, est refusé"),
+    (
+        "trace d'outil",
+        f"Redige par {GABARIT} un jour de relecture.",
+        "T5, un gabarit non rempli, est refusé",
+    ),
     # Les controles NEGATIFS. La demande qui a livre ce refus devait elle-meme CITER des traces
     # pour en parler : un garde qui l en empecherait serait inutilisable des son premier jour.
     (
@@ -360,7 +397,7 @@ CAS = (
         "l'espace sans chasse derrière une arobase passe",
     ),
     (
-        1,
+        "trace d'outil",
         f"<li>Fix the Temurin job by <code>@brunoborges{SANS_CHASSE}</code> upstream</li>",
         "la même, ailleurs que derrière l'arobase, reste refusée",
     ),
@@ -389,8 +426,13 @@ def _refus_de(corps: str) -> str:
     return sortie.getvalue()
 
 
+def _fautes_de(corps: str) -> list[str]:
+    """Les noms des fautes que `releve` rend sur ce corps, sans doublon et triés."""
+    return sorted({defaut for _, defaut, _ in releve(corps)})
+
+
 def _auto_test() -> int:
-    """Les corps CONNUS, chacun avec son code attendu ; la derniere ligne les recompte.
+    """Les corps CONNUS, chacun avec ce qu il doit rendre ; la derniere ligne les recompte.
 
     Chaque cas passe par un APPELABLE : un cas dont l expression leve se nomme alors lui-meme, au
     lieu d arreter le temoin sur une trace de pile (#5444).
@@ -398,9 +440,12 @@ def _auto_test() -> int:
     verifie, echecs = cas_d_auto_test()
     rouges = 0
     for attendu, corps, libelle in CAS:
-        if attendu != 0:
-            rouges += 1
-        verifie(libelle, lambda corps=corps: _code_de(corps), attendu)
+        if attendu == 0:
+            verifie(libelle, lambda corps=corps: _code_de(corps), 0)
+            continue
+        rouges += 1
+        # Le code ET la faute : sortir en 1 ne suffit pas, il faut que ce soit pour la règle nommée.
+        verifie(libelle, lambda corps=corps: (_code_de(corps), _fautes_de(corps)), (1, [attendu]))
 
     # Le chemin de REFUS, et pas seulement le code : un refus qui ne nommerait ni la famille ni le
     # remede sortirait en 1 sans dire quoi retirer, et les cas ci-dessus ne le verraient pas.
