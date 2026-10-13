@@ -173,7 +173,7 @@ final class HydratationDepuisBruts {
             Set<String> restantes,
             Map<String, List<String>> nomsArbitres) {
         RegenerationSequences moteur = regeneration.orElseThrow();
-        Path temporaire = DossierTemporaire.creer(baseTemporaires, "vc-hydrate-");
+        Path temporaire = DossierTemporaire.creer(baseTemporaires, DossierTemporaire.PREFIXE_HYDRATATION);
         try {
             // Aucun arbitrage de collisions ici, faute de pouvoir le rejouer : l'hydratation part d'un
             // passage reconstruit, dont la base ne connaît aucun original réel (ni durée, donc ni nombre

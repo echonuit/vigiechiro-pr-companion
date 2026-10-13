@@ -969,7 +969,7 @@ c191371dd389  src/main/java/fr/univ_amu/iut/passage/model/CrisAttendus.java
 fd8ceb740817  src/main/java/fr/univ_amu/iut/passage/model/DecompteAudio.java
 b64615b6913e  src/main/java/fr/univ_amu/iut/passage/model/DetailPassage.java
 63144236e4c5  src/main/java/fr/univ_amu/iut/passage/model/DisponibiliteAudio.java
-acb31cdeac09  src/main/java/fr/univ_amu/iut/passage/model/DossierTemporaire.java
+0e3a94b111aa  src/main/java/fr/univ_amu/iut/passage/model/DossierTemporaire.java
 6977e39fb5d6  src/main/java/fr/univ_amu/iut/passage/model/EcrivainPaquet.java
 c19bf8bfec8a  src/main/java/fr/univ_amu/iut/passage/model/EmpreinteContenu.java
 cd43e1bc1cf4  src/main/java/fr/univ_amu/iut/passage/model/EnregistrementOriginal.java
@@ -1985,6 +1985,7 @@ c45263937ade  src/test/java/fr/univ_amu/iut/passage/model/AnalyseAcoustiqueTest.
 75e3dae55c8c  src/test/java/fr/univ_amu/iut/passage/model/CorrespondanceParticipationTest.java
 1f65281861a1  src/test/java/fr/univ_amu/iut/passage/model/CreationPassageArchiveTest.java
 cb7e86dcc417  src/test/java/fr/univ_amu/iut/passage/model/DecompteAudioTest.java
+680de639baab  src/test/java/fr/univ_amu/iut/passage/model/DossierTemporaireTest.java
 d06312709d08  src/test/java/fr/univ_amu/iut/passage/model/EcrivainPaquetTest.java
 1c26157f7122  src/test/java/fr/univ_amu/iut/passage/model/EmpreinteContenuTest.java
 5ddf43ffcdbb  src/test/java/fr/univ_amu/iut/passage/model/FenetreObserveeNuitTest.java

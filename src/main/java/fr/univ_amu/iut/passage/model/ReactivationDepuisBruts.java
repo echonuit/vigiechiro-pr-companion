@@ -162,7 +162,8 @@ final class ReactivationDepuisBruts {
             Path brut,
             Prefixe prefixe,
             List<String> nomsArbitres) {
-        Path temporaire = DossierTemporaire.creer(baseTemporaires, "vc-regen-" + original.id() + "-");
+        Path temporaire =
+                DossierTemporaire.creer(baseTemporaires, DossierTemporaire.PREFIXE_REGENERATION + original.id() + "-");
         try {
             moteur.regenerer(
                     brut, original.nomFichier(), prefixe, frequenceAcquisition(original), temporaire, nomsArbitres);
