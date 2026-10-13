@@ -208,10 +208,7 @@ class CorrespondanceRecetteTest {
     private static List<Citation> citations;
 
     /// Une citation de cas par un test, avec ce que ce test dit de sa portée (#4142).
-    ///
-    /// `surLaPlateformeDeTest` dit si le test se joue sur la plateforme de test : c'est le fait auquel
-    /// la portée [Portee#SUR_LA_PLATEFORME_DE_TEST] se confronte (#6219).
-    private record Citation(String test, String cas, Portee portee, String reserve, boolean surLaPlateformeDeTest) {}
+    private record Citation(String test, String cas, Portee portee, String reserve) {}
 
     @BeforeAll
     static void lire() {
@@ -445,8 +442,7 @@ class CorrespondanceRecetteTest {
             } else {
                 verifs.assertThat(citation.reserve())
                         .as(
-                                "%s porte une réserve sur %s, dont le test lit le verdict lui-même, à"
-                                        + " l'écran ou sur la plateforme de test. Une page"
+                                "%s porte une réserve sur %s, dont le verdict se lit à l'écran. Une page"
                                         + " qui met une réserve partout n'en fait lire aucune : ou bien la"
                                         + " portée est fausse, ou bien la phrase est du bruit.",
                                 citation.test(), citation.cas())
@@ -458,47 +454,9 @@ class CorrespondanceRecetteTest {
         long horsApplication = citations.stream()
                 .filter(citation -> citation.portee() == Portee.HORS_APPLICATION)
                 .count();
-        long surLaPlateforme = citations.stream()
-                .filter(citation -> citation.portee() == Portee.SUR_LA_PLATEFORME_DE_TEST)
-                .count();
         System.out.printf(
-                "%nPortée des cas cités : %d à l'écran, %d hors application, %d lus sur la plateforme de test.%n",
-                citations.size() - horsApplication - surLaPlateforme, horsApplication, surLaPlateforme);
-    }
-
-    @Test
-    @DisplayName("#6219 : un verdict dit lu sur la plateforme de test est celui d'un test qui s'y joue")
-    void un_verdict_lu_sur_la_plateforme_de_test_s_y_joue() {
-        assertThat(porteesUsurpees(citations))
-                .as(
-                        "Ces tests déclarent un verdict lu sur la plateforme de test, et ne portent pas le tag"
-                                + " `%s`. Ils ne s'y jouent donc pas : ou bien la portée est fausse, ou bien le tag"
-                                + " manque. Sans cette confrontation, un test bouchonné pourrait se dire lu sur la"
-                                + " plateforme, et le compte des cas lus pour de bon ne voudrait plus rien dire.",
-                        TAG_PLATEFORME_DE_TEST)
-                .isEmpty();
-    }
-
-    @Test
-    @DisplayName("#6219 : le refus nomme le test qui usurpe la portée, et laisse passer celui qui s'y joue")
-    void le_refus_de_la_portee_usurpee_nomme_son_test() {
-        Citation usurpee = new Citation("TemoinBouchonne.cas", "S4-70", Portee.SUR_LA_PLATEFORME_DE_TEST, "", false);
-        Citation tenue = new Citation("TemoinSurLaPlateforme.cas", "S4-70", Portee.SUR_LA_PLATEFORME_DE_TEST, "", true);
-        Citation aLEcran = new Citation("TemoinALEcran.cas", "S1-01", Portee.A_L_ECRAN, "", false);
-
-        assertThat(porteesUsurpees(List.of(usurpee, tenue, aLEcran)))
-                .as("seul le test qui déclare la portée sans se jouer sur la plateforme est refusé")
-                .containsExactly("TemoinBouchonne.cas (S4-70)");
-    }
-
-    /// Les citations qui déclarent un verdict lu sur la plateforme de test sans que leur test s'y joue,
-    /// chacune sous la forme `Test.methode (cas)`.
-    private static List<String> porteesUsurpees(List<Citation> citations) {
-        return citations.stream()
-                .filter(citation -> citation.portee() == Portee.SUR_LA_PLATEFORME_DE_TEST)
-                .filter(citation -> !citation.surLaPlateformeDeTest())
-                .map(citation -> citation.test() + " (" + citation.cas() + ")")
-                .toList();
+                "%nPortée des cas cités : %d à l'écran, %d hors application.%n",
+                citations.size() - horsApplication, horsApplication);
     }
 
     @Test
@@ -905,12 +863,7 @@ class CorrespondanceRecetteTest {
                                     jugements
                                             .computeIfAbsent(id, k -> EnumSet.noneOf(Jugement.class))
                                             .add(annotation.jugement());
-                                    citations.add(new Citation(
-                                            nom,
-                                            id,
-                                            annotation.portee(),
-                                            annotation.reserve(),
-                                            classeDeTest || porteLeTag(methode, TAG_PLATEFORME_DE_TEST)));
+                                    citations.add(new Citation(nom, id, annotation.portee(), annotation.reserve()));
                                 }
                             }));
         });

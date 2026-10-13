@@ -2102,9 +2102,9 @@ bfbc2c64fc3e  src/test/java/fr/univ_amu/iut/recette/BancDesClipsTest.java
 3fcaced47b79  src/test/java/fr/univ_amu/iut/recette/CadreVisible.java
 4ea7917caf95  src/test/java/fr/univ_amu/iut/recette/CadreVisibleTest.java
 dd0bd72a760f  src/test/java/fr/univ_amu/iut/recette/CarteDeRecette.java
-8db6c5652b83  src/test/java/fr/univ_amu/iut/recette/CasDeRecette.java
+d5b67c7f558b  src/test/java/fr/univ_amu/iut/recette/CasDeRecette.java
 b5e7288906d9  src/test/java/fr/univ_amu/iut/recette/ClipDeModaleTest.java
-14f8b0c45e6d  src/test/java/fr/univ_amu/iut/recette/CorrespondanceRecetteTest.java
+03f3d8fd682d  src/test/java/fr/univ_amu/iut/recette/CorrespondanceRecetteTest.java
 4a5bee0529f1  src/test/java/fr/univ_amu/iut/recette/DeclarationDeLaPlateformeTest.java
 9e81f5097238  src/test/java/fr/univ_amu/iut/recette/DialoguesALImage.java
 fb2f197b3036  src/test/java/fr/univ_amu/iut/recette/DispositionDesBrutsTest.java
@@ -2142,7 +2142,7 @@ a8ebe81a91bf  src/test/java/fr/univ_amu/iut/recette/Jugement.java
 7a4f1005e083  src/test/java/fr/univ_amu/iut/recette/PageDesClipsTest.java
 a5d5dc3a5941  src/test/java/fr/univ_amu/iut/recette/PerimetreDesSessions.java
 a371b59567a4  src/test/java/fr/univ_amu/iut/recette/PerimetreDesSessionsTest.java
-a98031eee57f  src/test/java/fr/univ_amu/iut/recette/Portee.java
+1fa606665207  src/test/java/fr/univ_amu/iut/recette/Portee.java
 ba84a77dca75  src/test/java/fr/univ_amu/iut/recette/RecetteImportCliGoldenTest.java
 8f22ff6e66d3  src/test/java/fr/univ_amu/iut/recette/RepartitionDesCas.java
 15f7dfacabeb  src/test/java/fr/univ_amu/iut/recette/RepartitionDesCasTest.java
