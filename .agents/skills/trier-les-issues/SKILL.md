@@ -67,8 +67,8 @@ PR s'ouvre en **sous-chantier**, pas sous une case à cocher.
 
 La règle, sa mesure et son piège vivent dans la compétence `ouvrir-un-chantier`, qui porte le geste
 du découpage. Elle est rappelée ici parce que cette compétence s'ouvre aux **deux** moments où des
-lots se créent : au découpage d'un chantier, et à la passe 9 d'une clôture, où les suites deviennent
-des issues.
+lots se créent : au découpage d'un chantier, et à la passe 9 d'une clôture, où les issues du sas
+trouvent leur chantier.
 
 ## Interroger le graphe, pour ce que `grep` ne relie pas
 

@@ -40,7 +40,9 @@ d'équivalent en ligne de commande.
                accepte. Pas un exemple de chaque cote.
 3. LIRE        les options au nom VOISIN avant de conclure a une absence.
 4. ALIGNER     tout de suite si l ecart est petit ; sinon OUVRIR l issue sur-le-champ,
-               rattachee par --parent au chantier qui traite sa cause.
+               rattachee par --parent au chantier qui traite sa cause. L ecart,
+               releve par les deux listes, est un defaut MESURE qui prive un
+               utilisateur d une capacite : c est le cas ou l issue s ouvre.
 5. MOTIVER     un « sans objet cote CLI » par une mesure, jamais par une impression.
 ```
 

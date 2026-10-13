@@ -184,9 +184,13 @@ clôture où un garde de surface CLI avait été tenu à jour, mais pas le garde
 Les issues consolidées en passe 9 forment un chantier à part entière. Elles se closent par **les
 mêmes quatorze passes**, appliquées à leur seul delta. Le dépôt l'a appris trois fois.
 
-La passe 9 ne les **découvre** pas : chacune a été ouverte au moment où elle a été trouvée, et
-rattachée à l'EPIC du chantier ou à celui des suites (#4562). Ce que la passe en fait, et comment
-elle lit une page blanche, vit dans [`vider-le-sas`](../vider-le-sas/SKILL.md).
+La passe 9 ne les **découvre** pas : chacune a été ouverte au moment où elle a été trouvée, parce
+qu'elle était un défaut mesuré qui toucherait un utilisateur ou ferait mentir un garde, et rattachée à
+l'EPIC du chantier ou à celui des suites (#4562). Une suite qu'on ne traite pas n'a pas d'issue : elle
+est nommée en dette dans le corps de l'EPIC, et la passe 12 la reprend dans le bilan. La règle vit dans
+le [cycle de chantier](../../../dev-docs/cycle-de-chantier.md), section « Une trouvaille s'écrit au
+moment où on la fait ». Ce que la passe 9 fait des issues, et comment elle lit une page blanche, vit
+dans [`vider-le-sas`](../vider-le-sas/SKILL.md).
 
 **Ce qu'on y trouve n'est plus une prédiction.** L'EPIC #4671 - les quatre suites de #4573 - a été
 clos par les douze passes le 28 août 2026, sur un périmètre de quatre issues **déjà livrées et

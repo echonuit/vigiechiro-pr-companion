@@ -46,7 +46,8 @@ qui est la plus à même de casser un écran sans casser un test. On regarde don
 7. OUVRIR      le CLIP de chaque cas de recette que le chantier a pose ou change.
                Perceptif : le verdict revient a qui regarde. Asserte : verifier
                qu il joue ce que son nom annonce.
-8. CORRIGER    ce qui se corrige ; le reste part en issue a la passe suivante.
+8. CORRIGER    ce qui se corrige ; le reste s ecrit tout de suite, en issue s il
+               toucherait un utilisateur, en dette dans l EPIC sinon.
 ```
 
 ## Ce qu'on cherche, par ordre de fréquence constatée

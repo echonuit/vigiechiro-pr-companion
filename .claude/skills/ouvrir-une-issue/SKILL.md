@@ -63,9 +63,11 @@ Le [cycle de chantier](../../../dev-docs/cycle-de-chantier.md) tranche déjà o�
 et cette page ne le redit pas : elle appartient au chantier qui traite sa cause, pas à celui qui a
 remarqué son symptôme.
 
-**Le sas des suites n'est pas un chantier.** On y **consigne** une trouvaille au moment où on la fait,
-et c'est le bon geste. On n'y **prend** rien : son corps dit que rien ne s'y traite directement, et la
-passe 9 le vide. Consigner et prendre sont deux moments, et le sas ne sert qu'au premier.
+**Le sas des suites n'est pas un chantier.** On y **rattache** un défaut mesuré qui n'a pas encore de
+chantier, au moment où on le trouve. On n'y **prend** rien : son corps dit que rien ne s'y traite
+directement, et la passe 9 le vide. Rattacher et prendre sont deux moments, et le sas ne sert qu'au
+premier. Une suite qu'on ne traite pas n'y va pas du tout : elle se nomme en dette dans l'EPIC, sans
+issue, selon la règle du [cycle de chantier](../../../dev-docs/cycle-de-chantier.md).
 
 **Une issue de suite n'a donc pas de chantier par construction**, et c'est exactement le cas qui piège :
 il faut en ouvrir un. Une suite qu'on prend cesse d'être une suite ; elle devient le premier lot de

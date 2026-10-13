@@ -40,6 +40,13 @@ Une synthèse courte : ce qui a été livré, la dette restante, les décisions 
 Elle se dépose sur l'EPIC, et se répercute dans `AGENTS.md` ou `CONTRIBUTING.md` si elle change une
 règle du dépôt.
 
+**La dette restante est l'endroit où vont les suites qu'on ne traite pas**, et elles n'ont pas
+d'issue. Le bilan reprend, fait par fait, la dette que le corps de l'EPIC a nommée en chemin, et y
+ajoute ce que la clôture a révélé. Une issue ne s'ouvre que pour un défaut mesuré qui toucherait un
+utilisateur ou ferait mentir un garde. La règle et sa raison vivent dans le
+[cycle de chantier](../../../dev-docs/cycle-de-chantier.md), section « Une trouvaille s'écrit au
+moment où on la fait ».
+
 Elle **renvoie** aux ADR écrites en passe 11 : c'est la raison pour laquelle elle vient après elles.
 Redérouler leur raisonnement produit deux textes qui divergeront.
 
@@ -51,7 +58,8 @@ corriger s'il s'est trompé : une analyse fausse laissée en place oriente le ch
 
 Un bilan qui ne peut pas conclure tout de suite - un taux qui demande des tirages, une mesure qui
 demande du recul - ouvre une issue pour plus tard et y écrit une **prédiction**, pour ne pas lire
-ensuite dans les chiffres ce qui arrange. Deux règles s'y appliquent, et ce sont celles de la section
+ensuite dans les chiffres ce qui arrange. C'est un engagement daté, pas une suite qu'on abandonne : il
+garde son issue, parce que la loupe de l'ADR 5539 ne lit les échéances que dans les issues. Deux règles s'y appliquent, et ce sont celles de la section
 précédente.
 
 **La prédiction vit à UN endroit, et l'issue différée y renvoie.** Recopiée en abrégé, elle devient
@@ -178,4 +186,5 @@ une case qui porte « sans objet : aucun écran touché » est une décision, et
 | « Je réexplique la décision dans le bilan » | Il renvoie aux ADR. Deux textes sur la même décision divergent |
 | « Cette passe n'avait pas lieu d'être, je laisse la case vide » | Une case vide se lit comme un oubli. On la coche en disant pourquoi |
 | « La dette restante est claire » | Un bilan est une hypothèse. Quand la suite est traitée, on relit ce qu'il en disait |
+| « Cette dette mérite une issue, pour ne pas l'oublier » | Une suite qu'on ne traite pas reste en dette. L'issue est pour un défaut mesuré qui toucherait un utilisateur ou ferait mentir un garde |
 | « J'ai fermé la dernière issue, l'EPIC est clos » | Fermer les issues n'est pas clore. Les quatorze passes portent sur le delta |
