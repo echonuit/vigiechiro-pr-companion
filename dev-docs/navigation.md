@@ -47,6 +47,15 @@ d'une machine à l'autre ([ADR 3374](decisions/3374-une-fenetre-porte-son-habill
 Les **outils de capture** empruntent le même chemin. Un aperçu montre donc l'écran tel que
 l'utilisateur le voit **par construction**, et non parce qu'on y a pensé.
 
+**Dans la fenêtre principale, le trio vit sur la scène.** `MainView.fxml` le déclare sur sa racine, et
+chaque FXML d'écran redéclare `palette.css` et `design.css` pour se rendre seul. Quand la fenêtre reçoit
+sa scène, `Habillage.hisser` y monte les trois feuilles ; chaque vue que le chrome accueille perd, par
+`Habillage.alleger`, celles que la scène porte déjà, et garde sa feuille de fonctionnalité. Une feuille
+déclarée sur un parent fait enregistrer par JavaFX tous les parents qu'il contient, et le coût d'une
+ouverture d'écran croissait avec eux ([ADR 6207](decisions/6207-l-ouverture-d-un-ecran-reconstruit-ne-tient-pas-50-ms-et-les-feuilles-du-chrome-vivent-sur-la-scene.md)).
+Le rendu ne change pas : les trois feuilles changent de niveau ensemble, ce que le piège ci-dessous
+exige.
+
 !!! warning "Deux pièges, dont un silencieux"
     **L'ordre compte.** `base.css` consomme `-couleur-fond`, défini par `palette.css`. Posée à un autre
     **niveau** que la palette, la couleur ne se résout pas : JavaFX **avale la règle** en journalisant un
