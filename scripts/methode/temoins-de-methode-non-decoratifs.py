@@ -82,10 +82,11 @@ MOI = pathlib.Path(__file__).resolve().relative_to(RACINE / "scripts").as_posix(
 def declare_un_contrat(chemin: pathlib.Path) -> bool:
     """Ce fichier declare-t-il un `CONTRAT` ? Sinon ce n est pas un garde.
 
-    La regle est celle que `verifie-batterie-locale.py` porte deja : « un script qui ne declare
-    aucun CONTRAT n est pas un garde ». `scripts/graphify/rebuild.py` reconstruit un graphe et
-    `scripts/mkdocs/bandeau_adr.py` engendre un bandeau : ils PRODUISENT, ils ne jugent pas, et
-    `lint.yml` les lance pourtant. Sans ce filtre, l elargissement du motif les compterait.
+    Un script que `lint.yml` lance sans declarer de contrat reste hors du banc : sans ce filtre,
+    l elargissement du motif compterait n importe quel outil d appoint. Depuis #5192, les outils
+    de `scripts/graphify`, `scripts/mkdocs` ou `scripts/qualite` declarent le leur, et le porteur a
+    decide qu ils restent au banc : leur auto-test s eprouve comme celui d un garde. Ici, le contrat
+    dit « eprouvable », et non « juge » ; c est `verifie-batterie-locale.py` qui lit le dispositif.
     """
     try:
         arbre = ast.parse(chemin.read_text(encoding="utf-8"))
@@ -519,12 +520,13 @@ def _auto_test() -> int:
             exemptions_perimees(faux, {"disparu.py": "raison", "exempte.py": "raison"}),
             ["disparu.py"],
         )
-    # ⟨le filtre par CONTRAT⟩ `lint.yml` lance aussi `scripts/graphify/rebuild.py` et
-    # `scripts/mkdocs/bandeau_adr.py`, qui PRODUISENT sans juger. Sans ce filtre, l elargissement du
-    # motif les compterait comme des gardes, et le banc muterait un generateur de graphe.
+    # ⟨le filtre par CONTRAT⟩ Un script que `lint.yml` lance sans declarer de contrat reste hors du
+    # banc. L exemple etait `rebuild.py` et `bandeau_adr.py` ; depuis #5192 ils declarent le leur, et
+    # le porteur a decide de les garder au banc, ou leurs auto-tests sont eprouves comme les autres.
+    # `faux_s3.py`, lance pour son auto-test et nomme sans contrat dans `SANS_CONTRAT`, tient la place.
     verifie(
         "un script lance par la CI mais sans CONTRAT n est pas un garde",
-        any("rebuild.py" in c or "bandeau_adr.py" in c for c in corpus()),
+        lambda: any("faux_s3.py" in c for c in corpus()),
         False,
     )
     # ⟨l ancre negative, eprouvee sur le MOTIF⟩ Elle empeche d attraper la queue des chemins
