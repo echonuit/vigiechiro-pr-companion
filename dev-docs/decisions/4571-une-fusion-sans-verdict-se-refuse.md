@@ -17,9 +17,16 @@ generated:
   at: 2026-08-26
 relations:
   complète: ["0041"]
+  amendee_par: ["5004-une-pr-de-bot-se-tait-par-la-marque-de-son-commit"]
 ---
 
 # Fusionner en rouge est un choix, fusionner sans couleur est un accident
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-14** : « la cause n'a pas bougé », au Contexte, est **amendée** par
+    [5004](5004-une-pr-de-bot-se-tait-par-la-marque-de-son-commit.md). Elle a bougé : une PR ouverte
+    avec le `GITHUB_TOKEN` lance ses workflows depuis la 2.189.0, et c'est la marque de saut sur son
+    commit qui la fait taire. La décision de cette ADR n'en dépend pas.
 
 ## Contexte
 
