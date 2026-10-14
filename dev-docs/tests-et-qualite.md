@@ -500,7 +500,8 @@ monte une plateforme **par JVM**, au premier test qui la demande, dans cet ordre
 1. Mongo, par le digest de `scripts/plateforme-de-test/epingles.properties` ;
 2. le faux S3 en TLS (`faux_s3.py`, `faux-s3.Dockerfile`), dont le certificat couvre l'hôte que
    Testcontainers rend ;
-3. l'API Vigie-Chiro (`api.Dockerfile`), à la révision épinglée, sous `/api/v1`, avec
+3. l'API Vigie-Chiro (`api.Dockerfile`), à la révision épinglée, servie par `gunicorn` comme en
+   production (ADR 6183), sous `/api/v1`, avec
    `DEV_FAKE_S3_URL` pointé sur l'adresse du faux S3 **vue depuis la JVM**, d'où l'ordre. La même
    image porte le **front web** de Vigie-Chiro, construit à sa propre révision, que l'API sert à sa
    racine (`FRONTEND_HOSTED`) : le front et l'API ont la même origine, et le front appelle l'API par
