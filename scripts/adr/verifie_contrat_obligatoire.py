@@ -70,10 +70,25 @@ DOSSIERS = (DOSSIER, DOSSIER.parent / "methode") + tuple(
 # raison, sinon cette liste devient le tapis sous lequel on pousse la dette : c est l idiome de
 # `HORS_PORTEE` dans `verifie_verdicts_declares.py`.
 #
-# **Elle est VIDE a la livraison**, et c est la mesure qui compte : les 66 points d entree des
-# deux dossiers declarent tous leur contrat. Une entree ajoutee ici est une decision, pas une
-# formalite, et elle se defend dans la demande qui l ajoute.
-SANS_CONTRAT: dict[str, str] = {}
+# Elle etait VIDE a la livraison, les 66 points d entree des deux premiers dossiers declarant tous
+# leur contrat. Une entree ajoutee ici est une decision, pas une formalite, et elle se defend dans la
+# demande qui l ajoute : la premiere l a ete dans #5192.
+SANS_CONTRAT: dict[str, str] = {
+    # Decide par le porteur le 2026-10-14 (#5192). Le vocabulaire des dispositifs est ferme (ADR
+    # 5125), et aucun de ses sept mots ne decrit un service : il ne juge pas, n agrege pas, n ecrit
+    # aucun fichier du depot et n eprouve aucun garde. Etirer `generateur` aurait ouvert le mot a ce
+    # que l ADR ferme precisement.
+    "faux_s3.py": "un service de test, lance dans son conteneur pour servir la plateforme de "
+    "test, et qu aucun dispositif du vocabulaire ferme ne decrit",
+    # Decide par le porteur le 2026-10-14 (#5192). Un contrat nomme son temoin, et
+    # `verifie_contrats_tiennent.py` exige qu il existe : aucun test ni auto-test n exerce ces quatre
+    # outils, et un contrat leur en declarerait un faux. L absence de tests est nommee en dette dans
+    # #5006, qui decidera de les ecrire ou de dire pourquoi on y renonce.
+    "rapport_mutation.py": "aucun temoin : la synthese d un rapport PIT n est exercee par aucun test",
+    "trajet.py": "aucun temoin : les arguments xdotool de la video ne sont exerces par aucun test",
+    "ecrit-icns.py": "aucun temoin : l assemblage du fichier ICNS n est exerce par aucun test",
+    "genere_icones.py": "aucun temoin : la derivation des icones n est exercee par aucun test",
+}
 
 
 def points_d_entree(dossier: pathlib.Path | None = None) -> list[pathlib.Path]:
@@ -189,9 +204,19 @@ def _auto_test() -> int:
         [],
     )
 
-    # La liste des exceptions est VIDE, et ce cas la tient : la remplir devient une decision visible.
-    verifie("aucune exception n est ouverte", SANS_CONTRAT, {})
-    # Et sur le depot reel, les 66 declarent.
+    # Chaque exception designe un point d entree qui EXISTE, et dit sa raison. Une exception qui ne
+    # designe plus rien n est pas une absence, c est un suspect : elle couvrirait le prochain fichier
+    # du meme nom sans que personne l ait decide.
+    verifie(
+        "chaque exception designe un point d entree reel et porte sa raison",
+        lambda: sorted(
+            nom
+            for nom, raison in SANS_CONTRAT.items()
+            if not raison.strip() or nom not in {p.name for p in points_d_entree()}
+        ),
+        [],
+    )
+    # Et sur le depot reel, tous les autres declarent.
     verifie("le corpus reel ne porte aucun suspect", suspects(), [])
 
     # CE GARDE DECLARE-T-IL LA POPULATION QU IL LIT ? (issue #5176)
