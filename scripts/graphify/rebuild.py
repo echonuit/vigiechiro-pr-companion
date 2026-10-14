@@ -1565,7 +1565,26 @@ def main(argv: list[str]) -> int:
     return 0
 
 
+# Ce que ce script DECLARE etre (ADR 4636, #5192). Il ne juge rien : il ne repond a `--contrat`
+# que pour dire ce qu il est.
+CONTRAT = {
+    "geste": "reconstruction du graphe de connaissance apres un commit ou une fusion",
+    "population": "les fichiers modifies du depot, puis le graphe entier pour les passes de pont",
+    "dispositif": "generateur",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/graphify/rebuild.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    # L aide ne s importe qu a la demande : ce script se lance aussi la ou `scripts/_commun` n est pas
+    # (conteneur, interpreteur de graphify, crochet de mkdocs), et une importation en tete l y casserait.
+    if "--contrat" in sys.argv[1:]:
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+        from _commun import sort_si_contrat_demande
+
+        sort_si_contrat_demande(__file__, CONTRAT)
     sys.path.insert(0, str(RACINE))
     import os
 

@@ -696,7 +696,26 @@ def passe():
     print(f"\nresultat : {len(nodes)} noeuds, {len(edges)} aretes")
 
 
+# Ce que ce script DECLARE etre (ADR 4636, #5192). Il ne juge rien : il ne repond a `--contrat`
+# que pour dire ce qu il est.
+CONTRAT = {
+    "geste": "passes A et B : la documentation reliee au code dans le graphe",
+    "population": "les noeuds de code et les pages de documentation du graphe",
+    "dispositif": "generateur",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/graphify/pont_doc_code.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    # L aide ne s importe qu a la demande : ce script se lance aussi la ou `scripts/_commun` n est pas
+    # (conteneur, interpreteur de graphify, crochet de mkdocs), et une importation en tete l y casserait.
+    if "--contrat" in sys.argv[1:]:
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+        from _commun import sort_si_contrat_demande
+
+        sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         raise SystemExit(auto_test())
     # Pas de `SystemExit` ici : `rebuild.py` joue les passes par `runpy`, dans sa propre boucle,
