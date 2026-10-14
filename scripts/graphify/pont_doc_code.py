@@ -366,7 +366,9 @@ def auto_test():
     # page ; pour `AGENTS.md` le moteur a replie le doublon sur le premier titre, d'ou partent
     # depuis ses citations. Tant que la page n'a pas retrouve son noeud, le doublon quitte
     # seulement le suffixe reserve : sans cela le moteur reprendrait le noeud de page a son retour.
-    doublon = {**noeud_de_document("readme_doc", "README", "README.md"), "_origin": "pont"}
+    # `dict(...)` et non `{**...}` : sous mutation, la fabrique rend une liste vide, et le
+    # depaquetage levait AVANT le premier cas, sans dire lequel rougissait (ADR 4918, #5192).
+    doublon = dict(noeud_de_document("readme_doc", "README", "README.md"), _origin="pont")
     abime = [
         classe,
         titre_agents,
