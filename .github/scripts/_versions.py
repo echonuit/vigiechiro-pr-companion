@@ -80,7 +80,8 @@ def tags_de_version() -> list[str]:
     `FileNotFoundError` au lieu de refuser, et le message parle d une ligne de Python plutot que d une
     panne d installation. Trouve par le cas « forge muette » du garde de l ADR 5987, ecrit pour
     eprouver un chemin que l en-tete PROMETTAIT - et qui n etait pas atteignable. Le garde de l ADR
-    5692 ne l avait pas vu : il surveille les outils de forge, et `git` n est pas dans sa population.
+    5692 ne l avait pas vu : `git` n entrait pas dans sa population. Il y entre depuis #6058, sous
+    un cliquet qui descend.
     """
     if shutil.which("git") is None:
         raise Refus(
