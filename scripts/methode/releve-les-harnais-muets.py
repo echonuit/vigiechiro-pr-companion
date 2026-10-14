@@ -310,7 +310,7 @@ CONTRAT = {
     "(`scripts/batterie.py`, seize sites). Il ne voit pas un harnais dont l aide vit dans un autre "
     "module et porte un autre nom que `verifie` : ses comptes sont des MINORANTS",
     "dispositif": "cliquet",
-    "seuil": "81, polarite=descend",
+    "seuil": "79, polarite=descend",
     "temoin": "scripts/methode/releve-les-harnais-muets.py --auto-test",
     "decision": "ADR 5570",
     # Devenu obligatoire en devenant cliquet : l ADR 5340 compte les gardes qui portent un CONTRAT
