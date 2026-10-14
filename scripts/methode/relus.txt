@@ -963,7 +963,7 @@ c3bb0a70d076  src/main/java/fr/univ_amu/iut/passage/model/ChoixRebranchement.jav
 343ee6c4f22c  src/main/java/fr/univ_amu/iut/passage/model/CompteRenduChiffreReactivation.java
 38240a727bbd  src/main/java/fr/univ_amu/iut/passage/model/CompteRenduReactivation.java
 c307350ce434  src/main/java/fr/univ_amu/iut/passage/model/ConseilSiteNonRattache.java
-07873904e9df  src/main/java/fr/univ_amu/iut/passage/model/CorrespondanceParticipation.java
+235c85bf1a6b  src/main/java/fr/univ_amu/iut/passage/model/CorrespondanceParticipation.java
 5af874a13b89  src/main/java/fr/univ_amu/iut/passage/model/CouvertureNuageuse.java
 998bbda80d21  src/main/java/fr/univ_amu/iut/passage/model/CreationPassageArchive.java
 72a63454a6d7  src/main/java/fr/univ_amu/iut/passage/model/CriAttendu.java
@@ -1034,6 +1034,7 @@ a8eaf78c837a  src/main/java/fr/univ_amu/iut/passage/model/ServicePassage.java
 0857df4f8d6e  src/main/java/fr/univ_amu/iut/passage/model/SessionDEnregistrement.java
 642311752ffe  src/main/java/fr/univ_amu/iut/passage/model/SortieDeRecuperation.java
 c7ed6a750263  src/main/java/fr/univ_amu/iut/passage/model/SynchronisationParticipation.java
+50edfc376130  src/main/java/fr/univ_amu/iut/passage/model/TypeEnregistreur.java
 7f2837d0c5ef  src/main/java/fr/univ_amu/iut/passage/model/UniciteQuadruplet.java
 156e4487d4f8  src/main/java/fr/univ_amu/iut/passage/model/Vent.java
 870b2c48c322  src/main/java/fr/univ_amu/iut/passage/model/VerdictIdentite.java
@@ -1994,7 +1995,7 @@ c45263937ade  src/test/java/fr/univ_amu/iut/passage/model/AnalyseAcoustiqueTest.
 8f79925592e6  src/test/java/fr/univ_amu/iut/passage/model/CompteRenduChiffrePerdantsTest.java
 32027e2c77c2  src/test/java/fr/univ_amu/iut/passage/model/CompteRenduChiffreReactivationTest.java
 88ff1fea981f  src/test/java/fr/univ_amu/iut/passage/model/CompteRenduPerdantsDeCollisionTest.java
-75e3dae55c8c  src/test/java/fr/univ_amu/iut/passage/model/CorrespondanceParticipationTest.java
+93fb8905467a  src/test/java/fr/univ_amu/iut/passage/model/CorrespondanceParticipationTest.java
 1f65281861a1  src/test/java/fr/univ_amu/iut/passage/model/CreationPassageArchiveTest.java
 cb7e86dcc417  src/test/java/fr/univ_amu/iut/passage/model/DecompteAudioTest.java
 680de639baab  src/test/java/fr/univ_amu/iut/passage/model/DossierTemporaireTest.java
@@ -2023,6 +2024,7 @@ acd643d069e5  src/test/java/fr/univ_amu/iut/passage/model/PropositionsEnregistre
 7197dbbe34ed  src/test/java/fr/univ_amu/iut/passage/model/ServiceReconstructionPassagesTest.java
 63b238f5b1c7  src/test/java/fr/univ_amu/iut/passage/model/SessionDEnregistrementTest.java
 17a3fea42ffe  src/test/java/fr/univ_amu/iut/passage/model/SynchronisationParticipationTest.java
+602147192baa  src/test/java/fr/univ_amu/iut/passage/model/TypeEnregistreurTest.java
 8a9952c6166d  src/test/java/fr/univ_amu/iut/passage/model/VerificationIdentiteAudioTest.java
 318a7534a300  src/test/java/fr/univ_amu/iut/passage/view/CartesActionEntieresTest.java
 434ae859e67a  src/test/java/fr/univ_amu/iut/passage/view/GestionCampagnesModaleViewTest.java
