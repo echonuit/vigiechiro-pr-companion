@@ -153,25 +153,26 @@ def _auto_test() -> int:
         "A18": "L'utilisateur possède ses fichiers",
         "A28": "Un avertissement se dit en mots",
     }
-    echecs = []
-
     # L impression et la marque viennent du fonds (#5460) ; le DETAIL et la liste restent ici, parce
     # que le fonds ne porte ni l un ni l autre et que le message final compte les echecs par titre.
-    # `ok` arrive deja evalue : cette delegation ne protege pas encore d une exception, elle fait
-    # seulement que ce banc herite de ce que le fonds gagnera.
+    # Chaque condition est un APPELABLE, evalue dans le fonds : une exception y devient un cas rouge
+    # qui se nomme, au lieu d une trace qui arrete le banc avant sa premiere assertion (#5192, ADR
+    # 4918). Le detail ne se calcule qu en cas d echec, pour la meme raison.
     # Importe ICI et non en tete : ce fichier est un hook mkdocs, charge a chaque construction du
     # site, et le fonds des gardes n a rien a faire dans ce chargement.
     sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
     from _commun import cas_d_auto_test
 
-    asserte, _ = cas_d_auto_test()
+    asserte, echecs = cas_d_auto_test()
 
-    def verifie(titre: str, ok: bool, detail: str = "") -> None:
-        asserte(titre, ok, True)
-        if not ok:
-            echecs.append(titre)
-            if detail:
-                print(f"          -> {detail}")
+    def verifie(titre: str, condition, detail=None) -> None:
+        def evalue() -> bool:
+            ok = bool(condition())
+            if not ok and detail is not None:
+                print(f"          -> {detail()}")
+            return ok
+
+        asserte(titre, evalue, True)
 
     complet = {
         "type": "adr",
@@ -183,33 +184,42 @@ def _auto_test() -> int:
         "verification": "certaine",
         "enforced_by": ["TemoinTest#cas"],
     }
-    rendu = bandeau(complet, ARTICLES)
+
+    def rendu():
+        return bandeau(complet, ARTICLES)
+
     verifie(
         "le bandeau porte les quatre lignes",
-        all(m in rendu for m in ("Statut", "Article", "Chantier", "Vérification certaine")),
-        rendu[:90],
+        lambda: all(
+            m in rendu() for m in ("Statut", "Article", "Chantier", "Vérification certaine")
+        ),
+        lambda: rendu()[:90],
     )
     # L enonce est ECHAPPE : l apostrophe sort en `&#x27;`. L asserter sous sa forme brute passerait
     # a cote de l echappement, qui est ce qui empeche un titre d ADR de casser le HTML du bandeau.
     verifie(
         "l enonce de l article vient de la constitution, echappe",
-        html.escape("L'utilisateur possède ses fichiers") in rendu,
-        rendu[:90],
+        lambda: html.escape("L'utilisateur possède ses fichiers") in rendu(),
+        lambda: rendu()[:90],
     )
-    verifie("l applicateur est rendu en code", "<code>TemoinTest#cas</code>" in rendu, rendu[:90])
+    verifie(
+        "l applicateur est rendu en code",
+        lambda: "<code>TemoinTest#cas</code>" in rendu(),
+        lambda: rendu()[:90],
+    )
 
     # C est le HTML qui est exige, pas une admonition : une admonition se degrade en texte apparent
     # quand l extension manque, ce qui est une panne discrete.
     verifie(
         "le bandeau est du HTML, pas une admonition",
-        rendu.startswith('<div class="adr-bandeau">') and "!!!" not in rendu,
-        rendu[:60],
+        lambda: rendu().startswith('<div class="adr-bandeau">') and "!!!" not in rendu(),
+        lambda: rendu()[:60],
     )
 
     # Aucun cadratin, pas meme en entite : le cliquet cherche le glyphe et manquerait `&mdash;`.
     verifie(
         "aucun cadratin, ni glyphe ni entite",
-        chr(0x2014) not in rendu and "&mdash;" not in rendu and "&#8212;" not in rendu,
+        lambda: all(m not in rendu() for m in (chr(0x2014), "&mdash;", "&#8212;")),
     )
 
     humaine = dict(
@@ -218,31 +228,41 @@ def _auto_test() -> int:
         enforced_by=None,
         loupe=["scripts/adr/2843-tiret-cadratin.py"],
     )
-    rendu_h = bandeau(humaine, ARTICLES)
     verifie(
         "une verification humaine montre sa loupe",
-        "Loupe :" in rendu_h and "2843-tiret-cadratin.py" in rendu_h,
-        rendu_h[:90],
+        lambda: all(m in bandeau(humaine, ARTICLES) for m in ("Loupe :", "2843-tiret-cadratin.py")),
+        lambda: bandeau(humaine, ARTICLES)[:90],
     )
     # Une ADR ecrite a la main porte souvent les DEUX : un motif, et le champ `loupe:`. Rendre l un
     # OU l autre cacherait les scripts a celles dont la note ne les nomme pas, ce qui etait le cas.
     avec_note = dict(humaine, verification_note="aucun motif textuel ne tranche")
-    rendu_n = bandeau(avec_note, ARTICLES)
     verifie(
         "le motif ET la loupe se rendent ensemble",
-        "aucun motif textuel ne tranche" in rendu_n and "2843-tiret-cadratin.py" in rendu_n,
-        rendu_n[:120],
+        lambda: all(
+            m in bandeau(avec_note, ARTICLES)
+            for m in ("aucun motif textuel ne tranche", "2843-tiret-cadratin.py")
+        ),
+        lambda: bandeau(avec_note, ARTICLES)[:120],
     )
 
     # Un article que la constitution ne declare pas ARRETE la construction : c est un rattachement
     # casse, et le site ne doit pas le rendre en silence.
-    try:
-        bandeau(dict(complet, article="A99"), ARTICLES)
-        verifie("un article inconnu arrête la construction", False, "aucune levée")
-    except ValueError:
-        verifie("un article inconnu arrête la construction", True)
+    def leve_sur_un_article_inconnu() -> bool:
+        try:
+            bandeau(dict(complet, article="A99"), ARTICLES)
+        except ValueError:
+            return True
+        return False
 
-    verifie("des metadonnees vides ne fabriquent aucun bandeau", bandeau({}, ARTICLES) == "")
+    verifie(
+        "un article inconnu arrête la construction",
+        leve_sur_un_article_inconnu,
+        lambda: "aucune levée",
+    )
+
+    verifie(
+        "des metadonnees vides ne fabriquent aucun bandeau", lambda: bandeau({}, ARTICLES) == ""
+    )
 
     # Le placement : sous le titre de niveau 1, sinon le theme perd le titre de son sommaire.
     # `on_page_markdown` lit le vocabulaire global, que `on_config` remplit a la construction : on
@@ -250,32 +270,54 @@ def _auto_test() -> int:
     global _articles
     _articles = ARTICLES
     page = types.SimpleNamespace(meta=complet)
-    sortie = on_page_markdown("# Témoin\n\n## Contexte\n", page, None, None)
-    lignes = sortie.split("\n")
+
+    def sortie():
+        return on_page_markdown("# Témoin\n\n## Contexte\n", page, None, None)
+
     verifie(
         "le bandeau se pose SOUS le titre de niveau 1",
-        lignes[0].startswith("# ") and any("adr-bandeau" in l for l in lignes[1:4]),
-        sortie[:80],
+        lambda: (
+            sortie().split("\n")[0].startswith("# ")
+            and any("adr-bandeau" in l for l in sortie().split("\n")[1:4])
+        ),
+        lambda: sortie()[:80],
     )
 
     # Une page qui n est pas une ADR ne doit rien recevoir.
     autre = types.SimpleNamespace(meta={"type": "page"})
     verifie(
         "une page qui n est pas une ADR est rendue inchangée",
-        on_page_markdown("# Autre\n", autre, None, None) == "# Autre\n",
+        lambda: on_page_markdown("# Autre\n", autre, None, None) == "# Autre\n",
     )
 
     print()
-    if echecs:
-        print(
-            f"ÉCHEC : {len(echecs)} cas. Le bandeau ne fait pas ce qu il annonce.", file=sys.stderr
-        )
+    if echecs():
+        print("ÉCHEC : le bandeau ne fait pas ce qu il annonce.", file=sys.stderr)
         return 1
     print("Auto-test concluant : le bandeau rend ce qu il promet, et refuse un rattachement cassé.")
     return 0
 
 
+# Ce que ce script DECLARE etre (ADR 4636, #5192). Il ne juge rien : il ne repond a `--contrat`
+# que pour dire ce qu il est.
+CONTRAT = {
+    "geste": "le bandeau d une ADR redessine sur le site depuis son en-tete OKF",
+    "population": "les ADR de dev-docs/decisions, a la construction du site",
+    "dispositif": "generateur",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/mkdocs/bandeau_adr.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    # L aide ne s importe qu a la demande : ce script se lance aussi la ou `scripts/_commun` n est pas
+    # (conteneur, interpreteur de graphify, crochet de mkdocs), et une importation en tete l y casserait.
+    if "--contrat" in sys.argv[1:]:
+        sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+        from _commun import sort_si_contrat_demande
+
+        sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         raise SystemExit(_auto_test())
     raise SystemExit("Ce fichier est un hook MkDocs. Lancez-le avec --auto-test pour l'éprouver.")

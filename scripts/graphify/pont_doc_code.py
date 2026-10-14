@@ -366,7 +366,9 @@ def auto_test():
     # page ; pour `AGENTS.md` le moteur a replie le doublon sur le premier titre, d'ou partent
     # depuis ses citations. Tant que la page n'a pas retrouve son noeud, le doublon quitte
     # seulement le suffixe reserve : sans cela le moteur reprendrait le noeud de page a son retour.
-    doublon = {**noeud_de_document("readme_doc", "README", "README.md"), "_origin": "pont"}
+    # `dict(...)` et non `{**...}` : sous mutation, la fabrique rend une liste vide, et le
+    # depaquetage levait AVANT le premier cas, sans dire lequel rougissait (ADR 4918, #5192).
+    doublon = dict(noeud_de_document("readme_doc", "README", "README.md"), _origin="pont")
     abime = [
         classe,
         titre_agents,
@@ -696,7 +698,26 @@ def passe():
     print(f"\nresultat : {len(nodes)} noeuds, {len(edges)} aretes")
 
 
+# Ce que ce script DECLARE etre (ADR 4636, #5192). Il ne juge rien : il ne repond a `--contrat`
+# que pour dire ce qu il est.
+CONTRAT = {
+    "geste": "passes A et B : la documentation reliee au code dans le graphe",
+    "population": "les noeuds de code et les pages de documentation du graphe",
+    "dispositif": "generateur",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/graphify/pont_doc_code.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    # L aide ne s importe qu a la demande : ce script se lance aussi la ou `scripts/_commun` n est pas
+    # (conteneur, interpreteur de graphify, crochet de mkdocs), et une importation en tete l y casserait.
+    if "--contrat" in sys.argv[1:]:
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+        from _commun import sort_si_contrat_demande
+
+        sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         raise SystemExit(auto_test())
     # Pas de `SystemExit` ici : `rebuild.py` joue les passes par `runpy`, dans sa propre boucle,

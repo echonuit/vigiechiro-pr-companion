@@ -66,14 +66,23 @@ def commandes_couvertes(aretes, commandes):
 
 def auto_test():
     """Cinq cas ; les deux premiers de chaque defaut doivent rougir sur le code fautif."""
-    echecs = []
+    # Chaque condition est un APPELABLE, evalue dans le fonds : sous mutation, un resultat d une
+    # autre forme y devient un cas rouge qui se nomme, au lieu d un depaquetage qui arrete
+    # l auto-test avant son premier cas (ADR 4918, #5192). Importe ICI : ce module travaille a son
+    # chargement, et le fonds des gardes n a rien a faire dans la passe elle-meme.
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from _commun import cas_d_auto_test
 
-    def verifier(nom, condition, detail=""):
-        if condition:
-            print(f"  ok   {nom}")
-        else:
-            print(f"  ECHEC {nom}{' : ' + detail if detail else ''}")
-            echecs.append(nom)
+    asserte, echecs = cas_d_auto_test()
+
+    def verifier(nom, condition, detail=None):
+        def evalue():
+            ok = bool(condition())
+            if not ok and detail is not None:
+                print(f"          -> {detail()}")
+            return ok
+
+        asserte(nom, evalue, True)
 
     fichier = "src/main/java/fr/univ_amu/iut/cli/commande/Auditer.java"
     classe = {
@@ -98,11 +107,10 @@ def auto_test():
         ("classe puis fichier", [classe, page]),
         ("fichier puis classe", [page, classe]),
     ):
-        _, par_fichier = indexer_classes_java(lot)
         verifier(
             f"l index retient la classe ({ordre})",
-            par_fichier.get(fichier) == "x_auditer_auditer",
-            f"retenu : {par_fichier.get(fichier)!r}",
+            lambda lot=lot: indexer_classes_java(lot)[1].get(fichier) == "x_auditer_auditer",
+            lambda lot=lot: f"retenu : {indexer_classes_java(lot)[1].get(fichier)!r}",
         )
 
     # 3 : un fichier sans classe homonyme (module-info.java) n'a pas a entrer.
@@ -112,8 +120,10 @@ def auto_test():
         "source_file": "src/main/java/module-info.java",
         "_origin": "ast",
     }
-    _, sans_classe = indexer_classes_java([mi])
-    verifier("un fichier sans classe homonyme reste hors de l index", sans_classe == {})
+    verifier(
+        "un fichier sans classe homonyme reste hors de l index",
+        lambda: indexer_classes_java([mi])[1] == {},
+    )
 
     # 4 : une arete heritee vers une cible que la passe courante n'indexe plus ne
     # doit pas compter. `edges` est pre-alimente avec tout le graphe.
@@ -124,25 +134,46 @@ def auto_test():
         {"target": "x_inconnue", "context": "cli_invocation"},  # heritee, hors index
         {"target": "x_importer_importer", "context": "autre_chose"},
     ]
-    couvertes = commandes_couvertes(aretes, commandes)
     verifier(
         "seule la commande reellement indexee compte",
-        couvertes == {"auditer"},
-        f"obtenu : {sorted(couvertes)}",
+        lambda: commandes_couvertes(aretes, commandes) == {"auditer"},
+        lambda: f"obtenu : {sorted(commandes_couvertes(aretes, commandes))}",
     )
 
     # 5 : le numerateur est borne par le denominateur, par construction.
     verifier(
         "le numerateur ne depasse jamais le denominateur",
-        len(couvertes) <= len(commandes),
-        f"{len(couvertes)}/{len(commandes)}",
+        lambda: len(commandes_couvertes(aretes, commandes)) <= len(commandes),
+        lambda: f"{len(commandes_couvertes(aretes, commandes))}/{len(commandes)}",
     )
 
-    if echecs:
-        print(f"\n{len(echecs)} cas en echec : {', '.join(echecs)}")
+    if echecs():
+        print("\nau moins un cas en echec : voir les lignes marquees plus haut")
         return 1
     print("\nauto-test : tous les cas passent")
     return 0
+
+
+# Ce que ce script DECLARE etre (ADR 4636, #5192). Il ne juge rien : il ne repond a `--contrat`
+# que pour dire ce qu il est.
+CONTRAT = {
+    "geste": "passe C : les fichiers que graphify ne classe pas entrent dans le graphe",
+    "population": "les .fxml, .css, .bats et le registre ServiceLoader",
+    "dispositif": "generateur",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/graphify/pont_ressources.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
+if __name__ == "__main__":
+    # L aide ne s importe qu a la demande : ce script se lance aussi la ou `scripts/_commun` n est pas
+    # (conteneur, interpreteur de graphify, crochet de mkdocs), et une importation en tete l y casserait.
+    if "--contrat" in sys.argv[1:]:
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+        from _commun import sort_si_contrat_demande
+
+        sort_si_contrat_demande(__file__, CONTRAT)
 
 
 if __name__ == "__main__" and "--auto-test" in sys.argv:

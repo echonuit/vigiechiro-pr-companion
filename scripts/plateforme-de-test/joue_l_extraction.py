@@ -172,5 +172,24 @@ def main(argv: list[str]) -> int:
     return 0
 
 
+# Ce que ce script DECLARE etre (ADR 4636, #5192). Il ne juge rien : il ne repond a `--contrat`
+# que pour dire ce qu il est.
+CONTRAT = {
+    "geste": "l extraction des archives d une participation, jouee par le code du serveur",
+    "population": "les archives d une participation deposee sur la plateforme de test",
+    "dispositif": "generateur",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/plateforme-de-test/joue_l_extraction.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    # L aide ne s importe qu a la demande : ce script se lance aussi la ou `scripts/_commun` n est pas
+    # (conteneur, interpreteur de graphify, crochet de mkdocs), et une importation en tete l y casserait.
+    if "--contrat" in sys.argv[1:]:
+        sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+        from _commun import sort_si_contrat_demande
+
+        sort_si_contrat_demande(__file__, CONTRAT)
     sys.exit(main(sys.argv))

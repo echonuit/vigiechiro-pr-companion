@@ -101,6 +101,9 @@ LOCAUX = {
     # l appellent : un seul portait le remede, ecrit chez lui, et les autres mouraient sur la
     # console cp1252 de Windows sans que rien ne le voie.
     "_console",
+    # La porte, ajoutee en #5192 : `verifie-batterie-locale.py` lui emprunte `JUGENT`, la liste des
+    # dispositifs qui jugent. Une seconde liste dans ce garde aurait diverge de celle de la porte.
+    "batterie",
 }
 
 

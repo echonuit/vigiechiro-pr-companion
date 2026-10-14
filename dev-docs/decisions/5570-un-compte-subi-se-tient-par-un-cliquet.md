@@ -8,7 +8,7 @@ decided_at: 2026-10-01
 verification: probable
 enforced_by:
   - "scripts/methode/releve-les-harnais-muets.py"
-ratchet: 81
+ratchet: 79
 inv_key: cliquet-harnais-muets
 verified:
   - by: machine:suspects

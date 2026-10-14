@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Un point d entree de `scripts/adr` ou de `scripts/methode` declare ce qu il est (ADR 4636).
+"""Un point d entree Python du depot declare ce qu il est, `.github` excepte (ADR 4636).
 
 Les 42 points d entree de `scripts/adr` portent un contrat depuis le sous-chantier #5117, et les
 24 de `scripts/methode` depuis #5154. Rien n empechait le 67e d arriver sans le sien.
@@ -15,19 +15,24 @@ qu on tolere et sa marge se releve ; ici il n y a rien a tolerer. #5102 l annonc
 cliquet », puis demandait « des exceptions NOMMEES, non un compte » : les deux ne vont pas ensemble,
 et c est la description qui a raison contre l etiquette.
 
-## Sa population est `scripts/adr` ET `scripts/methode`, et c est une decision
+## Sa population : `scripts/adr`, `scripts/methode`, et six dossiers depuis #5192
 
-`scripts/methode` l a rejointe en #5157, une fois ses 24 points d entree declarants. Six points
-d entree Python du depot restent dehors, dans cinq dossiers : `icone`, `scripts/doc-video`,
-`scripts/graphify` pour deux, `scripts/mkdocs` et `scripts/qualite`. Aucun lot ne les a traites.
+`scripts/methode` l a rejointe en #5157. Six dossiers restaient dehors : `scripts/graphify`,
+`scripts/plateforme-de-test`, `scripts/qualite`, `icone`, `scripts/doc-video` et `scripts/mkdocs`,
+dix-sept points d entree au 2026-10-14. L argument qui les excluait etait arithmetique, et il s etait
+inverse. Le porteur a tranche le 2026-10-13 : un contrat dit ce qu un point d entree EST, et le
+dossier ou il vit n y change rien. Ils sont entres par #5192.
 
-**La raison qui bornait cette population a faibli, et il faut le dire.** Elle tenait a une
-arithmetique : au depart, elargir aurait demande vingt-huit exceptions nommees, ce qui aurait fait
-de la liste l inventaire de ce qui n est pas fait, deguise en regle. Mesure aujourd hui, le depot
-porte 72 points d entree Python dont 66 sont tenus : la liste en compterait **six**, ce qui est
-exactement la taille a laquelle l idiome des exceptions nommees fonctionne. Ce que cette
-arithmetique ne dit pas, en revanche, c est si ces six DOIVENT declarer, et c est la vraie
-question. Elle se tranche dans une demande a elle, pas dans un elargissement au fil de l eau.
+**`.github` reste dehors, et c est une decision.** Ses 56 points d entree, dont 46 sans contrat au
+2026-10-14, sont en majorite des outils d atelier. La question de les faire entrer est nommee en
+dette dans #5006, pour se decider a part.
+
+**Un contrat ne s importe pas toujours en tete.** Plusieurs de ces scripts tournent la ou
+`scripts/_commun` n est pas : `amorcer.py` est copie seul dans le conteneur de l API, et graphify lance
+les siens avec son propre interpreteur. Leur branche `--contrat` importe donc l aide a la demande. Et
+deux ponts de graphify, qui font leur travail au chargement du module, la portent AVANT ce travail :
+`verifie_contrats_tiennent.py` lance chaque porteur avec `--contrat`, et une branche placee en fin
+de fichier lui aurait fait reecrire le graphe.
 
 Les 50 fichiers `.sh` versionnes restent dehors sans arbitrage a rendre : le lot 5 de #5102 les
 mesure SANS leur ecrire de contrat, la cible du depot etant de les convertir, pas de les documenter.
@@ -50,19 +55,40 @@ from _commun import cas_d_auto_test, sort_si_contrat_demande
 
 ADR = "4636"
 DOSSIER = pathlib.Path(__file__).resolve().parent
-# Les dossiers tenus. `scripts/adr` depuis #5149 ; `scripts/methode` depuis #5157, une fois
-# ses 24 points d entree declarants. Les quatre autres dossiers de `scripts/` restent
-# dehors : ils portent cinq points d entree, et aucun lot ne les a encore traites.
-DOSSIERS = (DOSSIER, DOSSIER.parent / "methode")
+# Les six dossiers que #5192 fait entrer, sur decision du porteur du 2026-10-13 (« elargir ») et du
+# 2026-10-14 (sans `.github`, nomme en dette dans #5006). `icone` vit a la racine du depot.
+ELARGIS = ("graphify", "plateforme-de-test", "qualite", "icone", "doc-video", "mkdocs")
+
+# Les dossiers tenus. `scripts/adr` depuis #5149 ; `scripts/methode` depuis #5157, une fois ses 24
+# points d entree declarants ; les six de `ELARGIS` depuis #5192. Restent dehors `.github/scripts`
+# et `.github/assets`, par decision et non par oubli.
+DOSSIERS = (DOSSIER, DOSSIER.parent / "methode") + tuple(
+    (DOSSIER.parents[1] if nom == "icone" else DOSSIER.parent) / nom for nom in ELARGIS
+)
 
 # Les points d entree qui n ont PAS a declarer de contrat, et pourquoi. Chacun est nomme avec sa
 # raison, sinon cette liste devient le tapis sous lequel on pousse la dette : c est l idiome de
 # `HORS_PORTEE` dans `verifie_verdicts_declares.py`.
 #
-# **Elle est VIDE a la livraison**, et c est la mesure qui compte : les 66 points d entree des
-# deux dossiers declarent tous leur contrat. Une entree ajoutee ici est une decision, pas une
-# formalite, et elle se defend dans la demande qui l ajoute.
-SANS_CONTRAT: dict[str, str] = {}
+# Elle etait VIDE a la livraison, les 66 points d entree des deux premiers dossiers declarant tous
+# leur contrat. Une entree ajoutee ici est une decision, pas une formalite, et elle se defend dans la
+# demande qui l ajoute : la premiere l a ete dans #5192.
+SANS_CONTRAT: dict[str, str] = {
+    # Decide par le porteur le 2026-10-14 (#5192). Le vocabulaire des dispositifs est ferme (ADR
+    # 5125), et aucun de ses sept mots ne decrit un service : il ne juge pas, n agrege pas, n ecrit
+    # aucun fichier du depot et n eprouve aucun garde. Etirer `generateur` aurait ouvert le mot a ce
+    # que l ADR ferme precisement.
+    "faux_s3.py": "un service de test, lance dans son conteneur pour servir la plateforme de "
+    "test, et qu aucun dispositif du vocabulaire ferme ne decrit",
+    # Decide par le porteur le 2026-10-14 (#5192). Un contrat nomme son temoin, et
+    # `verifie_contrats_tiennent.py` exige qu il existe : aucun test ni auto-test n exerce ces quatre
+    # outils, et un contrat leur en declarerait un faux. L absence de tests est nommee en dette dans
+    # #5006, qui decidera de les ecrire ou de dire pourquoi on y renonce.
+    "rapport_mutation.py": "aucun temoin : la synthese d un rapport PIT n est exercee par aucun test",
+    "trajet.py": "aucun temoin : les arguments xdotool de la video ne sont exerces par aucun test",
+    "ecrit-icns.py": "aucun temoin : l assemblage du fichier ICNS n est exerce par aucun test",
+    "genere_icones.py": "aucun temoin : la derivation des icones n est exercee par aucun test",
+}
 
 
 def points_d_entree(dossier: pathlib.Path | None = None) -> list[pathlib.Path]:
@@ -167,9 +193,30 @@ def _auto_test() -> int:
             ["0003-sans-contrat.py  point d entree sans contrat"],
         )
 
-    # La liste des exceptions est VIDE, et ce cas la tient : la remplir devient une decision visible.
-    verifie("aucune exception n est ouverte", SANS_CONTRAT, {})
-    # Et sur le depot reel, les 66 declarent.
+    # #5192 : les six dossiers hors de `.github` sont LUS, chacun. Un chemin mal ecrit dans
+    # `DOSSIERS` ne rendrait aucun point d entree, donc aucun suspect, et le garde passerait vert sur
+    # un dossier qu il ne regarde pas : c est ce que ce cas refuse.
+    verifie(
+        "chacun des six dossiers de #5192 fournit des points d entree",
+        lambda: sorted(
+            n for n in ELARGIS if not any(p.parent.name == n for p in points_d_entree())
+        ),
+        [],
+    )
+
+    # Chaque exception designe un point d entree qui EXISTE, et dit sa raison. Une exception qui ne
+    # designe plus rien n est pas une absence, c est un suspect : elle couvrirait le prochain fichier
+    # du meme nom sans que personne l ait decide.
+    verifie(
+        "chaque exception designe un point d entree reel et porte sa raison",
+        lambda: sorted(
+            nom
+            for nom, raison in SANS_CONTRAT.items()
+            if not raison.strip() or nom not in {p.name for p in points_d_entree()}
+        ),
+        [],
+    )
+    # Et sur le depot reel, tous les autres declarent.
     verifie("le corpus reel ne porte aucun suspect", suspects(), [])
 
     # CE GARDE DECLARE-T-IL LA POPULATION QU IL LIT ? (issue #5176)
@@ -195,8 +242,10 @@ def _auto_test() -> int:
 
 # Ce que ce garde DECLARE etre. Il s applique a lui-meme : sa population le contient.
 CONTRAT = {
-    "geste": "point d entree de scripts/adr ou scripts/methode sans contrat declare",
-    "population": "les points d entree de scripts/adr et scripts/methode, par leur bloc __main__",
+    "geste": "point d entree Python du depot sans contrat declare, `.github` excepte",
+    "population": "les points d entree de scripts/adr, scripts/methode, scripts/graphify, "
+    "scripts/plateforme-de-test, scripts/qualite, icone, scripts/doc-video et scripts/mkdocs, par "
+    "leur bloc __main__",
     "dispositif": "invariant",
     "seuil": "(sans objet)",
     "temoin": "scripts/adr/verifie_contrat_obligatoire.py --auto-test",
@@ -209,7 +258,7 @@ if __name__ == "__main__":
     if "--auto-test" in sys.argv:
         sys.exit(_auto_test())
     manquants = suspects()
-    print(f"ADR {ADR} - point d entree de scripts/adr ou scripts/methode sans contrat declare")
+    print(f"ADR {ADR} - point d entree Python sans contrat declare, `.github` excepte")
     for m in manquants:
         print(f"  {m}")
     print(
@@ -218,8 +267,7 @@ if __name__ == "__main__":
     )
     if manquants:
         print(
-            "\nÉCHEC : un point d'entrée de scripts/adr ou scripts/methode ne déclare pas ce\n"
-            "qu'il est.\n"
+            "\nÉCHEC : un point d'entrée Python du dépôt ne déclare pas ce qu'il est.\n"
             "Ajoutez-lui un CONTRAT de six champs, sur le modèle de 0008-echec-silencieux.py, et la\n"
             "branche qui l'imprime AVANT tout le reste. Ce n'est pas un cliquet : il n'y a pas de\n"
             "marge à relever. Si ce point d'entrée ne doit vraiment pas déclarer, nommez-le dans\n"

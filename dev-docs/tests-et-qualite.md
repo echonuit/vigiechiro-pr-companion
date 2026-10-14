@@ -876,9 +876,12 @@ shell » alors qu'**aucun des deux scripts shell restants ne répond à `--contr
 lire du dépôt : la branche s'imprime **avant tout le reste**, pour qu'un garde dont une dépendance
 manque rende quand même sa déclaration.
 
-`verifie_contrat_obligatoire.py` **refuse** un point d'entrée de ces deux dossiers qui n'en
-déclarerait pas. Ce n'est pas un cliquet : il n'y a pas de marge à relever, et l'échappatoire est une
-liste d'exceptions **nommées**, vide aujourd'hui.
+`verifie_contrat_obligatoire.py` **refuse** un point d'entrée Python du dépôt qui n'en déclarerait
+pas, `.github` excepté : ces deux dossiers, et depuis #5192 six de plus (`scripts/graphify`,
+`scripts/plateforme-de-test`, `scripts/qualite`, `icone`, `scripts/doc-video`, `scripts/mkdocs`). Ce
+n'est pas un cliquet : il n'y a pas de marge à relever, et l'échappatoire est une liste d'exceptions
+**nommées**, chacune avec sa raison. Elle en compte cinq depuis #5192 : un service de test qu'aucun
+dispositif ne décrit, et quatre outils qu'aucun test n'exerce, donc sans témoin à déclarer.
 
 ```bash
 python3 scripts/adr/0008-echec-silencieux.py --contrat
