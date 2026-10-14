@@ -191,6 +191,11 @@ public final class SynchronisationParticipation {
                 juste.configuration(),
                 meteo.aEnvoyer(),
                 fuseaux.pour(passage.idPoint()));
+        // #6234 : nos dates l'emportent parce que les enregistrements les prouvent (#4756), et un passage
+        // ne prouve qu'une nuit. Une participation plus longue, ou sans fin, garde donc les siennes.
+        if (CorrespondanceParticipation.datesHorsDePortee(juste.dateDebut(), juste.dateFin())) {
+            maj = CorrespondanceParticipation.sansDates(maj);
+        }
         ResultatEcriture ecriture = client.modifierParticipation(objectid, juste.etag(), maj);
         // #4706 : la base ne se note QUE sur une ecriture acceptee, et sur la relecture, qui est l'etat
         // contre lequel on a valide. Un refus decrirait un etat distant qui n'existe pas ; et noter
