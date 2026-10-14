@@ -44,6 +44,13 @@ sur les 300 dernieres demandes fusionnees : 68 espaces sans chasse, les 68 derri
 dans 4 des 13 corps de Dependabot. Sans l exemption, ces quatre demandes auraient rougi sur un
 texte que personne ici n a ecrit. Partout ailleurs le caractere reste refuse.
 
+**Une seconde, de la meme famille : ce qui est replie dans un `<details>` referme.** Dependabot y
+range les notes de version et la liste de commits qu il recopie, en anglais. `eslint-plugin-n from`
+s y lisait comme une elision sans apostrophe, et #6277 restait rouge sur ce seul texte (#6283). Le
+pli se traite comme un bloc cloture : c est une citation, pas la prose de la demande. Mesure du
+2026-10-14 sur les 300 dernieres demandes : 15 portaient un `<details>`, toutes de Dependabot, et
+#6277 etait la seule refusee. Un `<details>` jamais referme ne replie rien.
+
 ## Ce qu elle ne voit PAS, et c est assume
 
 **Les quatre tics rhetoriques** de `CONTRIBUTING.md`. Aucun motif ne les distingue d une phrase
@@ -156,6 +163,28 @@ REMEDES = {
 }
 
 
+def plages_repliees(lignes: list[str]) -> set[int]:
+    """Les numeros de ligne compris dans un `<details>` REFERME, balises comprises.
+
+    C est la que Dependabot range ce qu il recopie : notes de version et liste de commits, en anglais
+    et en HTML. Un nom de paquet comme `eslint-plugin-n from` s y lisait comme une elision sans
+    apostrophe, et #6277 restait rouge sur un texte que personne ici n a ecrit (#6283). Sur les 300
+    dernieres demandes, les 15 qui portaient un `<details>` venaient toutes de Dependabot.
+
+    Un `<details>` jamais referme ne replie rien : sans cette condition, une balise oubliee ferait
+    taire tout le reste du corps, et le garde passerait sur une prose qu il n aurait pas lue.
+    """
+    repliees: set[int] = set()
+    ouverture = None
+    for numero, ligne in enumerate(lignes, 1):
+        if ouverture is None and ligne.lstrip().lower().startswith("<details"):
+            ouverture = numero
+        if ouverture is not None and "</details>" in ligne.lower():
+            repliees.update(range(ouverture, numero + 1))
+            ouverture = None
+    return repliees
+
+
 def releve(corps: str) -> list[tuple[int, str, str]]:
     """Les fautes du corps, ligne par ligne : le numéro, le nom de la faute, et la ligne.
 
@@ -164,11 +193,13 @@ def releve(corps: str) -> list[tuple[int, str, str]]:
     """
     fautes = []
     dans_un_bloc = False
-    for numero, ligne in enumerate(corps.splitlines(), 1):
+    lignes = corps.splitlines()
+    replies = plages_repliees(lignes)
+    for numero, ligne in enumerate(lignes, 1):
         if ligne.lstrip().startswith("```"):
             dans_un_bloc = not dans_un_bloc
             continue
-        if dans_un_bloc:
+        if dans_un_bloc or numero in replies:
             continue
         prose = CITE.sub("", ligne)
         if CADRATIN in prose:
@@ -400,6 +431,32 @@ CAS = (
         "trace d'outil",
         f"<li>Fix the Temurin job by <code>@brunoborges{SANS_CHASSE}</code> upstream</li>",
         "la même, ailleurs que derrière l'arobase, reste refusée",
+    ),
+    # Ce que Dependabot RECOPIE dans un `<details>` : la ligne exacte de #6277, qui rougissait (#6283).
+    (
+        0,
+        (
+            "<details>\n<summary>Commits</summary>\n"
+            "<li>Bump eslint-plugin-n from 18.1.0 to 18.3.0</li>\n</details>"
+        ),
+        "une élision apparente dans un <details> refermé passe",
+    ),
+    # Les trois bornes de l exemption. Sans elles, replier « tout ce qui suit une balise » passerait
+    # le cas ci-dessus aussi bien, et le garde se tairait sur une prose qu il n aurait pas lue.
+    (
+        "élision sans apostrophe",
+        "<li>Bump eslint-plugin-n from 18.1.0 to 18.3.0</li>",
+        "la même ligne hors d'un <details> reste refusée",
+    ),
+    (
+        "élision sans apostrophe",
+        "<details>\n<summary>Notes</summary>\n<li>Bump eslint-plugin-n from 18.1.0</li>",
+        "un <details> jamais refermé ne replie rien",
+    ),
+    (
+        "élision sans apostrophe",
+        "<details>\n<summary>Notes</summary>\n</details>\n<li>Bump eslint-plugin-n from 18.1.0</li>",
+        "ce qui suit un <details> refermé est jugé",
     ),
     # Epingle une DECISION, pas un comportement : un corps vide PASSE.
     (0, "", "un corps vide passe, faute de décision qui l'interdise"),
