@@ -608,6 +608,15 @@ jobs:
           chmod +x .github/scripts/verifie_butoirs.py
           python3 .github/scripts/verifie_butoirs.py --auto-test
           python3 .github/scripts/verifie_butoirs.py
+      - name: Un script que Windows peut lancer écrit en UTF-8
+        # La console de Windows encode en cp1252, où « ✓ » et « ⚠️ » n'existent pas : le tri des
+        # échecs de plateforme mourait sur son compte rendu après des tests verts, et le job
+        # rougissait en accusant la suite (#5197). Les auto-tests tournent ici, sous Linux, et ne
+        # pouvaient pas le voir.
+        run: |
+          chmod +x .github/scripts/verifie_sorties_sous_windows.py
+          python3 .github/scripts/verifie_sorties_sous_windows.py --auto-test
+          python3 .github/scripts/verifie_sorties_sous_windows.py
       - name: Une entrée booléenne ne se compare pas à une chaîne
         # `inputs.x == 'true'` vaut TOUJOURS faux, et `!= 'true'` TOUJOURS vrai : une entrée
         # `type: boolean` arrive comme un vrai booléen, et comparer deux types différents les casse

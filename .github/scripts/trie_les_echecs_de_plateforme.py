@@ -234,7 +234,7 @@ CAS = (
 
 
 def _auto_test() -> int:
-    """Les six cas de la version bash, dont quatre controles negatifs."""
+    """Les six cas de la version bash, la reconnaissance de TestFX, et la console de Windows."""
     import contextlib
     import io
     import shutil
