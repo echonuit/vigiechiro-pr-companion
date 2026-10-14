@@ -157,7 +157,9 @@ public final class BancReactivation {
 
     /// L'archivage tel que la réactivation le trouve : les séquences et les bruts de l'espace de travail
     /// ont quitté le disque, la base les connaît toujours. Il ne reste que la carte d'origine.
-    private static void archiver(Injector injecteur, Long idSession) {
+    /// Retire du disque les séquences et les originaux de la session, comme un archivage. Partagé avec le
+    /// banc de l'IHM, qui réactive la même nuit par la modale (#6256).
+    static void archiver(Injector injecteur, Long idSession) {
         for (SequenceDEcoute sequence : injecteur.getInstance(SequenceDao.class).findBySession(idSession)) {
             effacer(Path.of(sequence.cheminFichier()));
         }
@@ -172,7 +174,9 @@ public final class BancReactivation {
     /// ne porte, ni chemin, ni durée, ni fréquence d'acquisition. Plus rien en base ne relie alors la
     /// carte à la nuit, et c'est l'hydratation, qui relit la fréquence dans le journal de la carte, qui
     /// prend la main.
-    private static void oublierLesOriginaux(EnregistrementOriginalDao dao, Long idSession) {
+    /// Réduit les originaux à des placeholders, comme une nuit reconstruite : la réactivation prend alors
+    /// la voie d'hydratation, qui régénère ses bruts en parallèle. Partagé avec le banc de l'IHM (#6256).
+    static void oublierLesOriginaux(EnregistrementOriginalDao dao, Long idSession) {
         for (EnregistrementOriginal original : dao.findBySession(idSession)) {
             dao.update(new EnregistrementOriginal(
                     original.id(),

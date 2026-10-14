@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.Besoin;
 import fr.univ_amu.iut.commun.model.ExecutionParallele;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.ParallelismeDeFond;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RapportAncrage;
@@ -59,11 +60,11 @@ public class ServiceReactivationPassage {
 
     private static final String PARAM_ID_PASSAGE = "idPassage";
 
-    /// Parallélisme de la régénération des bruts à l'hydratation (#1779) : autant de tâches que de cœurs,
-    /// le pic disque/mémoire étant borné par le sémaphore de [ExecutionParallele]. C'était aussi la borne
-    /// de l'import, qui mène depuis #6175 la moitié des cœurs pour ne plus geler l'écran. Celle-ci reste,
-    /// faute de mesure de la réactivation dans l'IHM (ADR 6175).
-    private static final int PARALLELISME = Runtime.getRuntime().availableProcessors();
+    /// Parallélisme de la régénération des bruts à l'hydratation (#1779), borné par le sémaphore de
+    /// [ExecutionParallele] : la moitié des cœurs, comme l'import (ADR 6175). À tous les cœurs, elle ne
+    /// gelait pas l'écran d'un poste de seize, mais rien ne disait ce qu'elle laissait à l'interface et
+    /// aux autres applications d'un poste plus modeste (ADR 6256).
+    static final int PARALLELISME = ParallelismeDeFond.duPoste();
 
     private final SessionDao sessionDao;
     private final SequenceDao sequenceDao;

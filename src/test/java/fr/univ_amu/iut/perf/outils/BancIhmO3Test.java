@@ -3,7 +3,6 @@ package fr.univ_amu.iut.perf.outils;
 import static fr.univ_amu.iut.perf.outils.EcranDuBanc.RACINE;
 import static fr.univ_amu.iut.perf.outils.InstrumentsDuBanc.IMAGES_DE_GARDE;
 import static fr.univ_amu.iut.perf.outils.InstrumentsDuBanc.attendreLesImages;
-import static fr.univ_amu.iut.perf.outils.InstrumentsDuBanc.bloquerEtDater;
 import static fr.univ_amu.iut.perf.outils.InstrumentsDuBanc.heapApresGc;
 import static fr.univ_amu.iut.perf.outils.InstrumentsDuBanc.supprimer;
 import static fr.univ_amu.iut.perf.outils.InstrumentsDuBanc.surLeFil;
@@ -21,7 +20,6 @@ import fr.univ_amu.iut.importation.view.DesignationDuBanc;
 import fr.univ_amu.iut.importation.view.InspectionConclue;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
-import fr.univ_amu.iut.perf.outils.InstrumentsDuBanc.BlocageDate;
 import fr.univ_amu.iut.perf.outils.InstrumentsDuBanc.Gel;
 import fr.univ_amu.iut.perf.outils.InstrumentsDuBanc.Releve;
 import fr.univ_amu.iut.recette.Attente;
@@ -84,7 +82,6 @@ class BancIhmO3Test {
     /// Chaque nuit a sa date : la même date ferait demander « nuit déjà importée » (#147) dès la seconde.
     private static final LocalDate PREMIERE_NUIT = LocalDate.of(2026, 4, 22);
     private static final String UTILISATEUR = "bench-ihm";
-    private static final long BLOCAGE_TEMOIN_MS = 300;
     private static final int ECRANS_PAR_TOUR = 3;
 
     private EcranDuBanc ecran;
@@ -108,7 +105,7 @@ class BancIhmO3Test {
     void o3_nuits_successives() throws Exception {
         ecran.monter(EcranDuBanc.espace("o3-nuits"), BancIhmO3Test::semerUnCarre);
         Releve releve = ecran.releve("O3 nuits successives (" + WAV_PAR_NUIT + " WAV de 5 s par nuit)");
-        controlerLaDatation(releve);
+        ecran.controlerLaDatation(releve);
         releve.noterHeap("avant la première nuit", heapApresGc());
 
         for (int nuit = 1; nuit <= NUITS; nuit++) {
@@ -128,23 +125,6 @@ class BancIhmO3Test {
             releve.noterHeap("après la nuit " + nuit, heapApresGc());
         }
         releve.ecrire();
-    }
-
-    /// Le témoin de la datation, sur l'affichage du tir : sans lui, une date décalée d'une image ou d'un
-    /// écart entier se lirait comme une vraie.
-    private void controlerLaDatation(Releve releve) throws Exception {
-        BlocageDate temoin = bloquerEtDater(ecran.sonde(), BLOCAGE_TEMOIN_MS);
-        assertThat(temoin.dates())
-                .as("le blocage témoin donne un écart daté, et un seul")
-                .hasSize(1);
-        releve.noterTemoinDeDatation(BLOCAGE_TEMOIN_MS, temoin);
-        double uneImageMs = temoin.uneImageNs() / 1e6;
-        assertThat(temoin.avanceMs())
-                .as("l'écart daté commence à l'image d'avant le blocage, à une image près")
-                .isBetween(0.0, uneImageMs);
-        assertThat(temoin.retardMs())
-                .as("l'écart daté finit à l'image d'après le blocage, à une image près")
-                .isBetween(0.0, uneImageMs);
     }
 
     /// Une nuit générée, désignée à l'assistant et importée ; la carte retirée ensuite. Dans sa propre

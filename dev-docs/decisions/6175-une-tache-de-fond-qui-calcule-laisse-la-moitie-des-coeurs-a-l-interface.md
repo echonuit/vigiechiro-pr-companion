@@ -14,6 +14,7 @@ enforced_by:
 verification_note: "le premier compte les transformations en vol dans un vrai import et les veut égales à la borne du poste, ni plus ni moins ; le second tient la règle de calcul, passée à la mutation. Aucun des deux ne regarde une image : que l écran ne gèle plus se lit dans le relevé du banc de l IHM, qui ne tourne pas en CI"
 relations:
   amende: ["0044-le-mecanisme-de-parallelisme-suit-la-nature-de-l-attente"]
+  amendee_par: ["6256-la-reactivation-mene-la-moitie-des-coeurs-comme-l-import"]
 verified:
   - by: machine:ci
     at: 2026-10-13
@@ -23,6 +24,11 @@ generated:
 ---
 
 # Une tâche de fond qui calcule mène de front la moitié des cœurs, et laisse l'autre à l'interface
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-14** : le point 4 est **amendé** par
+    [6256](6256-la-reactivation-mene-la-moitie-des-coeurs-comme-l-import.md) : la réactivation mène
+    elle aussi la moitié des cœurs. Seule la compaction garde les siens.
 
 ## Contexte
 

@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.perf.outils;
 
+import static fr.univ_amu.iut.perf.outils.InstrumentsDuBanc.bloquerEtDater;
 import static fr.univ_amu.iut.perf.outils.InstrumentsDuBanc.bloquerLeFil;
 import static fr.univ_amu.iut.perf.outils.InstrumentsDuBanc.supprimer;
 import static fr.univ_amu.iut.perf.outils.InstrumentsDuBanc.surLeFil;
@@ -25,6 +26,7 @@ import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.multisite.view.NavigationMultisite;
+import fr.univ_amu.iut.perf.outils.InstrumentsDuBanc.BlocageDate;
 import fr.univ_amu.iut.perf.outils.InstrumentsDuBanc.Gel;
 import fr.univ_amu.iut.perf.outils.InstrumentsDuBanc.Questions;
 import fr.univ_amu.iut.perf.outils.InstrumentsDuBanc.Releve;
@@ -61,6 +63,9 @@ final class EcranDuBanc {
     /// Le nombre de relevés publiés après le geste jeté, selon le protocole d'`O5.md`.
     static final int RELEVES = 3;
 
+    /// Le blocage que la sonde doit dater à une image près, au début de chaque tir.
+    private static final long BLOCAGE_TEMOIN_MS = 300;
+
     static final Path RACINE =
             Path.of(System.getProperty("perf.ihm.racine", "target/banc-ihm")).toAbsolutePath();
 
@@ -78,6 +83,11 @@ final class EcranDuBanc {
 
     EcranDuBanc(Stage stage) {
         this.stage = stage;
+    }
+
+    /// La fenêtre du banc, que les bancs distinguent des modales qu'ils attendent.
+    Stage fenetre() {
+        return stage;
     }
 
     Injector injecteur() {
@@ -159,6 +169,23 @@ final class EcranDuBanc {
         });
         WaitForAsyncUtils.waitForFxEvents();
         echelle.verifier();
+    }
+
+    /// Le témoin de la datation, sur l'affichage du tir : sans lui, une date décalée d'une image ou d'un
+    /// écart entier se lirait comme une vraie.
+    void controlerLaDatation(Releve releve) throws Exception {
+        BlocageDate temoin = bloquerEtDater(sonde, BLOCAGE_TEMOIN_MS);
+        assertThat(temoin.dates())
+                .as("le blocage témoin donne un écart daté, et un seul")
+                .hasSize(1);
+        releve.noterTemoinDeDatation(BLOCAGE_TEMOIN_MS, temoin);
+        double uneImageMs = temoin.uneImageNs() / 1e6;
+        assertThat(temoin.avanceMs())
+                .as("l'écart daté commence à l'image d'avant le blocage, à une image près")
+                .isBetween(0.0, uneImageMs);
+        assertThat(temoin.retardMs())
+                .as("l'écart daté finit à l'image d'après le blocage, à une image près")
+                .isBetween(0.0, uneImageMs);
     }
 
     /// Un relevé ouvert sur l'échelle de la fenêtre montée : il ne s'ouvre qu'après [#monter].
