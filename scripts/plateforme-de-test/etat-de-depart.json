@@ -122,6 +122,18 @@
       "date_debut": "2026-06-18T21:00:00",
       "date_fin": "2026-06-19T06:00:00",
       "point": "Z1"
+    },
+    {
+      "cle": "nuit-preparee-sur-le-web",
+      "site": "carre-130711",
+      "observateur": "observatrice",
+      "date_debut": "2026-06-19T21:00:00",
+      "date_fin": "2026-06-20T06:00:00",
+      "point": "Z1",
+      "configuration": {
+        "micro0_numero_serie": "SMU-0417",
+        "canal_expansion_temps": "DROITE"
+      }
     }
   ],
   "donnees": [

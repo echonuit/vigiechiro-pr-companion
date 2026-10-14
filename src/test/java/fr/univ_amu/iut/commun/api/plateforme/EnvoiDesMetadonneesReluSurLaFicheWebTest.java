@@ -36,10 +36,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 /// Ce que Companion envoie des métadonnées d'un passage se relit sur la fiche web de Vigie-Chiro (#6062,
 /// sous-chantier #5645).
 ///
-/// Deux des trois défauts d'écriture de l'ADR 0020 réussissaient en `200` et se relisaient dans le JSON :
-/// le numéro de série partait sous une clé que le formulaire web ne lit pas (#1844), et la sentinelle
-/// « INCONNU » était publiée comme une donnée (#1828). Seule la fiche web les montrait, et aucun test ne
-/// la lisait.
+/// Les trois défauts d'écriture de l'ADR 0020 réussissaient en `200` : le numéro de série partait sous une
+/// clé que le formulaire web ne lit pas (#1844), la sentinelle « INCONNU » était publiée comme une donnée
+/// (#1828), et l'envoi effaçait ce que le formulaire gère sans que Companion le modélise. Seule la fiche
+/// web les montrait, et aucun test ne la lisait.
 ///
 /// L'envoi passe par [SynchronisationParticipation#pousserVers], le chemin que l'écran, la commande et
 /// le rattrapage empruntent, avec un vrai client pointé sur la plateforme de test. Seul le côté local est
@@ -47,8 +47,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 /// de production.
 ///
 /// Ce banc ne joue pas le bouton « Envoyer » de l'écran : aucun job de demande ne joue un scénario d'écran
-/// sur la plateforme de test. Il ne cite pas non plus S4-70 ni S4-71 par `@CasDeRecette`, qui ferait
-/// attendre un clip au tournage : les deux cas gardent leur marqueur « hors-portée », dont le motif le nomme.
+/// sur la plateforme de test. Il ne cite pas non plus S4-70, S4-71 ni S4-72 par `@CasDeRecette`, qui ferait
+/// attendre un clip au tournage : les cas gardent leur marqueur « hors-portée », dont le motif le nomme.
 ///
 /// Chaque cas écrit sur une participation à lui, que l'état de départ déclare : deux classes qui
 /// écriraient la même se disputeraient son `_etag`, et le second cas relirait le numéro du premier.
@@ -142,6 +142,23 @@ class EnvoiDesMetadonneesReluSurLaFicheWebTest {
         assertThat(navigateur.texteDe("body"))
                 .as("la fiche dit le type de l'appareil, que l'envoi publie, et aucun numéro de série")
                 .doesNotContain("Numéro de série du détecteur enregistreur");
+    }
+
+    @Test
+    @DisplayName("#6063 : un envoi n'efface pas ce que la fiche portait, et que Companion ne modélise pas")
+    void un_envoi_n_efface_pas_ce_que_la_fiche_portait() {
+        String participation = PlateformeDeTest.acces().id("participations:nuit-preparee-sur-le-web");
+
+        envoyer(participation, passage("2026-06-19", NUMERO_DE_SERIE));
+
+        navigateur.ouvrir("participations/" + participation);
+        // Le numéro de l'enregistreur vient de l'envoi : il dit que la fiche relue est celle d'après.
+        attendreSurLaFiche("Numéro de série du détecteur enregistreur : " + NUMERO_DE_SERIE);
+        assertThat(navigateur.texteDe("body"))
+                .as("le PATCH remplace la configuration entière : partie de la seule configuration locale,"
+                        + " elle effaçait le micro et le canal que le formulaire web gère (ADR 0020)")
+                .contains("Numéro de série du micro 0 : SMU-0417")
+                .contains("Canal en expansion de temps : DROITE");
     }
 
     /// Envoie les métadonnées du passage vers la participation, par le chemin de production.
