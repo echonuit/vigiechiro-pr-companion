@@ -63,6 +63,7 @@ Usage :
     python3 scripts/methode/verifie-batterie-locale.py --auto-test
 """
 
+import ast
 import fnmatch
 import pathlib
 import re
@@ -71,6 +72,7 @@ import sys
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
 from _commun import cas_d_auto_test, rapporte, sort_si_contrat_demande
+from batterie import JUGENT
 
 WORKFLOWS = RACINE / ".github" / "workflows"
 BATTERIE = RACINE / ".agents" / "skills" / "ouvrir-une-pr" / "SKILL.md"
@@ -105,11 +107,31 @@ def couvertes_par_rapport() -> set[str]:
 
 
 def est_un_garde(relatif: str) -> bool:
-    """Un garde DECLARE ce qu il est. Ce qui ne declare rien produit, mais ne juge pas."""
+    """Un garde DECLARE un dispositif qui juge. Ce qui ne declare rien, ou declare qu il produit, ne juge pas.
+
+    La presence du contrat suffisait tant que seuls des gardes en declaraient un. Depuis #5192, un
+    generateur ou un rapport en porte un pour dire ce qu il est, et c est son DISPOSITIF qui tranche.
+    La regle est celle de la porte, `batterie.JUGENT`, reprise et non recopiee : deux listes des
+    dispositifs qui jugent finiraient par diverger.
+    """
     fichier = RACINE / relatif
     if not fichier.exists():
         return False
-    return "CONTRAT = {" in fichier.read_text(encoding="utf-8", errors="replace")
+    try:
+        arbre = ast.parse(fichier.read_text(encoding="utf-8", errors="replace"))
+    except SyntaxError:
+        return False
+    for noeud in ast.walk(arbre):
+        if not (
+            isinstance(noeud, ast.Assign)
+            and any(getattr(c, "id", "") == "CONTRAT" for c in noeud.targets)
+            and isinstance(noeud.value, ast.Dict)
+        ):
+            continue
+        for cle, valeur in zip(noeud.value.keys, noeud.value.values):
+            if isinstance(cle, ast.Constant) and cle.value == "dispositif":
+                return isinstance(valeur, ast.Constant) and valeur.value in JUGENT
+    return False
 
 
 def noms_de_la_page(texte: str) -> list[str]:
@@ -139,7 +161,11 @@ PORTE = "scripts/batterie.py"
 
 
 def gardes_de_la_porte() -> list[str]:
-    """Tout ce que la porte engage : un fichier de `scripts/` qui DECLARE un contrat.
+    """Tout ce que la porte engage : un fichier de `scripts/` dont le contrat declare un dispositif qui juge.
+
+    Elle disait « qui DECLARE un contrat », ce qui revenait au meme tant que seuls des gardes en
+    declaraient un. Depuis #5192, des outils en portent un, et la porte ne les engage pas
+    (`batterie.JUGENT`) : une surface qui prescrit `scripts/qualite/appelants.py` n a pas a l y envoyer.
 
     Distincte de `population()`, qui soustrait ce que `rapport.py` balaie parce qu elle repond a une
     autre question - « la page les nomme-t-elle ? ». Ici la question est « la surface envoie-t-elle a
@@ -152,7 +178,7 @@ def gardes_de_la_porte() -> list[str]:
     return sorted(
         str(f.relative_to(RACINE))
         for f in (RACINE / "scripts").rglob("*.py")
-        if "CONTRAT = {" in f.read_text(encoding="utf-8", errors="replace")
+        if est_un_garde(str(f.relative_to(RACINE)))
     )
 
 
@@ -234,6 +260,27 @@ def _auto_test() -> int:
     )
     verifie(
         "un script inexistant n en est pas un", est_un_garde("scripts/methode/absent.py"), False
+    )
+    # Depuis #5192, un outil peut declarer un contrat pour dire ce qu il est : c est le DISPOSITIF
+    # qui fait le garde, pas la presence du contrat. Un generateur et un rapport n en sont pas.
+    verifie(
+        "un generateur muni d un contrat n est pas un garde",
+        lambda: est_un_garde("scripts/graphify/rebuild.py"),
+        False,
+    )
+    verifie(
+        "un rapport muni d un contrat n est pas un garde",
+        lambda: est_un_garde("scripts/qualite/appelants.py"),
+        False,
+    )
+    verifie(
+        "la porte n engage pas un outil muni d un contrat",
+        lambda: [
+            g
+            for g in ("scripts/graphify/rebuild.py", "scripts/qualite/appelants.py")
+            if g in gardes_de_la_porte()
+        ],
+        [],
     )
 
     # `rapport.py` balaie-t-il TOUJOURS ce que cette population lui soustrait ? Sans ce cas, une
