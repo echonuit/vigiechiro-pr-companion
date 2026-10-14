@@ -732,6 +732,34 @@ class SynchronisationParticipationTest {
     }
 
     @Test
+    @DisplayName("#6211, #6228 : tirer laisse vide ce qu'il ne relit pas, et le rend à son appelant")
+    void tirer_depuis_rend_ce_qui_n_a_pas_ete_relu() {
+        when(passageDao.findById(42L)).thenReturn(Optional.of(passage(null)));
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        ParticipationDetail modele = detail("e1");
+        when(client.participation("part-1"))
+                .thenReturn(ReponseApi.succes(new ParticipationDetail(
+                        modele.id(),
+                        modele.etag(),
+                        modele.point(),
+                        modele.dateDebut(),
+                        modele.dateFin(),
+                        modele.meteo(),
+                        Map.of("micro0_position", "hauteur", "micro0_hauteur", "2,5"),
+                        modele.traitement())));
+
+        List<String> nonRelus = sync.tirerDepuis(42L);
+
+        assertThat(nonRelus).containsExactly("position du micro « hauteur »");
+        ArgumentCaptor<MaterielMicro> micro = ArgumentCaptor.forClass(MaterielMicro.class);
+        verify(materielDao).definir(micro.capture());
+        assertThat(micro.getValue().positionMicro()).isNull();
+        assertThat(micro.getValue().hauteurMetres())
+                .as("« 2,5 » se relit, virgule comprise")
+                .isEqualTo(2.5);
+    }
+
+    @Test
     @DisplayName("#4706 : tirer NOTE ce que la plateforme portait, pour servir de base au conflit")
     void tirer_depuis_note_le_releve() {
         when(passageDao.findById(42L)).thenReturn(Optional.of(passage(null)));

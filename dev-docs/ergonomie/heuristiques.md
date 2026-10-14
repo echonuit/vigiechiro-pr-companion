@@ -112,7 +112,7 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-ergonomie.p
 | `nielsen-6` | Reconnaissance plutôt que rappel | 0 | **aucune** |
 | `nielsen-7` | Flexibilité et efficience | 2 | [1874-la-cli-rend-le-lien-sans-ouvrir-de-navigateur](../decisions/1874-la-cli-rend-le-lien-sans-ouvrir-de-navigateur.md), [5784-un-releve-qui-trouve-l-analyse-terminee-importe](../decisions/5784-un-releve-qui-trouve-l-analyse-terminee-importe.md) |
 | `nielsen-8` | Esthétique et sobriété | 2 | [4366-un-avertissement-se-dit-en-mots](../decisions/4366-un-avertissement-se-dit-en-mots.md), [5824-l-ecran-et-la-commande-n-offrent-et-ne-nomment-que-ce-qui-sert](../decisions/5824-l-ecran-et-la-commande-n-offrent-et-ne-nomment-que-ce-qui-sert.md) |
-| `nielsen-9` | Reconnaître, diagnostiquer, corriger | 4 | [5598-la-provenance-d-un-refus-remonte-par-le-depot](../decisions/5598-la-provenance-d-un-refus-remonte-par-le-depot.md), [5720-un-perdant-de-collision-est-une-absence-attendue](../decisions/5720-un-perdant-de-collision-est-une-absence-attendue.md), [5839-le-point-fixe-n-impose-aucune-distance-entre-deux-points](../decisions/5839-le-point-fixe-n-impose-aucune-distance-entre-deux-points.md), et 1 autre |
+| `nielsen-9` | Reconnaître, diagnostiquer, corriger | 5 | [5598-la-provenance-d-un-refus-remonte-par-le-depot](../decisions/5598-la-provenance-d-un-refus-remonte-par-le-depot.md), [5692-un-outil-absent-fait-refuser](../decisions/5692-un-outil-absent-fait-refuser.md), [5720-un-perdant-de-collision-est-une-absence-attendue](../decisions/5720-un-perdant-de-collision-est-une-absence-attendue.md), et 2 autres |
 | `nielsen-10` | Aide et documentation | 0 | **aucune** |
 | `affordance` | Affordance | 0 | **aucune** |
 | `signifiant` | Signifiant | 0 | **aucune** |

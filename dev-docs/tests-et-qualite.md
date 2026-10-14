@@ -507,7 +507,20 @@ monte une plateforme **par JVM**, au premier test qui la demande, dans cet ordre
    racine (`FRONTEND_HOSTED`) : le front et l'API ont la même origine, et le front appelle l'API par
    l'adresse relative `/api/v1` (#6060) ;
 4. l'état de départ déclaré (`etat-de-depart.json`), matérialisé par `amorcer.py` dans le
-   conteneur de l'API.
+   conteneur de l'API ;
+5. Toxiproxy, démarré en premier, avec deux mandataires devant l'API et le faux S3 (#6258). La JVM
+   joint les deux par eux, et `DEV_FAKE_S3_URL` est l'adresse du mandataire du faux S3 : les
+   téléversements y passent aussi. Le navigateur des bancs de la fiche web garde son chemin dans le
+   réseau, par l'alias de l'API.
+
+Un test pose un **profil de réseau** le temps d'un bloc, `try (var _ =
+PlateformeDeTest.sous(ProfilReseau.LENT)) { … }`, que la sortie du bloc retire : la plateforme est
+partagée par les classes d'un même fork, et un profil oublié ralentirait les suivantes. Les profils
+sont `NOMINAL`, `LENT` (une latence sur chaque réponse), `DEBIT_LIMITE` (un débit montant borné) et
+`COUPURE` (les deux mandataires fermés). Ils prouvent que Companion encaisse un réseau dégradé, pas
+que le vrai réseau se comporte comme eux : la plateforme nationale reste la vérification (chantier
+#5646). `ReseauDeLaPlateformeDeTestTest` exige que chaque profil s'applique bien à ce que la JVM
+joint.
 
 Elle pose ensuite `vigiechiro.s3.hotes` et fait accepter le certificat du faux S3 par
 `SSLContext.setDefault`. Cela ne tient que si aucun client HTTP n'a été construit avant dans le

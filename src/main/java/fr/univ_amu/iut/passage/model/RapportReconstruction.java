@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.passage.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /// Rapport d'une reconstruction (#1305) : ce que la plateforme a permis de recréer, et, tout aussi
@@ -29,5 +30,15 @@ public record RapportReconstruction(
                         + " identifiées n'existent pas côté serveur.",
                 "Aucune empreinte de fichier : une réactivation s'appuiera sur les noms et sur les cris"
                         + " eux-mêmes (vérification acoustique), pas sur une empreinte.");
+    }
+
+    /// Les lacunes structurelles, suivies de celles **de cette nuit** : les valeurs du matériel micro que la
+    /// lecture n'a pas su prendre, laissées vides (#6211, #6228).
+    ///
+    /// @param microNonRelus une ligne par valeur écartée, ex. `hauteur du micro « 2-3 »`
+    public static List<String> lacunesAvec(List<String> microNonRelus) {
+        List<String> lacunes = new ArrayList<>(lacunesConnues());
+        microNonRelus.forEach(valeur -> lacunes.add("Valeur non relue, laissée vide : " + valeur + "."));
+        return List.copyOf(lacunes);
     }
 }

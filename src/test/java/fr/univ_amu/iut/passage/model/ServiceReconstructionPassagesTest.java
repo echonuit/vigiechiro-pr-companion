@@ -665,6 +665,35 @@ class ServiceReconstructionPassagesTest {
     }
 
     @Test
+    @DisplayName("#6211, #6228 synchro : le bilan compte les nuits dont le micro n'a pas pu être relu")
+    void synchroniser_dit_le_micro_non_relu() {
+        when(client.mesParticipations()).thenReturn(new ReponseApi.Succes<>(List.of(participation(PARTICIPATION))));
+        when(client.participation(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(detailAvecHauteur("2-3")));
+        when(client.csvObservations(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(Optional.of(CSV_OBSERVATIONS)));
+        when(importObservations.nomsSequencesCsv(CSV_OBSERVATIONS)).thenReturn(List.of(SEQ_1, SEQ_2));
+
+        Optional<RapportSynchro> rapport = service.synchroniser(client);
+
+        assertThat(rapport)
+                .hasValueSatisfying(compteRendu -> assertThat(compteRendu.enClair())
+                        .contains("1 nuit(s) récupérée(s)")
+                        .contains("hauteur ou position du micro non relue sur 1 nuit(s), laissée vide"));
+    }
+
+    @Test
+    @DisplayName("#6211, #6228 reconstruire : la hauteur non relue figure parmi les lacunes de la nuit")
+    void reconstruire_nomme_la_hauteur_non_relue() {
+        bouchonnerPlateforme();
+        when(client.participation(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(detailAvecHauteur("2-3")));
+
+        RapportReconstruction rapport = service.reconstruire(PARTICIPATION);
+
+        assertThat(rapport.lacunes())
+                .containsAll(RapportReconstruction.lacunesConnues())
+                .contains("Valeur non relue, laissée vide : hauteur du micro « 2-3 ».");
+    }
+
+    @Test
     @DisplayName("#2557 : un squelette rapatrié AVANT ce correctif est complété au tour suivant, pas laissé à vie")
     void synchroniser_rattrape_un_squelette_preexistant() {
         when(client.mesParticipations()).thenReturn(new ReponseApi.Succes<>(List.of(participation(PARTICIPATION))));
@@ -1173,6 +1202,26 @@ class ServiceReconstructionPassagesTest {
     }
 
     /// Détail complet façon formulaire web : n° de série sous la clé **canonique**, météo et micro renseignés.
+    /// Le [#detailComplet] dont la hauteur du micro est écrite `hauteur`.
+    private static ParticipationDetail detailAvecHauteur(String hauteur) {
+        ParticipationDetail modele = detailComplet();
+        return new ParticipationDetail(
+                modele.id(),
+                modele.etag(),
+                modele.point(),
+                modele.dateDebut(),
+                modele.dateFin(),
+                modele.meteo(),
+                Map.of(
+                        "detecteur_enregistreur_numero_serie",
+                        "1997632",
+                        "micro0_type",
+                        "ICS",
+                        "micro0_hauteur",
+                        hauteur),
+                modele.traitement());
+    }
+
     private static ParticipationDetail detailComplet() {
         return new ParticipationDetail(
                 PARTICIPATION,

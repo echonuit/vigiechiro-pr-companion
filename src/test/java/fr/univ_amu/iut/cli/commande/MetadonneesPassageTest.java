@@ -80,6 +80,18 @@ class MetadonneesPassageTest {
     }
 
     @Test
+    @DisplayName("#6211, #6228 --passage --recuperer : une valeur du micro non relue se dit, laissée vide")
+    void recuperer_dit_ce_qui_n_a_pas_ete_relu() {
+        when(synchronisation.tirerDepuis(1L)).thenReturn(List.of("hauteur du micro « 2-3 »"));
+        StringWriter sortie = new StringWriter();
+
+        int code = ligne(sortie).execute("--passage", "1", "--recuperer");
+
+        assertThat(code).isZero();
+        assertThat(sortie.toString()).contains("Non relu, laissé vide : hauteur du micro « 2-3 ».");
+    }
+
+    @Test
     @DisplayName("#1861 --passage --envoyer : signale le réalignement des heures (#1885)")
     void envoyer_dit_le_realignement() {
         when(synchronisation.pousserVers(1L))
@@ -187,7 +199,8 @@ class MetadonneesPassageTest {
                     1L,
                     false,
                     true,
-                    Optional.of(new EnvoiParticipation.Realignement("15:00", "15:00", "21:00", "06:00"))));
+                    Optional.of(new EnvoiParticipation.Realignement("15:00", "15:00", "21:00", "06:00")),
+                    List.of()));
             issue.accept(new IssuePassage.Ignore(2L, "Participation introuvable."));
             return new BilanRattrapage(1, 1, 1);
         });
@@ -202,6 +215,24 @@ class MetadonneesPassageTest {
                 .contains("[2/2]")
                 .contains("ignorée : Participation introuvable.")
                 .contains("1 nuit(s) traitée(s), 1 ignorée(s), 1 dont les heures");
+    }
+
+    @Test
+    @DisplayName("#6211, #6228 --tout : la ligne d'une nuit récupérée nomme ce qui n'a pas été relu")
+    void tout_nomme_ce_qui_n_a_pas_ete_relu() {
+        when(rattrapage.passagesLies()).thenReturn(List.of(1L));
+        when(rattrapage.rattraper(any(), anyBoolean(), anyBoolean(), any())).thenAnswer(invocation -> {
+            Consumer<IssuePassage> issue = invocation.getArgument(3);
+            issue.accept(new IssuePassage.Traite(
+                    1L, true, false, Optional.empty(), List.of("position du micro « hauteur »")));
+            return new BilanRattrapage(1, 0, 0);
+        });
+        StringWriter sortie = new StringWriter();
+
+        int code = ligne(sortie).execute("--tout", "--envoyer", "--confirmer");
+
+        assertThat(code).isZero();
+        assertThat(sortie.toString()).contains("récupérée, non relu : position du micro « hauteur »");
     }
 
     @Test

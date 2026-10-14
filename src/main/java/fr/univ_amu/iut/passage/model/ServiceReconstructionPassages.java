@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 /// **Reconstruit un passage jamais importé sur cette machine** (#1305, EPIC #1297), à partir de ce que
 /// VigieChiro en sait.
@@ -193,7 +194,32 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
     /// @param completees nuits amenées au niveau « contenu » (séquences + observations)
     /// @param resteesIncompletes nuits toujours en squelette : leur analyse n'est pas terminée sur la
     ///     plateforme, ou leur CSV n'y est pas encore exposé. Elles seront reprises au prochain tour
-    record BilanTour(int crees, int completees, int enAttenteDAnalyse, int nonLues) {
+    /// @param microNonRelus nuits créées dont la hauteur ou la position du micro n'a pas pu être relue, et
+    ///     reste vide localement (#6211, #6228)
+    record BilanTour(int crees, int completees, int enAttenteDAnalyse, int nonLues, int microNonRelus) {
+
+        /// Un tour dont toutes les nuits créées ont vu leur matériel micro relu, ou n'en portaient pas.
+        BilanTour(int crees, int completees, int enAttenteDAnalyse, int nonLues) {
+            this(crees, completees, enAttenteDAnalyse, nonLues, 0);
+        }
+
+        /// La précision du compte rendu : ce qui reste, puis ce que le tour n'a pas su relire du matériel
+        /// micro, chacun omis s'il n'a rien à dire. Chaîne vide si rien ne mérite d'être précisé.
+        String precision() {
+            return String.join(
+                    " ; ",
+                    Stream.of(reste(), microNonRelu())
+                            .filter(partie -> !partie.isEmpty())
+                            .toList());
+        }
+
+        /// Ce que le tour n'a pas su relire du matériel micro, ou une chaîne vide. Le détail de chaque
+        /// valeur se lit en récupérant la nuit, qui la nomme.
+        String microNonRelu() {
+            return microNonRelus == 0
+                    ? ""
+                    : "hauteur ou position du micro non relue sur " + microNonRelus + " nuit(s), laissée vide";
+        }
 
         /// Rien **ne s'est passé** : ni nuit créée, ni nuit complétée.
         ///
@@ -270,8 +296,8 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         // Rien n'est dit quand tout est récupéré : « 12 sur 12 » fait chercher une différence qui n'existe
         // pas, la faute corrigée sur les volumes (#2677) et les validations (#2695).
         RapportSynchro rapport = new RapportSynchro("nuit(s) récupérée(s)", bilan.completees());
-        String reste = bilan.reste();
-        return Optional.of(reste.isEmpty() ? rapport : rapport.avecPrecision(reste));
+        String precision = bilan.precision();
+        return Optional.of(precision.isEmpty() ? rapport : rapport.avecPrecision(precision));
     }
 
     /// [Phase#DEPENDANTE] : les passages se rapatrient sur des points d'écoute **déjà locaux**, créés par le
@@ -296,14 +322,19 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
     ///
     /// @return ce que le tour a fait des nuits du compte
     BilanTour synchroniserStructure(Consumer<Progression> suivi, JetonAnnulation jeton) {
-        int crees = creerLesNuitsAbsentes();
+        Creations creations = creerLesNuitsAbsentes();
         HydratationSquelette.BilanCompletion completion = hydratation.completerLesSquelettes(
                 passagesParParticipation().values().stream().toList(), suivi, jeton);
-        return new BilanTour(crees, completion.completees(), completion.enAttenteDAnalyse(), completion.nonLues());
+        return new BilanTour(
+                creations.crees(),
+                completion.completees(),
+                completion.enAttenteDAnalyse(),
+                completion.nonLues(),
+                creations.microNonRelus());
     }
 
-    /// @return le nombre de passages créés
-    private int creerLesNuitsAbsentes() {
+    /// @return le nombre de passages créés, et combien portent un matériel micro non relu
+    private Creations creerLesNuitsAbsentes() {
         Map<String, Long> passageParParticipation = passagesParParticipation();
         List<NuitARapatrier> candidats = new ArrayList<>();
         for (ParticipationVigieChiro participation : plateforme.participations()) {
@@ -322,12 +353,12 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
             candidats.add(new NuitARapatrier(orpheline, idPoint.get(), debut.get()));
         }
         if (candidats.isEmpty()) {
-            return 0;
+            return new Creations(0, 0);
         }
         List<Optional<ParticipationDetail>> details = plateforme.detailsBestEffort(candidats.stream()
                 .map(candidat -> candidat.orpheline().idParticipation())
                 .toList());
-        int crees = 0;
+        List<CreationPassageArchive.PassageArchive> creees = new ArrayList<>();
         for (int i = 0; i < candidats.size(); i++) {
             NuitARapatrier candidat = candidats.get(i);
             Optional<ParticipationDetail> detail = details.get(i);
@@ -340,17 +371,23 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
                     candidat.orpheline().codePoint());
             LocalDateTime fin = detail.flatMap(connu -> horaires.lire(candidat.idPoint(), connu.dateFin()))
                     .orElse(candidat.debut());
-            Long idPassage = creationStructure
-                    .creerNuitRapatriee(candidat.idPoint(), numeroPassage, candidat.debut(), fin, prefixe, detail)
-                    .idPassage();
+            CreationPassageArchive.PassageArchive creee = creationStructure.creerNuitRapatriee(
+                    candidat.idPoint(), numeroPassage, candidat.debut(), fin, prefixe, detail);
+            creees.add(creee);
+            Long idPassage = creee.idPassage();
             liens.upsert(new LienVigieChiro(
                     LienVigieChiro.ENTITE_PASSAGE,
                     String.valueOf(idPassage),
                     candidat.orpheline().idParticipation()));
-            crees++;
         }
-        return crees;
+        return new Creations(creees.size(), (int) creees.stream()
+                .filter(CreationPassageArchive.PassageArchive::microIncomplet)
+                .count());
     }
+
+    /// Ce que [#creerLesNuitsAbsentes] a créé : les nuits, et celles dont le matériel micro n'a pas pu être
+    /// relu.
+    private record Creations(int crees, int microNonRelus) {}
 
     /// Une nuit nouvelle à rapatrier : l'orpheline distante et sa résolution locale (point + début), portées
     /// de la phase « candidats » (lectures) à la phase « création » (écritures) sans les recalculer.
@@ -537,7 +574,7 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
                     idPassage,
                     structure.nbSequences(),
                     observations.nbObservations(),
-                    RapportReconstruction.lacunesConnues());
+                    RapportReconstruction.lacunesAvec(structure.microNonRelus()));
         } catch (RuntimeException interruption) {
             if (idPassage != null) {
                 annulerReconstructionPartielle(idPassage, interruption);

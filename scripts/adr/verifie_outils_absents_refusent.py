@@ -39,8 +39,12 @@ rien. Et chercher le texte `except OSError` encore moins, pour la meme raison.
 
 ## Ce que ce garde ne fait pas
 
-**Il ne juge que `gh`.** C est le seul outil externe que le depot appelle par `subprocess.run` avec un
-premier argument litteral. Un autre outil s ajouterait a `OUTILS` avec sa raison.
+**Il juge `gh` et `git`, et pas sous le meme regime.** Il n a longtemps juge que `gh`, en se disant
+« le seul outil externe que le depot appelle avec un premier argument litteral » : c etait faux, `git`
+l etait 61 fois sans filet, et le garde ne pouvait pas le dire (#6058). `gh` reste un invariant, aucun
+appel nu ne passe. `git` est tenu par un cliquet qui descend, lu dans l ADR 5692 : la decision vaut
+pour lui aussi, mais sa dette se resorbe lot par lot au lieu d etre refusee d un coup. Un autre outil
+s ajouterait a `OUTILS` avec sa raison, et son regime.
 
 **Il ne suit pas une couture.** Un appel passe par un parametre - `lanceur(arguments, ...)`, comme
 `surveille_la_demande.py` le fait pour ses cas hors ligne - n a pas de premier argument litteral, donc
@@ -58,11 +62,18 @@ import sys
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
 
-from _commun import cas_d_auto_test, refuse, sort_si_contrat_demande
+from _commun import cas_d_auto_test, rapporte, sort_si_contrat_demande
 
-# ⟨les outils dont l absence doit REFUSER⟩ Un seul aujourd hui : `gh` est le seul outil externe que
-# le depot appelle avec un premier argument litteral. En ajouter un demande d ecrire pourquoi.
-OUTILS = ("gh",)
+# ⟨les outils dont l absence doit REFUSER⟩ `gh` depuis #5692, `git` depuis #6058. Le garde ne
+# regardait que `gh`, et 61 appels a `git` levaient sans qu il puisse le dire (mesure du 2026-10-14).
+OUTILS = ("gh", "git")
+
+# ⟨deux regimes, et la raison de l ecart⟩ `gh` n a plus aucun appel nu : il reste un invariant, et
+# le premier appel nu refuse. `git` en avait 61 le jour ou il est entre : les refuser d un coup aurait
+# demande une campagne sur 25 fichiers, et le porteur a choisi un cliquet qui descend (article A9).
+# Son seuil se lit dans l en-tete de l ADR 5692, comme tout cliquet du depot.
+STRICTS = ("gh",)
+ADR = "5692"
 
 # ⟨ce qui couvre un executable introuvable⟩ Les deux premiers le nomment, les deux derniers le
 # couvrent par ratissage. `CalledProcessError` n y est pas : elle parle d un code de sortie, pas d un
@@ -188,27 +199,51 @@ def nus(fichiers: list[pathlib.Path] | None = None) -> list[str]:
     return sorted(trouves)
 
 
-def juge() -> int:
-    tous = []
-    for fichier in _fichiers():
-        try:
-            arbre = ast.parse(fichier.read_text(encoding="utf-8"))
-        except (SyntaxError, UnicodeDecodeError, OSError):
-            continue
-        tous += [n for n in ast.walk(arbre) if isinstance(n, ast.Call) and vise_un_outil(n)]
-    muets = nus()
-    print(f"OUTILS EXTERNES | appels={len(tous)} | sans filet={len(muets)}")
-    for ligne in muets:
-        print(f"  ✘ {ligne}")
-    if muets:
-        refuse(
-            f"{len(muets)} appel(s) a un outil externe qui LEVENT au lieu de refuser : "
-            + ", ".join(muets),
-            "entourez l appel d un `try` qui attrape `OSError`, et faites-lui rendre un refus qui "
-            "nomme sa cause et son geste - `check=False` ne couvre PAS un executable introuvable. "
-            "`mesure_duree_portail.insiste` en est le patron.",
+def outil_de(ligne: str) -> str:
+    """L outil qu une ligne de `nus()` nomme, lu dans sa forme fixe « lance « outil » »."""
+    return ligne.split("« ", 1)[1].split(" »", 1)[0]
+
+
+def stricts_nus(muets: list[str]) -> list[str]:
+    """Les appels nus a un outil SANS marge : un seul suffit a faire rougir."""
+    return [ligne for ligne in muets if outil_de(ligne) in STRICTS]
+
+
+def juge(muets: list[str] | None = None, appels: list[str] | None = None) -> int:
+    """Le cliquet pour les outils qui en ont un, l invariant pour les autres, et le pire des deux.
+
+    `muets` et `appels` sont injectables pour l auto-test ; sans eux, le garde lit le depot.
+    """
+    if appels is None:
+        appels = []
+        for fichier in _fichiers():
+            try:
+                arbre = ast.parse(fichier.read_text(encoding="utf-8"))
+            except (SyntaxError, UnicodeDecodeError, OSError):
+                continue
+            appels += [
+                o for n in ast.walk(arbre) if isinstance(n, ast.Call) and (o := vise_un_outil(n))
+            ]
+    muets = nus() if muets is None else muets
+    print(f"OUTILS EXTERNES | appels={len(appels)} | sans filet={len(muets)}")
+
+    sous_cliquet = [ligne for ligne in muets if outil_de(ligne) not in STRICTS]
+    lus = sum(1 for outil in appels if outil not in STRICTS)
+    code = rapporte(ADR, "appels a git qui levent au lieu de refuser", sous_cliquet, lus=lus)
+
+    stricts = stricts_nus(muets)
+    if stricts:
+        for ligne in stricts:
+            print(f"  ✘ {ligne}")
+        print(
+            f"\nÉCHEC : {len(stricts)} appel(s) a « gh » qui LEVENT au lieu de refuser, et « gh » n a\n"
+            "aucune marge. Entourez l appel d un `try` qui attrape `OSError`, ou sondez l outil par\n"
+            "`shutil.which` avant de le lancer, et faites rendre un refus qui nomme sa cause et son\n"
+            "geste : `check=False` ne couvre PAS un executable introuvable.",
+            file=sys.stderr,
         )
-    return 0
+        return 1
+    return code
 
 
 def _auto_test() -> int:
@@ -323,6 +358,50 @@ def _auto_test() -> int:
         lambda: dans_un_bac("def f(lanceur, args):\n    return lanceur(args, check=False)\n"),
         [],
     )
+    # ⟨`git` entre dans la population⟩ Avant #6058, ce cas rendait [] : `git` n etait pas declare.
+    verifie(
+        "un appel nu a « git » est vu, comme un appel a « gh »",
+        lambda: [
+            outil_de(ligne)
+            for ligne in dans_un_bac(NU.replace("'gh', 'pr', 'list'", "'git', 'status'"))
+        ],
+        ["git"],
+    )
+
+    # ⟨LES DEUX REGIMES, joues sur le verdict et non sur le calcul⟩ La sortie est capturee : un cas
+    # qui eprouve un chemin de refus ne doit pas laisser sa marque dans le journal du garde (#5890).
+    import contextlib
+    import io
+
+    def verdict(muets: list[str], appels: list[str]) -> int:
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            return juge(muets, appels)
+
+    import _commun
+
+    marge = _commun.cliquet(ADR)
+
+    def git_nus(n: int) -> list[str]:
+        return [f"f{i}.py:1 lance « git » sans filet" for i in range(n)]
+
+    gh_nu = ["g.py:1 lance « gh » sans filet"]
+    verifie("« git » AU cliquet passe", lambda: verdict(git_nus(marge), ["git"] * (marge + 3)), 0)
+    verifie(
+        "« git » un cran AU-DELA du cliquet rougit",
+        lambda: verdict(git_nus(marge + 1), ["git"] * (marge + 3)),
+        1,
+    )
+    verifie(
+        "un seul « gh » nu rougit, meme quand « git » tient son cliquet",
+        lambda: verdict(git_nus(marge) + gh_nu, ["git"] * (marge + 3) + ["gh"]),
+        1,
+    )
+    verifie(
+        "un « gh » nu ne s ajoute PAS au compte de « git »",
+        lambda: stricts_nus(git_nus(2) + gh_nu),
+        gh_nu,
+    )
+
     # Le compte se DERIVE du harnais : un litteral reste juste le jour ou on l ecrit et
     # faux au cas suivant (#5744).
     print(
@@ -333,17 +412,19 @@ def _auto_test() -> int:
 
 CONTRAT = {
     "geste": "appel a un outil externe qui leve au lieu de refuser",
-    "population": 'les `subprocess.run(["gh", ...])` a premier argument litteral que git suit',
-    "dispositif": "invariant",
-    "seuil": "(aucune marge : tout appel sans filet refuse)",
+    "population": 'les `subprocess.run(["gh" ou "git", ...])` a premier argument litteral que git suit',
+    "dispositif": "cliquet",
+    "seuil": "61, polarite=descend",
     "temoin": "scripts/adr/verifie_outils_absents_refusent.py --auto-test",
-    "decision": "#5692",
+    "decision": "ADR 5692",
     # ⟨les deux fonds de forge, et tout ce qui les appelle⟩ Les six appels d origine vivaient dans
     # `.github/scripts/` ET `scripts/`, ce qui est la raison pour laquelle un garde vaut mieux que
     # six relectures : aucun lot ne touche les deux a la fois.
+    # `.github/assets/` depuis #6058 : ses outils de rendu appellent `git` sans filet, onze fois.
     "chemins": """
 scripts/**
 .github/scripts/**
+.github/assets/**
 """,
 }
 

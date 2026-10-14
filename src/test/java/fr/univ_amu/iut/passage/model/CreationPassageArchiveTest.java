@@ -154,5 +154,33 @@ class CreationPassageArchiveTest {
         assertThat(new SequenceDao(source).findBySession(session.id()))
                 .as("0 séquence : l'audio et les observations viennent à la reconstruction")
                 .isEmpty();
+        assertThat(r.microNonRelus()).as("tout le micro du détail se relit").isEmpty();
+    }
+
+    @Test
+    @DisplayName("#6211, #6228 : une nuit rapatriée rend ce que la lecture de son micro n'a pas su prendre")
+    void creer_avec_identite_rend_le_micro_non_relu() {
+        ParticipationDetail modele = detailComplet();
+        ParticipationDetail detail = new ParticipationDetail(
+                modele.id(),
+                modele.etag(),
+                modele.point(),
+                modele.dateDebut(),
+                modele.dateFin(),
+                modele.meteo(),
+                Map.of("micro0_type", "ICS", "micro0_hauteur", "2-3"),
+                modele.traitement());
+
+        CreationPassageArchive.PassageArchive r = creation.creerAvecIdentite(
+                idPoint,
+                1,
+                LocalDateTime.of(2026, 7, 3, 21, 0),
+                LocalDateTime.of(2026, 7, 4, 5, 0),
+                new Prefixe("130711", 2026, 1, "Z41"),
+                detail);
+
+        assertThat(r.microNonRelus()).containsExactly("hauteur du micro « 2-3 »");
+        assertThat(new MaterielMicroDao(source).pour(r.idPassage()).hauteurMetres())
+                .isNull();
     }
 }

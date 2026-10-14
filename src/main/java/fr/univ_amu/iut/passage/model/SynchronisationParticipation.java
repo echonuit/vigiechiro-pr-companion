@@ -267,7 +267,10 @@ public final class SynchronisationParticipation {
     /// Recopie la météo et la configuration micro de la participation vers le passage local (cas « préparé sur
     /// le web »), en **préservant les températures** locales (l'API ne les porte pas). [RegleMetierException]
     /// si non lié / introuvable.
-    public void tirerDepuis(Long idPassage) {
+    ///
+    /// @return les valeurs du matériel micro que la lecture n'a pas su prendre, laissées vides localement
+    ///     (#6211, #6228) ; liste vide si tout a été relu. L'appelant les annonce dans son bilan.
+    public List<String> tirerDepuis(Long idPassage) {
         Passage passage = chargerPassage(idPassage);
         String objectid = participationDe(idPassage).orElseThrow(() -> new RegleMetierException(NON_LIE));
         // La cause ne se perd plus (#4631) : quatre issues distinctes s'aplatissaient en un vide, et
@@ -286,9 +289,12 @@ public final class SynchronisationParticipation {
                 passage,
                 MeteoPassage.definirReleve(passage.donneesMeteo(), fusion),
                 enregistreurATirer(passage, distant)));
-        if (distant.configuration() != null && !distant.configuration().isEmpty()) {
-            materielDao.definir(CorrespondanceParticipation.microDepuis(idPassage, distant.configuration()));
+        if (distant.configuration() == null || distant.configuration().isEmpty()) {
+            return List.of();
         }
+        MaterielRelu relu = LectureMicro.depuis(idPassage, distant.configuration());
+        materielDao.definir(relu.materiel());
+        return relu.nonRelus();
     }
 
     /// Numéro de série à retenir pour ce passage (#1828). Le micro et la météo se lisaient déjà dans la

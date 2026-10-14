@@ -12,6 +12,7 @@ import fr.univ_amu.iut.passage.model.ServiceConditionsPassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceRattachement;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.property.BooleanProperty;
@@ -327,27 +328,30 @@ public class RattachementViewModel {
 
     /// **Tire** les métadonnées (météo / micro) de la participation VigieChiro vers le passage local (cas
     /// « participation préparée sur le site web »). À appeler **hors du fil JavaFX** (réseau) ; ne touche
-    /// aucun contrôle (VM pur). Renvoie `true` si des données ont été récupérées (passerelle présente +
-    /// passage lié + succès), `false` sinon (best-effort, silencieux).
-    public boolean tirerDepuisVigieChiro() {
+    /// aucun contrôle (VM pur). Rend, si des données ont été récupérées (passerelle présente + passage lié +
+    /// succès), les valeurs du matériel micro que la lecture n'a pas su prendre (#6211, #6228), vide si
+    /// tout a été relu ; rien sinon (best-effort, silencieux).
+    public Optional<List<String>> tirerDepuisVigieChiro() {
         if (idPassage == null || synchronisation.isEmpty()) {
-            return false;
+            return Optional.empty();
         }
         try {
-            synchronisation.get().tirerDepuis(idPassage);
-            return true;
+            return Optional.of(synchronisation.get().tirerDepuis(idPassage));
         } catch (RegleMetierException nonLie) {
-            return false;
+            return Optional.empty();
         }
     }
 
     /// Recharge les champs météo/micro depuis la base **après un tir** (à exécuter sur le fil JavaFX) et
-    /// publie un message : confirmation si des données ont été récupérées, aide sinon.
-    public void rechargerApresTir(boolean recupere) {
+    /// publie un message : confirmation si des données ont été récupérées, avertissement si une valeur n'a
+    /// pas pu être relue, aide sinon.
+    ///
+    /// @param recupere le résultat de [#tirerDepuisVigieChiro]
+    public void rechargerApresTir(Optional<List<String>> recupere) {
         if (idPassage == null) {
             return;
         }
-        if (recupere) {
+        if (recupere.isPresent()) {
             DetailPassage rafraichi = service.detailPassage(idPassage);
             conditions.charger(
                     idPassage,
@@ -355,7 +359,13 @@ public class RattachementViewModel {
                     rafraichi.idEnregistreur(),
                     rafraichi.heureDebut(),
                     rafraichi.heureFin());
-            messages.succes("Métadonnées récupérées depuis Vigie-Chiro.");
+            List<String> nonRelus = recupere.get();
+            if (nonRelus.isEmpty()) {
+                messages.succes("Métadonnées récupérées depuis Vigie-Chiro.");
+            } else {
+                messages.publier(RetourOperation.avertissement("Métadonnées récupérées depuis Vigie-Chiro. Non relu,"
+                        + " laissé vide : " + String.join(", ", nonRelus) + "."));
+            }
         } else {
             messages.info("Aucune participation Vigie-Chiro liée à ce passage (ou hors connexion).");
         }
