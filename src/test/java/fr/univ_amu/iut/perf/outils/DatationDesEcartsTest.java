@@ -16,6 +16,7 @@ import fr.univ_amu.iut.recette.SansEcritureHorsDuFil;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalTime;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -155,13 +156,16 @@ class DatationDesEcartsTest {
         Gel gel = new Gel(12, 185, List.of(), List.of(new EcartDate(CLIC + 110 * MS, CLIC + 295 * MS)));
         Releve releve = new Releve(racine, "témoin", new EchelleDuRendu(1, 1, 1, 1, "réglages", false));
 
-        releve.noterNavigationDatee(2, navigation, List.of("sons 1 120 ms"), gel);
+        releve.noterNavigationDatee(
+                2, navigation, List.of("sons 1 120 ms"), gel, LocalTime.of(14, 17, 21, 643_000_000));
         releve.noterPremieresOuvertures(List.of("Mes sites 1 122 ms", "multisite 1 465 ms"));
         releve.ecrire();
 
         assertThat(Files.readAllLines(racine.resolve("releve.tsv"), StandardCharsets.UTF_8))
                 .contains(
                         "témoin\touvertures après la nuit 2\tsons 1 120 ms",
+                        "témoin\tjalons de la navigation après la nuit 2\touvre sons 1 +0.000 s · sons 1 prêt"
+                                + " +0.120 s · ouvre Mes sites 2 +0.400 s · première ouverture à 14:17:21.643",
                         "témoin\técart daté, navigation après la nuit 2\t185 ms, de +0.110 s à +0.295 s :"
                                 + " après « ouvre sons 1 », contient « sons 1 prêt », avant « ouvre Mes sites 2 »",
                         "témoin\tpremières ouvertures du processus, à froid\tMes sites 1 122 ms · multisite 1 465 ms");

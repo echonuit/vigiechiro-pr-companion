@@ -110,6 +110,37 @@ public final class Habillage {
         garantirDesign(porteuse, base);
     }
 
+    /// Monte sur la scène les feuilles que sa racine déclare, dans leur ordre (#6207).
+    ///
+    /// Pour chaque feuille déclarée sur un **parent**, JavaFX enregistre tous les parents qu'il
+    /// contient, et parcourt cette liste à chaque parent neuf qu'il style : le coût d'une ouverture
+    /// d'écran croît comme le carré du nombre de nœuds, et la liste ne se vide qu'au ramasse-miettes.
+    /// Une feuille de **scène** ne passe pas par ce chemin. Le chrome s'en sert pour sa fenêtre, qui
+    /// vit autant que l'application et contient tous les écrans.
+    ///
+    /// Les trois feuilles montent ensemble : `base.css` posée seule sur la scène ne résoudrait pas les
+    /// couleurs d'une palette restée sur la racine, ce que [#poser(Scene)] décrit.
+    public static void hisser(Scene scene) {
+        List<String> surLaRacine = scene.getRoot().getStylesheets();
+        List<String> surLaScene = scene.getStylesheets();
+        for (String feuille : List.copyOf(surLaRacine)) {
+            if (!surLaScene.contains(feuille)) {
+                surLaScene.add(feuille);
+            }
+        }
+        surLaRacine.clear();
+    }
+
+    /// Retire d'une vue accueillie dans cette scène les feuilles que la scène porte déjà (#6207).
+    ///
+    /// Chaque FXML d'écran déclare `palette.css` et `design.css`, pour se rendre seul : dans une modale,
+    /// une capture, un test. Accueillie par le chrome, la vue les hérite de la scène, et les redéclarer
+    /// ramène le coût que [#hisser(Scene)] retire. Sa feuille de fonctionnalité reste sur elle : ses
+    /// règles ne valent que pour elle.
+    public static void alleger(Parent vue, Scene scene) {
+        vue.getStylesheets().removeAll(scene.getStylesheets());
+    }
+
     /// Pose `design.css` **juste après** `base.css` si elle manque, dans la liste qui porte déjà le
     /// socle.
     ///

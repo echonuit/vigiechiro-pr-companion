@@ -10,6 +10,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -258,6 +260,8 @@ final class InstrumentsDuBanc {
     /// Le relevé s'ouvre sur l'échelle à laquelle le banc a dessiné (#6177) : ses chiffres en dépendent,
     /// et ils ne se comparent d'un poste à l'autre qu'avec elle.
     static final class Releve {
+
+        private static final DateTimeFormatter HEURE = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
         private final Path racine;
         private final String titre;
         private final String echelle;
@@ -272,6 +276,13 @@ final class InstrumentsDuBanc {
         void noter(String geste, int rang, double ms) {
             String role = rang == 0 ? "jeté (premier)" : "relevé " + rang;
             lignes.add(String.format(Locale.ROOT, "%s\t%s\t%s\t%.1f ms", titre, geste, role, ms));
+        }
+
+        /// Le même relevé, suivi de l'heure du poste au départ du geste (#6207).
+        void noter(String geste, int rang, double ms, LocalTime depart) {
+            String role = rang == 0 ? "jeté (premier)" : "relevé " + rang;
+            lignes.add(String.format(
+                    Locale.ROOT, "%s\t%s\t%s\t%.1f ms\tparti à %s", titre, geste, role, ms, depart.format(HEURE)));
         }
 
         void noterGel(String quoi, Gel gel) {
@@ -329,12 +340,20 @@ final class InstrumentsDuBanc {
         }
 
         /// Les ouvertures d'écran d'une navigation, chacune avec son début et l'instant où l'écran est
-        /// prêt, puis une ligne par écart de plus de 100 ms, situé parmi elles (#6171).
-        void noterNavigationDatee(int nuit, DatationDesEcarts datation, List<String> durees, Gel gel) {
+        /// prêt, puis une ligne par écart de plus de 100 ms, situé parmi elles (#6171). La ligne des
+        /// jalons finit sur l'heure du poste à la première ouverture, comme celle de l'import finit sur
+        /// l'heure du clic (#6207).
+        void noterNavigationDatee(
+                int nuit, DatationDesEcarts datation, List<String> durees, Gel gel, LocalTime premiereOuverture) {
             lignes.add(String.format(
                     Locale.ROOT, "%s\touvertures après la nuit %d\t%s", titre, nuit, String.join(" · ", durees)));
             lignes.add(String.format(
-                    Locale.ROOT, "%s\tjalons de la navigation après la nuit %d\t%s", titre, nuit, datation.jalons()));
+                    Locale.ROOT,
+                    "%s\tjalons de la navigation après la nuit %d\t%s · première ouverture à %s",
+                    titre,
+                    nuit,
+                    datation.jalons(),
+                    premiereOuverture.format(HEURE)));
             for (EcartDate ecart : gel.dates()) {
                 lignes.add(String.format(
                         Locale.ROOT,
