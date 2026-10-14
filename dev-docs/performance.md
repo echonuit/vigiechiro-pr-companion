@@ -22,6 +22,8 @@ benchmark** (calibrer les cibles sur la machine cible) et d'outil de **non-régr
 | [`GenerateurJeuDeDonnees`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/perf/outils/GenerateurJeuDeDonnees.java) | Peuple une base SQLite déterministe (déf. 1000 passages + 4031 observations). |
 | [`BancMesure`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/perf/outils/BancMesure.java) | Chronomètre les opérations **O5** à froid / à chaud et imprime l'`EXPLAIN QUERY PLAN`. |
 | [`BancImport`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/perf/outils/BancImport.java) | Génère une **nuit synthétique** de vrais WAV + `LogPR`, lance le **vrai** import et mesure temps / débit / **mémoire crête** (**O3**). |
+| [`BancReactivation`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/perf/outils/BancReactivation.java) | Réactive une nuit synthétique par l'une ou l'autre voie, et mesure la mémoire qu'elle prend **au poste**, temporaires compris. |
+| [`BancIhmO3Test`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO3Test.java), [`BancIhmO5Test`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO5Test.java) | Le **banc de l'IHM** : l'application sur l'affichage réel, ses imports et ses ouvertures d'écran datés, image par image. Tag `banc-ihm`, profil `recette-filmee`, lancé à la main, jamais en CI. |
 
 On les lance via `exec-maven-plugin`, avec le **JDK 25 standard** (comme la CI) ; les commandes
 complètes (avec les propriétés `-Dperf.*` de dimensionnement) sont dans le README du banc.
@@ -131,6 +133,21 @@ bloqué par le travail lourd, seuls les relais du socle (`relaisProgression`, `s
 ramènent la progression. Le README du banc donne une procédure semi-manuelle pour **détecter tout
 écart de frame > 200 ms** (un `AnimationTimer` d'instrumentation) et une procédure pour vérifier la
 **stabilité mémoire de nuit en nuit** (heap après GC dans un seul processus).
+
+**Le banc de l'IHM** fait ces relevés sans manipulation : il date chaque écart de plus de 100 ms entre
+deux images et le situe parmi les jalons de l'import ou de la navigation, écrit l'échelle et le dessin
+de son rendu, et refuse de mesurer hors de l'échelle 1. Le chantier #6178 en a tiré cinq règles :
+
+- **une tâche de fond qui calcule mène de front la moitié des cœurs**, et laisse l'autre à
+  l'interface ([ADR 6175](decisions/6175-une-tache-de-fond-qui-calcule-laisse-la-moitie-des-coeurs-a-l-interface.md)) ;
+- **l'ouverture d'un écran se juge à chaud et en rendu GPU**, la première de chaque écran se publiant à
+  part ([ADR 6171](decisions/6171-le-seuil-d-ouverture-d-un-ecran-se-juge-a-chaud-et-en-rendu-gpu.md)) ;
+- **la première image d'un import se juge au premier import du processus**, le cas courant
+  ([ADR 6197](decisions/6197-l-image-du-plan-etabli-se-juge-au-premier-import-et-tient-o3-sans-remede.md)) ;
+- **un écran reconstruit à chaque ouverture ne tient pas les 50 ms d'O5** : le seuil reste, non tenu
+  ([ADR 6207](decisions/6207-l-ouverture-d-un-ecran-reconstruit-ne-tient-pas-50-ms-et-les-feuilles-du-chrome-vivent-sur-la-scene.md)) ;
+- **un écran quitté est rendu au ramasse-miettes** : il suit ce qui lui survit par une liaison ou une
+  écoute faible ([ADR 6184](decisions/6184-un-ecran-n-ecoute-ce-qui-lui-survit-que-par-une-ecoute-faible.md)).
 
 !!! note "Lien avec l'architecture"
     Cette discipline du fil JavaFX (travail lourd hors fil, retour et progression relayés par le
