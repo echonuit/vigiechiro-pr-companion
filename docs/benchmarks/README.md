@@ -941,16 +941,36 @@ au départ des tirs de 2,0 à 7,1. Le blocage témoin de 300 ms est daté de 303
 Chaque tir a tout réactivé, 1572 ou 1920 séquences, et le compte rendu de la modale dit que les
 séquences ont été régénérées à partir des bruts.
 
+**Puis à la moitié des cœurs.** Le porteur a douté que tous les cœurs soient sans risque de famine :
+pour l'interface d'un poste plus modeste, et pour les autres applications de l'utilisateur. Seconde
+séance le même jour, de 11 h 17 à 11 h 40, rendu GPU, nuit de 1572 bruts : la moitié des cœurs sur ce
+poste, puis tous contre la moitié, alternés, sous `taskset -c 0-3`. La JVM voit alors quatre cœurs
+(« 16 total, 4 available » dans son journal), borne de la réactivation comprise.
+
+| Nuit de 1572 bruts, rendu GPU | Écart maximal | Régénération | Réactivation entière |
+|---|---|---|---|
+| 16 cœurs, tous (première séance, 5 tirs) | 130 · 119 · 151 · 75 · 85 ms | 8,3 à 8,6 s | 29,3 à 29,7 s |
+| 16 cœurs, la moitié (5 tirs) | 48 · 49 · 85 · 69 · 48 ms | 8,5 à 8,9 s | 26,2 à 26,6 s |
+| 4 cœurs, tous (3 tirs) | 58 · 30 · 29 ms | 8,5 à 8,6 s | 25,5 à 25,9 s |
+| 4 cœurs, la moitié (3 tirs) | 26 · 23 · 25 ms | 11,3 à 15,3 s | 28,2 à 33,1 s |
+
+La nuit de 8 bruts de 20 min, à la moitié des cœurs de ce poste : 26, 29 et 34 ms, en 9,7 à 9,8 s.
+
 **Lectures** :
 
-- **La réactivation tient O3 à tous les cœurs**, dans les deux dessins : 151 ms au plus sur vingt
-  tirs. Elle garde sa borne (ADR 6256).
-- **Les écarts de plus de 100 ms tombent à trois endroits** : au clic, quand la modale s'ouvre (101 et
-  151 ms) ; pendant la régénération des 1572 bruts, en rendu GPU (110 à 130 ms) ; à l'affichage du
-  compte rendu (109 ms).
+- **À tous les cœurs, la réactivation ne gèle pas l'écran**, dans les deux dessins, et même restreinte à
+  quatre cœurs : 151 ms au plus sur les vingt-trois tirs. La famine ne se voit pas pour notre fil
+  JavaFX sur ce poste.
+- **Elle mène pourtant la moitié des cœurs** (ADR 6256), sur décision du porteur : les écarts sont plus
+  courts dans chaque configuration, et les autres applications gardent du processeur, ce que le banc
+  ne voit pas.
+- **Le prix** : rien sur seize cœurs, de 10 à 30 % de durée en plus restreint à quatre. La régénération
+  ne gagne plus rien au-delà de quatre fils sur ce poste (8,5 s à 4, 8 ou 16).
+- **Les écarts de plus de 100 ms, à tous les cœurs**, tombaient au clic, quand la modale s'ouvre,
+  pendant la régénération des 1572 bruts, et à l'affichage du compte rendu.
 - **La même charge de calcul que l'import, pas le même écran.** Un import met à jour une ligne de la
-  table de suivi par fichier terminé ; la modale ne porte que deux barres. C'est une piste pour
-  comprendre pourquoi l'une gelait et l'autre non, pas une mesure.
+  table de suivi par fichier terminé ; la modale ne porte que deux barres. Une piste pour comprendre
+  pourquoi l'une gelait à tous les cœurs et l'autre non, pas une mesure.
 
 **Ce que ces chiffres ne mesurent pas** :
 
@@ -958,7 +978,8 @@ séquences ont été régénérées à partir des bruts.
   s'il faut les copier.
 - Le filet du démarrage, appelé par `App.start`, que le banc ne traverse pas.
 - La compaction du dépôt, qui calcule elle aussi sur tous les cœurs.
-- Un autre poste, et un poste à peu de cœurs.
+- Ce que voient les autres applications du poste pendant la régénération.
+- Un vrai poste à peu de cœurs, plus lent par cœur que celui-ci restreint par `taskset`.
 
 **Le relancer** : la commande du test de charge avec `-Dtest=BancIhmReactivationTest`, et
 `-Dperf.ihm.reactivation.fichiers=8 -Dperf.ihm.reactivation.secondes=1200` pour la nuit de bruts

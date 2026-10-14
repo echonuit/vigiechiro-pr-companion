@@ -469,7 +469,7 @@ nav:
     - 6219 · Un test qui ne filme rien ne cite pas un cas de recette: decisions/6219-un-test-qui-ne-filme-rien-ne-cite-pas-un-cas-de-recette.md
     - 6161 · Un original se lit par morceaux, seule une séquence bornée se lit entière: decisions/6161-un-original-se-lit-par-morceaux-seule-une-sequence-bornee-se-lit-entiere.md
     - 6174 · Un temporaire volumineux naît sous l'espace de travail, jamais dans le dossier temporaire du système: decisions/6174-un-temporaire-volumineux-nait-sous-l-espace-de-travail.md
-    - 6256 · La réactivation garde tous ses cœurs : menée par sa modale, elle tient O3: decisions/6256-la-reactivation-garde-tous-ses-coeurs-et-tient-o3.md
+    - 6256 · La réactivation mène la moitié des cœurs, comme l'import: decisions/6256-la-reactivation-mene-la-moitie-des-coeurs-comme-l-import.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Retour de terrain de la 2.189.0: retours/2189-ce-que-ton-retour-a-produit.md

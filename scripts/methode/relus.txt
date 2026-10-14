@@ -1029,7 +1029,7 @@ bf8027d34eeb  src/main/java/fr/univ_amu/iut/passage/model/ServiceCampagne.java
 f09356865c12  src/main/java/fr/univ_amu/iut/passage/model/ServiceDisponibiliteAudio.java
 a8eaf78c837a  src/main/java/fr/univ_amu/iut/passage/model/ServicePassage.java
 0884a6469fe1  src/main/java/fr/univ_amu/iut/passage/model/ServiceRattachement.java
-7dfad3c988ef  src/main/java/fr/univ_amu/iut/passage/model/ServiceReactivationPassage.java
+dd1271f08aa5  src/main/java/fr/univ_amu/iut/passage/model/ServiceReactivationPassage.java
 24493cd0b728  src/main/java/fr/univ_amu/iut/passage/model/ServiceReconstructionPassages.java
 0857df4f8d6e  src/main/java/fr/univ_amu/iut/passage/model/SessionDEnregistrement.java
 642311752ffe  src/main/java/fr/univ_amu/iut/passage/model/SortieDeRecuperation.java
@@ -2011,6 +2011,7 @@ ffa112bb5876  src/test/java/fr/univ_amu/iut/passage/model/ManifestePaquetTest.ja
 32c67fa1fd75  src/test/java/fr/univ_amu/iut/passage/model/MeteoPassageTest.java
 d774b5417d03  src/test/java/fr/univ_amu/iut/passage/model/OuvertureDePaquetTest.java
 64bf29416881  src/test/java/fr/univ_amu/iut/passage/model/PaquetAllerRetourTest.java
+4cf9ef755e0e  src/test/java/fr/univ_amu/iut/passage/model/ParallelismeDeLaReactivationTest.java
 b03f97a20dc3  src/test/java/fr/univ_amu/iut/passage/model/ParticipationOrphelineTest.java
 90b5ce16b4e7  src/test/java/fr/univ_amu/iut/passage/model/PlanDePaquetTest.java
 3567263e5189  src/test/java/fr/univ_amu/iut/passage/model/ProgressionTelechargementTest.java
