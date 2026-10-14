@@ -80,7 +80,7 @@ Le devcontainer l'installe et la met sur le `PATH`. Hors devcontainer :
 ```bash
 npm ci --prefix .github/openspec
 export PATH="$PWD/.github/openspec/node_modules/.bin:$PATH"
-openspec --version        # 1.12.0
+openspec --version        # 1.14.1
 ```
 
 **Deux conditions que cette recette suppose, et qui ont coûté huit corps de demande** (#5774).

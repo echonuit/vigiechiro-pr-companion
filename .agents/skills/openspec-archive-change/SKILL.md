@@ -7,7 +7,7 @@ compatibility: Requires openspec CLI.
 metadata:
   author: openspec
   version: "1.0"
-  generatedBy: "1.12.0"
+  generatedBy: "1.14.1"
   langue: fr
   origine: adoptee de l'outil OpenSpec, puis reecrite ici (ADR 4515)
 ---
@@ -40,6 +40,43 @@ Le `<capability-path>` est le dossier de spec relatif à `specs/`, par exemple `
 `identity/user-auth`. Conserver le chemin **entier** de chaque delta spec pour retrouver sa spec
 principale.
 
+## Vérifier que le projet a une racine OpenSpec
+
+Ce flux suppose un projet qui emploie déjà OpenSpec. Avant la première étape qui écrit quoi que ce
+soit (`new change`, `archive`, la fusion des specs, ou l'écriture d'un artefact), s'assurer que le
+projet a une racine : lancer `openspec list --json`, avec `--store <id>` quand une réserve est
+choisie puisqu'elle est alors la racine, et lire `root`.
+
+- **Un objet `root`** : le projet est en place, on continue.
+- **`"root": null`** : il n'y a pas de dossier `openspec/` ici, et une écriture comme
+  `openspec new change` en créerait un par effet de bord. La commande sort aussi en code non nul.
+  C'est la réponse, pas un outil cassé : lire le JSON plutôt que réessayer ou contourner.
+
+Un `"root": null` ne parle pas toujours d'installation. Quand un message d'erreur de `status`
+commence par `Declared in` ou `Invalid store declaration in` et nomme l'`openspec/config.yaml` (ou
+`config.yml`) de ce projet, le projet emploie bien OpenSpec, par une réserve qu'il déclare et que la
+machine ne sait pas résoudre : réserve non enregistrée, ou ligne `store:` mal formée. Ne pas le
+traiter comme un projet vierge : s'arrêter avant d'écrire et montrer à l'utilisateur le `message` et
+le `fix` de cette erreur.
+
+Hors ce cas, sans racine, la suite dépend de la façon dont on est arrivé ici :
+
+- **Choisie d'office** : on a pris ce flux de soi-même, sans que l'utilisateur nomme OpenSpec, nomme
+  cette compétence ou lance `/archiver`. On laisse OpenSpec de côté et on répond à la demande comme
+  si l'outil n'était pas installé, sans lui demander de rien mettre en place et sans parler
+  d'installation.
+- **Demande explicite** : l'utilisateur a nommé OpenSpec, cette compétence, ou lancé `/archiver`. On
+  s'arrête avant d'écrire et on demande comment continuer : mettre le projet en place
+  (`openspec init`), viser une réserve qu'il a déjà (`--store <id>`), ou continuer sans OpenSpec pour
+  cette demande. Puis on attend sa réponse.
+
+Dans les deux cas, **on ne crée jamais la racine par effet de bord** : pas d'`openspec init` tant que
+l'utilisateur ne l'a pas demandé, pas de fichiers `openspec/` écrits à la main, pas de commande qu'on
+laisse la créer.
+
+Dans ce dépôt, la racine `openspec/` existe : la vérification répond « en place », et la règle reste
+pour le jour où elle ne répondrait plus ainsi.
+
 ## Entrée
 
 Le nom du changement est facultatif. S'il manque, le déduire du fil. S'il reste vague, demander.
@@ -54,9 +91,11 @@ chantier court encore fait mentir la liste des changements actifs dans l'autre s
 
 ```
 1. CHOISIR    le changement, et charger les entrees d archivage (facultatif, jamais bloquant).
-2. VERIFIER   les artefacts, puis les taches. Un manque AVERTIT, il ne refuse pas.
+2. VERIFIER   les artefacts, puis les taches. Un manque AVERTIT, un compte illisible ARRETE.
 3. EVALUER    l ecart entre chaque delta spec et sa spec principale, et le MONTRER avant de demander.
-4. FUSIONNER  en ligne si l utilisateur le choisit, puis RE-COMPARER toutes les capacites.
+              Une capacite BLOQUEE ferme la fusion, pas l evaluation des autres.
+4. FUSIONNER  en ligne si l utilisateur le choisit, verifier la STRUCTURE, puis RE-COMPARER toutes
+              les capacites. Une fusion qui rend un arret fait echouer l archivage.
 5. DEPLACER   `changeRoot` sous l archive, une fois et une seule.
 6. RENDRE     compte de ce qui a ete fusionne, et de ce qui a ete archive malgre un avertissement.
 ```
@@ -100,9 +139,25 @@ Le JSON porte `schemaName`, le contexte de chemins (`planningHome`, `changeRoot`
 puisque le changement déclare `skip_specs` : afficher l'avertissement, demander confirmation,
 continuer si l'utilisateur confirme.
 
-Puis lire le fichier de tâches, typiquement `tasks.md`, et compter les `- [ ]` face aux `- [x]`. Des
-tâches inachevées **avertissent** et n'empêchent pas : afficher le compte, demander confirmation.
-Sans fichier de tâches, continuer sans avertissement.
+Puis compter les tâches **par l'outil, pas en lisant `tasks.md`** : lancer `openspec list --json`
+avec les mêmes drapeaux de racine (`--store <id>` s'il y en a un), et prendre dans `changes`
+l'entrée dont le `name` est **exactement** le changement retenu. L'outil résout les fichiers de
+tâches que le schéma suit, y compris les noms d'artefacts propres, les chemins de sortie et les
+motifs : un `tasks.md` absent à la racine du changement ne dit donc pas qu'il n'y a pas de tâche, et
+le statut des artefacts ne dit pas qu'elles sont faites.
+
+Exiger une seule entrée, et des `totalTasks` et `completedTasks` entiers et non négatifs, avec
+`completedTasks <= totalTasks`. Les tâches inachevées valent `totalTasks - completedTasks`. Seules
+les cases marquées `x` ou `X` comptent comme faites ; toute autre marque, même inconnue, reste
+inachevée.
+
+**Si cette lecture échoue**, rend un JSON invalide, omet le changement ou le rend deux fois, ou porte
+des comptes invalides : signaler le problème et **s'arrêter avant toute fusion et tout archivage**.
+Un compte qu'on ne sait pas lire ne se remplace pas par un compte deviné.
+
+Des tâches inachevées, elles, **avertissent** et n'empêchent pas : afficher le compte, demander
+confirmation, continuer si l'utilisateur confirme. Si `totalTasks` vaut zéro, continuer sans
+avertissement.
 
 ## 3. Évaluer l'écart avec les specs principales
 
@@ -113,11 +168,42 @@ delta specs depuis d'autres artefacts.
 Quand des delta specs existent, comparer chacune à sa spec principale sous
 `<planningHome.root>/openspec/specs/<capability-path>/spec.md`, en utilisant le `planningHome.root`
 rendu à l'étape 2 et non un chemin écrit en dur. Déterminer ce qui serait appliqué : ajouts,
-modifications, retraits, renommages. **Montrer un résumé combiné avant de demander.**
+modifications, retraits, renommages.
 
-Les réponses possibles : quand il y a des changements, « fusionner maintenant (recommandé) » ou
-« archiver sans fusionner » ; quand tout est déjà fusionné, « archiver maintenant », « fusionner
-quand même » ou « annuler ». Toute autre réponse fait reposer la question plutôt qu'archiver.
+**Une spec principale absente ne vaut pas « déjà fusionnée ».** Pour une capacité neuve, la spec
+principale est une **sortie** de la fusion, pas une entrée. Quatre cas, dans cet ordre :
+
+- **Le delta porte des exigences MODIFIED ou RENAMED** : seules des exigences ADDED peuvent créer une
+  spec principale. Le dire, et marquer la capacité **fusion bloquée**. On n'invente jamais une
+  exigence qui n'a pas de version courante.
+- **Le delta ne porte que des REMOVED, et le `.openspec.yaml` du changement déclare
+  `retire_capabilities: true`** : la capacité est déjà retirée. La compter comme déjà fusionnée,
+  avertir qu'il ne reste rien à retirer, et ne pas recréer la spec principale. Cette règle vaut ici
+  et à la vérification de l'étape 4.
+- **Sinon, le delta ne porte aucune exigence ADDED** : aucune fusion n'est possible, la capacité est
+  marquée **fusion bloquée**. Pour un delta qui ne fait que retirer, avertir qu'il n'y a pas de spec
+  principale où retirer, et laisser l'arbre des specs principales tel quel. `openspec archive`
+  refuse ce cas non déclaré par `Spec must have at least one requirement`.
+- **Sinon** : la capacité est à fusionner, et le résumé la nomme
+  (`<capability-path>: new main spec will be created`). Si le delta porte aussi des REMOVED, avertir
+  qu'ils seront ignorés faute de spec où retirer. La fusion crée la spec principale à partir des
+  seules exigences ADDED, exactement comme `openspec archive`.
+
+**Une capacité bloquée n'arrête pas l'évaluation des autres.** On les évalue toutes, puis on
+**montre un résumé combiné avant de demander**.
+
+Les réponses possibles :
+
+- si une capacité au moins est bloquée : expliquer pourquoi, et ne proposer que « archiver sans
+  fusionner » ou « annuler » ;
+- sinon, quand il y a des changements : « fusionner maintenant (recommandé) » ou « archiver sans
+  fusionner » ;
+- sinon, quand tout est déjà fusionné : « archiver maintenant », « fusionner quand même » ou
+  « annuler ».
+
+« Annuler » arrête sans archiver. Aucune fusion ne démarre tant qu'une capacité est bloquée : si
+l'utilisateur la demande quand même, réexpliquer le blocage et reproposer les choix ouverts. Toute
+autre réponse fait reposer la question plutôt qu'archiver.
 
 ## 4. Fusionner en ligne, puis re-comparer
 
@@ -139,16 +225,36 @@ en ligne réutilise cet instantané sans redemander les instructions `specs`. **
 une tâche de fond** : l'étape 5 déplacerait `changeRoot` sous une fusion qui le lit encore. Si votre
 agent ne sait la lancer que par délégation, déléguer de façon synchrone et attendre le résultat.
 
-Puis **re-comparer depuis le début de l'étape 3**, contre **toutes** les capacités portant une delta
-spec, et pas seulement celles que la fusion dit avoir touchées. Une fusion réussie ne laisse rien à
-appliquer, donc chaque capacité doit se lire comme déjà fusionnée :
+**Si la fusion rend une condition d'arrêt ou de blocage, elle a échoué.** Arrêter l'archivage tout de
+suite : pas de comparaison de contenu après fusion, pas de déplacement de `changeRoot`. Rien n'a
+bougé, l'utilisateur peut lever le blocage ou relancer la fusion.
+
+Après que la fusion a écrit chaque spec principale, en vérifier la **structure** contre le contrat
+de fusion :
+
+- une spec principale neuve commence par un titre `# <capability> Specification` ; une spec
+  existante garde son titre tel quel ;
+- la section `## Purpose` d'une spec principale établie reste **entièrement intacte** ;
+- pour une spec neuve, le `## Purpose` du delta est recopié tel quel. N'avertir que si ce texte est
+  plus court que ce qu'attend la validation ordinaire, et ne jamais régénérer ni réécrire un
+  `Purpose` déjà écrit. Sans `## Purpose` exploitable, garder le comportement existant : un
+  `Purpose` TBD et son avertissement ;
+- aucun en-tête de delta ne reste dans la spec principale : ni `## ADDED Requirements`, ni
+  `## MODIFIED Requirements`, ni `## REMOVED Requirements`, ni `## RENAMED Requirements` ;
+- les blocs d'exigence que la fusion a écrits ou changés portent des titres `### Requirement:`, et
+  leurs scénarios des titres `#### Scenario:`, sous la section `## Requirements`. Ce que le delta ne
+  mentionne pas reste exactement tel quel.
+
+Puis **re-comparer depuis le début de l'étape 3**, y compris le cas de la capacité retirée par
+`retire_capabilities: true` dont la spec principale manque, contre **toutes** les capacités portant
+une delta spec, et pas seulement celles que la fusion dit avoir touchées. Une fusion réussie ne
+laisse rien à appliquer, donc chaque capacité doit se lire comme déjà fusionnée :
 
 - les exigences ADDED sont présentes ;
 - les exigences MODIFIED portent les changements de scénario et de description nommés dans le delta,
   leurs autres scénarios intacts ;
 - les exigences REMOVED ont disparu, et là où la fusion a retiré la dernière exigence d'une capacité,
-  laissant `## Requirements` vide, sa spec principale est **supprimée** plutôt que laissée vide. Une
-  spec que la fusion a délibérément conservée et signalée convient aussi ;
+  laissant `## Requirements` vide, sa spec principale est **supprimée** plutôt que laissée vide ;
 - les exigences RENAMED sont présentes sous le nouveau nom et absentes sous l'ancien.
 
 Si la fusion a échoué, ou si une capacité ne correspond pas, dire ce qui diffère et **s'arrêter**.
@@ -227,5 +333,7 @@ tiennent, aucune ne se substitue à l'autre.
 | « La fusion dit avoir touché deux capacités, je vérifie ces deux-là » | On re-compare **toutes** les capacités portant une delta spec. |
 | « Des tâches restent, j'arrête » | Un manque avertit et se confirme, il ne refuse pas. |
 | « `openspec instructions archive` a échoué, j'abandonne » | Cette lecture est facultative. On continue sans contexte. |
-| « La capacité n'a plus d'exigence, je laisse la spec vide » | Elle se supprime, sauf si la fusion l'a délibérément gardée et l'a dit. |
+| « La capacité n'a plus d'exigence, je laisse la spec vide » | Elle se supprime. Une spec gardée, même signalée, ne passe plus la vérification. |
+| « La spec principale n'existe pas, donc tout est déjà fusionné » | Pour une capacité neuve, elle est la sortie de la fusion. Seul un retrait déclaré par `retire_capabilities: true` se lit comme déjà fait. |
+| « `openspec list` ne répond pas, je compte les cases de `tasks.md` » | Un compte illisible arrête avant toute fusion et tout archivage. |
 | « Je préfixe la date pour être sûr » | Jamais deux dates empilées. |

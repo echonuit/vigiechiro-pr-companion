@@ -7,7 +7,7 @@ compatibility: Requires openspec CLI.
 metadata:
   author: openspec
   version: "1.0"
-  generatedBy: "1.12.0"
+  generatedBy: "1.14.1"
   langue: fr
   origine: adoptee de l'outil OpenSpec, puis reecrite ici (ADR 4515)
 ---
@@ -43,6 +43,43 @@ racine `openspec/` la plus proche.
 
 Le `<capability-path>` est le dossier de spec relatif à `specs/`. Conserver le chemin **entier** de
 chaque delta spec pour retrouver sa spec principale.
+
+## Vérifier que le projet a une racine OpenSpec
+
+Ce flux suppose un projet qui emploie déjà OpenSpec. Avant la première étape qui écrit quoi que ce
+soit (`new change`, `archive`, la fusion des specs, ou l'écriture d'un artefact), s'assurer que le
+projet a une racine : lancer `openspec list --json`, avec `--store <id>` quand une réserve est
+choisie puisqu'elle est alors la racine, et lire `root`.
+
+- **Un objet `root`** : le projet est en place, on continue.
+- **`"root": null`** : il n'y a pas de dossier `openspec/` ici, et une écriture comme
+  `openspec new change` en créerait un par effet de bord. La commande sort aussi en code non nul.
+  C'est la réponse, pas un outil cassé : lire le JSON plutôt que réessayer ou contourner.
+
+Un `"root": null` ne parle pas toujours d'installation. Quand un message d'erreur de `status`
+commence par `Declared in` ou `Invalid store declaration in` et nomme l'`openspec/config.yaml` (ou
+`config.yml`) de ce projet, le projet emploie bien OpenSpec, par une réserve qu'il déclare et que la
+machine ne sait pas résoudre : réserve non enregistrée, ou ligne `store:` mal formée. Ne pas le
+traiter comme un projet vierge : s'arrêter avant d'écrire et montrer à l'utilisateur le `message` et
+le `fix` de cette erreur.
+
+Hors ce cas, sans racine, la suite dépend de la façon dont on est arrivé ici :
+
+- **Choisie d'office** : on a pris ce flux de soi-même, sans que l'utilisateur nomme OpenSpec, nomme
+  cette compétence ou lance `/fusionner`. On laisse OpenSpec de côté et on répond à la demande comme
+  si l'outil n'était pas installé, sans lui demander de rien mettre en place et sans parler
+  d'installation.
+- **Demande explicite** : l'utilisateur a nommé OpenSpec, cette compétence, ou lancé `/fusionner`. On
+  s'arrête avant d'écrire et on demande comment continuer : mettre le projet en place
+  (`openspec init`), viser une réserve qu'il a déjà (`--store <id>`), ou continuer sans OpenSpec pour
+  cette demande. Puis on attend sa réponse.
+
+Dans les deux cas, **on ne crée jamais la racine par effet de bord** : pas d'`openspec init` tant que
+l'utilisateur ne l'a pas demandé, pas de fichiers `openspec/` écrits à la main, pas de commande qu'on
+laisse la créer.
+
+Dans ce dépôt, la racine `openspec/` existe : la vérification répond « en place », et la règle reste
+pour le jour où elle ne répondrait plus ainsi.
 
 ## Fonction de garde
 
@@ -110,6 +147,13 @@ les chemins de delta, ni les contrôles de l'outil, ni les étapes. Leur texte n
 Pour chaque delta spec retenue : lire la delta, lire la spec principale, qui peut ne pas exister
 encore, puis appliquer.
 
+**Quand la spec principale n'existe pas encore**, la capacité est neuve, et l'on fait ce que fait
+`openspec archive` : seuls les ADDED s'appliquent, et ce sont eux qui créent la spec. Un MODIFIED ou
+un RENAMED n'a aucune exigence sur laquelle agir : on arrête la fusion pour cette capacité, et l'on
+dit que sa spec principale n'existe pas et qu'une spec neuve n'admet que des ADDED. On ne fabrique
+**jamais** l'exigence manquante pour avoir quelque chose à modifier. Un REMOVED n'a rien à retirer :
+on le saute, en avertissant.
+
 **ADDED** : l'exigence absente s'ajoute ; l'exigence déjà présente se met à jour, ce qui revient à un
 MODIFIED implicite.
 
@@ -143,10 +187,22 @@ dans la copie de l'appelant ; sinon, donner une conduite de récupération adapt
 **Un `## Purpose` dans le delta** : si la spec principale en a déjà un, il fait autorité et on n'y
 touche pas, ce que fait `openspec archive`, qui avertit et poursuit.
 
-**Créer une spec principale** quand la capacité n'existe pas encore, sous
-`<planningHome.root>/openspec/specs/<capability-path>/spec.md` : reprendre le `## Purpose` du delta
-mot pour mot quand il en porte un, et ne poser un court texte à écrire que s'il n'y en a pas. Puis la
-section des exigences avec les ADDED, au format de référence ci-dessous.
+**Créer une spec principale** quand la capacité n'existe pas encore, mais **seulement** si le delta
+porte des ADDED à y mettre et qu'aucun MODIFIED ni RENAMED n'a bloqué la capacité. Sinon on ne crée
+rien et l'on ne touche pas au dossier des specs. Deux cas se rapportent à part :
+
+- **Un delta qui ne porte que des REMOVED** : si le `.openspec.yaml` du changement déclare
+  `retire_capabilities: true`, on rapporte la capacité comme déjà retirée et l'on continue, sans
+  recréer la spec. Sans ce marqueur, la fusion est bloquée pour cette capacité : `openspec archive`
+  la refuse avec `Spec must have at least one requirement`.
+- **Un delta vide** n'a aucune opération à fusionner : on le rapporte bloqué, lui aussi.
+
+Dans aucun de ces cas on n'écrit de section `## Requirements` vide.
+
+Quand la création a lieu, sous `<planningHome.root>/openspec/specs/<capability-path>/spec.md` :
+reprendre le `## Purpose` du delta mot pour mot quand il en porte un, et ne poser un court texte à
+écrire que s'il n'y en a pas. Puis la section des exigences avec les ADDED, au format de référence
+ci-dessous.
 
 ## 5. Valider
 
@@ -161,11 +217,16 @@ fusion a réussi**.
 
 Quelles capacités ont été mises à jour et ce qui a changé ; toute spec principale neuve laissée avec
 un Purpose à écrire, pour qu'il s'écrive maintenant plutôt qu'il ne traîne ; toute capacité retirée,
-en nommant le `spec.md` supprimé, son Purpose, et la conduite de récupération.
+en nommant le `spec.md` supprimé, son Purpose, et la conduite de récupération. Et toute capacité neuve
+qu'on n'a pas créée : bloquée par un MODIFIED ou un RENAMED, bloquée parce que son delta est vide ou
+ne porte que des REMOVED sans le marqueur, ou rapportée comme déjà retirée ; avec les REMOVED sautés
+faute de spec où retirer.
 
 ## Le format d'une delta spec
 
 ```markdown
+# Spec Delta
+
 ## Purpose
 
 Seulement sur un delta qui introduit une capacité neuve. Il amorce la spec principale.
@@ -250,4 +311,5 @@ pas comment elle est vérifiée se relit comme vérifiée.
 | « Les instructions `specs` ont échoué, donc pas de règles » | Un échec ne vaut pas « aucune règle ». On s'arrête avant d'écrire. |
 | « Plus aucune exigence, je supprime le fichier » | Six conditions, toutes. Sinon on ne modifie rien et on dit laquelle bloque. |
 | « Le MODIFIED ne cite qu'un scénario, je remplace » | Il porte l'exigence entière. Ce qu'il ne mentionne pas se garde. |
-| « J'écris `## Requirements` vide en attendant » | Jamais. C'est l'état que le retrait doit éviter. |
+| « J'écris `## Requirements` vide en attendant » | Jamais, ni au retrait ni à la création d'une spec principale. |
+| « La spec principale n'existe pas, j'écris l'exigence que le MODIFIED vise » | On ne fabrique jamais une exigence. Une capacité neuve ne prend que des ADDED ; sinon la fusion est bloquée pour elle. |
