@@ -39,6 +39,10 @@ from __future__ import annotations
 import pathlib
 import sys
 
+from _console import ecrire_en_utf8
+
+ecrire_en_utf8()
+
 
 def indexes(index: pathlib.Path) -> set[str]:
     """Les cas indexes, dedoublonnes.

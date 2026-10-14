@@ -34,6 +34,10 @@ import pathlib
 import re
 import sys
 
+from _console import ecrire_en_utf8
+
+ecrire_en_utf8()
+
 # `ApplicationExtension.class` parmi les extensions d un `@ExtendWith`, seule ou avec d autres, sur
 # une ligne ou sur plusieurs. La chaine exacte `@ExtendWith(ApplicationExtension.class)` ne voit que
 # l ecriture sans accolades, portee par une seule classe du depot le 2026-10-13 (#6190).
@@ -234,6 +238,7 @@ def _auto_test() -> int:
     import contextlib
     import io
     import shutil
+    import subprocess
     import tempfile
 
     total = echecs = 0
@@ -287,6 +292,37 @@ def _auto_test() -> int:
             en_trop = ", ".join(sorted(reconnues - attendues)) or "aucune"
             print(f"  [ÉCHEC] {nom:<58} -> manquées : {manquees} ; en trop : {en_trop}")
             echecs += 1
+
+        # Les cas plus haut lisent la sortie dans un tampon, qui accepte tout caractere : ils ne
+        # pouvaient pas voir la console de Windows, ou le pictogramme des deux bannieres n existe
+        # pas en cp1252 (#5197). Le script se joue donc ici dans son propre processus, avec cette
+        # console-la, comme l atelier le lance.
+        for nom, motif, code_attendu, classes in (
+            ("sous une console cp1252, le passage ciblé s'écrit", "Passage ciblé", 0, "UneVueTest"),
+            ("sous une console cp1252, l'interruption s'écrit", "Passage INTERROMPU", 1, ""),
+        ):
+            env = {
+                k: v
+                for k, v in os.environ.items()
+                if k not in ("GITHUB_STEP_SUMMARY", "RUNNER_OS", "CLASSES")
+            }
+            env |= {"PYTHONIOENCODING": "cp1252", "CLASSES": classes}
+            temoin = bac / "temoin"
+            temoin.unlink(missing_ok=True)
+            fini = subprocess.run(
+                [sys.executable, __file__, str(rapports), str(sources), str(temoin)],
+                env=env,
+                capture_output=True,
+                check=False,
+            )
+            sortie = fini.stdout.decode("utf-8", errors="replace")
+            total += 1
+            if motif in sortie and fini.returncode == code_attendu:
+                print(f"  [OK   ] {nom:<58} -> code {fini.returncode}")
+            else:
+                erreur = fini.stderr.decode("utf-8", errors="replace").strip().splitlines()
+                print(f"  [ÉCHEC] {nom:<58} -> code {fini.returncode} : {erreur[-1:]}")
+                echecs += 1
 
     print()
     print(f"{total} cas, dont 4 contrôles négatifs.")

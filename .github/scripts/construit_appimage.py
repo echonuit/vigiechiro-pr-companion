@@ -21,6 +21,10 @@ import subprocess
 import sys
 import urllib.request
 
+from _console import ecrire_en_utf8
+
+ecrire_en_utf8()
+
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 
 # Une version FIGEE : un outil qui change sous les pieds du build changerait la forme de l artefact

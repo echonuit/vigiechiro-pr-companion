@@ -50,6 +50,10 @@ import re
 import subprocess
 import sys
 
+from _console import ecrire_en_utf8
+
+ecrire_en_utf8()
+
 # Le chemin du paquet dans winget-pkgs, tel que komac le resout.
 CHEMIN_PAQUET = "manifests/e/Echonuit/VigieChiroCompanion"
 POLITIQUE = re.compile(r"lifetime|enterprise", re.I)

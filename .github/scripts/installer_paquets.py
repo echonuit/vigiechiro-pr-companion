@@ -50,6 +50,10 @@ import pathlib
 import subprocess
 import sys
 
+from _console import ecrire_en_utf8
+
+ecrire_en_utf8()
+
 # Bornes : au-dela, on prefere un echec net a une attente muette.
 BORNES = [
     "-o",

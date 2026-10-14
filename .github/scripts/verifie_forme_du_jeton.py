@@ -56,6 +56,10 @@ import pathlib
 import re
 import sys
 
+from _console import ecrire_en_utf8
+
+ecrire_en_utf8()
+
 SUITE = re.compile(r"[A-Za-z0-9]+")
 HORS_HEXA = re.compile(r"[G-Z]")
 JETON = re.compile(r"^[A-Z0-9]+$")
