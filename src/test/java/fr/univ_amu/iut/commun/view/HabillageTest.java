@@ -170,4 +170,66 @@ class HabillageTest {
 
         assertThat(scene.getRoot().getStylesheets()).hasSize(apresLePremier);
     }
+
+    @Test
+    @DisplayName("#6207 : hisser monte sur la scène les feuilles de la racine, dans leur ordre")
+    void hisser_monte_les_feuilles_de_la_racine_sur_la_scene() {
+        StackPane racine = new StackPane();
+        racine.getStylesheets().addAll(url(PALETTE), url(BASE), url(DESIGN));
+        Scene scene = new Scene(racine);
+
+        Habillage.hisser(scene);
+
+        assertThat(scene.getStylesheets())
+                .as("l'ordre du chrome se garde : `base.css` lit les couleurs de la palette, `design.css` la reprend")
+                .containsExactly(url(PALETTE), url(BASE), url(DESIGN));
+        assertThat(racine.getStylesheets())
+                .as(
+                        "plus rien sur la racine : un parent qui déclare une feuille fait enregistrer chaque parent qu'il contient")
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#6207 : hisser deux fois, ou sur une scène qui porte déjà une feuille, ne double rien")
+    void hisser_ne_double_rien() {
+        StackPane racine = new StackPane();
+        racine.getStylesheets().addAll(url(PALETTE), url(BASE), url(DESIGN));
+        Scene scene = new Scene(racine);
+        scene.getStylesheets().add(url(PALETTE));
+
+        Habillage.hisser(scene);
+        Habillage.hisser(scene);
+
+        assertThat(scene.getStylesheets()).containsExactly(url(PALETTE), url(BASE), url(DESIGN));
+    }
+
+    @Test
+    @DisplayName("#6207 : une vue accueillie ne redéclare pas ce que la scène porte, et garde sa feuille")
+    void alleger_retire_ce_que_la_scene_porte_et_garde_la_feuille_de_la_vue() {
+        StackPane racine = new StackPane();
+        Scene scene = new Scene(racine);
+        scene.getStylesheets().addAll(url(PALETTE), url(BASE), url(DESIGN));
+        StackPane vue = new StackPane();
+        String sites = urlDeFeature("/fr/univ_amu/iut/sites/view/sites.css");
+        vue.getStylesheets().addAll(url(PALETTE), url(DESIGN), sites);
+
+        Habillage.alleger(vue, scene);
+
+        assertThat(vue.getStylesheets())
+                .as("la feuille de la fonctionnalité reste sur sa vue : ses règles ne valent que pour elle")
+                .containsExactly(sites);
+    }
+
+    @Test
+    @DisplayName("#6207 : une vue seule, sans scène qui porte ses feuilles, les garde toutes")
+    void alleger_ne_retire_rien_quand_la_scene_ne_porte_rien() {
+        StackPane racine = new StackPane();
+        Scene scene = new Scene(racine);
+        StackPane vue = new StackPane();
+        vue.getStylesheets().addAll(url(PALETTE), url(DESIGN));
+
+        Habillage.alleger(vue, scene);
+
+        assertThat(vue.getStylesheets()).containsExactly(url(PALETTE), url(DESIGN));
+    }
 }

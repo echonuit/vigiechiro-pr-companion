@@ -258,6 +258,9 @@ public class MainController {
         // raccourcis passent par le Navigateur, qui respecte la garde de saisie et le verrou (#54).
         racine.sceneProperty().addListener((obs, ancienne, scene) -> {
             if (scene != null) {
+                // Les feuilles du chrome vivent sur la scène, et la vue déjà en place s'y range (#6207).
+                Habillage.hisser(scene);
+                allegerLesFeuilles(navigateur.getVueCentrale());
                 scene.getAccelerators()
                         .put(new KeyCodeCombination(KeyCode.LEFT, KeyCombination.ALT_DOWN), navigateur::revenir);
                 scene.getAccelerators()
@@ -292,6 +295,7 @@ public class MainController {
     /// écrans). Le changement d'écran reste instantané côté graphe de scène ; seule l'opacité est
     /// animée, sans incidence sur l'interaction (un nœud en cours de fondu reste cliquable et trouvable).
     private void afficherAvecFondu(Parent vue) {
+        allegerLesFeuilles(vue);
         defilementCentral.setContent(vue);
         if (vue == null) {
             return;
@@ -301,6 +305,15 @@ public class MainController {
         fondu.setFromValue(0.0);
         fondu.setToValue(1.0);
         fondu.playFromStart();
+    }
+
+    /// Une vue accueillie ne redéclare pas les feuilles que la scène du chrome porte déjà (#6207). Avant
+    /// que la fenêtre ait sa scène, il n'y a rien à retirer : la vue alors en place est rangée à son
+    /// arrivée.
+    private void allegerLesFeuilles(Parent vue) {
+        if (vue != null && racine.getScene() != null) {
+            Habillage.alleger(vue, racine.getScene());
+        }
     }
 
     /// Reconstruit la barre de navigation : visibilité du ← Retour (présent hors accueil) et segments
