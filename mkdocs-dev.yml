@@ -466,6 +466,8 @@ nav:
     - 6197 · L'image du plan établi se juge au premier import d'un processus, et tient O3 sans remède: decisions/6197-l-image-du-plan-etabli-se-juge-au-premier-import-et-tient-o3-sans-remede.md
     - 6207 · Un écran reconstruit à chaque ouverture ne tient pas les 50 ms d'O5, et les feuilles du chrome vivent sur la scène: decisions/6207-l-ouverture-d-un-ecran-reconstruit-ne-tient-pas-50-ms-et-les-feuilles-du-chrome-vivent-sur-la-scene.md
     - 6219 · Un test qui ne filme rien ne cite pas un cas de recette: decisions/6219-un-test-qui-ne-filme-rien-ne-cite-pas-un-cas-de-recette.md
+    - 6161 · Un original se lit par morceaux, seule une séquence bornée se lit entière: decisions/6161-un-original-se-lit-par-morceaux-seule-une-sequence-bornee-se-lit-entiere.md
+    - 6174 · Un temporaire volumineux naît sous l'espace de travail, jamais dans le dossier temporaire du système: decisions/6174-un-temporaire-volumineux-nait-sous-l-espace-de-travail.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Retour de terrain de la 2.189.0: retours/2189-ce-que-ton-retour-a-produit.md
