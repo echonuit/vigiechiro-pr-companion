@@ -22,10 +22,16 @@
 #    exactement le piège de #2299, où un paquet mort a été publié parce que la CI
 #    vérifiait la présence du lanceur sans jamais l'exécuter.
 #
-# 2. La vérification a lieu ICI, pas dans un job `pull_request`. Une PR ouverte
-#    avec le GITHUB_TOKEN ne déclenche AUCUN autre workflow (garde-fou anti-boucle
-#    de GitHub) : la PR arriverait donc sans le moindre check. Reporter la
-#    vérification à la PR reviendrait à ne pas vérifier du tout.
+# 2. La vérification a lieu ICI, pas dans un job `pull_request`. La PR ne lance
+#    AUCUN workflow : son commit porte la marque de saut de CI, comme celui des PR
+#    d'aperçus. Reporter la vérification à la PR reviendrait donc à ne pas vérifier
+#    du tout, et aucun job `pull_request` ne construit ni ne démarre le Flatpak.
+#
+#    Ce n'est PAS le GITHUB_TOKEN qui fait taire la PR, contrairement à ce que ce
+#    workflow a longtemps écrit. Depuis la 2.189.0, une PR ouverte avec ce jeton
+#    lance ses workflows : sans la marque, chaque mise à jour laissait 5 à 9
+#    vérifications rouges, nées sur une branche que la fusion avait déjà supprimée
+#    et mortes dans la seconde sans avoir rien vérifié (#5004).
 #
 # 3. La PR est ouverte PUIS fusionnée dans la foulée, comme capture-vues.yml le fait
 #    pour la galerie d'aperçus : `main` impose le passage par une PR, la PR n'est donc
@@ -109,8 +115,8 @@ permissions:
   contents: write
   pull-requests: write
   # `checks: write` sert à publier le check `titre` sur la PR de mise à jour, pour la
-  # même raison qu'en 2. : rien ne se déclenche sur une PR ouverte au GITHUB_TOKEN,
-  # donc titre-pr.yml ne peut pas s'y exécuter. Même mécanisme que capture-vues.yml.
+  # même raison qu'en 2. : le commit de la PR porte la marque de saut de CI, donc
+  # titre-pr.yml ne s'y exécute pas. Même mécanisme que capture-vues.yml.
   checks: write
 
 jobs:
@@ -421,8 +427,12 @@ jobs:
           # les deux fichiers que le vérificateur a réécrits.
           git add flatpak/fr.echonuit.VigieChiroCompanion.yml \
                   flatpak/fr.echonuit.VigieChiroCompanion.metainfo.xml
+          # `[skip ci]` sur le commit de la BRANCHE, et pas seulement sur le sujet du
+          # squash plus bas : GitHub lit la marque sur le commit de tête de la PR. Sans
+          # elle, la PR lance ses workflows, et la fusion qui suit les fait tous mourir
+          # rouges dans la seconde, sans rien avoir vérifié (#5004).
           git commit \
-            -m "build(flatpak): aligner le manifeste sur la v${version}" \
+            -m "build(flatpak): aligner le manifeste sur la v${version} [skip ci]" \
             -m "Mise à jour produite par flatpak-external-data-checker depuis le bloc x-checker-data du manifeste, puis éprouvée : le Flatpak a été construit et démarré (45 s debout, sans erreur de chargement) avant d'être proposé." \
             -m "Refs #2247"
           git push origin "$branche"
@@ -435,7 +445,7 @@ jobs:
             echo
             echo "Le paquet a été **construit et démarré** avant l'ouverture de cette PR : 45 s debout, sans erreur de chargement."
             echo
-            echo "La vérification a lieu dans le workflow et non sur cette PR, car une PR ouverte avec le \`GITHUB_TOKEN\` ne déclenche aucun autre workflow. PR ouverte par le bot car \`main\` impose le passage par une PR ; squash-mergée automatiquement."
+            echo "La vérification a lieu dans le workflow et non sur cette PR, dont le commit porte la marque de saut de CI : aucun workflow ne s'y exécute. PR ouverte par le bot car \`main\` impose le passage par une PR ; squash-mergée automatiquement."
             echo
             echo "Refs #2247"
           } > "$corps"
@@ -444,9 +454,9 @@ jobs:
           gh pr create --base main --head "$branche" --title "$titre" --body-file "$corps"
 
           # Valider le titre et publier le résultat comme check `titre`, exactement
-          # comme le fait capture-vues.yml : titre-pr.yml ne peut PAS s'exécuter sur
-          # cette PR (aucun workflow n'est déclenché par un événement produit avec le
-          # GITHUB_TOKEN), donc sans ce passage elle ne serait validée par rien. On
+          # comme le fait capture-vues.yml : titre-pr.yml ne s'exécute PAS sur cette PR,
+          # dont le commit porte la marque de saut de CI, donc sans ce passage elle ne
+          # serait validée par rien. On
           # exécute le MÊME script : seul le transport du résultat change. Publier un
           # succès en dur reviendrait à faire croire à une vérification inexistante.
           chmod +x .github/scripts/verifie_titre_pr.py

@@ -24,9 +24,9 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  # `checks: write` sert à publier le check `titre` sur la PR d'aperçus : GitHub ne déclenche
-  # aucun workflow pour un événement produit avec le GITHUB_TOKEN, donc titre-pr.yml ne peut
-  # pas s'exécuter ici et cette PR ne serait validée par rien. Cf. l'étape « Valider le titre »
+  # `checks: write` sert à publier le check `titre` sur la PR d'aperçus : son commit porte la
+  # marque de saut de CI, donc titre-pr.yml ne s'y exécute pas et cette PR ne serait validée
+  # par rien. Cf. l'étape « Valider le titre »
   # plus bas, et l'ADR 0041.
   checks: write
 
@@ -183,8 +183,10 @@ jobs:
         # Uniquement sur `main` : une PR vérifie que les écrans se rendent, elle ne publie rien.
         if: steps.portee.outputs.concerne == 'oui' && (github.event_name == 'push')
         # `main` impose le passage par une PR et github-actions[bot] ne peut PAS pousser en direct.
-        # On modélise donc le workflow PR : branche -> PR -> squash-merge. Le squash porte
-        # [skip ci] (anti-récursion : un commit d'aperçus n'a pas de code à valider).
+        # On modélise donc le workflow PR : branche -> PR -> squash-merge. Le commit de la branche
+        # et le squash portent [skip ci] (anti-récursion : un commit d'aperçus n'a pas de code à
+        # valider). C'est celui de la branche qui garde la PR muette : sans lui, elle lancerait
+        # ses workflows, que la fusion immédiate ferait mourir rouges (#5004).
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -208,8 +210,9 @@ jobs:
 
           # Valider le titre, et publier le résultat comme check `titre`.
           #
-          # titre-pr.yml ne peut PAS s'exécuter sur cette PR : GitHub ne déclenche aucun workflow
-          # pour un événement produit avec le GITHUB_TOKEN (garde-fou anti-récursion). Sans ce
+          # titre-pr.yml ne s'exécute PAS sur cette PR : son commit porte la marque de saut de CI.
+          # Ce n'est pas le GITHUB_TOKEN qui la fait taire, contrairement à ce que ce workflow a
+          # longtemps écrit : une PR ouverte avec ce jeton lance ses workflows (#5004). Sans ce
           # passage, une PR d'aperçus ne serait donc validée par RIEN.
           #
           # Ce mécanisme est né d'un besoin plus dur - `titre` était alors un check REQUIS, et son
