@@ -107,7 +107,13 @@ Un seul avis porte les quatre : `braces`, [GHSA-vfj7-8cjw-p6xm], un déni de ser
 profondément imbriqué, publié le 18 septembre 2026, donc après la montée en 1.12.0. Il remonte par
 `micromatch`, `fast-glob`, puis `@fission-ai/openspec` lui-même. **Monter de version ne le corrige
 pas** : l'audit range toutes les versions depuis 0.18.0 dans la plage touchée, et le seul correctif
-qu'il propose est un retour à 0.17.2. Ce que cet avis expose réellement ici n'a pas été évalué.
+qu'il propose est un retour à 0.17.2, et `braces` lui-même n'a aucune version corrigée.
+
+**Ce que l'avis expose ici, évalué le 2026-10-14 : rien d'exploitable.** Il faut qu'un attaquant
+fournisse le motif d'accolades imbriquées. Les motifs que `fast-glob` reçoit ici viennent de l'outil
+et des schémas OpenSpec du dépôt : pour en glisser un, il faudrait déjà pouvoir écrire dans le
+dépôt. Le pire cas est une commande `openspec` qui plante sur un motif que nous aurions écrit
+nous-mêmes (#5290, dette 3).
 
 ```bash
 (cd .github/openspec && npm audit)
