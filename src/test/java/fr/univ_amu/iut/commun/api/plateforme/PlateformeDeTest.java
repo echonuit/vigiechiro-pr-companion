@@ -116,6 +116,21 @@ public final class PlateformeDeTest implements BeforeAllCallback {
     /// Le réseau de la plateforme, gardé pour [#reseau()].
     private static Network reseauMonte;
 
+    /// Le nom sous lequel le faux S3 répond dans le réseau de la plateforme, pour le mandataire qui le
+    /// précède (#6258).
+    static final String ALIAS_DU_FAUX_S3 = "faux-s3";
+
+    /// Toxiproxy et ses deux mandataires, gardés pour [#sous(ProfilReseau)].
+    private static ReseauDeLaPlateforme mandataires;
+
+    /// Un profil de réseau posé, que sa fermeture retire.
+    public interface ProfilPose extends AutoCloseable {
+
+        /// Remet le réseau de la plateforme au profil [ProfilReseau#NOMINAL].
+        @Override
+        void close();
+    }
+
     @Override
     public void beforeAll(ExtensionContext contexte) {
         acces();
@@ -143,6 +158,22 @@ public final class PlateformeDeTest implements BeforeAllCallback {
         return reseauMonte;
     }
 
+    /// Pose un profil de réseau devant l'API et le faux S3, le temps d'un bloc (#6258, chantier #5646).
+    ///
+    /// La plateforme est partagée par les classes d'un même fork : un profil oublié ralentirait ou
+    /// couperait les suivantes. Il se pose donc dans un `try` qui le retire en sortie.
+    ///
+    /// ```java
+    /// try (var _ = PlateformeDeTest.sous(ProfilReseau.LENT)) {
+    ///     // ce qui doit se jouer sous un réseau lent
+    /// }
+    /// ```
+    public static synchronized ProfilPose sous(ProfilReseau profil) {
+        acces();
+        mandataires.poser(profil);
+        return () -> mandataires.poser(ProfilReseau.NOMINAL);
+    }
+
     /// L'adresse du front web vue DANS le réseau de la plateforme. Le front a la même origine que l'API
     /// (ADR 6060) : un navigateur qui ouvre cette adresse appelle l'API par `/api/v1` sans autre réglage.
     static String urlDuFrontDansLeReseau() {
@@ -152,6 +183,9 @@ public final class PlateformeDeTest implements BeforeAllCallback {
     private static Acces monter(Path dossier) {
         Properties epingles = epingles(dossier);
         Network reseau = Network.newNetwork();
+        // Toxiproxy d'abord : l'adresse du faux S3 que l'API rend doit être celle de son mandataire.
+        ReseauDeLaPlateforme reseauDegrade = ReseauDeLaPlateforme.demarrer(
+                epingles.getProperty("toxiproxy.image"), reseau, ALIAS_DE_L_API + ":8080", ALIAS_DU_FAUX_S3 + ":8443");
 
         GenericContainer<?> mongo = new GenericContainer<>(DockerImageName.parse(epingles.getProperty("mongo.image"))
                         .asCompatibleSubstituteFor("mongo"))
@@ -166,14 +200,16 @@ public final class PlateformeDeTest implements BeforeAllCallback {
                         new ImageFromDockerfile("vigiechiro-plateforme-faux-s3", false)
                                 .withDockerfile(dossier.resolve("faux-s3.Dockerfile")))
                 .withNetwork(reseau)
+                .withNetworkAliases(ALIAS_DU_FAUX_S3)
                 .withEnv("PYTHONUNBUFFERED", "1")
                 .withLogConsumer(JournauxDesConteneurs.pour("faux-s3"))
                 .withExposedPorts(8443)
                 .waitingFor(Wait.forListeningPort());
-        String hote = fauxS3.getHost();
+        // Le certificat couvre l'hôte par lequel la JVM joint le mandataire, qui ne fait que relayer.
+        String hote = reseauDegrade.hote();
         fauxS3.withEnv("FAUX_S3_NOMS", nomsDuCertificat(hote));
         fauxS3.start();
-        String urlS3 = "https://" + hote + ":" + fauxS3.getMappedPort(8443);
+        String urlS3 = "https://" + hote + ":" + reseauDegrade.portDuFauxS3();
         X509Certificate certificat =
                 fauxS3.copyFileFromContainer("/certificats/faux-s3.pem", PlateformeDeTest::lireCertificat);
         faireConfiance(certificat);
@@ -194,11 +230,12 @@ public final class PlateformeDeTest implements BeforeAllCallback {
         api.start();
         apiMontee = api;
         reseauMonte = reseau;
+        mandataires = reseauDegrade;
 
         JsonObject amorce = amorcer(api, dossier);
         deposer(urlS3, amorce.getAsJsonObject("objets"));
         return new Acces(
-                "http://" + api.getHost() + ":" + api.getMappedPort(8080) + PREFIXE_DE_L_API,
+                "http://" + reseauDegrade.hote() + ":" + reseauDegrade.portDeLApi() + PREFIXE_DE_L_API,
                 urlS3,
                 enTable(amorce.getAsJsonObject("jetons")),
                 enTable(amorce.getAsJsonObject("ids")));

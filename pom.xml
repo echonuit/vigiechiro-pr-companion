@@ -436,6 +436,23 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Toxiproxy devant l'API et le faux S3 de la plateforme de test, pour jouer un réseau lent,
+             limité ou coupé (#6258, chantier #5646). Le module rend le conteneur ; les mandataires et
+             leurs toxiques se règlent par le client toxiproxy-java, déclaré pour le contrôle des
+             dépendances de la phase `verify`, à la version que le module tire. -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-toxiproxy</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>eu.rekawek.toxiproxy</groupId>
+            <artifactId>toxiproxy-java</artifactId>
+            <version>2.1.11</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Un navigateur dans un conteneur, pour lire la fiche web que sert la plateforme de test
              (#6061, sous-chantier #5645). Le module rend l'adresse du navigateur ; le pilote se
              construit avec les modules de Selenium que les tests emploient, déclarés pour le
