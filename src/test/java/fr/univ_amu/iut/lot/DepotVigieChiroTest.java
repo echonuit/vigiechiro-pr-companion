@@ -19,16 +19,22 @@ import fr.univ_amu.iut.commun.api.EtatTraitement;
 import fr.univ_amu.iut.commun.api.FichierSigne;
 import fr.univ_amu.iut.commun.api.IssueDeDepot;
 import fr.univ_amu.iut.commun.api.IssueLancement;
+import fr.univ_amu.iut.commun.api.ParticipationDetail;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.api.ResultatLancement;
 import fr.univ_amu.iut.commun.api.SuiviReprise;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
+import fr.univ_amu.iut.commun.model.FuseauDuPoint;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
+import fr.univ_amu.iut.commun.model.InfosPoint;
+import fr.univ_amu.iut.commun.model.LienVigieChiro;
+import fr.univ_amu.iut.commun.model.ReferentielPoint;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
@@ -43,9 +49,13 @@ import fr.univ_amu.iut.lot.model.StatutDepotUnite;
 import fr.univ_amu.iut.lot.model.SuiviDepot;
 import fr.univ_amu.iut.lot.model.dao.DepotPlanDao;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
+import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.Passage;
+import fr.univ_amu.iut.passage.model.ReleveDeParticipation;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
+import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
+import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -243,6 +253,69 @@ class DepotVigieChiroTest {
         assertThat(statutPassage()).isEqualTo(StatutWorkflow.DEPOSE);
         assertThat(passage().deposeLe()).isNotNull();
         verify(participations, never()).creerPour(anyLong());
+    }
+
+    @Test
+    @DisplayName("#6231 : une nuit commencée après minuit passe le pré-vol et se dépose")
+    void nuit_apres_minuit_passe_le_pre_vol(@TempDir Path dossier) throws IOException {
+        // Le passage commence le 23 avril à 00:30, heure du site ; sa participation, à 22:30 UTC le 22.
+        // C'est la même nuit, et le pré-vol réel (non mocké) la refusait en coupant l'instant en UTC.
+        Passage seme = passage();
+        passageDao.update(new Passage(
+                seme.id(),
+                seme.numeroPassage(),
+                seme.annee(),
+                "2026-04-23",
+                "00:30",
+                seme.heureFin(),
+                seme.parametresAcquisition(),
+                seme.statutWorkflow(),
+                seme.verdictVerification(),
+                seme.commentaire(),
+                seme.donneesMeteo(),
+                seme.deposeLe(),
+                seme.idPoint(),
+                seme.idEnregistreur(),
+                seme.idCampagne()));
+        DepotVigieChiro avecPreVolReel = new DepotVigieChiro(
+                preVolReel(seme.idPoint(), "2026-04-22T22:30:00+00:00"),
+                client,
+                traitementServeur,
+                depotUnites,
+                depotPlans,
+                passageDao,
+                new MoteurWorkflowPassage(),
+                new HorlogeFigee(LocalDate.of(2026, 7, 11)));
+        armerUploadOk();
+
+        BilanDepot bilan = avecPreVolReel.deposer(idPassage, List.of(fichier(dossier, "Car-1.zip")));
+
+        assertThat(bilan.estComplet()).isTrue();
+        assertThat(statutPassage()).isEqualTo(StatutWorkflow.DEPOSE);
+    }
+
+    /// Une [SynchronisationParticipation] **réelle**, liée à la participation `part-1` qui commence à
+    /// `dateDebutDistante` sur le point Z1 : seul son pré-vol sert ici, ses autres collaborateurs sont muets.
+    private SynchronisationParticipation preVolReel(Long idPoint, String dateDebutDistante) {
+        LienVigieChiroDao liens = mock(LienVigieChiroDao.class);
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage)))
+                .thenReturn(Optional.of("part-1"));
+        ReferentielPoint referentiel = mock(ReferentielPoint.class);
+        when(referentiel.pour(idPoint)).thenReturn(Optional.of(new InfosPoint("Z1", 1L, "640380")));
+        when(client.participation("part-1"))
+                .thenReturn(ReponseApi.succes(new ParticipationDetail(
+                        "part-1", "e1", "Z1", dateDebutDistante, null, null, Map.of(), Traitement.absent())));
+        return new SynchronisationParticipation(
+                client,
+                liens,
+                passageDao,
+                mock(MaterielMicroDao.class),
+                mock(EnregistreurDao.class),
+                referentiel,
+                mock(FenetreObserveeNuit.class),
+                // Aucune commune résolue : le fuseau de repli, celui de la métropole.
+                new FuseauDuPoint(point -> Optional.empty()),
+                mock(ReleveDeParticipation.class));
     }
 
     @Test

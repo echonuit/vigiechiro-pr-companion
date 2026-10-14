@@ -20,6 +20,7 @@ import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.api.Traitement;
+import fr.univ_amu.iut.commun.model.Commune;
 import fr.univ_amu.iut.commun.model.FuseauDuPoint;
 import fr.univ_amu.iut.commun.model.InfosPoint;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
@@ -760,7 +761,7 @@ class SynchronisationParticipationTest {
     }
 
     @Test
-    @DisplayName("ecartsAvecDistant : même point, même nuit (date UTC de date_debut) → aucun écart")
+    @DisplayName("ecartsAvecDistant : même point, même nuit (jour du site de date_debut) → aucun écart")
     void ecarts_concordants() {
         armerLienEtDistant(detail("part-1", "Z41", "2026-07-03T19:00:00+00:00"));
 
@@ -794,6 +795,51 @@ class SynchronisationParticipationTest {
     }
 
     @Test
+    @DisplayName("ecartsAvecDistant : nuit commencée après minuit → même nuit au jour du site, aucun écart (#6231)")
+    void ecarts_nuit_apres_minuit_meme_jour_du_site() {
+        // 00:30 le 4 juillet à Paris, c'est 22:30 UTC le 3. Le passage porte le jour du site (ADR 3406) :
+        // couper l'instant en UTC lui inventait un écart, et le pré-vol refusait le dépôt.
+        armerNuitLiee(passageCommencant("2026-07-04", "00:30:00"), "2026-07-03T22:30:00+00:00");
+
+        assertThat(sync.ecartsAvecDistant(42L)).isEmpty();
+    }
+
+    @Test
+    @DisplayName(
+            "ecartsAvecDistant : la participation commence le lendemain au jour du site → écart, même jour UTC (#6231)")
+    void ecarts_nuit_suivante_au_jour_du_site() {
+        // 22:30 UTC le 4, c'est 00:30 le 5 à Paris : une nuit plus tard que le passage, alors que le jour
+        // UTC, lui, est le même.
+        armerNuitLiee(passageCommencant("2026-07-04", "00:30:00"), "2026-07-04T22:30:00+00:00");
+
+        assertThat(sync.ecartsAvecDistant(42L))
+                .singleElement()
+                .asString()
+                .contains("nuit du 04/07/2026 en local")
+                .contains("du 05/07/2026 sur la participation");
+    }
+
+    @Test
+    @DisplayName("ecartsAvecDistant : le jour se lit au fuseau du point, pas à celui de la métropole (#6231)")
+    void ecarts_jour_au_fuseau_du_point() {
+        // Un point de La Réunion (UTC+4) : 00:30 le 4 juillet y vaut 20:30 UTC le 3, soit 22:30 le 3 à
+        // Paris. Lu au fuseau de la métropole, l'écart reviendrait.
+        SynchronisationParticipation reunion = new SynchronisationParticipation(
+                client,
+                liens,
+                passageDao,
+                materielDao,
+                enregistreurDao,
+                referentielPoint,
+                fenetreObservee,
+                new FuseauDuPoint(idPoint -> Optional.of(new Commune("Saint-Denis", "97411"))),
+                releve);
+        armerNuitLiee(passageCommencant("2026-07-04", "00:30:00"), "2026-07-03T20:30:00+00:00");
+
+        assertThat(reunion.ecartsAvecDistant(42L)).isEmpty();
+    }
+
+    @Test
     @DisplayName("ecartsAvecDistant : participation liée injoignable → écart explicite (pas un silence)")
     void ecarts_distant_injoignable() {
         armerPassageEtPoint();
@@ -815,6 +861,14 @@ class SynchronisationParticipationTest {
         armerPassageEtPoint();
         when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
         when(client.participation("part-1")).thenReturn(ReponseApi.succes(distant));
+    }
+
+    /// Le passage 42 donné, lié à une participation qui commence à l'instant `dateDebutDistante`.
+    private void armerNuitLiee(Passage passage, String dateDebutDistante) {
+        when(passageDao.findById(42L)).thenReturn(Optional.of(passage));
+        when(referentielPoint.pour(7L)).thenReturn(Optional.of(new InfosPoint("Z41", 7L, CARRE)));
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        when(client.participation("part-1")).thenReturn(ReponseApi.succes(detail("part-1", "Z41", dateDebutDistante)));
     }
 
     /// Participation distante minimale pour le pré-vol (météo/config sans objet ici).
@@ -959,6 +1013,25 @@ class SynchronisationParticipationTest {
                 modele.deposeLe(),
                 modele.idPoint(),
                 serie,
+                null);
+    }
+
+    private static Passage passageCommencant(String date, String heureDebut) {
+        return new Passage(
+                42L,
+                1,
+                2026,
+                date,
+                heureDebut,
+                "05:00:00",
+                null,
+                StatutWorkflow.TRANSFORME,
+                null,
+                null,
+                null,
+                null,
+                7L,
+                "1997632",
                 null);
     }
 
