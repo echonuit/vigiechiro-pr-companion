@@ -703,6 +703,79 @@ le reste de cette passe, 11 dans le code du projet (la pose des lignes, les cell
 `-Drecette.prism.order=es2` pour le rendu GPU. L'écart se lit dans `releve.tsv`, sur la ligne « écart
 daté, import de la nuit 1 » qui commence « après « plan établi » ».
 
+### L'ouverture de la vue multisite et de l'écran des sons (#6207)
+
+O5 demande que, sur cent cinquante carrés de deux points, chaque écran de la topologie s'ouvre sous
+50 ms et ne croisse pas avec le nombre de carrés. Mes sites le tient depuis #6172 ; la vue multisite
+et l'écran des sons ne le tenaient pas.
+
+Mesuré sur le second poste (Core Ultra 7 255H, 16 cœurs, 30,3 Gio, carte Intel, JDK 25.0.3,
+Linux 7.0.0), à l'échelle 1 écrite par le banc. `BancIhmO5Test.o5_topologie` monte 15 puis 150 carrés
+de deux points, 1000 passages et 4031 observations, et ouvre chaque écran depuis un écran neutre : une
+ouverture jetée, puis trois relevées, du geste au premier pulse où l'écran montre ses données. Le banc
+écrit désormais l'heure du poste au départ de chaque ouverture, pour qu'un enregistrement JFR se
+découpe par écran.
+
+**Le 2026-10-13**, de 16 h 12 à 16 h 15, `main` à `48540597c` plus cette heure, trois tirs par dessin
+(neuf relevés) :
+
+| À chaud | Rendu GPU, 15 carrés | 150 carrés | Rendu logiciel, 15 carrés | 150 carrés | Seuil |
+|---|---|---|---|---|---|
+| Mes sites | de 48 à 87 ms | de 24 à 92 ms | de 60 à 97 ms | de 38 à 80 ms | 50 ms |
+| vue multisite | de 82 à 134 ms | de 134 à 200 ms | de 102 à 208 ms | de 124 à 277 ms | 50 ms |
+| écran des sons | de 101 à 149 ms | de 92 à 130 ms | de 184 à 312 ms | de 175 à 254 ms | |
+
+L'écran des sons n'est pas dans la liste des écrans de la topologie d'O5 ; il est relevé avec eux.
+
+**Le profil.** Un tir de plus par dessin sous JFR, échantillonné à la milliseconde. À 150 carrés, en
+rendu GPU, le fil JavaFX passe la moitié à deux tiers de ces ouvertures dans le CSS des nœuds neufs,
+jusqu'à un tiers dans le chargeur FXML (l'écran des sons), et moins de 2 % dans les lectures en base.
+Une seule méthode de JavaFX prend 18 % des échantillons de la vue multisite :
+`StyleManager.RefList.add`. Pour chaque feuille déclarée sur un parent, JavaFX enregistre tous les
+parents qu'il contient, et reparcourt la liste à chaque parent neuf qu'il style. `palette.css`,
+`base.css` et `design.css` étaient déclarées sur la racine du chrome et sur celle de chaque écran :
+après vingt ouvertures, chacune comptait 187 parents enregistrés.
+
+**Le remède, et sa mesure.** Les feuilles du chrome montent sur la scène, et un écran accueilli ne les
+redéclare plus (ADR 6207). Le 2026-10-14, de 6 h 38 à 6 h 46, `main` à `b54f1a21b` avec et sans le
+remède, en alternance, quatre tirs par côté en rendu GPU et deux en logiciel :
+
+| À chaud, 150 carrés | GPU, avant | GPU, après | Logiciel, avant | Logiciel, après |
+|---|---|---|---|---|
+| Mes sites, médiane (étendue) | 60 ms (42 à 73) | 65 ms (42 à 92) | 55 ms (49 à 91) | 69 ms (55 à 86) |
+| vue multisite | 213 ms (199 à 294) | 187 ms (141 à 256) | 298 ms (193 à 391) | 455 ms (260 à 472) |
+| écran des sons | 152 ms (123 à 172) | 145 ms (133 à 190) | 318 ms (313 à 371) | 341 ms (269 à 372) |
+| vue multisite, à 15 carrés | 144 ms (105 à 166) | 142 ms (89 à 192) | 131 ms (101 à 166) | 132 ms (104 à 332) |
+
+Charge du poste sur 1 minute au départ des tirs : de 1,6 à 5,9. Un conteneur Docker d'une autre
+session s'est terminé dans la minute qui précédait le premier tir.
+
+**Lectures** :
+
+- **Le remède retire ce qu'il vise dans JavaFX** : 13 parents enregistrés par feuille commune au lieu
+  de 187, et `RefList.add` passe de 18 à 6 % des échantillons de la vue multisite. Huit écrans ouverts
+  par le chrome rendent la même image avant et après, au pixel près hors du curseur clignotant du
+  champ de recherche.
+- **Son gain en temps n'est pas établi.** La médiane GPU de la vue multisite baisse de 12 %, mais les
+  étendues se recouvrent ; l'écran des sons ne bouge pas ; en logiciel, les deux tirs vont dans
+  l'autre sens.
+- **La même ouverture coûte jusqu'à moitié plus d'un jour à l'autre**, sur le même code : de 134 à
+  200 ms le 13, de 199 à 294 ms le 14, pour la vue multisite en rendu GPU.
+- **Le seuil de 50 ms n'est tenu par aucun des deux écrans, et il reste** (ADR 6207). Le navigateur
+  reconstruit l'écran à chaque ouverture, et rien de ce que le profil désigne ne l'approche tant qu'il
+  le fait. La vue multisite croît aussi avec les carrés.
+
+**Ce que ces chiffres ne mesurent pas** :
+
+- La cause de l'écart d'un jour à l'autre.
+- La part de la croissance avec les carrés dans le profil de la vue multisite.
+- Le coût de la feuille de fonctionnalité, restée sur la vue et soumise au même mécanisme : 93
+  parents enregistrés pour `sites.css` après vingt ouvertures.
+- Un autre poste.
+
+**Le relancer** : la commande du test de charge avec `-Dtest=BancIhmO5Test#o5_topologie`, et
+`-Drecette.prism.order=es2` pour le rendu GPU.
+
 ### La lecture par morceaux (#104) : la mémoire ne suit plus la durée d'un WAV
 
 Jusqu'à #104, l'import chargeait chaque WAV entier avant de le découper. Il le lit désormais tranche
@@ -905,7 +978,9 @@ critère a son relevé, et chaque seuil non tenu son issue.
 - **O5, couche données** : sélection des 4031 observations de 11 à 19 ms à chaud (seuil 100 ms) ; tri
   et filtre des 1000 passages de 10 à 12 ms à chaud (seuil 200 ms). Index `#28` en place et verrouillé
   par un test CI. **Dans l'IHM** : tri, filtre et clic tenus (au plus 66 ms) ; à 150 carrés, ni la vue
-  multisite ni l'écran des sons ne s'ouvrent sous 50 ms (#6207) ; Mes sites croissait avec les carrés, et ne croît plus depuis sa liste
+  multisite ni l'écran des sons ne s'ouvrent sous 50 ms, parce qu'ils sont reconstruits à chaque
+  ouverture : le seuil reste, non tenu, et les feuilles du chrome vivent sur la scène (#6207,
+  ADR 6207) ; Mes sites croissait avec les carrés, et ne croît plus depuis sa liste
   virtualisée (#6172).
 - **O3** : nuit standard de 5,62 Gio en 40 à 49 s ; 9 Gio en 84 à 87 s ; occupation après GC de 81
   à 85 Mo, la nuit standard passant sous `-Xmx128m`. **Dans l'IHM** : pas d'écart de plus de 200 ms pendant l'import ; des écarts de 203 à 758 ms à

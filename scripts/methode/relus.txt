@@ -581,7 +581,7 @@ f6d365a0f00e  src/main/java/fr/univ_amu/iut/commun/view/GestionnaireFiltres.java
 37ab453e674c  src/main/java/fr/univ_amu/iut/commun/view/GestionnaireVues.java
 6cc9999a9e1f  src/main/java/fr/univ_amu/iut/commun/view/GrapheNocturne.java
 c12684009280  src/main/java/fr/univ_amu/iut/commun/view/GroupeMenu.java
-6829089d652d  src/main/java/fr/univ_amu/iut/commun/view/Habillage.java
+dcb65dbfe3c6  src/main/java/fr/univ_amu/iut/commun/view/Habillage.java
 b8e36cb2bf98  src/main/java/fr/univ_amu/iut/commun/view/IconeSelonEtat.java
 fdd52d70bae5  src/main/java/fr/univ_amu/iut/commun/view/IconesSeverite.java
 f8b3b2fb20e7  src/main/java/fr/univ_amu/iut/commun/view/IndicateurBlocage.java
@@ -591,7 +591,7 @@ fffe529aaf3f  src/main/java/fr/univ_amu/iut/commun/view/IndicateurOccupation.jav
 0720010d854f  src/main/java/fr/univ_amu/iut/commun/view/LibelleRetour.java
 b53178f506a6  src/main/java/fr/univ_amu/iut/commun/view/LibellesCriteres.java
 149e335cc7b2  src/main/java/fr/univ_amu/iut/commun/view/Lieu.java
-1fc2f57028cc  src/main/java/fr/univ_amu/iut/commun/view/MainController.java
+fb0ba17aba6d  src/main/java/fr/univ_amu/iut/commun/view/MainController.java
 4c632b51531b  src/main/java/fr/univ_amu/iut/commun/view/MemoireEcran.java
 89b745565cb9  src/main/java/fr/univ_amu/iut/commun/view/MemoireFiltres.java
 1bc780fb5338  src/main/java/fr/univ_amu/iut/commun/view/MenuCopier.java
@@ -1781,6 +1781,7 @@ e93a95bddc5b  src/test/java/fr/univ_amu/iut/e2e/AttenteAvantClicTest.java
 f6aeb13a6f09  src/test/java/fr/univ_amu/iut/e2e/CarteHorsCadreAccueilTest.java
 a8fd5f587ce3  src/test/java/fr/univ_amu/iut/e2e/EcranQuitteEstRenduTest.java
 58f5398b324a  src/test/java/fr/univ_amu/iut/e2e/EcransSuivantUnSingleton.java
+cd03b3409fdc  src/test/java/fr/univ_amu/iut/e2e/FeuillesDuChromeSurLaSceneTest.java
 4766f0f39999  src/test/java/fr/univ_amu/iut/e2e/ParcoursAnalyseVersValidationE2ETest.java
 603d24248ae4  src/test/java/fr/univ_amu/iut/e2e/ParcoursDeclarerSiteE2ETest.java
 ec0931d84305  src/test/java/fr/univ_amu/iut/e2e/ParcoursDepotE2ETest.java
@@ -2048,14 +2049,14 @@ ab70d6f6344b  src/test/java/fr/univ_amu/iut/passage/viewmodel/MemesMotsQueLEcran
 59c6503e55be  src/test/java/fr/univ_amu/iut/passage/viewmodel/SaisieHorairesNuitTest.java
 a8f5b54b21d0  src/test/java/fr/univ_amu/iut/passage/viewmodel/VerificationDuTraitementTest.java
 49766a118987  src/test/java/fr/univ_amu/iut/perf/JeuDuBancTest.java
-f9e4c4b51ceb  src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO3Test.java
+929541f0bc35  src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO3Test.java
 eace6174d00f  src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO5Test.java
 0f83f49f3cdf  src/test/java/fr/univ_amu/iut/perf/outils/DatationDesEcarts.java
 8b1bdb842238  src/test/java/fr/univ_amu/iut/perf/outils/DatationDesEcartsTest.java
 535fa25dfcc2  src/test/java/fr/univ_amu/iut/perf/outils/EchelleDuRendu.java
 8c8958cd2741  src/test/java/fr/univ_amu/iut/perf/outils/EchelleDuRenduTest.java
-f20d25e20b48  src/test/java/fr/univ_amu/iut/perf/outils/EcranDuBanc.java
-5ea1701c1914  src/test/java/fr/univ_amu/iut/perf/outils/InstrumentsDuBanc.java
+dbed8d993896  src/test/java/fr/univ_amu/iut/perf/outils/EcranDuBanc.java
+4eefe12ab191  src/test/java/fr/univ_amu/iut/perf/outils/InstrumentsDuBanc.java
 83e308799b67  src/test/java/fr/univ_amu/iut/perf/outils/JalonsDeLImport.java
 a915ebf9d263  src/test/java/fr/univ_amu/iut/qualification/AgregationVerdictTest.java
 134e5d009078  src/test/java/fr/univ_amu/iut/qualification/FenetreDeCouvertureTest.java
