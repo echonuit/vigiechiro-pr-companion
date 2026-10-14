@@ -573,7 +573,7 @@ le refuse sinon.
 
 **Quand le job rougit, les conteneurs disent ce qu'ils faisaient** (#6183). L'API, le faux S3 et
 Mongo versent leur journal sous `target/plateforme-de-test/journaux/`, un fichier par conteneur et par
-fork, chaque ligne datée à sa réception par la JVM. Le job les dépose en artefact,
+fork, chaque ligne datée à sa réception par la JVM. La construction de l'image de l'API y verse aussi sa sortie, `<pid>-construction-api.log` : `ConstructionDeLImage` la construit par le client Docker de Testcontainers, parce qu'`ImageFromDockerfile` ne rend pas cette sortie et que les tests branchent SLF4J sur `slf4j-nop` (#6267). Le job les dépose en artefact,
 `journaux-de-la-plateforme-<tentative>`, avec les rapports surefire. L'API y écrit une ligne par requête à
 laquelle elle répond : une écriture que la JVM dit sans réponse se cherche là, à l'instant de
 l'échec. `JournauxDeLaPlateformeDeTestTest` exige d'y relire une requête marquée.

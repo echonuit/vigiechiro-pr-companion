@@ -215,10 +215,16 @@ public final class PlateformeDeTest implements BeforeAllCallback {
         faireConfiance(certificat);
         System.setProperty("vigiechiro.s3.hotes", hote);
 
-        GenericContainer<?> api = new GenericContainer<>(new ImageFromDockerfile("vigiechiro-plateforme-api", false)
-                        .withDockerfile(dossier.resolve("api.Dockerfile"))
-                        .withBuildArg("REVISION", epingles.getProperty("api.revision"))
-                        .withBuildArg("FRONT_REVISION", epingles.getProperty("front.revision")))
+        // La sortie de la construction va dans les journaux de la plateforme (#6267) : un fork qui ne
+        // construisait pas l'image du front ne disait pas pourquoi.
+        String imageDeLApi = ConstructionDeLImage.construire(
+                "api",
+                dossier.resolve("api.Dockerfile"),
+                "vigiechiro-plateforme-api:latest",
+                Map.of(
+                        "REVISION", epingles.getProperty("api.revision"),
+                        "FRONT_REVISION", epingles.getProperty("front.revision")));
+        GenericContainer<?> api = new GenericContainer<>(DockerImageName.parse(imageDeLApi))
                 .withNetwork(reseau)
                 .withNetworkAliases(ALIAS_DE_L_API)
                 .withEnv("MONGO_HOST", MONGO_DANS_LE_RESEAU)
