@@ -18,8 +18,7 @@ import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeParseException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -310,8 +309,8 @@ public final class SynchronisationParticipation {
     }
 
     /// Écarts entre le passage local et la **participation liée** côté VigieChiro (« la bonne nuit au
-    /// bon endroit », pré-vol du dépôt #1046) : compare le **point** (code localité) et la **nuit**
-    /// (date UTC de `date_debut` : le mappeur pousse la date du passage telle quelle en UTC). Liste de
+    /// bon endroit », pré-vol du dépôt #1046) : compare le **point** (code localité) et la **nuit** (le
+    /// jour où commence `date_debut`, lu au fuseau du point, cf. [#nuitDistante]). Liste de
     /// messages lisibles, vide si tout concorde **ou** si aucune participation n'est liée (rien à
     /// vérifier : une création est correcte par construction). Ne compare pas météo/config : la
     /// synchronisation de la modale les gère.
@@ -334,7 +333,7 @@ public final class SynchronisationParticipation {
             ecarts.add("point d'écoute « " + point.code() + " » en local, « "
                     + distant.get().point() + " » sur la participation");
         }
-        Optional<LocalDate> nuitDistante = nuitDistante(distant.get());
+        Optional<LocalDate> nuitDistante = nuitDistante(distant.get(), passage);
         if (nuitDistante.isEmpty()) {
             ecarts.add("date de début absente ou illisible sur la participation");
         } else if (passage.dateEnregistrement() != null
@@ -345,16 +344,16 @@ public final class SynchronisationParticipation {
         return List.copyOf(ecarts);
     }
 
-    /// Date UTC du `date_debut` distant (ISO `+00:00`), vide si absent ou illisible.
-    private static Optional<LocalDate> nuitDistante(ParticipationDetail distant) {
-        if (distant.dateDebut() == null || distant.dateDebut().isBlank()) {
-            return Optional.empty();
-        }
-        try {
-            return Optional.of(OffsetDateTime.parse(distant.dateDebut()).toLocalDate());
-        } catch (DateTimeParseException illisible) {
-            return Optional.empty();
-        }
+    /// Jour où commence la participation distante, lu au fuseau du point du passage ; vide si
+    /// `date_debut` est absente ou illisible.
+    ///
+    /// Le jour du **site**, et non le jour UTC : le passage porte le jour où sa nuit commence là où elle
+    /// est enregistrée, et l'envoi convertit son début depuis ce même fuseau (ADR 3406). Le jour UTC
+    /// donnerait la veille à toute nuit commencée après minuit, et le pré-vol en refuserait le dépôt
+    /// (#6231).
+    private Optional<LocalDate> nuitDistante(ParticipationDetail distant, Passage passage) {
+        return Horodatage.heureMurale(distant.dateDebut(), fuseaux.pour(passage.idPoint()))
+                .map(LocalDateTime::toLocalDate);
     }
 
     private Passage chargerPassage(Long idPassage) {
