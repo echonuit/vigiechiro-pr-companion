@@ -241,7 +241,7 @@ jobs:
         # Le nom porte la tentative, comme les clips de `tournage-recette.yml` : la mesure de #6183
         # relance ce job, et chaque tentative rouge garde ainsi ses propres journaux.
         if: ${{ failure() && steps.portee.outputs.concerne == 'oui' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: journaux-de-la-plateforme-${{ github.run_attempt }}
           path: |
@@ -530,7 +530,7 @@ jobs:
 
       - name: "Verser l'app-image (#5301)"
         if: steps.portee.outputs.concerne == 'oui'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: app-image
           path: |
