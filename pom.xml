@@ -92,7 +92,7 @@
         <hamcrest.version>3.0</hamcrest.version>
         <!-- Suite de contrat API « vivante » (profil -Papi-live, hors CI) : REST-assured tape l'API
              VigieChiro réelle et valide les réponses contre les JSON Schema de src/test/resources. -->
-        <restassured.version>6.0.1</restassured.version>
+        <restassured.version>6.1.0</restassured.version>
         <testcontainers.version>2.0.5</testcontainers.version>
         <!-- La version de Selenium que testcontainers-selenium tire lui-même : le navigateur de la
              plateforme de test se pilote avec elle (#6061). -->
