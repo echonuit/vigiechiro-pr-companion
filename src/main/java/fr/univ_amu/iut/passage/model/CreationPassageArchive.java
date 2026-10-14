@@ -66,8 +66,24 @@ public final class CreationPassageArchive {
         this.journal = Objects.requireNonNull(journal, "journal");
     }
 
-    /// Résultat de la création : l'identifiant du passage créé et le **nombre de séquences** recréées.
-    public record PassageArchive(Long idPassage, int nbSequences) {}
+    /// Résultat de la création : l'identifiant du passage créé, le **nombre de séquences** recréées, et les
+    /// valeurs du matériel micro que la lecture n'a pas su prendre (#6211, #6228), vide si tout a été relu.
+    public record PassageArchive(Long idPassage, int nbSequences, List<String> microNonRelus) {
+
+        public PassageArchive {
+            microNonRelus = List.copyOf(microNonRelus);
+        }
+
+        /// Une création qui n'a lu aucun matériel micro, ou l'a lu entier.
+        public PassageArchive(Long idPassage, int nbSequences) {
+            this(idPassage, nbSequences, List.of());
+        }
+
+        /// Vrai si une valeur du matériel micro n'a pas pu être relue.
+        public boolean microIncomplet() {
+            return !microNonRelus.isEmpty();
+        }
+    }
 
     /// Premier numéro de passage **libre** pour ce point et cette année. La plateforme ne le porte pas, et
     /// deviner « 1 ou 2 » selon la date serait une supposition : on prend le premier trou. L'appelant en a
@@ -110,11 +126,11 @@ public final class CreationPassageArchive {
             Consumer<Progression> progres) {
         progres.accept(new Progression("Création du passage…", 0.90));
         Long idPassage = creerPassage(idPoint, numeroPassage, debut, fin, enregistreur(detail), meteoDepuis(detail));
-        rapatrierMateriel(idPassage, detail);
+        List<String> microNonRelus = rapatrierMateriel(idPassage, detail);
         Long idSession = creerSessionArchivee(idPassage, prefixe);
         progres.accept(new Progression("Création des séquences…", 0.93));
         int sequences = creerSequences(idSession, prefixe, nomsFichiers);
-        return new PassageArchive(idPassage, sequences);
+        return new PassageArchive(idPassage, sequences, microNonRelus);
     }
 
     /// Crée les séquences d'une session **déjà existante**, sans toucher au passage qui la porte (#2555).
@@ -185,9 +201,9 @@ public final class CreationPassageArchive {
             Prefixe prefixe,
             ParticipationDetail detail) {
         Long idPassage = creerPassage(idPoint, numeroPassage, debut, fin, enregistreur(detail), meteoDepuis(detail));
-        rapatrierMateriel(idPassage, detail);
+        List<String> microNonRelus = rapatrierMateriel(idPassage, detail);
         creerSessionArchivee(idPassage, prefixe);
-        return new PassageArchive(idPassage, 0);
+        return new PassageArchive(idPassage, 0, microNonRelus);
     }
 
     /// Crée une nuit **rapatriée par la synchro** (#1814) : avec son **identité** si son détail a pu être lu
@@ -340,10 +356,14 @@ public final class CreationPassageArchive {
     }
 
     /// Matériel du micro (position, hauteur, type) rapatrié de la participation (#1689) s'il est renseigné,
-    /// via les mêmes clés `micro0_*` que le « tir » de [SynchronisationParticipation].
-    private void rapatrierMateriel(Long idPassage, ParticipationDetail detail) {
-        if (detail.configuration() != null && !detail.configuration().isEmpty()) {
-            materielDao.definir(CorrespondanceParticipation.microDepuis(idPassage, detail.configuration()));
+    /// via les mêmes clés `micro0_*` que le « tir » de [SynchronisationParticipation]. Rend ce que la lecture
+    /// n'a pas su prendre, pour que la reconstruction l'annonce (#6211, #6228).
+    private List<String> rapatrierMateriel(Long idPassage, ParticipationDetail detail) {
+        if (detail.configuration() == null || detail.configuration().isEmpty()) {
+            return List.of();
         }
+        MaterielRelu relu = LectureMicro.depuis(idPassage, detail.configuration());
+        materielDao.definir(relu.materiel());
+        return relu.nonRelus();
     }
 }

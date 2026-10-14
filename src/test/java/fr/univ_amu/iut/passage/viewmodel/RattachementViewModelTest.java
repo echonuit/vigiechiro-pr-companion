@@ -641,10 +641,10 @@ class RattachementViewModelTest {
                 .thenReturn(detailMeteo(new MeteoReleve(9.0, 3.0, Vent.FORT, CouvertureNuageuse.DE_75_A_100)));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
-        boolean recupere = avecSync.tirerDepuisVigieChiro();
+        Optional<List<String>> recupere = avecSync.tirerDepuisVigieChiro();
         avecSync.rechargerApresTir(recupere);
 
-        assertThat(recupere).isTrue();
+        assertThat(recupere).contains(List.of());
         verify(sync).tirerDepuis(ID);
         assertThat(avecSync.conditions().ventSaisieProperty().get()).isEqualTo(Vent.FORT);
         assertThat(avecSync.retourProperty().get().texte()).contains("récupérées");
@@ -669,11 +669,35 @@ class RattachementViewModelTest {
         when(service.detailPassage(ID)).thenReturn(detailMeteo(MeteoReleve.VIDE));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
-        boolean recupere = avecSync.tirerDepuisVigieChiro();
+        Optional<List<String>> recupere = avecSync.tirerDepuisVigieChiro();
         avecSync.rechargerApresTir(recupere);
 
-        assertThat(recupere).isFalse();
+        assertThat(recupere).isEmpty();
         assertThat(avecSync.retourProperty().get().texte()).contains("Aucune participation");
+    }
+
+    @Test
+    @DisplayName("#6211, #6228 : une valeur du micro non relue se dit en avertissement après la récupération")
+    void tirer_depuis_vigiechiro_avertit_d_une_valeur_non_relue() {
+        SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
+        when(sync.tirerDepuis(ID)).thenReturn(List.of("hauteur du micro « 2-3 »"));
+        RattachementViewModel avecSync = new RattachementViewModel(
+                service,
+                rattachement,
+                conditionsPassage,
+                propositions,
+                Optional.of(sync),
+                Optional.empty(),
+                numeroCarre -> java.util.List.of());
+        when(service.detailPassage(ID)).thenReturn(detailMeteo(MeteoReleve.VIDE));
+        avecSync.ouvrirSur(ID, "040962", "A1");
+
+        avecSync.rechargerApresTir(avecSync.tirerDepuisVigieChiro());
+
+        assertThat(avecSync.retourProperty().get().severite()).isEqualTo(Severite.AVERTISSEMENT);
+        assertThat(avecSync.retourProperty().get().texte())
+                .contains("récupérées")
+                .contains("hauteur du micro « 2-3 »");
     }
 
     @Test

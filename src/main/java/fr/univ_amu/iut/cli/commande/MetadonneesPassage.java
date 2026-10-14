@@ -178,8 +178,17 @@ public final class MetadonneesPassage implements Callable<Integer> {
                     modifie.heureDebut() + VERS + modifie.heureFin());
         }
         if (recuperer) {
-            passerelle().tirerDepuis(idPassage);
+            List<String> nonRelus = passerelle().tirerDepuis(idPassage);
             dire(sortie, compte, "recupere", "Métadonnées récupérées depuis Vigie-Chiro.", true);
+            if (!nonRelus.isEmpty()) {
+                // #6211, #6228 : une valeur que la lecture ne prend pas se tait localement, mais se dit.
+                dire(
+                        sortie,
+                        compte,
+                        "nonRelus",
+                        "Non relu, laissé vide : " + String.join(", ", nonRelus) + ".",
+                        nonRelus);
+            }
         }
         return envoyer ? envoyerUneNuit(sortie, compte) : rendre(sortie, compte);
     }
@@ -308,9 +317,12 @@ public final class MetadonneesPassage implements Callable<Integer> {
         String gestes = traite.recupere() && traite.envoye()
                 ? "récupérée et envoyée"
                 : (traite.recupere() ? "récupérée" : "envoyée");
-        return traite.realignement()
+        String avecRealignement = traite.realignement()
                 .map(realignement -> gestes + ", " + phrase(realignement))
                 .orElse(gestes);
+        return traite.nonRelus().isEmpty()
+                ? avecRealignement
+                : avecRealignement + ", non relu : " + String.join(", ", traite.nonRelus());
     }
 
     /// Les heures avant et après réalignement. Dire seulement la nouvelle valeur n'apprendrait pas ce qui a
