@@ -23,8 +23,8 @@ import java.util.Map;
 /// bascule sur ce mapper, Phase 1d.)
 final class CorrespondanceParticipation {
 
-    /// Type de détecteur/enregistreur (l'app cible les Passive Recorders, log `PaRecPR…`).
-    private static final String TYPE_DETECTEUR = "PassiveRecorder";
+    /// Clé VigieChiro du type de détecteur/enregistreur ; sa valeur vient de [TypeEnregistreur].
+    private static final String CLE_TYPE = "detecteur_enregistreur_type";
 
     /// Clé **canonique** VigieChiro du numéro de série de l'enregistreur (celle du formulaire web).
     private static final String CLE_SERIE_CANONIQUE = "detecteur_enregistreur_numero_serie";
@@ -121,21 +121,23 @@ final class CorrespondanceParticipation {
         // web gère (micro0_numero_serie, micro1_*, canal_expansion_temps, canal_enregistrement_direct). Nos
         // clés écrasent les leurs ; les autres survivent.
         Map<String, String> config = new LinkedHashMap<>(distante == null ? Map.of() : distante);
-        if (passage.idEnregistreur() != null) {
-            config.put("detecteur_enregistreur_type", TYPE_DETECTEUR);
-            // #1828 : le TYPE est publié (l'app ne pilote que des Passive Recorders : c'est vrai), mais
-            // JAMAIS un numéro de série sentinelle. « INCONNU » n'est pas un numéro, c'est un aveu
-            // d'ignorance ; le publier fabriquerait une donnée que l'app - et le prochain poste - se
-            // reliraient ensuite comme si elle était réelle. Ne rien dire vaut mieux que mentir. Comme
-            // `recorder_id` est NOT NULL en base, sans cette garde la sentinelle partait à chaque dépôt.
-            if (!Enregistreur.estInconnu(passage.idEnregistreur())) {
-                // #1844 : clé **canonique**, celle que lie le formulaire web. L'app poussait la clé
-                // historique `..._numserie`, que le front ne lit pas : le numéro arrivait bien sur la
-                // plateforme, mais **invisible**. On retire au passage l'ancienne clé, pour que les
-                // participations déjà déposées par l'app se réparent au premier envoi.
-                config.remove(CLE_SERIE_APP);
-                config.put(CLE_SERIE_CANONIQUE, passage.idEnregistreur());
-            }
+        // #6233 : le TYPE n'est pas une clé que nous possédons. Il ne part que si la participation n'en porte
+        // aucun, et seulement quand nous savons quel appareil a produit la nuit : une nuit rapatriée a pu
+        // être enregistrée par un SM4 ou une Audiomoth, et la nommer « PassiveRecorder » serait inventer.
+        TypeEnregistreur.de(passage)
+                .filter(type -> estVide(config.get(CLE_TYPE)))
+                .ifPresent(type -> config.put(CLE_TYPE, type.valeurPlateforme()));
+        // #1828 : JAMAIS un numéro de série sentinelle. « INCONNU » n'est pas un numéro, c'est un aveu
+        // d'ignorance ; le publier fabriquerait une donnée que l'app - et le prochain poste - se reliraient
+        // ensuite comme si elle était réelle. Ne rien dire vaut mieux que mentir. Comme `recorder_id` est
+        // NOT NULL en base, sans cette garde la sentinelle partait à chaque dépôt.
+        if (!Enregistreur.estInconnu(passage.idEnregistreur())) {
+            // #1844 : clé **canonique**, celle que lie le formulaire web. L'app poussait la clé historique
+            // `..._numserie`, que le front ne lit pas : le numéro arrivait bien sur la plateforme, mais
+            // **invisible**. On retire au passage l'ancienne clé, pour que les participations déjà déposées
+            // par l'app se réparent au premier envoi.
+            config.remove(CLE_SERIE_APP);
+            config.put(CLE_SERIE_CANONIQUE, passage.idEnregistreur());
         }
         if (micro.typeMicro() != null) {
             config.put("micro0_type", micro.typeMicro());
@@ -147,6 +149,11 @@ final class CorrespondanceParticipation {
             config.put("micro0_hauteur", hauteur(micro.hauteurMetres()));
         }
         return config.isEmpty() ? null : config;
+    }
+
+    /// Vrai si la valeur distante est absente ou blanche : un champ vide du formulaire web ne dit rien.
+    private static boolean estVide(String valeur) {
+        return valeur == null || valeur.isBlank();
     }
 
     /// Refuse d'assembler une participation dont les **bornes de nuit** manquent (#3451).

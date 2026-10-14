@@ -399,6 +399,36 @@ class SynchronisationParticipationTest {
     }
 
     @Test
+    @DisplayName("#6233 : renvoyer une nuit rapatriée garde le type de détecteur que porte la participation")
+    void pousser_vers_garde_le_type_de_detecteur_distant() {
+        // Le passage des fixtures n'a pas de paramètres d'acquisition : c'est une nuit rapatriée, dont
+        // l'appareil est inconnu du poste. La participation dit qu'un SM4 l'a enregistrée.
+        when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        ParticipationDetail modele = detail("e1");
+        when(client.participation("part-1"))
+                .thenReturn(ReponseApi.succes(new ParticipationDetail(
+                        modele.id(),
+                        modele.etag(),
+                        modele.point(),
+                        modele.dateDebut(),
+                        modele.dateFin(),
+                        modele.meteo(),
+                        Map.of("detecteur_enregistreur_type", "SM4", "micro0_type", "ICS"),
+                        modele.traitement())));
+        when(client.modifierParticipation(anyString(), anyString(), any()))
+                .thenReturn(ResultatEcriture.reussie("part-1"));
+
+        sync.pousserVers(42L);
+
+        ArgumentCaptor<ParticipationADeposer> corps = ArgumentCaptor.forClass(ParticipationADeposer.class);
+        verify(client).modifierParticipation(anyString(), anyString(), corps.capture());
+        assertThat(corps.getValue().configuration()).containsEntry("detecteur_enregistreur_type", "SM4");
+    }
+
+    @Test
     @DisplayName("#4757 témoin : les DEUX côtés ont bougé → on renonce, c'est le seul vrai conflit")
     void pousser_vers_renonce_quand_les_deux_cotes_ont_bouge() {
         when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver

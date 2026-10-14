@@ -138,10 +138,14 @@ class EnvoiDesMetadonneesReluSurLaFicheWebTest {
                 .isEmpty();
 
         navigateur.ouvrir("participations/" + participation);
-        attendreSurLaFiche("Type du détecteur enregistreur");
+        // Les températures prouvent que l'envoi est arrivé. Le type ne le prouve plus : cette nuit n'a pas
+        // de paramètres d'acquisition, son appareil est inconnu du poste, et rien ne s'en publie (#6233).
+        attendreSurLaFiche("°C au début de la participation");
         assertThat(navigateur.texteDe("body"))
-                .as("la fiche dit le type de l'appareil, que l'envoi publie, et aucun numéro de série")
-                .doesNotContain("Numéro de série du détecteur enregistreur");
+                .as("ni numéro de série ni type d'appareil : le poste ne sait pas quel enregistreur a produit"
+                        + " la nuit, et l'affirmer serait inventer (#1828, #6233)")
+                .doesNotContain("Numéro de série du détecteur enregistreur")
+                .doesNotContain("Type du détecteur enregistreur");
     }
 
     @Test

@@ -120,7 +120,7 @@ class CorrespondanceParticipationTest {
     @DisplayName("#1828 : un n° de série sentinelle n'est PAS publié, le type reste vrai, le mensonge ne part pas")
     void vers_participation_ne_publie_pas_une_sentinelle() {
         ParticipationADeposer squelette = CorrespondanceParticipation.versParticipation(
-                "Z41", passageAvecEnregistreur(Enregistreur.INCONNU), MaterielMicro.vide(42L), FuseauDuSite.ZONE);
+                "Z41", rapatriee(Enregistreur.INCONNU), MaterielMicro.vide(42L), FuseauDuSite.ZONE);
         ParticipationADeposer degrade = CorrespondanceParticipation.versParticipation(
                 "Z41",
                 passageAvecEnregistreur(Enregistreur.INCONNU_IMPORT),
@@ -128,11 +128,86 @@ class CorrespondanceParticipationTest {
                 FuseauDuSite.ZONE);
 
         assertThat(squelette.configuration())
-                .as("« INCONNU » est un aveu, pas un numéro : la plateforme ne doit pas le recevoir")
-                .containsOnlyKeys("detecteur_enregistreur_type");
+                .as("« INCONNU » est un aveu, pas un numéro, et l'appareil d'une nuit rapatriée est inconnu :"
+                        + " rien ne part (#6233)")
+                .isNull();
         assertThat(degrade.configuration())
-                .as("même chose pour la sentinelle de l'import en mode dégradé")
+                .as("la carte d'un import dégradé vient d'un Passive Recorder : son type part, pas sa sentinelle")
                 .containsOnlyKeys("detecteur_enregistreur_type");
+    }
+
+    @Test
+    @DisplayName("#6233 : une nuit rapatriée garde le type de détecteur que porte sa participation")
+    void rapatriee_garde_le_type_distant() {
+        ParticipationADeposer p = CorrespondanceParticipation.versParticipation(
+                "Z41",
+                rapatriee(Enregistreur.INCONNU),
+                MaterielMicro.vide(42L),
+                Map.of("detecteur_enregistreur_type", "SM4"),
+                FuseauDuSite.ZONE);
+
+        assertThat(p.configuration())
+                .as("la nuit a été enregistrée par un SM4 : l'écrire « PassiveRecorder » serait inventer")
+                .containsEntry("detecteur_enregistreur_type", "SM4");
+    }
+
+    @Test
+    @DisplayName("#6233 : une nuit rapatriée n'invente pas de type quand sa participation n'en porte aucun")
+    void rapatriee_sans_type_distant_n_en_invente_pas() {
+        ParticipationADeposer p = CorrespondanceParticipation.versParticipation(
+                "Z41", rapatriee("S4U12345"), MaterielMicro.vide(42L), Map.of("micro0_type", "ICS"), FuseauDuSite.ZONE);
+
+        assertThat(p.configuration())
+                .doesNotContainKey("detecteur_enregistreur_type")
+                .containsEntry("detecteur_enregistreur_numero_serie", "S4U12345");
+    }
+
+    @Test
+    @DisplayName("#6233 : une nuit importée ne remplace pas le type que sa participation porte déjà")
+    void importee_ne_remplace_pas_un_type_distant() {
+        ParticipationADeposer p = CorrespondanceParticipation.versParticipation(
+                "Z41",
+                passage(null),
+                MaterielMicro.vide(42L),
+                Map.of("detecteur_enregistreur_type", "Audiomoth"),
+                FuseauDuSite.ZONE);
+
+        assertThat(p.configuration()).containsEntry("detecteur_enregistreur_type", "Audiomoth");
+    }
+
+    @Test
+    @DisplayName("#6233 : un type distant vide compte comme absent, et la nuit importée publie le sien")
+    void type_distant_vide_compte_comme_absent() {
+        ParticipationADeposer p = CorrespondanceParticipation.versParticipation(
+                "Z41",
+                passage(null),
+                MaterielMicro.vide(42L),
+                Map.of("detecteur_enregistreur_type", " "),
+                FuseauDuSite.ZONE);
+
+        assertThat(p.configuration()).containsEntry("detecteur_enregistreur_type", "PassiveRecorder");
+    }
+
+    /// Une nuit **rapatriée** de la plateforme : sans paramètres d'acquisition, puisqu'aucune carte n'a été
+    /// lue, et portant l'enregistreur donné.
+    private static Passage rapatriee(String serie) {
+        Passage modele = passage(null);
+        return new Passage(
+                modele.id(),
+                modele.numeroPassage(),
+                modele.annee(),
+                modele.dateEnregistrement(),
+                modele.heureDebut(),
+                modele.heureFin(),
+                null,
+                StatutWorkflow.RECUPERE,
+                modele.verdictVerification(),
+                modele.commentaire(),
+                modele.donneesMeteo(),
+                modele.deposeLe(),
+                modele.idPoint(),
+                serie,
+                null);
     }
 
     /// Le même passage que [#passage], avec l'enregistreur qu'on veut éprouver.
@@ -283,7 +358,8 @@ class CorrespondanceParticipationTest {
     }
 
     private static Passage passage(String donneesMeteo) {
-        // Nuit du 3→4 juillet : début 21:00, fin 05:00 (franchit minuit).
+        // Nuit du 3→4 juillet : début 21:00, fin 05:00 (franchit minuit). Une nuit IMPORTÉE d'une carte de
+        // Passive Recorder : elle porte les paramètres d'acquisition lus dans son journal.
         return new Passage(
                 42L,
                 1,
@@ -291,7 +367,7 @@ class CorrespondanceParticipationTest {
                 "2026-07-03",
                 "21:00:00",
                 "05:00:00",
-                null,
+                "{\"feHz\":\"384000\"}",
                 StatutWorkflow.TRANSFORME,
                 null,
                 null,
