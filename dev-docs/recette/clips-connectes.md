@@ -252,8 +252,9 @@ connexion, pas par un lien fabriqué.
 La première publication annonce qu'elle rapatriera d'abord un identifiant, puis rend son compte :
 une correction publiée, aucun écart. La seconde ne l'annonce plus.
 
-**Ce qu'il ne prouve pas.** Que le portail montre la correction : c'est S4-91, qui reste hors de
-portée. Et pour S4-92 :
+**Ce qu'il ne prouve pas.** Que le portail montre la correction : c'est S4-91, qui n'aura pas de clip.
+Un test le lit sans le filmer, `CorrectionPublieeRelueSurLaFicheWebTest`, qui publie par le service et
+relit le taxon et la certitude dans un navigateur (#6064). Et pour S4-92 :
 
 > Le récapitulatif de confirmation, sur lequel S4-92 se juge, est lu par le banc et ne paraît pas à l'image : le clip montre les deux publications et leur compte rendu, pas la phrase qui dit que la seconde ne rapatrie plus rien.
 
