@@ -12,9 +12,16 @@ verified:
     at: 2026-07-20
 relations:
   complète: ["0040"]
+  amendee_par: ["5004-une-pr-de-bot-se-tait-par-la-marque-de-son-commit"]
 ---
 
 # Un check requis ne gouverne pas les PR, il gouverne la branche
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-14** : la cause donnée au Contexte est **amendée** par
+    [5004](5004-une-pr-de-bot-se-tait-par-la-marque-de-son-commit.md). Une PR ouverte avec le
+    `GITHUB_TOKEN` lance ses workflows depuis la 2.189.0 ; ce qui fait taire les PR de bot est la
+    marque de saut sur leur commit. La conclusion tient, mais ce silence est devenu un choix du dépôt.
 
 ## Contexte
 
