@@ -26,6 +26,43 @@ import org.junit.jupiter.params.provider.MethodSource;
 /// UTC + météo + configuration) et retraduction météo/config (pull), sans réseau ni base.
 class CorrespondanceParticipationTest {
 
+    @ParameterizedTest(name = "{0} → {1} : dates laissées à la plateforme = {2}")
+    @CsvSource(
+            nullValues = "null",
+            value = {
+                "2025-06-01T19:00:00+00:00, 2025-06-04T04:00:00+00:00, true",
+                "2025-06-01T19:00:00+00:00, 2025-06-02T19:00:01+00:00, true",
+                "2025-06-01T19:00:00+00:00, null, true",
+                "2025-06-01T19:00:00+00:00, '  ', true",
+                "2025-06-01T19:00:00+00:00, 2025-06-02T04:00:00+00:00, false",
+                "2025-06-01T19:00:00+00:00, 2025-06-02T19:00:00+00:00, false",
+                "illisible, 2025-06-02T04:00:00+00:00, false",
+                "null, 2025-06-02T04:00:00+00:00, false"
+            })
+    @DisplayName("#6234 : l'envoi laisse les dates à la plateforme au-delà de 24 h, ou sans fin")
+    void dates_laissees_a_la_plateforme(String debut, String fin, boolean laissees) {
+        assertThat(CorrespondanceParticipation.datesHorsDePortee(debut, fin)).isEqualTo(laissees);
+    }
+
+    @Test
+    @DisplayName("#6234 : sans ses dates, l'envoi garde tout le reste du corps")
+    void sans_dates_garde_le_reste() {
+        ParticipationADeposer complet = CorrespondanceParticipation.versParticipation(
+                "Z41",
+                passage("{\"vent\":\"FAIBLE\",\"couvertureNuageuse\":\"DE_25_A_50\"}"),
+                MaterielMicro.vide(42L),
+                FuseauDuSite.ZONE);
+
+        ParticipationADeposer sans = CorrespondanceParticipation.sansDates(complet);
+
+        assertThat(sans.dateDebut()).isNull();
+        assertThat(sans.dateFin()).isNull();
+        assertThat(sans.point()).isEqualTo(complet.point());
+        assertThat(sans.meteo()).isEqualTo(complet.meteo());
+        assertThat(sans.configuration()).isEqualTo(complet.configuration());
+        assertThat(sans.commentaire()).isEqualTo(complet.commentaire());
+    }
+
     @Test
     @DisplayName("versParticipation : point, dates RFC 1123 UTC (franchit minuit), météo, config complète")
     void vers_participation() {

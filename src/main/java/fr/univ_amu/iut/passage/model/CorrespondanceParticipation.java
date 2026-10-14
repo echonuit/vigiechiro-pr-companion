@@ -3,12 +3,15 @@ package fr.univ_amu.iut.passage.model;
 import fr.univ_amu.iut.commun.api.MeteoDepot;
 import fr.univ_amu.iut.commun.api.ParticipationADeposer;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -32,6 +35,9 @@ final class CorrespondanceParticipation {
     /// Clé **historique** poussée par l'application (#1689) : une participation déposée par l'app porte le
     /// numéro de série sous cette forme, le web sous [#CLE_SERIE_CANONIQUE]. La lecture accepte les deux.
     private static final String CLE_SERIE_APP = "detecteur_enregistreur_numserie";
+
+    /// La plus longue nuit qu'un passage sache représenter (cf. [#datesHorsDePortee]).
+    private static final Duration UNE_NUIT_AU_PLUS = Duration.ofHours(24);
 
     private CorrespondanceParticipation() {}
 
@@ -206,6 +212,39 @@ final class CorrespondanceParticipation {
                 .atZone(fuseauDuSite)
                 .withZoneSameInstant(ZoneOffset.UTC)
                 .format(DateTimeFormatter.RFC_1123_DATE_TIME);
+    }
+
+    /// Les dates de la participation distante sont-elles hors de portée d'un passage, si bien que l'envoi
+    /// doit les laisser à la plateforme (#6234) ?
+    ///
+    /// Un passage tient sa nuit par une date et deux heures, donc 24 h au plus. Une participation plus
+    /// longue, ou sans fin, ne se représente pas : renvoyer les bornes du passage la ramènerait à une
+    /// nuit, ou lui donnerait une fin qu'elle n'avait pas. Des dates illisibles ne se jugent pas, et
+    /// l'envoi écrit alors les siennes, comme pour toute autre nuit (#4756).
+    static boolean datesHorsDePortee(String dateDebut, String dateFin) {
+        if (dateFin == null || dateFin.isBlank()) {
+            return true;
+        }
+        if (dateDebut == null) {
+            return false;
+        }
+        try {
+            Duration duree = Duration.between(OffsetDateTime.parse(dateDebut), OffsetDateTime.parse(dateFin));
+            return duree.compareTo(UNE_NUIT_AU_PLUS) > 0;
+        } catch (DateTimeParseException illisible) {
+            return false;
+        }
+    }
+
+    /// Le même corps, sans ses dates : Gson omet un champ `null`, et la plateforme garde alors les siennes.
+    static ParticipationADeposer sansDates(ParticipationADeposer participation) {
+        return new ParticipationADeposer(
+                participation.point(),
+                null,
+                null,
+                participation.meteo(),
+                participation.configuration(),
+                participation.commentaire());
     }
 
     /// Hauteur du micro en texte, sans décimale superflue (`4.0` → `4`).

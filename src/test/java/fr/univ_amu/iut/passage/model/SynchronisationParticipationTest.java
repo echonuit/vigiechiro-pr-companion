@@ -369,6 +369,65 @@ class SynchronisationParticipationTest {
     }
 
     @Test
+    @DisplayName("#6234 : une participation de plusieurs nuits garde ses dates, l'envoi ne les raccourcit pas")
+    void pousser_vers_laisse_les_dates_d_une_participation_de_plusieurs_nuits() {
+        // Du 1er juin 19:00 au 4 juin 04:00 UTC : trois nuits. Le passage ne tient qu'une date et deux
+        // heures ; renvoyer ses bornes ramènerait la fin au lendemain du début.
+        ParticipationADeposer corps = envoiSur("2025-06-01T19:00:00+00:00", "2025-06-04T04:00:00+00:00");
+
+        assertThat(corps.dateDebut())
+                .as("aucune date émise : la plateforme garde les siennes")
+                .isNull();
+        assertThat(corps.dateFin()).isNull();
+    }
+
+    @Test
+    @DisplayName("#6234 : une participation sans date de fin n'en reçoit pas d'inventée")
+    void pousser_vers_n_invente_pas_de_date_de_fin() {
+        ParticipationADeposer corps = envoiSur("2025-06-01T19:00:00+00:00", null);
+
+        assertThat(corps.dateDebut()).isNull();
+        assertThat(corps.dateFin()).isNull();
+    }
+
+    @Test
+    @DisplayName("#6234 témoin : une participation d'une seule nuit reçoit toujours les dates du passage (#4756)")
+    void pousser_vers_envoie_les_dates_d_une_seule_nuit() {
+        ParticipationADeposer corps = envoiSur("2026-07-03T19:00:00+00:00", "2026-07-04T04:00:00+00:00");
+
+        assertThat(corps.dateDebut()).isEqualTo("Fri, 3 Jul 2026 19:00:00 GMT");
+        assertThat(corps.dateFin()).isEqualTo("Sat, 4 Jul 2026 03:00:00 GMT");
+    }
+
+    /// Renvoie le passage des fixtures vers une participation datée du `debut` à la `fin` donnés, et rend le
+    /// corps que l'envoi a émis.
+    private ParticipationADeposer envoiSur(String debut, String fin) {
+        when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        ParticipationDetail modele = detail("e1");
+        when(client.participation("part-1"))
+                .thenReturn(ReponseApi.succes(new ParticipationDetail(
+                        modele.id(),
+                        modele.etag(),
+                        modele.point(),
+                        debut,
+                        fin,
+                        modele.meteo(),
+                        modele.configuration(),
+                        modele.traitement())));
+        when(client.modifierParticipation(anyString(), anyString(), any()))
+                .thenReturn(ResultatEcriture.reussie("part-1"));
+
+        sync.pousserVers(42L);
+
+        ArgumentCaptor<ParticipationADeposer> corps = ArgumentCaptor.forClass(ParticipationADeposer.class);
+        verify(client).modifierParticipation(anyString(), anyString(), corps.capture());
+        return corps.getValue();
+    }
+
+    @Test
     @DisplayName("#4757 : eux seuls ont saisi la météo → l'envoi part, et le corps ne la porte PAS")
     void pousser_vers_omet_la_meteo_que_nous_n_avons_pas_touchee() {
         when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
