@@ -153,13 +153,13 @@ def _auto_test() -> int:
     import tempfile
 
     asserte, echecs = cas_d_auto_test()
-    cas = rouges = 0
+    cas = a_rougir = 0
 
     def verifie(attendu, libelle, racine):
-        nonlocal cas, rouges
+        nonlocal cas, a_rougir
         cas += 1
         if attendu != 0:
-            rouges += 1
+            a_rougir += 1
         asserte(f"{libelle} -> attendu {attendu}", lambda: juge(racine), attendu)
 
     print("AUTO-TEST")
@@ -199,7 +199,7 @@ def _auto_test() -> int:
         verifie(1, "un script lancé mais introuvable est refusé", bac)
 
     print()
-    print(f"{cas} cas, dont {rouges} qui DOIVENT rougir.")
+    print(f"{cas} cas, dont {a_rougir} qui DOIVENT rougir.")
     if echecs() == 0:
         print("Auto-test concluant.")
         return 0

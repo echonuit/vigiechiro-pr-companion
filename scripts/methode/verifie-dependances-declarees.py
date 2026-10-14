@@ -97,6 +97,10 @@ LOCAUX = {
     # dans le garde, elle aurait continue de passer le filtre apres que l outil aurait change la
     # sienne, et le resume n aurait plus rien montre sans que rien ne rougisse.
     "compare_tournages",
+    # La sortie en UTF-8 des scripts que Windows peut lancer, ajoutee en #5197. Dix scripts
+    # l appellent : un seul portait le remede, ecrit chez lui, et les autres mouraient sur la
+    # console cp1252 de Windows sans que rien ne le voie.
+    "_console",
 }
 
 
