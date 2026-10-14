@@ -61,8 +61,8 @@ public class ServiceReactivationPassage {
 
     /// Parallélisme de la régénération des bruts à l'hydratation (#1779) : autant de tâches que de cœurs,
     /// le pic disque/mémoire étant borné par le sémaphore de [ExecutionParallele]. C'était aussi la borne
-    /// de l'import, qui mène depuis #6175 la moitié des cœurs pour ne plus geler l'écran. Celle-ci reste,
-    /// faute de mesure de la réactivation dans l'IHM (ADR 6175).
+    /// de l'import, qui mène depuis #6175 la moitié des cœurs pour ne plus geler l'écran. Celle-ci reste :
+    /// menée par sa modale, la réactivation ne gèle pas l'écran à tous les cœurs (ADR 6256).
     private static final int PARALLELISME = Runtime.getRuntime().availableProcessors();
 
     private final SessionDao sessionDao;

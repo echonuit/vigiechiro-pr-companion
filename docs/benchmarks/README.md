@@ -918,6 +918,52 @@ Gio en hydratation, ce que le tir D faisait déjà avec le temporaire sur `/home
 coûte du temps, d'où une réactivation plus lente, comme D (66,0 s) l'était déjà ; la charge du poste au
 départ des tirs (3,0 et 7,6) n'en permet pas une lecture plus fine.
 
+#### Vue de l'écran : la réactivation par sa modale (#6256)
+
+`BancImport` et `BancReactivation` ne dessinent rien. `BancIhmReactivationTest` mène la réactivation
+dans l'application, par sa modale, sur l'affichage réel. La nuit est importée, archivée et réduite à
+des placeholders avant que l'écran ne se monte, comme une nuit reconstruite : la réactivation prend
+la voie d'hydratation, qui régénère ses bruts en parallèle, sur tous les cœurs. Le banc ouvre la fiche
+du passage, désigne la carte sans dialogue natif (`ReactivationDuBanc`), clique « Réactiver ce
+passage », et date chaque écart de plus de 100 ms parmi les jalons de la modale : le clic, la
+première régénération, la régénération finie, le compte rendu.
+
+Mesuré le 2026-10-14 sur le second poste (Core Ultra 7 255H, 16 cœurs, 30,3 Gio, carte Intel,
+JDK 25.0.3, Linux 7.0.0), `main` à `bd22c719a` plus le banc, à l'échelle 1, fenêtre de 1280 × 860.
+Vingt tirs alternés de 10 h 44 à 11 h 03, cinq par nuit et par dessin ; charge du poste sur 1 minute
+au départ des tirs de 2,0 à 7,1. Le blocage témoin de 300 ms est daté de 303 à 314 ms dans chaque tir.
+
+| Écart maximal entre deux images, par tir | Rendu GPU | Rendu logiciel | Seuil |
+|---|---|---|---|
+| 1572 bruts de 5 s (5,62 Gio), réactivés en 28,5 à 29,7 s | 130 · 119 · 151 · 75 · 85 ms | 85 · 61 · 45 · 70 · 67 ms | 200 ms |
+| 8 bruts de 20 min (6,87 Gio), réactivés en 10,5 à 13,3 s | 44 · 34 · 64 · 52 · 35 ms | 109 · 50 · 102 · 52 · 50 ms | 200 ms |
+
+Chaque tir a tout réactivé, 1572 ou 1920 séquences, et le compte rendu de la modale dit que les
+séquences ont été régénérées à partir des bruts.
+
+**Lectures** :
+
+- **La réactivation tient O3 à tous les cœurs**, dans les deux dessins : 151 ms au plus sur vingt
+  tirs. Elle garde sa borne (ADR 6256).
+- **Les écarts de plus de 100 ms tombent à trois endroits** : au clic, quand la modale s'ouvre (101 et
+  151 ms) ; pendant la régénération des 1572 bruts, en rendu GPU (110 à 130 ms) ; à l'affichage du
+  compte rendu (109 ms).
+- **La même charge de calcul que l'import, pas le même écran.** Un import met à jour une ligne de la
+  table de suivi par fichier terminé ; la modale ne porte que deux barres. C'est une piste pour
+  comprendre pourquoi l'une gelait et l'autre non, pas une mesure.
+
+**Ce que ces chiffres ne mesurent pas** :
+
+- La voie des fichiers transformés, où le dossier contient déjà les séquences et où la modale demande
+  s'il faut les copier.
+- Le filet du démarrage, appelé par `App.start`, que le banc ne traverse pas.
+- La compaction du dépôt, qui calcule elle aussi sur tous les cœurs.
+- Un autre poste, et un poste à peu de cœurs.
+
+**Le relancer** : la commande du test de charge avec `-Dtest=BancIhmReactivationTest`, et
+`-Dperf.ihm.reactivation.fichiers=8 -Dperf.ihm.reactivation.secondes=1200` pour la nuit de bruts
+longs ; `-Drecette.prism.order=es2` pour le rendu GPU.
+
 ## Réactivité IHM (freeze > 200 ms) : procédure semi-manuelle
 
 Dans l'application réelle, l'import s'exécute **hors du fil JavaFX** (socle `ExecuteurTache`, cf.
