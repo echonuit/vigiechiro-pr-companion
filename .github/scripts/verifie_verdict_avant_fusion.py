@@ -14,11 +14,12 @@ demande son avis.
 ## Ce qu il ne fait pas, et pourquoi
 
 **Il ne juge pas la couleur.** L ADR 0041 a tranche que le rouge reste informatif : rendus bloquants,
-les checks requis ont casse en une heure les deux chemins par lesquels ce depot ecrit sur `main`. La
-raison est structurelle - aucun workflow n est declenche par un evenement produit avec le
-`GITHUB_TOKEN`, donc un check requis reste muet sur les PR de bot, et un check requis muet bloque pour
-toujours. Ce garde ne ferme que l autre cas, celui qu elle n avait pas prevu : quand il n y a aucune
-couleur, il n y a rien a assumer.
+les checks requis ont casse en une heure les deux chemins par lesquels ce depot ecrit sur `main`. Un
+check requis reste muet sur les PR de bot, parce que leur commit porte la marque de saut, et un check
+requis muet bloque pour toujours. L ADR en donnait pour cause la regle du `GITHUB_TOKEN`, qui ne
+declencherait aucun workflow : elle est dementie pour les PR, qu un evenement produit avec ce jeton
+declenche depuis la 2.189.0 (#5004). Ce garde ne ferme que l autre cas, celui qu elle n avait pas
+prevu : quand il n y a aucune couleur, il n y a rien a assumer.
 
 **Il n est donc pas un check requis**, et ne peut pas l etre sans repayer ce que l ADR 0041 a mesure.
 Il se lance a la main avant de fusionner ; seul son `--auto-test` tourne en CI.

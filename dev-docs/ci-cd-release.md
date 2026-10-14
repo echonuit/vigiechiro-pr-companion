@@ -478,7 +478,7 @@ Ce dépôt y écrit par deux chemins automatisés, et les deux se sont cassés :
 
 | Chemin | Ce qui s'est passé |
 |---|---|
-| PR d'aperçus (`capture-vues.yml`) | `BLOCKED`, **aucun check rapporté** : GitHub ne déclenche aucun workflow pour un événement produit avec le `GITHUB_TOKEN` (garde-fou anti-récursion), donc `titre-pr.yml` ne s'exécute jamais - et un check requis muet bloque la fusion **pour toujours** |
+| PR d'aperçus (`capture-vues.yml`) | `BLOCKED`, **aucun check rapporté** : le commit de la PR porte la marque de saut de CI, donc `titre-pr.yml` ne s'exécute jamais - et un check requis muet bloque la fusion **pour toujours**. On l'a longtemps attribué au `GITHUB_TOKEN`, qui ne déclencherait aucun workflow : c'est faux pour une PR, qui lance ses workflows quand son commit ne porte pas la marque (#5004) |
 | Push du CHANGELOG (`semantic-release`) | `GH013 … Required status check "titre" is expected` : un **push direct** est soumis aux mêmes règles, et un commit poussé n'a évidemment aucun check |
 
 Le second a **arrêté la publication**, c'est-à-dire précisément ce que le chantier #2104 venait de
