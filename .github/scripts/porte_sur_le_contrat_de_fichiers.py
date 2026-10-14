@@ -43,7 +43,10 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from _console import ecrire_en_utf8
 from _portee import ajoute, base_de_comparaison, fichiers_modifies, resume, sans_base
+
+ecrire_en_utf8()
 
 TITRE = "Portée · contrat-fichiers"
 

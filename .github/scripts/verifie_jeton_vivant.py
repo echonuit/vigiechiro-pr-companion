@@ -51,7 +51,10 @@ import sys
 ICI = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(ICI))
 
+from _console import ecrire_en_utf8
 from interroge_le_jeton import base_de, interroger
+
+ecrire_en_utf8()
 
 
 def verdict(code: str) -> int:

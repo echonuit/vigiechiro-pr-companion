@@ -58,6 +58,10 @@ import sys
 import tempfile
 import time
 
+from _console import ecrire_en_utf8
+
+ecrire_en_utf8()
+
 MOTIFS_DE_CHARGEMENT = re.compile(
     r"NoClassDefFoundError|ClassNotFoundException|Exception in Application start method"
 )

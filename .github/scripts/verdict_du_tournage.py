@@ -48,13 +48,12 @@ import pathlib
 import sys
 import xml.etree.ElementTree as ET
 
-# La sortie de Python suit l encodage de la CONSOLE, et sous Windows c est cp1252, ou le « ✓ » de la
-# ligne de verdict n existe pas. Le tournage `windows-latest` mourait donc sur un caractere
-# d ornement, et le rouge accusait le banc alors que les clips etaient bien la (#5195). Reconfigurer
-# ici plutot que de poser `PYTHONIOENCODING` sur l etape : ce script est appele de plusieurs
-# endroits, et un remede porte par l appelant s oublie au prochain appel.
-if hasattr(sys.stdout, "reconfigure"):
-    sys.stdout.reconfigure(encoding="utf-8")
+# Le « ✓ » de la ligne de verdict n existe pas dans la console de Windows : le tournage
+# `windows-latest` mourait dessus, et le rouge accusait le banc alors que les clips etaient la
+# (#5195). Ce script a porte le premier remede, que `_console` rend commun (#5197).
+from _console import ecrire_en_utf8
+
+ecrire_en_utf8()
 
 
 def _est(nom: str, classe: str) -> bool:
