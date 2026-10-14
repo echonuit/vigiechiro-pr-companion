@@ -2,6 +2,14 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.199.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.199.0...v2.199.1) (2026-10-14)
+
+
+### Bug Fixes
+
+* **ci:** les PR flatpak du bot ne lancent plus de vérifications mort-nées ([#6252](https://github.com/echonuit/vigiechiro-pr-companion/issues/6252)) ([33802c9](https://github.com/echonuit/vigiechiro-pr-companion/commit/33802c93a5b907ede0f8743428c8f0e0bd0a8ba6)), closes [#5004](https://github.com/echonuit/vigiechiro-pr-companion/issues/5004) [#6213](https://github.com/echonuit/vigiechiro-pr-companion/issues/6213) [#6250](https://github.com/echonuit/vigiechiro-pr-companion/issues/6250) [#5004](https://github.com/echonuit/vigiechiro-pr-companion/issues/5004) [#5722](https://github.com/echonuit/vigiechiro-pr-companion/issues/5722) [#5004](https://github.com/echonuit/vigiechiro-pr-companion/issues/5004)
+* **passage:** le type de détecteur ne s'écrit plus sans être connu ([#6248](https://github.com/echonuit/vigiechiro-pr-companion/issues/6248)) ([e60c27b](https://github.com/echonuit/vigiechiro-pr-companion/commit/e60c27b4e49ce7235808168ff61608ff3edde67e)), closes [#6233](https://github.com/echonuit/vigiechiro-pr-companion/issues/6233) [#1828](https://github.com/echonuit/vigiechiro-pr-companion/issues/1828) [#1828](https://github.com/echonuit/vigiechiro-pr-companion/issues/1828)
+
 # [2.199.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.198.0...v2.199.0) (2026-10-14)
 
 
