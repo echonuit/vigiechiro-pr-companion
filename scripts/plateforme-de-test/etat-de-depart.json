@@ -134,6 +134,17 @@
         "micro0_numero_serie": "SMU-0417",
         "canal_expansion_temps": "DROITE"
       }
+    },
+    {
+      "cle": "nuit-a-corriger",
+      "site": "carre-130711",
+      "observateur": "observatrice",
+      "date_debut": "2026-06-20T21:00:00",
+      "date_fin": "2026-06-21T06:00:00",
+      "point": "Z1",
+      "traitement": {
+        "etat": "FINI"
+      }
     }
   ],
   "donnees": [
@@ -159,6 +170,20 @@
         {
           "temps_debut": 2.0,
           "temps_fin": 2.6,
+          "frequence_mediane": 45.0,
+          "tadarida_taxon": "pippip",
+          "tadarida_probabilite": 0.92
+        }
+      ]
+    },
+    {
+      "cle": "sequence-a-corriger",
+      "participation": "nuit-a-corriger",
+      "titre": "Car130711-2026-Pass1-Z1-PaRec_20260620_223000_000",
+      "observations": [
+        {
+          "temps_debut": 0.5,
+          "temps_fin": 1.25,
           "frequence_mediane": 45.0,
           "tadarida_taxon": "pippip",
           "tadarida_probabilite": 0.92

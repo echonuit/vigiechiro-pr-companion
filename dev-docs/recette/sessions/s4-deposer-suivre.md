@@ -267,7 +267,7 @@ peuvent pas dire si le premier import « paraît instantané » ni si « Annuler
   publication.
 - **S4-90** · Après une publication menée à son terme, le bandeau annonce les corrections envoyées **sans écart
   « sans ancrage »**.
-- **S4-91** · *hors-portée: la fiche WEB de la plateforme, dans un navigateur. Aucun carton n'y peut rien : il remplace une ÉTAPE muette, pas l'observable lui-même* · Sur le portail Vigie-Chiro, l'observation porte le taxon et la certitude déclarés ici.
+- **S4-91** · *hors-portée: la fiche WEB de la plateforme, dans un navigateur. Aucun carton n'y peut rien : il remplace une ÉTAPE muette, pas l'observable lui-même ; un test la lit sur la plateforme de test, CorrectionPublieeRelueSurLaFicheWebTest* · Sur le portail Vigie-Chiro, l'observation porte le taxon et la certitude déclarés ici.
 - **S4-92** · Republier immédiatement : la publication repart **sans** repasser par la récupération des
   identifiants (ils sont désormais en base).
 - **S4-93** · *hors-portée: le verdict d'un validateur du MNHN. Aucun dispositif ne le fabrique : il faut qu'un humain ait tranché* · « ☰ → Réimporter depuis Vigie-Chiro… » repasse, lui, par la fenêtre **paginée**, et la colonne « Avis

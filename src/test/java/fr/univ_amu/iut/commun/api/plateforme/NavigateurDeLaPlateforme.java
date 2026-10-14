@@ -84,6 +84,14 @@ final class NavigateurDeLaPlateforme implements AutoCloseable {
         return String.valueOf(valeur);
     }
 
+    /// La valeur du premier champ de formulaire que le sélecteur désigne, ou une chaîne vide s'il n'y en a
+    /// pas : pour un champ sans identifiant, comme la certitude d'une observation (#6064).
+    String valeurDe(String selecteur) {
+        Object valeur = pilote.executeScript(
+                "const e = document.querySelector(arguments[0]); return e === null ? '' : e.value;", selecteur);
+        return String.valueOf(valeur);
+    }
+
     /// Le nombre d'éléments que le sélecteur désigne.
     long nombreDe(String selecteur) {
         Object nombre = pilote.executeScript("return document.querySelectorAll(arguments[0]).length;", selecteur);

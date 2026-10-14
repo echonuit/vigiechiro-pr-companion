@@ -540,7 +540,9 @@ fork, ce que garantit le profil, qui ne joue que ce tag.
   qui écriraient la même se disputeraient son `_etag`. Exemple :
   [`EnvoiDesMetadonneesReluSurLaFicheWebTest`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/test/java/fr/univ_amu/iut/commun/api/plateforme/EnvoiDesMetadonneesReluSurLaFicheWebTest.java),
   qui relit le numéro de série dans le champ du formulaire et les températures sur la fiche (S4-70,
-  S4-71), et qu'un envoi n'efface pas ce que la fiche portait avant lui (S4-72).
+  S4-71), et qu'un envoi n'efface pas ce que la fiche portait avant lui (S4-72). Une correction d'observation se
+  relit de la même façon : `CorrectionPublieeRelueSurLaFicheWebTest` publie par `PublicationCorrections`
+  et lit le taxon et la certitude sur la liste des données de la participation (S4-91).
 - Un scénario d'écran : `BancDeRecette.surLaPlateformeDeTest("observatrice")`, exclusive des autres
   déclarations du banc. Le banc vise la plateforme et dépose le jeton sans profil ; la modale le
   revérifie seule. Exemple :
