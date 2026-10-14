@@ -94,11 +94,9 @@ public final class RattrapageMetadonnees {
     /// la plateforme a rejeté l'écriture serait exactement le mensonge que cet ADR interdit.
     private IssuePassage traiter(Long idPassage, boolean recuperer, boolean envoyer) {
         try {
-            if (recuperer) {
-                synchronisation.tirerDepuis(idPassage);
-            }
+            List<String> nonRelus = recuperer ? synchronisation.tirerDepuis(idPassage) : List.of();
             if (!envoyer) {
-                return new IssuePassage.Traite(idPassage, recuperer, false, Optional.empty());
+                return new IssuePassage.Traite(idPassage, recuperer, false, Optional.empty(), nonRelus);
             }
             EnvoiParticipation issue = synchronisation.pousserVers(idPassage);
             if (!(issue instanceof EnvoiParticipation.Ecrit envoi)) {
@@ -112,7 +110,7 @@ public final class RattrapageMetadonnees {
             if (!envoi.ecriture().estReussie()) {
                 return new IssuePassage.Ignore(idPassage, envoi.ecriture().echec());
             }
-            return new IssuePassage.Traite(idPassage, recuperer, true, envoi.realignement());
+            return new IssuePassage.Traite(idPassage, recuperer, true, envoi.realignement(), nonRelus);
         } catch (RegleMetierException echecNuit) {
             return new IssuePassage.Ignore(idPassage, echecNuit.getMessage());
         }
@@ -150,9 +148,19 @@ public final class RattrapageMetadonnees {
         /// naturellement, pour une nuit ignorée.
         Optional<EnvoiParticipation.Realignement> realignement();
 
+        /// @param nonRelus valeurs du matériel micro que la récupération n'a pas su prendre, laissées vides
+        ///     (#6211, #6228) ; vide si rien n'a été récupéré ou si tout a été relu
         record Traite(
-                Long passage, boolean recupere, boolean envoye, Optional<EnvoiParticipation.Realignement> realignement)
+                Long passage,
+                boolean recupere,
+                boolean envoye,
+                Optional<EnvoiParticipation.Realignement> realignement,
+                List<String> nonRelus)
                 implements IssuePassage {
+
+            public Traite {
+                nonRelus = List.copyOf(nonRelus);
+            }
 
             @Override
             public boolean estTraitee() {

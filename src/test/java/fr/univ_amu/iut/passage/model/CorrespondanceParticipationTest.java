@@ -307,22 +307,6 @@ class CorrespondanceParticipationTest {
     }
 
     @Test
-    @DisplayName("microDepuis : mappe micro0_* vers MaterielMicro ; valeurs absentes → null")
-    void micro_depuis_config() {
-        MaterielMicro micro = CorrespondanceParticipation.microDepuis(
-                42L, Map.of("micro0_type", "ICS", "micro0_position", "CANOPEE", "micro0_hauteur", "4"));
-
-        assertThat(micro.typeMicro()).isEqualTo("ICS");
-        assertThat(micro.positionMicro()).isEqualTo(PositionMicro.CANOPEE);
-        assertThat(micro.hauteurMetres()).isEqualTo(4.0);
-
-        MaterielMicro vide = CorrespondanceParticipation.microDepuis(42L, Map.of());
-        assertThat(vide.typeMicro()).isNull();
-        assertThat(vide.positionMicro()).isNull();
-        assertThat(vide.hauteurMetres()).isNull();
-    }
-
-    @Test
     @DisplayName("#3406 : ce qui part vers la plateforme ne dépend PAS du fuseau du poste qui dépouille")
     void le_depot_ne_depend_pas_du_poste() {
         // Les heures d'un passage viennent de l'enregistreur posé sur le SITE. Les convertir avec le

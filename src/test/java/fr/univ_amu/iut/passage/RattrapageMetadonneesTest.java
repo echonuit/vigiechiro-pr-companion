@@ -155,4 +155,18 @@ class RattrapageMetadonneesTest {
         assertThat(bilan).isEqualTo(new BilanRattrapage(1, 0, 0));
         assertThat(vues.get(0).realignement()).isEmpty();
     }
+
+    @Test
+    @DisplayName("#6211, #6228 : la nuit récupérée porte ce que la lecture du micro n'a pas su prendre")
+    void la_nuit_recuperee_porte_ce_qui_n_a_pas_ete_relu() {
+        when(synchronisation.tirerDepuis(1L)).thenReturn(List.of("hauteur du micro « 2-3 »"));
+        List<IssuePassage> vues = new ArrayList<>();
+
+        rattrapage.rattraper(List.of(1L), true, false, vues::add);
+
+        assertThat(vues.get(0))
+                .isInstanceOfSatisfying(
+                        IssuePassage.Traite.class,
+                        traite -> assertThat(traite.nonRelus()).containsExactly("hauteur du micro « 2-3 »"));
+    }
 }

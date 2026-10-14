@@ -18,7 +18,8 @@ import java.util.Map;
 /// Correspondance **pure** entre un passage local (+ sa configuration micro) et l'objet `participation` de
 /// l'API VigieChiro, dans les **deux sens** (axe 4) :
 ///  - *push* : [#versParticipation] assemble le corps envoyé à l'API (dates RFC 1123 UTC, météo, configuration) ;
-///  - *pull* : [#fusionnerMeteo] / [#microDepuis] retraduisent une météo/config distante vers les types locaux.
+///  - *pull* : [#fusionnerMeteo] retraduit une météo distante vers les types locaux ; le matériel micro se lit
+///    par [LectureMicro].
 ///
 /// Fonctions statiques, sans état ni réseau : c'est le point unique où vivent les conventions de format de
 /// l'API (formats de date, codes météo, clés `micro0_*` / `detecteur_enregistreur_*`), vérifiées par la suite
@@ -308,37 +309,5 @@ final class CorrespondanceParticipation {
         }
         String serie = configuration.getOrDefault(CLE_SERIE_CANONIQUE, configuration.get(CLE_SERIE_APP));
         return serie == null || serie.isBlank() ? null : serie;
-    }
-
-    /// Matériel micro local depuis la `configuration` distante (`micro0_*`). Valeurs absentes / illisibles →
-    /// champs `null` (le [MaterielMicro] reste tolérant).
-    static MaterielMicro microDepuis(long idPassage, Map<String, String> configuration) {
-        return new MaterielMicro(
-                idPassage,
-                positionMicro(configuration.get("micro0_position")),
-                hauteurMetres(configuration.get("micro0_hauteur")),
-                configuration.get("micro0_type"));
-    }
-
-    private static PositionMicro positionMicro(String nom) {
-        if (nom == null) {
-            return null;
-        }
-        try {
-            return PositionMicro.valueOf(nom);
-        } catch (IllegalArgumentException inconnu) {
-            return null;
-        }
-    }
-
-    private static Double hauteurMetres(String texte) {
-        if (texte == null) {
-            return null;
-        }
-        try {
-            return Double.valueOf(texte);
-        } catch (NumberFormatException illisible) {
-            return null;
-        }
     }
 }
