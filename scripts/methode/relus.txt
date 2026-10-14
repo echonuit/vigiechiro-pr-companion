@@ -1501,7 +1501,10 @@ df1637e55f07  src/test/java/fr/univ_amu/iut/commun/api/plateforme/ImageDeLApiSan
 657be5eb9837  src/test/java/fr/univ_amu/iut/commun/api/plateforme/JournauxDeLaPlateformeDeTestTest.java
 7a6bd35f05b9  src/test/java/fr/univ_amu/iut/commun/api/plateforme/JournauxDesConteneurs.java
 d740bc73ccdc  src/test/java/fr/univ_amu/iut/commun/api/plateforme/NavigateurDeLaPlateforme.java
-8010b3bc64fd  src/test/java/fr/univ_amu/iut/commun/api/plateforme/PlateformeDeTest.java
+5c13da164fbd  src/test/java/fr/univ_amu/iut/commun/api/plateforme/PlateformeDeTest.java
+ef6f3b8c2bc3  src/test/java/fr/univ_amu/iut/commun/api/plateforme/ProfilReseau.java
+f95196083299  src/test/java/fr/univ_amu/iut/commun/api/plateforme/ReseauDeLaPlateforme.java
+d309389654bf  src/test/java/fr/univ_amu/iut/commun/api/plateforme/ReseauDeLaPlateformeDeTestTest.java
 7292391074af  src/test/java/fr/univ_amu/iut/commun/api/plateforme/WorkerDeLaPlateformeDeTest.java
 08562833df8b  src/test/java/fr/univ_amu/iut/commun/di/AmorcageTest.java
 9ceb8cd1b78e  src/test/java/fr/univ_amu/iut/commun/di/DecouverteModulesTest.java
