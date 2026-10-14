@@ -24,7 +24,8 @@ generated:
 
 `O5.md` demande que, sur cent cinquante carrés de deux points, chaque écran de la topologie s'ouvre
 sous 50 ms et ne croisse pas avec le nombre de carrés. Il le donne pour un ordre de grandeur « à
-affiner par un premier benchmark ». Mes sites le tient depuis #6172. La vue multisite et l'écran des
+affiner par un premier benchmark ». Mes sites ne croît plus avec les carrés depuis #6172, sans tenir
+50 ms pour autant (de 24 à 92 ms à 150 carrés). La vue multisite et l'écran des
 sons ne le tenaient pas (#6207).
 
 ## Ce que la mesure a établi

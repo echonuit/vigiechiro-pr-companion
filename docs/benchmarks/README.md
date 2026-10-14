@@ -706,7 +706,8 @@ daté, import de la nuit 1 » qui commence « après « plan établi » ».
 ### L'ouverture de la vue multisite et de l'écran des sons (#6207)
 
 O5 demande que, sur cent cinquante carrés de deux points, chaque écran de la topologie s'ouvre sous
-50 ms et ne croisse pas avec le nombre de carrés. Mes sites le tient depuis #6172 ; la vue multisite
+50 ms et ne croisse pas avec le nombre de carrés. Mes sites ne croît plus depuis #6172, sans tenir
+50 ms pour autant (de 24 à 92 ms à 150 carrés, ci-dessous) ; la vue multisite
 et l'écran des sons ne le tenaient pas.
 
 Mesuré sur le second poste (Core Ultra 7 255H, 16 cœurs, 30,3 Gio, carte Intel, JDK 25.0.3,
