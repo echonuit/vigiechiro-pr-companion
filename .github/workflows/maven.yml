@@ -37,9 +37,22 @@ on:
   pull_request:
   workflow_dispatch: {}
 
-# Annule un run encore en cours sur la même ref (pushes/PR rapprochés).
+# La clé n'est pas la même sur les deux sortes de ref, parce qu'elles n'ont pas la même valeur (#5928).
+#
+# Sur une branche de demande, la clé est la ref : un push annule le run encore en cours, et c'est
+# juste, seul le dernier commit d'une demande compte.
+#
+# Sur `main`, la clé est le COMMIT. Chaque commit de `main` est un état livré que personne ne
+# rejugera : avec la ref pour clé, la fusion suivante annulait son run, et la moitié des états livrés
+# n'obtenaient jamais de verdict (7 `cancelled` sur 15 commits jugeables, relevé du 14 octobre 2026).
+# Garder la ref en coupant seulement l'annulation ne suffirait pas : GitHub ne garde qu'un run EN
+# ATTENTE par groupe, et un nouveau remplace l'ancien. La clé par commit lève aussi la collision
+# d'une relance : un vieux run de `main` relancé n'entre plus dans le groupe du run courant.
+#
+# Le prix est un run complet par fusion, en parallèle des autres : le dépôt est public, les minutes
+# ne sont pas facturées, mais les runners sont partagés avec les demandes.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref == 'refs/heads/main' && github.sha || github.ref }}
   cancel-in-progress: true
 
 permissions:
