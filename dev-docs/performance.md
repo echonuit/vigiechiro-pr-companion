@@ -99,7 +99,14 @@ produit **2109 séquences** (découpage à 5 s réelles, `ceil(D/5)` par enregis
 (`FichierWav.ouvrirPcm`), une tranche de 5 s en mémoire par original en vol, au lieu de le charger
 entier. Mesuré le 2026-10-12 sur 16 WAV de 120 s : l'occupation après GC passe de 904 à 68 Mo sous
 `-Xmx2g`, et la nuit, qui tombait sur une `OutOfMemoryError` sous `-Xmx128m`, s'importe. Le tableau
-complet est dans `docs/benchmarks/README.md`.
+complet est dans `docs/benchmarks/README.md`. Seule une séquence bornée de 5 s se lit encore
+entière, et un garde d'architecture refuse tout autre appelant de `FichierWav.lire` ([ADR 6161](decisions/6161-un-original-se-lit-par-morceaux-seule-une-sequence-bornee-se-lit-entiere.md)).
+
+**Un temporaire volumineux naît sous l'espace de travail (#6174).** `java.io.tmpdir` est souvent un
+tmpfs : ce qui s'y écrit est de la mémoire vive, que la JVM ne voit pas. La réactivation d'une nuit
+hydratée y a pris 7031 Mo et figé un poste. Le produit passe donc toujours le dossier parent, et un
+garde d'architecture refuse hors des outils un temporaire qui n'en a pas
+([ADR 6174](decisions/6174-un-temporaire-volumineux-nait-sous-l-espace-de-travail.md)).
 
 !!! warning "Des ordres de grandeur, pas des garanties"
     Ces chiffres valent pour la machine qu'ils nomment. Sur un autre poste, refaire la mesure. La règle

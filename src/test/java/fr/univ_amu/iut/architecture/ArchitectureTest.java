@@ -13,8 +13,12 @@ import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.model.FichierWav;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.viewmodel.ProgressionOperation;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileAttribute;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,6 +50,38 @@ class ArchitectureTest {
         classes = new ClassFileImporter()
                 .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
                 .importPackages("fr.univ_amu.iut");
+    }
+
+    @Test
+    @DisplayName("Un temporaire du produit naît sous un dossier qu'il nomme, jamais dans java.io.tmpdir (#6174)")
+    void aucun_temporaire_du_produit_dans_le_dossier_du_systeme() {
+        // `java.io.tmpdir` est souvent un tmpfs : ce qui s'y écrit est de la mémoire vive, que la JVM ne
+        // voit pas. La réactivation y a pris 7031 Mo au poste (#6174). Le produit passe donc le dossier
+        // parent, l'espace de travail en général ; les outils de capture et les bancs restent libres.
+        noClasses()
+                .that()
+                .resideOutsideOfPackage("..outils..")
+                .should()
+                .callMethod(Files.class, "createTempDirectory", String.class, FileAttribute[].class)
+                .orShould()
+                .callMethod(Files.class, "createTempFile", String.class, String.class, FileAttribute[].class)
+                .because("ADR 6174 : un temporaire volumineux naît sous l'espace de travail")
+                .check(classes);
+    }
+
+    @Test
+    @DisplayName("Seule une séquence bornée se lit entière : un original se lit par morceaux (#104)")
+    void seule_une_sequence_bornee_se_lit_entiere() {
+        // `FichierWav.lire` charge le fichier entier. Un original peut peser plusieurs Gio, et au-delà
+        // de 2 Gio l'import tombait (#104) : la transformation le lit par morceaux. La vérification
+        // d'identité lit une séquence candidate de 5 s, bornée par construction.
+        noClasses()
+                .that()
+                .doNotHaveFullyQualifiedName("fr.univ_amu.iut.passage.model.VerificationIdentiteAudio")
+                .should()
+                .callMethod(FichierWav.class, "lire", Path.class)
+                .because("ADR 6161 : un original se lit par morceaux")
+                .check(classes);
     }
 
     @Test
