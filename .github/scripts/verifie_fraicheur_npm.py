@@ -62,6 +62,12 @@ etant deja la.
 et sort en 0 sur un retard. Il sort toujours en 2 quand il n a pas pu lire : c est precisement ce
 que la demande doit prouver, que l etape fonctionne.
 
+**Sauf quand la demande modifie un manifeste** (#5290, dette 7). Celle-la n est pas « pour rien » :
+c est elle qui pose l epinglage. En `--constat`, une majeure de retard rendait 0, et une demande qui
+figeait un outillage en retard fusionnait verte, le rouge n arrivant qu au lundi suivant. Le garde
+demande donc a `_portee` les fichiers du diff, ceux-la memes que la portee du job a lus, et juge
+pour de vrai des que l un des deux manifestes en est.
+
 Usage : python3 .github/scripts/verifie_fraicheur_npm.py [--racine <dossier>] [--constat]
         python3 .github/scripts/verifie_fraicheur_npm.py --inventaire
         python3 .github/scripts/verifie_fraicheur_npm.py --auto-test
@@ -296,6 +302,11 @@ def code_de_sortie(code: int, constat: bool) -> int:
     return code
 
 
+def manifeste_touche(modifies: list[str]) -> bool:
+    """Le diff modifie-t-il l un des manifestes ? Alors la demande pose l epinglage, et se juge."""
+    return any(chemin in MANIFESTES for chemin in modifies)
+
+
 def _fausse_fiche(latest: str, publications: dict[str, str]) -> dict:
     """Une fiche de registre fabriquee : l etiquette `latest` et les dates de publication."""
     return {"dist-tags": {"latest": latest}, "time": dict(publications)}
@@ -511,6 +522,28 @@ def _auto_test() -> int:
     verifie("hors constat : un retard fait rougir", lambda: code_de_sortie(1, False), 1)
     verifie("constat : un vert reste un vert", lambda: code_de_sortie(0, True), 0)
 
+    # Une demande qui modifie un manifeste pose l epinglage : elle n est plus « pour rien ».
+    verifie(
+        "un manifeste dans le diff : la demande se juge",
+        lambda: manifeste_touche([".github/workflows/x.yml", MANIFESTES[0]]),
+        True,
+    )
+    verifie(
+        "l'atelier ou le garde seuls : la demande reste un constat",
+        lambda: manifeste_touche(
+            [
+                ".github/workflows/securite-dependances.yml",
+                ".github/scripts/verifie_fraicheur_npm.py",
+            ]
+        ),
+        False,
+    )
+    verifie(
+        "un lockfile seul n'est pas un manifeste",
+        lambda: manifeste_touche([".github/openspec/package-lock.json"]),
+        False,
+    )
+
     if echecs() == 0:
         print(f"Auto-test de la fraîcheur npm : OK ({echecs.joues()} cas).")
         return 0
@@ -536,6 +569,16 @@ def main(arguments: list[str]) -> int:
         else:
             print(f"option inconnue : {drapeau}", file=sys.stderr)
             return 2
+    if constat:
+        from _portee import base_de_comparaison, fichiers_modifies
+
+        base = base_de_comparaison()
+        if base and manifeste_touche(fichiers_modifies(base)):
+            print(
+                "JUGÉ : cette demande modifie un manifeste, son retard est le sien. "
+                "--constat ne s'applique pas."
+            )
+            constat = False
     epinglages = inventorier(racine)
     if mode == "inventaire":
         for manifeste, paquet, epingle in epinglages:
