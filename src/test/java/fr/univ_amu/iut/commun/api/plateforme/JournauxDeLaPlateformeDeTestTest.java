@@ -21,7 +21,9 @@ import org.junit.jupiter.api.Test;
 /// la plateforme a écrit : un journal qui ne serait plus versé le fait rougir.
 ///
 /// Il exige aussi d'y lire le démarrage de `gunicorn` (ADR 6183) : servie par le serveur de
-/// développement de Flask, l'API laissait par intermittence une écriture sans réponse.
+/// développement de Flask, l'API laissait par intermittence une écriture sans réponse. Et la sortie de
+/// la construction de l'image de l'API, faute de laquelle un fork qui échouait au front ne disait pas
+/// pourquoi (#6267).
 @Tag("plateforme-de-test")
 class JournauxDeLaPlateformeDeTestTest {
 
@@ -46,6 +48,14 @@ class JournauxDeLaPlateformeDeTestTest {
         PlateformeDeTest.acces();
 
         attendreDansLeJournal("api", "Starting gunicorn");
+    }
+
+    @Test
+    @DisplayName("#6267 : la construction de l'image de l'API verse sa sortie, construction du front comprise")
+    void la_construction_de_l_image_verse_sa_sortie() {
+        PlateformeDeTest.acces();
+
+        attendreDansLeJournal("construction-api", "grunt build");
     }
 
     @Test
