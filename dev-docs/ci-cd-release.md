@@ -1362,9 +1362,11 @@ Deux choses le séparent de son patron. L'âge n'est pas celui de la version ép
 que son auteur ne republie plus est ancien et à jour. Et un registre muet ne rend pas un rouge mais
 un refus, parce qu'« indéterminé » n'est ni frais ni périmé.
 
-Sur une demande qui touche le garde, son atelier ou un manifeste, le job tourne en `--constat` : il
-écrit le retard réel dans le récapitulatif sans faire rougir un diff qui n'y est pour rien. La
-demande prouve que l'étape fonctionne ; le lundi juge.
+Sur une demande qui ne touche que le garde ou son atelier, le job tourne en `--constat` : il écrit le
+retard réel dans le récapitulatif sans faire rougir un diff qui n'y est pour rien. La demande prouve
+que l'étape fonctionne ; le lundi juge. Une demande qui **modifie un manifeste**, elle, se juge : c'est
+elle qui pose l'épinglage, et en constat une majeure de retard y passait verte jusqu'au lundi suivant
+(#5290, dette 7). Le garde lit le diff par `_portee`, comme la portée du job.
 
 #### Un tag qui ne bouge jamais rendait cette mesure aveugle (#2213)
 

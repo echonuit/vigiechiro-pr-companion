@@ -234,13 +234,19 @@ jobs:
       #
       # Sur une demande, `--constat` : le retard RÉEL du dépôt s'écrit dans le récapitulatif mais
       # ne fait pas rougir un diff qui n'y est pour rien. Ce que la demande doit prouver est que
-      # l'étape fonctionne, et un registre illisible la fait toujours sortir en 2.
+      # l'étape fonctionne, et un registre illisible la fait toujours sortir en 2. Le garde lève
+      # lui-même `--constat` quand le diff modifie un manifeste : cette demande pose l'épinglage,
+      # et se juge (#5290, dette 7).
+      #
+      # Il lit ce diff par `_portee`, comme la portée ci-dessus, donc avec la même base : sans
+      # `GITHUB_BASE_SHA`, un clone à un seul commit n'en trouve aucune et le constat resterait.
       - name: Les outillages npm figés ont-ils pris du retard ?
         if: steps.portee.outputs.concerne == 'oui'
         shell: bash
         timeout-minutes: 5
         env:
           MODE: ${{ github.event_name == 'pull_request' && '--constat' || '' }}
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           set -euo pipefail
           # shellcheck disable=SC2086  # $MODE est vide ou un seul drapeau, jamais une saisie.

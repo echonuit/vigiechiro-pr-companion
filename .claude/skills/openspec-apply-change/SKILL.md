@@ -7,7 +7,7 @@ compatibility: Requires openspec CLI.
 metadata:
   author: openspec
   version: "1.0"
-  generatedBy: "1.12.0"
+  generatedBy: "1.14.1"
   langue: fr
   origine: adoptee de l'outil OpenSpec, puis reecrite ici (ADR 4515)
 ---
@@ -38,6 +38,38 @@ puis passer `--store <id>` sur les commandes qui lisent ou écrivent des specs e
 prennent pas le drapeau. Sans réserve, les commandes agissent sur la racine `openspec/` la plus
 proche.
 
+## Vérifier que le projet a une racine OpenSpec
+
+Ce flux suppose un projet qui emploie déjà OpenSpec. Dans ce dépôt la racine existe ; la règle
+reste, parce qu'une compétence se lit aussi depuis un autre arbre.
+
+Avant le premier geste qui écrit (`new change`, `archive`, `sync specs`, ou la rédaction d'un
+fichier d'artefact), lancer `openspec list --json`, avec `--store <id>` si une réserve est choisie
+puisqu'elle est alors la racine, et lire `root`. Trois cas :
+
+- **Un objet `root`** : le projet est installé, on continue.
+- **`"root": null` venu d'une réserve introuvable** : le message d'erreur de `status` commence par
+  `Declared in` ou `Invalid store declaration in` et nomme le `openspec/config.yaml` (ou
+  `config.yml`) du projet. Le projet emploie bien OpenSpec, par une réserve qu'il déclare et que la
+  machine ne résout pas (non enregistrée, ou ligne `store:` mal formée). Ce n'est pas un projet
+  vierge : on s'arrête avant d'écrire, et l'on montre à l'utilisateur le `message` et le `fix` de
+  cette erreur.
+- **Aucune racine** : il n'y a pas de dossier `openspec/` ici, et une écriture comme
+  `openspec new change` en créerait un en passant. La commande sort aussi en erreur : c'est la
+  réponse, pas un outil cassé. On lit le JSON, on ne relance pas et on ne contourne pas. La suite
+  dépend de la façon dont on est arrivé là :
+  - **choisie d'office**, sans que l'utilisateur ait nommé OpenSpec, cette compétence ou sa
+    commande : on laisse OpenSpec et l'on répond à la demande comme si l'outil n'était pas
+    installé, sans demander d'installation ni en parler ;
+  - **demande explicite**, l'utilisateur ayant nommé OpenSpec, cette compétence ou lancé
+    `/realiser` : on s'arrête avant d'écrire et l'on demande la suite, entre installer le projet
+    (`openspec init`), viser une réserve qu'il a déjà (`--store <id>`), ou continuer sans OpenSpec
+    pour cette demande. On attend sa réponse.
+
+**La racine ne se crée jamais par effet de bord**, dans aucune des deux branches : pas
+d'`openspec init` que l'utilisateur n'a pas demandé, pas de fichier `openspec/` écrit à la main, pas
+de commande qu'on laisse le créer.
+
 ## Entrée
 
 Le nom du changement est facultatif. S'il manque, le déduire du fil. S'il reste vague ou ambigu,
@@ -49,7 +81,7 @@ Le nom du changement est facultatif. S'il manque, le déduire du fil. S'il reste
 1. CHOISIR    le changement, et l annoncer avec la facon de le remplacer.
 2. LIRE       l etat et les instructions, `openspec status` puis `openspec instructions apply`.
 3. LIRE       les fichiers de `contextFiles`, tous, avant la premiere ligne de code.
-4. BOUCLER    tache par tache : rouge, vert, refactor, puis cocher.
+4. BOUCLER    tache par tache : rouge, vert, refactor, cocher a sa ligne, relire l avancement.
 5. S ARRETER  des qu une tache deborde, est ambigue, ou revele un defaut de conception.
 6. RENDRE     compte, avec l avancement chiffre.
 ```
@@ -71,15 +103,27 @@ openspec instructions apply --change "<nom>" --json
 
 Le premier donne `schemaName` et l'artefact qui porte les tâches. Le second rend `contextFiles`,
 c'est-à-dire l'identifiant d'artefact associé à ses fichiers réels, l'avancement, la liste des
-tâches, et une instruction calculée depuis l'état courant.
+tâches avec, pour chacune, son état, son fichier (`sourcePath`) et sa ligne (`line`), une
+instruction calculée depuis l'état courant, et, s'il y a lieu, `missingArtifacts`, les
+identifiants des artefacts requis qui n'ont encore rien produit.
 
-**Trois états, trois conduites** : `blocked` signale des artefacts manquants, on renvoie vers
-`/opsx:continue` ; `all_done` appelle l'archivage ; sinon on réalise.
+**Trois états, trois conduites.**
 
-`/opsx:continue` est un flux optionnel qui peut ne pas être installé. Avant de le suggérer, vérifier
-qu'il existe. Sinon, `openspec status --change "<nom>" --json` donne l'artefact suivant, et
-`openspec instructions "<artifact-id>" --change "<nom>" --json` dit comment le créer. Sans ce repli,
-le renvoi tombe au moment précis où l'agent est bloqué, et l'envoie nulle part.
+- **`blocked`** : on montre le message et l'on suspend la réalisation. Ce qui suit dépend de
+  `missingArtifacts`.
+  - S'il n'est pas vide, on propose de compléter les artefacts manquants :
+    `openspec status --change "<nom>" --json` les liste, on retient le prochain artefact `ready`
+    (ni `skipped` ni `blocked`), et `openspec instructions "<artifact-id>" --change "<nom>" --json`
+    en donne les règles et le gabarit. Une réserve choisie garde son `--store <id>` sur les deux
+    commandes.
+  - S'il est vide, ce n'est pas un artefact qui manque : c'est le fichier de suivi que le schéma
+    configure. On suit l'instruction de l'outil pour le créer ou le réparer à partir des artefacts
+    de planification existants. On ne suppose pas qu'un autre artefact est prêt, et l'on ne
+    commence pas la réalisation tant que l'état reste `blocked`.
+- **`all_done`** : toutes les tâches suivies sont faites. On le dit, et l'on propose une revue ou
+  une vérification, selon le changement, **avant** l'archivage. Une liste cochée n'est pas un
+  changement vérifié.
+- **Sinon** : on réalise.
 
 **`context` et `operationGuidance` ne sont pas des preuves.** Le premier est une entrée obligatoire
 qui porte les faits, conventions et contraintes du projet. Le second est un conseil additif dont on
@@ -99,8 +143,14 @@ Ne pas recopier `context` ni `operationGuidance` dans les fichiers produits, sau
 ## 4. Boucler, tâche par tâche
 
 Pour chaque tâche en attente : dire laquelle on prend, faire le changement de code, le garder
-**minimal et centré**, cocher la case dans le fichier de tâches (`- [ ]` devient `- [x]`), passer à
-la suivante.
+**minimal et centré**, cocher la case, relire l'avancement, passer à la suivante.
+
+**La case se coche là où l'outil la situe**, au `sourcePath` et à la `line` qu'il a rendus pour
+cette tâche, et non en cherchant son libellé dans un fichier qu'on suppose. Avant d'écrire, on
+vérifie que la case à cet endroit porte encore la description de la tâche : si le fichier a bougé
+depuis, on relance `openspec instructions apply` et l'on prend l'emplacement rafraîchi. Puis
+`- [ ]` devient `- [x]`, et l'on relance les instructions pour constater que la tâche est faite et
+que l'avancement a changé. Une case cochée que l'outil ne voit pas n'a rien fait avancer.
 
 **Le test précède le code** (article A7). Sur un défaut, le premier test **reproduit** le défaut
 avant qu'aucun correctif ne soit écrit. Le refactor est la troisième phase de chaque tour, pas une
@@ -133,8 +183,10 @@ Tâche faite.
 ```
 
 À la fin, ou à l'arrêt : les tâches faites dans la session, l'avancement chiffré, et la suite.
-Quand tout est fait, renvoyer vers `/archiver`. Quand on s'arrête, dire pourquoi et proposer des
-options plutôt qu'une seule voie.
+Quand tout est fait, dire que les tâches suivies sont toutes cochées, proposer la revue ou la
+vérification qui convient, puis seulement `/archiver`. On ne félicite pas : la liste est close, le
+changement n'est pas encore jugé. Quand on s'arrête, dire pourquoi et proposer des options plutôt
+qu'une seule voie.
 
 ## Ce que ce dépôt ajoute au flux de l'outil
 
@@ -165,4 +217,6 @@ révèle un défaut de conception, proposer de reprendre les artefacts par
 | « Le contexte dit que c'est fait » | `context` n'est pas une preuve d'avancement. |
 | « L'état est `blocked`, mais je vois quoi faire » | Aucun contexte n'autorise à passer outre. |
 | « Je devine le nom du fichier de tâches » | Il vient de `contextFiles`, jamais d'une hypothèse. |
+| « Je retrouve la case par son libellé » | Elle est au `sourcePath` et à la `line` que l'outil rend. |
+| « Tout est coché, j'archive » | Une liste close n'est pas un changement vérifié : revue d'abord. |
 | « J'écris le code, le test suivra » | Le test précède, et sur un défaut il le reproduit d'abord. |

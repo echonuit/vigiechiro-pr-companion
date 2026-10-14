@@ -121,8 +121,12 @@ il reste à poser à la main, dans chaque arbre de travail où l'on veut vérifi
 `semantic-release@25` (#3264), contre **18** (15 hautes) avant lui. **Refait le 2026-10-06 sur le même
 lockfile : 17 paquets, 16 hautes et 1 moyenne.** La base des avis a grandi, l'arbre n'a pas bougé, et
 la relecture de ces dix-sept n'était pas faite (#5290). Elle l'est en partie depuis #6193, qui a trié
-les paquets porteurs d'un avis selon qu'un greffon chargé les atteint ou non ; ce que l'avis de
-`braces` expose ici, lui que `@semantic-release/git` atteint, n'est pas évalué. **Refait le
+les paquets porteurs d'un avis selon qu'un greffon chargé les atteint ou non. Ce que l'avis de
+`braces` expose ici, lui que `@semantic-release/git` atteint, a été évalué le 2026-10-14 : rien
+d'exploitable. L'avis demande qu'un attaquant fournisse le motif d'accolades imbriquées, et le seul
+motif que ce greffon passe à `micromatch` est `"assets": ["CHANGELOG.md"]`, écrit en dur dans
+`.releaserc.json` ; en glisser un autre suppose déjà le droit d'écrire dans le dépôt (#5290,
+dette 3). **Refait le
 même jour après la montée des deux greffons d'écriture (#6099) : les mêmes 17 paquets, aux mêmes
 gravités.** La montée n'en retire aucun et n'en ajoute aucun. Ces vulnérabilités **existaient déjà** avec `npx --yes` ;
 la différence est qu'elles sont désormais **visibles**, et c'était l'objet du lockfile.

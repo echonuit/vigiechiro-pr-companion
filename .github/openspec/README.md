@@ -28,7 +28,7 @@ Après `npm ci`, le lien `node_modules/.bin/openspec` existe. C'est lui qu'il fa
 
 ## Pourquoi cette version-là, et pas la dernière
 
-Les douze fichiers d'OpenSpec présents dans le dépôt portent `generatedBy: "1.12.0"` dans leur
+Les douze fichiers d'OpenSpec présents dans le dépôt portent `generatedBy: "1.14.1"` dans leur
 en-tête. Ils décrivent le contrat de la ligne de commande de cette version : ses sous-commandes, les
 champs de son JSON, les états qu'elle rend. Une version installée qui ne serait pas celle-là ferait
 décrire un contrat périmé par des fichiers qui se lisent comme vrais.
@@ -58,6 +58,15 @@ six ne changeaient que leur `generatedBy` ; `openspec-propose` gagnait un bloc �
 avant de rédiger » ; `openspec-explore` gagnait 27 lignes, dont une règle de consentement qui reprend
 la cérémonie du bloc de `CLAUDE.md`. Deux portages à la main, et rien d'autre.
 
+**Ce que 1.12.0 vers 1.14.1 a coûté**, mesuré de la même façon le 2026-10-14 (#5290) : bien plus.
+Les six compétences changent leur contrat, de 30 à 61 lignes chacune hors `generatedBy`. Les six
+gagnent le même bloc, qui vérifie que le projet a une racine OpenSpec avant toute écriture et interdit
+de la créer par effet de bord. Au-delà : `apply` coche une tâche au fichier et à la ligne que l'outil
+rend ; `archive` compte les tâches par `openspec list --json` au lieu de lire `tasks.md` ; `explore`
+liste aussi les spécifications durables ; `sync-specs` et `archive` refusent de fabriquer une
+exigence pour une capacité neuve ; `update` rédige d'abord dans la conversation et n'écrit qu'après
+confirmation ; `propose` charge le contexte du projet avant de rédiger. Six portages à la main.
+
 [ADR 4515]: https://companion-dev.echonuit.fr/decisions/4515-les-competences-openspec-sont-reecrites/
 
 ## Vérifier en local
@@ -79,7 +88,7 @@ le shebang le réclame.
 ```bash
 npm ci --prefix .github/openspec
 
-./.github/openspec/node_modules/.bin/openspec --version      # 1.12.0
+./.github/openspec/node_modules/.bin/openspec --version      # 1.14.1
 ./.github/openspec/node_modules/.bin/openspec context --json # "role": "openspec_root"
 
 python3 scripts/methode/verifie-version-openspec.py          # l'égalité tient
@@ -90,14 +99,21 @@ python3 scripts/methode/verifie-version-openspec.py --auto-test
 
 ## Ce que l'audit dit aujourd'hui
 
-`npm audit` signale **4 paquets**, tous au niveau élevé, sur les 80 dépendances de l'arbre, au
-6 octobre 2026. Chiffre daté, qui se refait plutôt qu'il ne se croit : il valait 0 sur 79 le 26 août.
+`npm audit` signale **4 paquets**, tous au niveau élevé, sur les 70 dépendances de l'arbre, au
+14 octobre 2026, après la montée en 1.14.1. Chiffre daté, qui se refait plutôt qu'il ne se croit : il
+valait 0 sur 79 le 26 août, et 4 sur 80 le 6 octobre en 1.12.0.
 
 Un seul avis porte les quatre : `braces`, [GHSA-vfj7-8cjw-p6xm], un déni de service par motif
 profondément imbriqué, publié le 18 septembre 2026, donc après la montée en 1.12.0. Il remonte par
 `micromatch`, `fast-glob`, puis `@fission-ai/openspec` lui-même. **Monter de version ne le corrige
 pas** : l'audit range toutes les versions depuis 0.18.0 dans la plage touchée, et le seul correctif
-qu'il propose est un retour à 0.17.2. Ce que cet avis expose réellement ici n'a pas été évalué.
+qu'il propose est un retour à 0.17.2, et `braces` lui-même n'a aucune version corrigée.
+
+**Ce que l'avis expose ici, évalué le 2026-10-14 : rien d'exploitable.** Il faut qu'un attaquant
+fournisse le motif d'accolades imbriquées. Les motifs que `fast-glob` reçoit ici viennent de l'outil
+et des schémas OpenSpec du dépôt : pour en glisser un, il faudrait déjà pouvoir écrire dans le
+dépôt. Le pire cas est une commande `openspec` qui plante sur un motif que nous aurions écrit
+nous-mêmes (#5290, dette 3).
 
 ```bash
 (cd .github/openspec && npm audit)
@@ -134,6 +150,7 @@ signalé sans bloquer, et bloque au-delà de 365 jours. Il se lance aussi à la 
 python3 .github/scripts/verifie_fraicheur_npm.py
 ```
 
-Au 2026-10-06 il rend, pour ce manifeste : « 1.12.0 -> 1.14.1, en retard depuis 27 jours », signalé
+Au 2026-10-06 il rendait, pour ce manifeste : « 1.12.0 -> 1.14.1, en retard depuis 27 jours », signalé
 et non bloquant. Il dit le retard, il ne le résorbe pas : la montée, quand on la décide, se fait par
-le geste de la section « Pourquoi cette version-là, et pas la dernière ».
+le geste de la section « Pourquoi cette version-là, et pas la dernière ». Elle a été décidée le
+2026-10-14, à 35 jours de retard, et faite ainsi (#5290).
