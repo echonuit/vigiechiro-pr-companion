@@ -308,6 +308,37 @@ final class InstrumentsDuBanc {
                     enMs(gel.gelsMs())));
         }
 
+        /// La réactivation menée par sa modale (#6256) : sa durée, puis ses jalons et chaque écart de plus
+        /// de 100 ms situé parmi eux. La ligne des jalons finit sur l'heure du clic.
+        void noterReactivation(double dureeS, Gel gel, JalonsDeLaReactivation jalons) {
+            lignes.add(String.format(
+                    Locale.ROOT,
+                    "%s\tpendant la réactivation\t%.1f s, %d images\técart max %.1f ms, au-delà de 200 ms : %s",
+                    titre,
+                    dureeS,
+                    gel.images(),
+                    gel.maxMs(),
+                    enMs(gel.gelsMs())));
+            lignes.add(String.format(
+                    Locale.ROOT,
+                    "%s\tjalons de la réactivation\t%s · %s",
+                    titre,
+                    jalons.datation().jalons(),
+                    jalons.contexte()));
+            for (EcartDate ecart : gel.dates()) {
+                lignes.add(String.format(
+                        Locale.ROOT,
+                        "%s\técart daté, réactivation\t%s",
+                        titre,
+                        jalons.datation().ligne(ecart)));
+            }
+        }
+
+        /// Une ligne libre : ce que l'écran a dit, ou ce que le banc a posé avant de mesurer.
+        void noterTexte(String quoi, String texte) {
+            lignes.add(String.format(Locale.ROOT, "%s\t%s\t%s", titre, quoi, texte));
+        }
+
         void noterNavigation(int nuit, Gel gel) {
             lignes.add(String.format(
                     Locale.ROOT,

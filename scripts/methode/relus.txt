@@ -1088,7 +1088,7 @@ ebc7965c702c  src/main/java/fr/univ_amu/iut/passage/viewmodel/SelectionCampagne.
 9e30cc6f7ce1  src/main/java/fr/univ_amu/iut/passage/viewmodel/VerificationDuTraitement.java
 8d897d3f7089  src/main/java/fr/univ_amu/iut/perf/outils/BancImport.java
 d8df481f824d  src/main/java/fr/univ_amu/iut/perf/outils/BancMesure.java
-898ba92522dc  src/main/java/fr/univ_amu/iut/perf/outils/BancReactivation.java
+2698476f4e5c  src/main/java/fr/univ_amu/iut/perf/outils/BancReactivation.java
 767df64caea1  src/main/java/fr/univ_amu/iut/perf/outils/GenerateurJeuDeDonnees.java
 a7a734f95bd5  src/main/java/fr/univ_amu/iut/qualification/di/QualificationModule.java
 73b492e3e943  src/main/java/fr/univ_amu/iut/qualification/model/AgregationVerdict.java
@@ -2037,6 +2037,7 @@ f492068c695e  src/test/java/fr/univ_amu/iut/passage/view/PassageActionsFicheView
 324f85b443e8  src/test/java/fr/univ_amu/iut/passage/view/PassageVueIntegrationTest.java
 1223d0b3a4bf  src/test/java/fr/univ_amu/iut/passage/view/RattachementModaleFermetureViewTest.java
 3d6110c2ae06  src/test/java/fr/univ_amu/iut/passage/view/RattachementModaleViewTest.java
+54a546c6cf43  src/test/java/fr/univ_amu/iut/passage/view/ReactivationDuBanc.java
 e96caab1b9b1  src/test/java/fr/univ_amu/iut/passage/view/ReactivationModaleQuestionTest.java
 cbc014bf6958  src/test/java/fr/univ_amu/iut/passage/view/ReactivationModaleViewTest.java
 f88c0100d0a8  src/test/java/fr/univ_amu/iut/passage/view/ScenarioPassagePivotTest.java
@@ -2052,15 +2053,17 @@ ab70d6f6344b  src/test/java/fr/univ_amu/iut/passage/viewmodel/MemesMotsQueLEcran
 59c6503e55be  src/test/java/fr/univ_amu/iut/passage/viewmodel/SaisieHorairesNuitTest.java
 a8f5b54b21d0  src/test/java/fr/univ_amu/iut/passage/viewmodel/VerificationDuTraitementTest.java
 49766a118987  src/test/java/fr/univ_amu/iut/perf/JeuDuBancTest.java
-929541f0bc35  src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO3Test.java
+84c97992f324  src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO3Test.java
 eace6174d00f  src/test/java/fr/univ_amu/iut/perf/outils/BancIhmO5Test.java
+e3ea29ad56cc  src/test/java/fr/univ_amu/iut/perf/outils/BancIhmReactivationTest.java
 0f83f49f3cdf  src/test/java/fr/univ_amu/iut/perf/outils/DatationDesEcarts.java
 8b1bdb842238  src/test/java/fr/univ_amu/iut/perf/outils/DatationDesEcartsTest.java
 535fa25dfcc2  src/test/java/fr/univ_amu/iut/perf/outils/EchelleDuRendu.java
 8c8958cd2741  src/test/java/fr/univ_amu/iut/perf/outils/EchelleDuRenduTest.java
-dbed8d993896  src/test/java/fr/univ_amu/iut/perf/outils/EcranDuBanc.java
-4eefe12ab191  src/test/java/fr/univ_amu/iut/perf/outils/InstrumentsDuBanc.java
+a6dc55cd5b15  src/test/java/fr/univ_amu/iut/perf/outils/EcranDuBanc.java
+5bb7880b377a  src/test/java/fr/univ_amu/iut/perf/outils/InstrumentsDuBanc.java
 83e308799b67  src/test/java/fr/univ_amu/iut/perf/outils/JalonsDeLImport.java
+434fb67d7713  src/test/java/fr/univ_amu/iut/perf/outils/JalonsDeLaReactivation.java
 a915ebf9d263  src/test/java/fr/univ_amu/iut/qualification/AgregationVerdictTest.java
 134e5d009078  src/test/java/fr/univ_amu/iut/qualification/FenetreDeCouvertureTest.java
 7dfaa00febe4  src/test/java/fr/univ_amu/iut/qualification/GenerateurSelectionTest.java
