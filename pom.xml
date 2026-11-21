@@ -58,7 +58,7 @@
              elles : la raison est au profil (#6090). -->
         <plexus.compiler.version>2.17.1</plexus.compiler.version>
         <ecj.version>3.46.100</ecj.version>
-        <maven.surefire.plugin.version>3.6.0</maven.surefire.plugin.version>
+        <maven.surefire.plugin.version>3.6.1</maven.surefire.plugin.version>
         <maven.shade.plugin.version>3.6.2</maven.shade.plugin.version>
         <maven.dependency.plugin.version>3.11.0</maven.dependency.plugin.version>
         <cyclonedx.maven.plugin.version>2.9.3</cyclonedx.maven.plugin.version>
